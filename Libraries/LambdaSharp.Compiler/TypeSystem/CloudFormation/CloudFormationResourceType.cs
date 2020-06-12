@@ -48,12 +48,12 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
         public IEnumerable<IProperty> RequiredProperties => _requiredProperties.Value;
 
         //--- Methods ---
-        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? propertyType) {
+        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? property) {
             if(_resourceType.Properties.TryGetValue(propertyName, out var type)) {
-                propertyType = new CloudFormationProperty(propertyName, this, type, _specification);
+                property = new CloudFormationProperty(propertyName, this, type, _specification);
                 return true;
             }
-            propertyType = null;
+            property = null;
             return false;
         }
     }

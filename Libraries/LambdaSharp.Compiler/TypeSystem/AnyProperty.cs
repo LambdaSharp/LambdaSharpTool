@@ -27,8 +27,10 @@ namespace LambdaSharp.Compiler.TypeSystem {
 
         //--- Properties ---
         public string Name { get; }
+        public bool Required => false;
         public PropertyCollectionType CollectionType => PropertyCollectionType.NoCollection;
         public PropertyItemType ItemType => PropertyItemType.Any;
         public IResourceType ComplexType => AnyResourceType.Instance;
+
     }
 }

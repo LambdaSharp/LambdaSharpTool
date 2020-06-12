@@ -40,6 +40,7 @@ namespace LambdaSharp.Compiler.TypeSystem {
 
         //--- Properties ---
         string Name { get; }
+        bool Required { get; }
         PropertyCollectionType CollectionType { get; }
         PropertyItemType ItemType { get; }
         IResourceType ComplexType { get; }

@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using FluentAssertions;
-using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Validators;
 using Xunit.Abstractions;
@@ -27,14 +24,6 @@ using Xunit.Abstractions;
 namespace Tests.LambdaSharp.Compiler.Validators {
 
     public abstract class _Validator : _Init {
-
-        //--- Class Methods ---
-        protected static void ShouldNotBeNull([NotNull] object? value) {
-            value.Should().NotBeNull();
-            if(value == null) {
-                throw new ShouldNeverHappenException();
-            }
-        }
 
         //--- Constructors ---
         protected _Validator(ITestOutputHelper output) : base(output) { }

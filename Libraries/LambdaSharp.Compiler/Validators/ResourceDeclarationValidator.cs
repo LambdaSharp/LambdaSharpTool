@@ -31,16 +31,17 @@ namespace LambdaSharp.Compiler.Validators {
         //--- Class Fields ---
 
         #region Errors/Warnings
-        public static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error(0, $"unrecognized property '{parameter}'");
-        public static readonly Error IfAttributeRequiresCloudFormationType = new Error(0, "'If' attribute can only be used with a CloudFormation type");
-        public static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
-        public static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
-        public static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
-        public static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
-        public static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
-        public static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
-        public static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
-        public static readonly Warning ResourceContainsTransformAndCannotBeValidated = new Warning(0, "Fn::Transform prevents resource properties to be validated");
+        private static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error(0, $"unrecognized property '{parameter}'");
+        private static readonly Error IfAttributeRequiresCloudFormationType = new Error(0, "'If' attribute can only be used with a CloudFormation type");
+        private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
+        private static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
+        private static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
+        private static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
+        private static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
+        private static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
+        private static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
+        private static readonly ErrorFunc ResourcePropertyExpectedLiteral = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a literal");
+        private static readonly Warning ResourceContainsTransformAndCannotBeValidated = new Warning(0, "Fn::Transform prevents resource properties to be validated");
         #endregion
 
         //--- Constructors ---
@@ -144,17 +145,20 @@ namespace LambdaSharp.Compiler.Validators {
                     switch(propertyType.CollectionType) {
                     case PropertyCollectionType.NoCollection:
 
-                        // check the property expression type is compatible
+                        // check the property expression type is a compatible list
                         switch(currentProperty.Value) {
                         case AFunctionExpression _:
 
-                            // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                            // TODO: validate the return type of the function matches the item type
                             break;
-                        case ObjectExpression objectExpression:
-                            ValidateProperties(propertyType.ComplexType, objectExpression);
+                        case LiteralExpression _:
+                        case ObjectExpression _:
+
+                            // validate value against item type
+                            Validate(propertyType, currentProperty.Value, allowJson: true, ResourcePropertyExpectedLiteral(currentProperty.Key.Value));
                             break;
                         default:
-                            Logger.Log(ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
+                            Logger.Log(ResourcePropertyExpectedLiteral(currentProperty.Key.Value), currentProperty.Value);
                             break;
                         }
                         break;
@@ -164,38 +168,14 @@ namespace LambdaSharp.Compiler.Validators {
                         switch(currentProperty.Value) {
                         case AFunctionExpression _:
 
-                            // TODO (2019-01-25, bjorg): validate the return type of the function is a list
+                            // TODO: validate the return type of the function is a list
                             break;
                         case ListExpression listExpression:
-                            switch(propertyType.ItemType) {
-                            case PropertyItemType.Any:
 
-                                // anything is valid; nothing to do
-                                break;
-                            case PropertyItemType.ComplexType:
-
-                                // validate all items in list are objects that match the nested resource type
-                                for(var i = 0; i < listExpression.Count; ++i) {
-                                    var item = listExpression[i];
-                                    if(item is ObjectExpression objectExpressionItem) {
-                                        ValidateProperties(propertyType.ComplexType, objectExpressionItem);
-                                    } else {
-                                        Logger.Log(ResourcePropertyExpectedMap($"[{i}]"), item);
-                                    }
-                                }
-                                break;
-                            case PropertyItemType.Boolean:
-                            case PropertyItemType.Double:
-                            case PropertyItemType.Integer:
-                            case PropertyItemType.Json:
-                            case PropertyItemType.Long:
-                            case PropertyItemType.String:
-                            case PropertyItemType.Timestamp:
-
-                                // TODO (2018-12-06, bjorg): validate list items using the primitive type
-                                break;
-                            default:
-                                throw new ShouldNeverHappenException();
+                            // validate all items in list are objects that match the nested resource type
+                            for(var i = 0; i < listExpression.Count; ++i) {
+                                var item = listExpression[i];
+                                Validate(propertyType, item, allowJson: false, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}[{i}]"));
                             }
                             break;
                         default:
@@ -209,38 +189,14 @@ namespace LambdaSharp.Compiler.Validators {
                         switch(currentProperty.Value) {
                         case AFunctionExpression _:
 
-                            // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                            // TODO: validate the return type of the function is a map
                             break;
                         case ObjectExpression objectExpression:
-                            switch(propertyType.ItemType) {
-                            case PropertyItemType.Any:
 
-                                // anything is valid; nothing to do
-                                break;
-                            case PropertyItemType.ComplexType:
-
-                                // validate all values in map are objects that match the nested resource type
-                                foreach(var kv in objectExpression) {
-                                    var item = kv.Value;
-                                    if(item is ObjectExpression objectExpressionItem) {
-                                        ValidateProperties(propertyType.ComplexType, objectExpressionItem);
-                                    } else {
-                                        Logger.Log(ResourcePropertyExpectedMap(kv.Key.Value), item);
-                                    }
-                                }
-                                break;
-                            case PropertyItemType.Boolean:
-                            case PropertyItemType.Double:
-                            case PropertyItemType.Integer:
-                            case PropertyItemType.Json:
-                            case PropertyItemType.Long:
-                            case PropertyItemType.String:
-                            case PropertyItemType.Timestamp:
-
-                                // TODO (2018-12-06, bjorg): validate map entries using the primitive type
-                                break;
-                            default:
-                                throw new ShouldNeverHappenException($"unexpected collection type: {propertyType.CollectionType}");
+                            // validate all values in map are objects that match the nested resource type
+                            foreach(var kv in objectExpression) {
+                                var item = kv.Value;
+                                Validate(propertyType, item, allowJson: false, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}.{kv.Key.Value}"));
                             }
                             break;
                         default:
@@ -255,6 +211,43 @@ namespace LambdaSharp.Compiler.Validators {
                     Logger.Log(ResourceUnknownProperty(currentProperty.Key.Value), currentProperty.Key);
                 }
             }
+
+            // local function
+            void Validate(IProperty propertyType, AExpression expression, bool allowJson, Error error) {
+                switch(propertyType.ItemType) {
+                case PropertyItemType.Any:
+
+                    // anything is valid; nothing to do
+                    break;
+                case PropertyItemType.ComplexType:
+
+                    // validate experssion is an object matching the complex type
+                    if(expression is ObjectExpression objectExpression) {
+                        ValidateProperties(propertyType.ComplexType, objectExpression);
+                    } else {
+                        Logger.Log(error, expression);
+                    }
+                    break;
+                case PropertyItemType.Boolean:
+                case PropertyItemType.Double:
+                case PropertyItemType.Integer:
+                case PropertyItemType.Long:
+                case PropertyItemType.String:
+                case PropertyItemType.Timestamp:
+
+                    // TODO: validate against primitive type
+                    break;
+                case PropertyItemType.Json:
+                    if(allowJson) {
+
+                        // TODO: validate against JSON type
+                    } else {
+                        throw new ShouldNeverHappenException($"unexpected map item type: {propertyType.ItemType}");
+                    }
+                    break;
+                default:
+                    throw new ShouldNeverHappenException($"unexpected map item type: {propertyType.ItemType}");
+                }            }
         }
     }
 }

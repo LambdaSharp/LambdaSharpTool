@@ -25,7 +25,7 @@ namespace LambdaSharp.Compiler.TypeSystem {
 
         //--- Properties ---
         string Name { get; }
-        bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? propertyType);
+        bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? property);
         IEnumerable<IProperty> RequiredProperties { get; }
     }
 }

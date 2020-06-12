@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.TypeSystem;
@@ -152,6 +153,14 @@ namespace Tests.LambdaSharp.Compiler {
         //         }
         //     }
         // }
+
+        //--- Class Methods ---
+        protected static void ShouldNotBeNull([NotNull] object? value) {
+            value.Should().NotBeNull();
+            if(value == null) {
+                throw new ShouldNeverHappenException();
+            }
+        }
 
         //--- Fields ---
         protected readonly ITestOutputHelper Output;
