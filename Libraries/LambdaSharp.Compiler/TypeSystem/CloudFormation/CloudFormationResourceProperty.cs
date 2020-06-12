@@ -52,7 +52,7 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
     //  - List<T>
     //  - Map<T>
 
-    internal class CloudFormationProperty : IProperty {
+    internal class CloudFormationResourceProperty : IResourceProperty {
 
         // TODO: leverage UpdateType: _propertyType.UpdateType;
         // TODO: leverage ValueType: _propertyType.Value.ValueType
@@ -64,7 +64,7 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
         private readonly Lazy<IResourceType> _complexType;
 
         //--- Constructors ---
-        public CloudFormationProperty(string propertyName, CloudFormationResourceType resourceType, ResourcePropertyType propertyType, ExtendedCloudFormationSpecification specification) {
+        public CloudFormationResourceProperty(string propertyName, CloudFormationResourceType resourceType, ResourcePropertyType propertyType, ExtendedCloudFormationSpecification specification) {
             Name = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
             _resourceType = resourceType ?? throw new ArgumentNullException(nameof(resourceType));
             _propertyType = propertyType ?? throw new ArgumentNullException(nameof(propertyType));
@@ -77,56 +77,56 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
         public bool Required => _propertyType.Required;
         public bool DuplicatesAllowed => _propertyType.DuplicatesAllowed;
 
-        public PropertyCollectionType CollectionType {
+        public ResourcePropertyCollectionType CollectionType {
             get {
                 if(_propertyType.Type == "List") {
-                    return PropertyCollectionType.List;
+                    return ResourcePropertyCollectionType.List;
                 } else if(_propertyType.Type == "Map") {
-                    return PropertyCollectionType.Map;
+                    return ResourcePropertyCollectionType.Map;
                 }
-                return PropertyCollectionType.NoCollection;
+                return ResourcePropertyCollectionType.NoCollection;
             }
         }
 
-        public PropertyItemType ItemType {
+        public ResourcePropertyItemType ItemType {
             get {
-                if(CollectionType == PropertyCollectionType.NoCollection) {
+                if(CollectionType == ResourcePropertyCollectionType.NoCollection) {
                     switch(_propertyType.PrimitiveType) {
                     case null when (_propertyType.Type != null):
-                        return PropertyItemType.ComplexType;
+                        return ResourcePropertyItemType.ComplexType;
                     case "String":
-                        return PropertyItemType.String;
+                        return ResourcePropertyItemType.String;
                     case "Long":
-                        return PropertyItemType.Long;
+                        return ResourcePropertyItemType.Long;
                     case "Integer":
-                        return PropertyItemType.Integer;
+                        return ResourcePropertyItemType.Integer;
                     case "Double":
-                        return PropertyItemType.Double;
+                        return ResourcePropertyItemType.Double;
                     case "Boolean":
-                        return PropertyItemType.Boolean;
+                        return ResourcePropertyItemType.Boolean;
                     case "Timestamp":
-                        return PropertyItemType.Timestamp;
+                        return ResourcePropertyItemType.Timestamp;
                     case "Json":
-                        return PropertyItemType.Json;
+                        return ResourcePropertyItemType.Json;
                     default:
                         throw new ShouldNeverHappenException($"unexpected primitive type: {_propertyType.PrimitiveType ?? "<null>"} in {Name}");
                     }
                 } else {
                     switch(_propertyType.PrimitiveItemType) {
                     case null when (_propertyType.ItemType != null):
-                        return PropertyItemType.ComplexType;
+                        return ResourcePropertyItemType.ComplexType;
                     case "String":
-                        return PropertyItemType.String;
+                        return ResourcePropertyItemType.String;
                     case "Long":
-                        return PropertyItemType.Long;
+                        return ResourcePropertyItemType.Long;
                     case "Integer":
-                        return PropertyItemType.Integer;
+                        return ResourcePropertyItemType.Integer;
                     case "Double":
-                        return PropertyItemType.Double;
+                        return ResourcePropertyItemType.Double;
                     case "Boolean":
-                        return PropertyItemType.Boolean;
+                        return ResourcePropertyItemType.Boolean;
                     case "Timestamp":
-                        return PropertyItemType.Timestamp;
+                        return ResourcePropertyItemType.Timestamp;
                     case "Json":
                         throw new ShouldNeverHappenException("'Json' is not supported for collections");
                     default:
@@ -139,10 +139,10 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
         public IResourceType ComplexType => _complexType.Value;
 
         private IResourceType GetComplexType() {
-            if(ItemType != PropertyItemType.ComplexType) {
+            if(ItemType != ResourcePropertyItemType.ComplexType) {
                 throw new InvalidOperationException("property uses a primitive type");
             }
-            if(CollectionType == PropertyCollectionType.NoCollection) {
+            if(CollectionType == ResourcePropertyCollectionType.NoCollection) {
                 return GetResourceType(_propertyType.Type ?? throw new ShouldNeverHappenException("'Type' is null"));
             } else {
                 return GetResourceType(_propertyType.ItemType ?? throw new ShouldNeverHappenException("'ItemType' is null"));

@@ -29,15 +29,15 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
         //--- Fields ---
         private readonly ResourceType _resourceType;
         private readonly ExtendedCloudFormationSpecification _specification;
-        private readonly Lazy<IEnumerable<IProperty>> _requiredProperties;
+        private readonly Lazy<IEnumerable<IResourceProperty>> _requiredProperties;
 
         //--- Constructors ---
         public CloudFormationResourceType(string resourceName, ResourceType resourceType, ExtendedCloudFormationSpecification specification) {
             Name = resourceName ?? throw new ArgumentNullException(nameof(resourceName));
             _resourceType = resourceType ?? throw new ArgumentNullException(nameof(resourceType));
             _specification = specification ?? throw new ArgumentNullException(nameof(specification));
-            _requiredProperties = new Lazy<IEnumerable<IProperty>>(() => _resourceType.Properties
-                .Where(kv => kv.Value.Required).Select(kv => new CloudFormationProperty(kv.Key, this, kv.Value, _specification))
+            _requiredProperties = new Lazy<IEnumerable<IResourceProperty>>(() => _resourceType.Properties
+                .Where(kv => kv.Value.Required).Select(kv => new CloudFormationResourceProperty(kv.Key, this, kv.Value, _specification))
                 .ToList()
             );
         }
@@ -45,12 +45,12 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
         //--- Properties ---
         public string Name { get; }
 
-        public IEnumerable<IProperty> RequiredProperties => _requiredProperties.Value;
+        public IEnumerable<IResourceProperty> RequiredProperties => _requiredProperties.Value;
 
         //--- Methods ---
-        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? property) {
+        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property) {
             if(_resourceType.Properties.TryGetValue(propertyName, out var type)) {
-                property = new CloudFormationProperty(propertyName, this, type, _specification);
+                property = new CloudFormationResourceProperty(propertyName, this, type, _specification);
                 return true;
             }
             property = null;

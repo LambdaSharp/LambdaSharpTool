@@ -143,7 +143,7 @@ namespace LambdaSharp.Compiler.Validators {
 
                     // check if property represents a collection of items or a single item
                     switch(propertyType.CollectionType) {
-                    case PropertyCollectionType.NoCollection:
+                    case ResourcePropertyCollectionType.NoCollection:
 
                         // check the property expression type is a compatible list
                         switch(currentProperty.Value) {
@@ -162,7 +162,7 @@ namespace LambdaSharp.Compiler.Validators {
                             break;
                         }
                         break;
-                    case PropertyCollectionType.List:
+                    case ResourcePropertyCollectionType.List:
 
                         // check the property expression type is a compatible list
                         switch(currentProperty.Value) {
@@ -183,7 +183,7 @@ namespace LambdaSharp.Compiler.Validators {
                             break;
                         }
                         break;
-                    case PropertyCollectionType.Map:
+                    case ResourcePropertyCollectionType.Map:
 
                         // check the property expression type is a compatible map
                         switch(currentProperty.Value) {
@@ -213,13 +213,13 @@ namespace LambdaSharp.Compiler.Validators {
             }
 
             // local function
-            void Validate(IProperty propertyType, AExpression expression, bool allowJson, Error error) {
+            void Validate(IResourceProperty propertyType, AExpression expression, bool allowJson, Error error) {
                 switch(propertyType.ItemType) {
-                case PropertyItemType.Any:
+                case ResourcePropertyItemType.Any:
 
                     // anything is valid; nothing to do
                     break;
-                case PropertyItemType.ComplexType:
+                case ResourcePropertyItemType.ComplexType:
 
                     // validate experssion is an object matching the complex type
                     if(expression is ObjectExpression objectExpression) {
@@ -228,16 +228,16 @@ namespace LambdaSharp.Compiler.Validators {
                         Logger.Log(error, expression);
                     }
                     break;
-                case PropertyItemType.Boolean:
-                case PropertyItemType.Double:
-                case PropertyItemType.Integer:
-                case PropertyItemType.Long:
-                case PropertyItemType.String:
-                case PropertyItemType.Timestamp:
+                case ResourcePropertyItemType.Boolean:
+                case ResourcePropertyItemType.Double:
+                case ResourcePropertyItemType.Integer:
+                case ResourcePropertyItemType.Long:
+                case ResourcePropertyItemType.String:
+                case ResourcePropertyItemType.Timestamp:
 
                     // TODO: validate against primitive type
                     break;
-                case PropertyItemType.Json:
+                case ResourcePropertyItemType.Json:
                     if(allowJson) {
 
                         // TODO: validate against JSON type

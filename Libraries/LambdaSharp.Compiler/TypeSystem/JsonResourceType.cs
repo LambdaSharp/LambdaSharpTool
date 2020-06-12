@@ -32,11 +32,11 @@ namespace LambdaSharp.Compiler.TypeSystem {
 
         //--- Properties ---
         public string Name => "Json";
-        public IEnumerable<IProperty> RequiredProperties => Enumerable.Empty<IProperty>();
+        public IEnumerable<IResourceProperty> RequiredProperties => Enumerable.Empty<IResourceProperty>();
 
         //--- Methods ---
-        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? property) {
-            property = new AnyProperty(propertyName);
+        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property) {
+            property = new AnyResourceProperty(propertyName);
             return true;
         }
     }

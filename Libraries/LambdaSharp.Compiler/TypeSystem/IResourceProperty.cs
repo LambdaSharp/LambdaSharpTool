@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,21 +16,33 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    internal class AnyProperty : IProperty {
+    public enum ResourcePropertyCollectionType {
+        NoCollection,
+        List,
+        Map
+    }
 
-        //--- Constructors ---
-        public AnyProperty(string propertyName) => Name = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
+    public enum ResourcePropertyItemType {
+        ComplexType,
+        String,
+        Long,
+        Integer,
+        Double,
+        Boolean,
+        Timestamp,
+        Json,
+        Any
+    }
+
+    public interface IResourceProperty {
 
         //--- Properties ---
-        public string Name { get; }
-        public bool Required => false;
-        public PropertyCollectionType CollectionType => PropertyCollectionType.NoCollection;
-        public PropertyItemType ItemType => PropertyItemType.Any;
-        public IResourceType ComplexType => AnyResourceType.Instance;
-
+        string Name { get; }
+        bool Required { get; }
+        ResourcePropertyCollectionType CollectionType { get; }
+        ResourcePropertyItemType ItemType { get; }
+        IResourceType ComplexType { get; }
     }
 }

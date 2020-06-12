@@ -16,34 +16,21 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    public enum PropertyCollectionType {
-        NoCollection,
-        List,
-        Map
-    }
+    internal class AnyResourceProperty : IResourceProperty {
 
-    public enum PropertyItemType {
-        ComplexType,
-        String,
-        Long,
-        Integer,
-        Double,
-        Boolean,
-        Timestamp,
-        Json,
-        Any
-    }
-
-    // TODO: rename to IResourceProperty
-    public interface IProperty {
+        //--- Constructors ---
+        public AnyResourceProperty(string propertyName) => Name = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
 
         //--- Properties ---
-        string Name { get; }
-        bool Required { get; }
-        PropertyCollectionType CollectionType { get; }
-        PropertyItemType ItemType { get; }
-        IResourceType ComplexType { get; }
+        public string Name { get; }
+        public bool Required => false;
+        public ResourcePropertyCollectionType CollectionType => ResourcePropertyCollectionType.NoCollection;
+        public ResourcePropertyItemType ItemType => ResourcePropertyItemType.Any;
+        public IResourceType ComplexType => AnyResourceType.Instance;
+
     }
 }
