@@ -1110,6 +1110,8 @@ namespace LambdaSharp.Compiler.Parser {
                 )), Encoding.UTF8);
                 contents = reader.ReadToEnd().Replace("\r", "");
             } else {
+
+                // TODO: shouldn't this be async?
                 contents = _provider.ReadFile(filePath);
             }
 
