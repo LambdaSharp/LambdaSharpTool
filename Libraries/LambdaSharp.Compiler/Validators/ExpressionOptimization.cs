@@ -24,7 +24,7 @@ namespace LambdaSharp.Compiler.Validators {
     internal sealed class ExpressionOptimization : AValidator {
 
         //--- Constructors ---
-        public ExpressionOptimization(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ExpressionOptimization(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Optimize(ModuleDeclaration moduleDeclaration) {

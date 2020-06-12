@@ -28,7 +28,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
 
     public class ResourceDeclarationValidatorTests :
         _Validator,
-        IModuleValidatorDependencyProvider,
+        IValidatorDependencyProvider,
         IClassFixture<CloudFormationTypeSystemFixture>
     {
 
@@ -98,7 +98,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         protected ITypeSystem TypeSystem => _typeSystemFixture.TypeSystem;
 
         //--- IModuleValidatorDependencyProvider Members ---
-        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
+        bool IValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
             => TypeSystem.TryGetResourceType(typeName, out resourceType);
     }
 }

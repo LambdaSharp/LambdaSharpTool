@@ -37,7 +37,7 @@ namespace LambdaSharp.Compiler.Validators {
         #endregion
 
         //--- Constructors ---
-        public ConstantExpressionEvaluator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ConstantExpressionEvaluator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Evaluate(ModuleDeclaration moduleDeclaration) {

@@ -21,11 +21,11 @@ namespace LambdaSharp.Compiler.Validators {
     internal abstract class AValidator {
 
         //--- Constructors ---
-        public AValidator(IModuleValidatorDependencyProvider provider)
+        public AValidator(IValidatorDependencyProvider provider)
             => Provider = provider ?? throw new System.ArgumentNullException(nameof(provider));
 
         //--- Properties ---
-        protected IModuleValidatorDependencyProvider Provider { get; }
+        protected IValidatorDependencyProvider Provider { get; }
         protected ILogger Logger => Provider.Logger;
     }
 }

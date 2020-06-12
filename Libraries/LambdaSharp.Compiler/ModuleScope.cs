@@ -40,7 +40,7 @@ namespace LambdaSharp.Compiler {
         string ReadFile(string filePath);
     }
 
-    public class ModuleScope : IModuleValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
+    public class ModuleScope : IValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
 
         //--- Class Methods ---
         public static bool TryParseModuleFullName(string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
@@ -100,7 +100,7 @@ namespace LambdaSharp.Compiler {
 
             // evaluate expressions
             new ConstantExpressionEvaluator(this).Evaluate(moduleDeclaration);
-            new ReferenceValidator(this).Validate(moduleDeclaration, _declarations);
+            new ReferenceValidator(this).Validate(moduleDeclaration);
 
             // TODO: annotate expression types
             // TODO: ensure that constructed resources have all required properties
@@ -114,7 +114,7 @@ namespace LambdaSharp.Compiler {
             new AllowValidator(this).Validate(moduleDeclaration);
 
             // validate resource scopes
-            new ScopeValidator(this).Validate(moduleDeclaration, _declarations);
+            new ScopeValidator(this).Validate(moduleDeclaration);
 
             // optimize AST
             new ExpressionOptimization(this).Optimize(moduleDeclaration);
@@ -178,24 +178,25 @@ namespace LambdaSharp.Compiler {
         }
 
         //--- IModuleValidatorDependencyProvider Members ---
-        ILogger IModuleValidatorDependencyProvider.Logger => Logger;
+        ILogger IValidatorDependencyProvider.Logger => Logger;
+        IEnumerable<AItemDeclaration> IValidatorDependencyProvider.Declarations => _declarations.Values;
 
-        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType) {
-
-            // TODO:
-            throw new NotImplementedException();
-        }
-
-        Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+        bool IValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType) {
 
             // TODO:
             throw new NotImplementedException();
         }
 
-        void IModuleValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+        Task<string> IValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        void IValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
             => _declarations.Add(declaration.FullName, declaration);
 
-        bool IModuleValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+        bool IValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => _declarations.TryGetValue(fullname, out itemDeclaration);
 
         //--- ILambdaSharpParserDependencyProvider Members ---

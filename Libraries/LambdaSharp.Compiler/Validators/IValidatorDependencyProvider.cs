@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using LambdaSharp.Compiler.Syntax.Declarations;
@@ -23,10 +24,11 @@ using LambdaSharp.Compiler.TypeSystem;
 
 namespace LambdaSharp.Compiler.Validators {
 
-    public interface IModuleValidatorDependencyProvider {
+    public interface IValidatorDependencyProvider {
 
         //--- Properties ---
         ILogger Logger { get; }
+        IEnumerable<AItemDeclaration> Declarations { get; }
 
         //--- Methods ---
         bool TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType);

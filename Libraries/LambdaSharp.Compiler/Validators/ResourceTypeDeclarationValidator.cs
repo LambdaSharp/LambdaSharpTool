@@ -60,7 +60,7 @@ namespace LambdaSharp.Compiler.Validators {
         }
 
         //--- Constructors ---
-        public ResourceTypeDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ResourceTypeDeclarationValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public IEnumerable<ModuleManifestResourceType> FindResourceTypes(ModuleDeclaration moduleDeclaration) {

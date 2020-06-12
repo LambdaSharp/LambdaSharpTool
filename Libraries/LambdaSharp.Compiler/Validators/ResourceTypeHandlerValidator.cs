@@ -24,7 +24,7 @@ namespace LambdaSharp.Compiler.Validators {
     internal sealed class ResourceTypeHandlerValidator : AValidator {
 
         //--- Constructors ---
-        public ResourceTypeHandlerValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ResourceTypeHandlerValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

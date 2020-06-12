@@ -25,7 +25,7 @@ namespace LambdaSharp.Compiler.Validators {
     internal sealed class IntegrityValidator : AValidator {
 
         //--- Constructors ---
-        public IntegrityValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public IntegrityValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

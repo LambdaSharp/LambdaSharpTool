@@ -24,7 +24,7 @@ namespace LambdaSharp.Compiler.Validators {
     internal sealed class MacroHandlerValidator : AValidator {
 
         //--- Constructors ---
-        public MacroHandlerValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public MacroHandlerValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

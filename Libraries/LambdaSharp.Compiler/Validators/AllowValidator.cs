@@ -24,7 +24,7 @@ namespace LambdaSharp.Compiler.Validators {
     internal sealed class AllowValidator : AValidator {
 
         //--- Constructors ---
-        public AllowValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public AllowValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

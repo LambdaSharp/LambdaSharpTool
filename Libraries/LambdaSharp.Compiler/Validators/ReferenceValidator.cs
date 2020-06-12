@@ -42,10 +42,10 @@ namespace LambdaSharp.Compiler.Validators {
         #endregion
 
         //--- Constructors ---
-        public ReferenceValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ReferenceValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
+        public void Validate(ModuleDeclaration moduleDeclaration) {
 
             // check for referential integrity
             moduleDeclaration.Inspect(node => {
@@ -72,7 +72,7 @@ namespace LambdaSharp.Compiler.Validators {
             });
 
             // check for circular dependencies
-            DetectCircularDependencies(declarations.Values);
+            DetectCircularDependencies(Provider.Declarations);
 
             // TODO: check reference integrity for conditional resources
             //  Build a truth table for: RefereeDeclaration implies ReferencedDeclaration [A |- B => !A || B]
@@ -86,7 +86,7 @@ namespace LambdaSharp.Compiler.Validators {
                 var referenceName = node.ReferenceName;
 
                 // validate reference
-                if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
+                if(Provider.TryGetItem(referenceName.Value, out var referencedDeclaration)) {
                     if(node.ParentItemDeclaration is ConditionDeclaration) {
                         Logger.Log(GetAttCannotBeUsedInAConditionDeclaration, node);
                     }
@@ -111,7 +111,7 @@ namespace LambdaSharp.Compiler.Validators {
                 var referenceName = node.ReferenceName;
 
                 // validate reference
-                if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
+                if(Provider.TryGetItem(referenceName.Value, out var referencedDeclaration)) {
                     if(node.ParentItemDeclaration is ConditionDeclaration) {
 
                         // validate the declaration type
@@ -171,7 +171,7 @@ namespace LambdaSharp.Compiler.Validators {
                 var referenceName = node.ReferenceName;
 
                 // validate reference
-                if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
+                if(Provider.TryGetItem(referenceName.Value, out var referencedDeclaration)) {
                     if(referencedDeclaration is ConditionDeclaration conditionDeclaration) {
                         node.ReferencedDeclaration = conditionDeclaration;
                     } else {
@@ -187,7 +187,7 @@ namespace LambdaSharp.Compiler.Validators {
                 var referenceName = node.MapName;
 
                 // validate reference
-                if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
+                if(Provider.TryGetItem(referenceName.Value, out var referencedDeclaration)) {
                     if(referencedDeclaration is MappingDeclaration mappingDeclaration) {
                         node.ReferencedDeclaration = mappingDeclaration;
                     } else {
@@ -201,7 +201,7 @@ namespace LambdaSharp.Compiler.Validators {
 
             void ValidateDependsOn(AItemDeclaration node, SyntaxNodeCollection<LiteralExpression> dependsOn) {
                 foreach(var referenceName in dependsOn) {
-                    if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
+                    if(Provider.TryGetItem(referenceName.Value, out var referencedDeclaration)) {
                         if(referencedDeclaration is IResourceDeclaration resourceDeclaration) {
 
                             // NOTE (2020-01-29, bjorg): we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource

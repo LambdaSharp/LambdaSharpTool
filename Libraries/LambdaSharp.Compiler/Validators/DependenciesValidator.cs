@@ -26,7 +26,7 @@ namespace LambdaSharp.Compiler.Validators {
     internal sealed class DependenciesValidator : AValidator {
 
         //--- Constructors ---
-        public DependenciesValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public DependenciesValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public IEnumerable<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)> FindDependencies(ModuleDeclaration moduleDeclaration) {

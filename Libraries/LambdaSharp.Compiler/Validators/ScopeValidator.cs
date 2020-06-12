@@ -27,10 +27,10 @@ namespace LambdaSharp.Compiler.Validators {
     internal sealed class ScopeValidator : AValidator {
 
         //--- Constructors ---
-        public ScopeValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ScopeValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
+        public void Validate(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.InspectType<IScopedDeclaration>(node => {
                 if(!(node is AItemDeclaration itemDeclaration)) {
                     throw new ShouldNeverHappenException($"unexpected type {node.GetType().FullName}");
@@ -53,7 +53,7 @@ namespace LambdaSharp.Compiler.Validators {
                     // nothing to do; 'public' is a reserved scope keyword
                     break;
                 default:
-                    if(declarations.TryGetValue(scope.Value, out var scopeReferenceDeclaration)) {
+                    if(Provider.TryGetItem(scope.Value, out var scopeReferenceDeclaration)) {
                         if(!(scopeReferenceDeclaration is FunctionDeclaration)) {
                             Logger.Log(Error.ReferenceMustBeFunction(scope.Value), scope);
                         } else if(scopeReferenceDeclaration == declaration) {

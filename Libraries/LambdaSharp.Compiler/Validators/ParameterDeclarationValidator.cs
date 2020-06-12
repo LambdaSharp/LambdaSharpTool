@@ -149,7 +149,7 @@ namespace LambdaSharp.Compiler.Validators {
         private static bool IsCloudFormationParameterType(string type) => _cloudFormationParameterTypes.Contains(type);
 
         //--- Constructors ---
-        public ParameterDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ParameterDeclarationValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

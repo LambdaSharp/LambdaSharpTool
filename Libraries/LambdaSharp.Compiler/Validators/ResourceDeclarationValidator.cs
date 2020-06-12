@@ -45,7 +45,7 @@ namespace LambdaSharp.Compiler.Validators {
         #endregion
 
         //--- Constructors ---
-        public ResourceDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ResourceDeclarationValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

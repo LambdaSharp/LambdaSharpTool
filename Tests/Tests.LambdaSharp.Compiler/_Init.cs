@@ -32,7 +32,7 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler {
 
-    public abstract class _Init : IModuleValidatorDependencyProvider {
+    public abstract class _Init : IValidatorDependencyProvider {
 
         //--- Types ---
         public class InMemoryLogger : ILogger {
@@ -178,6 +178,7 @@ namespace Tests.LambdaSharp.Compiler {
         //--- Properties ---
         public ILogger Logger { get; }
 
+
         //--- Methods ---
         protected void AddSource(string filePath, string source) => Provider.Files.Add(filePath, source);
 
@@ -207,16 +208,18 @@ namespace Tests.LambdaSharp.Compiler {
         }
 
         //--- IModuleValidatorDependencyProvider Members ---
-        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
+        IEnumerable<AItemDeclaration> IValidatorDependencyProvider.Declarations => Declarations.Values;
+
+        bool IValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
             => throw new NotImplementedException();
 
-        Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias)
+        Task<string> IValidatorDependencyProvider.ConvertKmsAliasToArn(string alias)
             => throw new NotImplementedException();
 
-        void IModuleValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+        void IValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
             => Declarations.Add(declaration.FullName, declaration);
 
-        bool IModuleValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+        bool IValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => Declarations.TryGetValue(fullname, out itemDeclaration);
     }
 }

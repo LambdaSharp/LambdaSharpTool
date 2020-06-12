@@ -29,7 +29,7 @@ namespace LambdaSharp.Compiler.Validators {
         private static readonly ErrorFunc ReservedName = parameter => new Error(0, $"'{parameter}' is a reserved name");
 
         //--- Constructors ---
-        public ItemDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ItemDeclarationValidator(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

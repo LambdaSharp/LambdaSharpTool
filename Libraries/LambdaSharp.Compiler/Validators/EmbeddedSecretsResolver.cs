@@ -38,7 +38,7 @@ namespace LambdaSharp.Compiler.Validators {
         #endregion
 
         //--- Constructors ---
-        public EmbeddedSecretsResolver(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public EmbeddedSecretsResolver(IValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public async Task ResolveAsync(ModuleDeclaration moduleDeclaration) {
