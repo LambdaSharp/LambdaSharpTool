@@ -19,9 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using LambdaSharp.CloudFormation.Serialization;
+using LambdaSharp.CloudFormation.Template.Serialization;
 
-namespace LambdaSharp.CloudFormation {
+namespace LambdaSharp.CloudFormation.Template {
 
     [JsonConverter(typeof(CloudFormationResourceConverter))]
     public class CloudFormationResource {

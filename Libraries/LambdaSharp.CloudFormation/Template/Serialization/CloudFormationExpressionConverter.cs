@@ -20,7 +20,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LambdaSharp.CloudFormation.Serialization {
+namespace LambdaSharp.CloudFormation.Template.Serialization {
 
     public class CloudFormationExpressionConverter : JsonConverter<ACloudFormationExpression> {
 

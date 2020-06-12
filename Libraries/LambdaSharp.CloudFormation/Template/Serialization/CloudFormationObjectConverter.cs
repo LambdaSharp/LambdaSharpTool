@@ -20,21 +20,22 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LambdaSharp.CloudFormation.Serialization {
+namespace LambdaSharp.CloudFormation.Template.Serialization {
 
-    public class CloudFormationListConverter : JsonConverter<CloudFormationList> {
+    public class CloudFormationObjectConverter : JsonConverter<CloudFormationObject> {
 
         //--- Methods ---
-        public override CloudFormationList Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        public override CloudFormationObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             throw new NotImplementedException();
         }
 
-        public override void Write(Utf8JsonWriter writer, CloudFormationList list, JsonSerializerOptions options) {
-            writer.WriteStartArray();
-            foreach(var item in list) {
-                JsonSerializer.Serialize(writer, item, item.GetType(), options);
+        public override void Write(Utf8JsonWriter writer, CloudFormationObject map, JsonSerializerOptions options) {
+            writer.WriteStartObject();
+            foreach(var kv in map) {
+                writer.WritePropertyName(kv.Key);
+                JsonSerializer.Serialize(writer, kv.Value, kv.Value.GetType(), options);
             }
-            writer.WriteEndArray();
+            writer.WriteEndObject();
         }
     }
 }

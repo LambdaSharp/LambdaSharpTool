@@ -18,7 +18,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using LambdaSharp.CloudFormation.Template;
 
 namespace LambdaSharp.CloudFormation.ModuleManifest {
 

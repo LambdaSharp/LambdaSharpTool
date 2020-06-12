@@ -22,6 +22,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using LambdaSharp.CloudFormation;
+using LambdaSharp.CloudFormation.Template;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;

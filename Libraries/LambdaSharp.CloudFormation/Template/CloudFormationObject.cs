@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
-using LambdaSharp.CloudFormation.Serialization;
+using LambdaSharp.CloudFormation.Template.Serialization;
 
-namespace LambdaSharp.CloudFormation {
+namespace LambdaSharp.CloudFormation.Template {
 
     [JsonConverter(typeof(CloudFormationObjectConverter))]
     public class CloudFormationObject : ACloudFormationExpression, IEnumerable, IEnumerable<CloudFormationObject.KeyValuePair> {
