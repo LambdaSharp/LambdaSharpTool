@@ -22,9 +22,9 @@ using System.Threading.Tasks;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.TypeSystem;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
 
-    public interface IValidatorDependencyProvider {
+    public interface IProcessorDependencyProvider {
 
         //--- Properties ---
         ILogger Logger { get; }

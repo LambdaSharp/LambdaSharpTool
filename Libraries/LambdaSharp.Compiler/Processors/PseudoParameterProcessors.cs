@@ -20,12 +20,12 @@ using System;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class PseudoParameterValidator : AValidator {
+    internal sealed class PseudoParameterProcessor : AProcessor {
 
         //--- Constructors ---
-        public PseudoParameterValidator(IValidatorDependencyProvider provider) : base(provider) { }
+        public PseudoParameterProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

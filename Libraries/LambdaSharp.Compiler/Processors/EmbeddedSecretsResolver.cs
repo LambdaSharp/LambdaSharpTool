@@ -22,9 +22,9 @@ using System.Threading.Tasks;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class EmbeddedSecretsResolver : AValidator {
+    internal sealed class EmbeddedSecretsResolver : AProcessor {
 
         //--- Class Fields ---
         private static Regex SecretArnRegex = new Regex(@"^arn:aws:kms:[a-z\-]+-\d:\d{12}:key\/[a-fA-F0-9\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -38,7 +38,7 @@ namespace LambdaSharp.Compiler.Validators {
         #endregion
 
         //--- Constructors ---
-        public EmbeddedSecretsResolver(IValidatorDependencyProvider provider) : base(provider) { }
+        public EmbeddedSecretsResolver(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public async Task ResolveAsync(ModuleDeclaration moduleDeclaration) {

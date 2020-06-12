@@ -21,11 +21,11 @@
 using FluentAssertions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
-using LambdaSharp.Compiler.Validators;
+using LambdaSharp.Compiler.Processors;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Validators {
+namespace Tests.LambdaSharp.Compiler.Processors {
 
     public class ConstantExpressionEvaluatorTests : _Init {
 
@@ -38,9 +38,9 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void EvaluateIfTrueExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IfTrueExpression.yml");
+            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IfTrueExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
+            new ItemDeclarationProcessor(this).Validate(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
@@ -58,9 +58,9 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void EvaluateIfFalseExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IfFalseExpression.yml");
+            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IfFalseExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
+            new ItemDeclarationProcessor(this).Validate(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
@@ -78,9 +78,9 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void EvaluateIsDefinedTrueExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IsDefinedTrueExpression.yml");
+            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IsDefinedTrueExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
+            new ItemDeclarationProcessor(this).Validate(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
@@ -98,9 +98,9 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void EvaluateIsDefinedFalseExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IsDefinedFalseExpression.yml");
+            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IsDefinedFalseExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
+            new ItemDeclarationProcessor(this).Validate(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
@@ -118,9 +118,9 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void EvaluateJoinExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/JoinExpression.yml");
+            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/JoinExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
+            new ItemDeclarationProcessor(this).Validate(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
@@ -138,9 +138,9 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void EvaluateSubExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/SubExpression.yml");
+            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/SubExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
+            new ItemDeclarationProcessor(this).Validate(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 

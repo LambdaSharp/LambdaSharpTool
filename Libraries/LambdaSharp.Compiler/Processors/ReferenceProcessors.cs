@@ -24,10 +24,10 @@ using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ReferenceValidator : AValidator {
+    internal sealed class ReferenceProcessor : AProcessor {
 
         //--- Class Fields ---
         #region Errors/Warnings
@@ -42,7 +42,7 @@ namespace LambdaSharp.Compiler.Validators {
         #endregion
 
         //--- Constructors ---
-        public ReferenceValidator(IValidatorDependencyProvider provider) : base(provider) { }
+        public ReferenceProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

@@ -16,16 +16,22 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.Validators {
+using System;
+using LambdaSharp.Compiler.Syntax.Declarations;
 
-    internal abstract class AValidator {
+namespace LambdaSharp.Compiler.Processors {
+
+    internal sealed class ExpressionOptimization : AProcessor {
 
         //--- Constructors ---
-        public AValidator(IValidatorDependencyProvider provider)
-            => Provider = provider ?? throw new System.ArgumentNullException(nameof(provider));
+        public ExpressionOptimization(IProcessorDependencyProvider provider) : base(provider) { }
 
-        //--- Properties ---
-        protected IValidatorDependencyProvider Provider { get; }
-        protected ILogger Logger => Provider.Logger;
+        //--- Methods ---
+        public void Optimize(ModuleDeclaration moduleDeclaration) {
+
+            // TODO: inline !Ref/!GetAtt expressions in !Sub whenever possible
+            // TODO: remove any unused resources that can be garbage collected
+            throw new NotImplementedException();
+        }
     }
 }

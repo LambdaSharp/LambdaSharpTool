@@ -23,9 +23,9 @@ using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class ResourceTypeDeclarationValidator : AValidator {
+    internal sealed class ResourceTypeDeclarationProcessor : AProcessor {
 
         //--- Class Fields ---
         private static readonly HashSet<string> _reservedResourceTypePrefixes = new HashSet<string> {
@@ -60,7 +60,7 @@ namespace LambdaSharp.Compiler.Validators {
         }
 
         //--- Constructors ---
-        public ResourceTypeDeclarationValidator(IValidatorDependencyProvider provider) : base(provider) { }
+        public ResourceTypeDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public IEnumerable<ModuleManifestResourceType> FindResourceTypes(ModuleDeclaration moduleDeclaration) {

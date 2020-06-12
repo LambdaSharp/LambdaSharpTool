@@ -24,10 +24,10 @@ using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ParameterDeclarationValidator : AValidator {
+    internal sealed class ParameterDeclarationProcessor : AProcessor {
 
         //--- Constants ---
         private const int MAX_PARAMETER_DESCRIPTION_LENGTH = 4_000;
@@ -149,7 +149,7 @@ namespace LambdaSharp.Compiler.Validators {
         private static bool IsCloudFormationParameterType(string type) => _cloudFormationParameterTypes.Contains(type);
 
         //--- Constructors ---
-        public ParameterDeclarationValidator(IValidatorDependencyProvider provider) : base(provider) { }
+        public ParameterDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-using LambdaSharp.Compiler.Validators;
+using LambdaSharp.Compiler.Processors;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Validators {
+namespace Tests.LambdaSharp.Compiler.Processors {
 
-    public class ParameterDeclarationValidatorTests : _Validator {
+    public class ParameterDeclarationProcessorTests : _Processor {
 
         //--- Constructors ---
-        public ParameterDeclarationValidatorTests(ITestOutputHelper output) : base(output) { }
+        public ParameterDeclarationProcessorTests(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
 
@@ -36,7 +36,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ParameterDeclarationValidator(this).Validate(module);
+            new ParameterDeclarationProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: 'MinValue' attribute can only be used with 'Number' type in Module.yml: line 6, column 15");
@@ -49,7 +49,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ParameterDeclarationValidator(this).Validate(module);
+            new ParameterDeclarationProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: 'MaxValue' attribute can only be used with 'Number' type in Module.yml: line 6, column 15");
@@ -62,7 +62,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ParameterDeclarationValidator(this).Validate(module);
+            new ParameterDeclarationProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: 'MinValue' must be less or equal to 'MaxValue' in Module.yml: line 6, column 15");
@@ -75,7 +75,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ParameterDeclarationValidator(this).Validate(module);
+            new ParameterDeclarationProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages("WARNING: missing 'Type' attribute, assuming type 'String' in Module.yml: line 4, column 5");
@@ -88,7 +88,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ParameterDeclarationValidator(this).Validate(module);
+            new ParameterDeclarationProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages(
@@ -104,7 +104,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ParameterDeclarationValidator(this).Validate(module);
+            new ParameterDeclarationProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: 'AllowedPattern' attribute must be a valid regular expression in Module.yml: line 6, column 21");

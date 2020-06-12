@@ -18,27 +18,27 @@
 
 using System.Runtime.CompilerServices;
 using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.Validators;
+using LambdaSharp.Compiler.Processors;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Validators {
+namespace Tests.LambdaSharp.Compiler.Processors {
 
-    public abstract class _Validator : _Init {
+    public abstract class _Processor : _Init {
 
         //--- Constructors ---
-        protected _Validator(ITestOutputHelper output) : base(output) { }
+        protected _Processor(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
         protected ModuleDeclaration LoadTestModule([CallerMemberName] string testName = "") {
 
             // parse test source
-            var result = NewParser($"@Validators/{GetType().Name}/{testName}.yml").ParseModule();
+            var result = NewParser($"@Processors/{GetType().Name}/{testName}.yml").ParseModule();
             ShouldNotBeNull(result);
             ExpectedMessages();
 
             // register declarations
-            new PseudoParameterValidator(this).Validate(result);
-            new ItemDeclarationValidator(this).Validate(result);
+            new PseudoParameterProcessor(this).Validate(result);
+            new ItemDeclarationProcessor(this).Validate(result);
             ExpectedMessages();
             return result;
         }

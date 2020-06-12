@@ -19,12 +19,12 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class AllowValidator : AValidator {
+    internal sealed class AllowProcessor : AProcessor {
 
         //--- Constructors ---
-        public AllowValidator(IValidatorDependencyProvider provider) : base(provider) { }
+        public AllowProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

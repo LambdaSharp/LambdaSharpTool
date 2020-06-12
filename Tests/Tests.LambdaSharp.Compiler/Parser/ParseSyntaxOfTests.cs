@@ -16,11 +16,9 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
 using FluentAssertions;
 using LambdaSharp.Compiler.Syntax.Expressions;
-using LambdaSharp.Compiler.Validators;
+using LambdaSharp.Compiler.Processors;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -49,7 +47,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             // assert
             ExpectedMessages();
             module.Should().NotBeNull();
-            new IntegrityValidator(this).Validate(module!);
+            new IntegrityProcessor(this).Validate(module!);
         }
 
 

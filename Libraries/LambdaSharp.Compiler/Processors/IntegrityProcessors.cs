@@ -20,12 +20,12 @@ using System;
 using System.Collections.Generic;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class IntegrityValidator : AValidator {
+    internal sealed class IntegrityProcessor : AProcessor {
 
         //--- Constructors ---
-        public IntegrityValidator(IValidatorDependencyProvider provider) : base(provider) { }
+        public IntegrityProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

@@ -20,16 +20,16 @@ using System;
 using System.Collections.Generic;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.Processors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ItemDeclarationValidator : AValidator {
+    internal sealed class ItemDeclarationProcessor : AProcessor {
 
         //--- Class Fields ---
         private static readonly ErrorFunc ReservedName = parameter => new Error(0, $"'{parameter}' is a reserved name");
 
         //--- Constructors ---
-        public ItemDeclarationValidator(IValidatorDependencyProvider provider) : base(provider) { }
+        public ItemDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

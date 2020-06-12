@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-using LambdaSharp.Compiler.Validators;
+using LambdaSharp.Compiler.Processors;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Validators {
+namespace Tests.LambdaSharp.Compiler.Processors {
 
-    public class ReferenceValidatorTests : _Validator {
+    public class ReferenceProcessorTests : _Processor {
 
         //--- Constructors ---
-        public ReferenceValidatorTests(ITestOutputHelper output) : base(output) { }
+        public ReferenceProcessorTests(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
 
@@ -36,7 +36,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ReferenceValidator(this).Validate(module);
+            new ReferenceProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages(
@@ -52,7 +52,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ReferenceValidator(this).Validate(module);
+            new ReferenceProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages(
@@ -68,7 +68,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ReferenceValidator(this).Validate(module);
+            new ReferenceProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: circular dependency VariableA -> VariableA in Module.yml: line 4, column 5");
@@ -81,7 +81,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ReferenceValidator(this).Validate(module);
+            new ReferenceProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: circular dependency ResourceA -> ResourceB -> ResourceA in Module.yml: line 4, column 5");
@@ -94,7 +94,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             var module = LoadTestModule();
 
             // act
-            new ReferenceValidator(this).Validate(module);
+            new ReferenceProcessor(this).Validate(module);
 
             // assert
             ExpectedMessages();

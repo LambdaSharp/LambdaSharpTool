@@ -27,7 +27,7 @@ using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.TypeSystem;
-using LambdaSharp.Compiler.Validators;
+using LambdaSharp.Compiler.Processors;
 
 namespace LambdaSharp.Compiler {
 
@@ -43,7 +43,7 @@ namespace LambdaSharp.Compiler {
         Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region, string version);
     }
 
-    public sealed class ModuleScope : IValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
+    public sealed class ModuleScope : IProcessorDependencyProvider, ILambdaSharpParserDependencyProvider {
 
         // TODO:
         //  - validate usage against imported definitions
@@ -92,10 +92,10 @@ namespace LambdaSharp.Compiler {
             ValidateModuleInformation(moduleDeclaration);
 
             // validate AST integrity
-            new IntegrityValidator(this).Validate(moduleDeclaration);
+            new IntegrityProcessor(this).Validate(moduleDeclaration);
 
             // find module dependencies
-            var dependencies = new DependenciesValidator(this).FindDependencies(moduleDeclaration);
+            var dependencies = new DependenciesProcessor(this).FindDependencies(moduleDeclaration);
 
             // TODO: download external dependencies
 
@@ -106,33 +106,33 @@ namespace LambdaSharp.Compiler {
             );
 
             // register all declarations
-            new PseudoParameterValidator(this).Validate(moduleDeclaration);
-            new ItemDeclarationValidator(this).Validate(moduleDeclaration);
+            new PseudoParameterProcessor(this).Validate(moduleDeclaration);
+            new ItemDeclarationProcessor(this).Validate(moduleDeclaration);
 
             // validate declarations
-            new ParameterDeclarationValidator(this).Validate(moduleDeclaration);
-            new ResourceDeclarationValidator(this).Validate(moduleDeclaration);
+            new ParameterDeclarationProcessor(this).Validate(moduleDeclaration);
+            new ResourceDeclarationProcessor(this).Validate(moduleDeclaration);
 
             // register local resource types
-            var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(moduleDeclaration);
+            var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
 
             // evaluate expressions
             new ConstantExpressionEvaluator(this).Evaluate(moduleDeclaration);
-            new ReferenceValidator(this).Validate(moduleDeclaration);
+            new ReferenceProcessor(this).Validate(moduleDeclaration);
 
             // TODO: annotate expression types
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
             // ensure that handler references are valid
-            new ResourceTypeHandlerValidator(this).Validate(moduleDeclaration);
-            new MacroHandlerValidator(this).Validate(moduleDeclaration);
+            new ResourceTypeHandlerProcessor(this).Validate(moduleDeclaration);
+            new MacroHandlerProcessor(this).Validate(moduleDeclaration);
 
             // TODO: needs access to IAM permissions
-            new AllowValidator(this).Validate(moduleDeclaration);
+            new AllowProcessor(this).Validate(moduleDeclaration);
 
             // validate resource scopes
-            new ScopeValidator(this).Validate(moduleDeclaration);
+            new ScopeProcessor(this).Validate(moduleDeclaration);
 
             // optimize AST
             new ExpressionOptimization(this).Optimize(moduleDeclaration);
@@ -195,26 +195,26 @@ namespace LambdaSharp.Compiler {
             }
         }
 
-        //--- IModuleValidatorDependencyProvider Members ---
-        ILogger IValidatorDependencyProvider.Logger => Logger;
-        IEnumerable<AItemDeclaration> IValidatorDependencyProvider.Declarations => _declarations.Values;
+        //--- IModuleProcessorDependencyProvider Members ---
+        ILogger IProcessorDependencyProvider.Logger => Logger;
+        IEnumerable<AItemDeclaration> IProcessorDependencyProvider.Declarations => _declarations.Values;
 
-        bool IValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType) {
-
-            // TODO:
-            throw new NotImplementedException();
-        }
-
-        Task<string> IValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+        bool IProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType) {
 
             // TODO:
             throw new NotImplementedException();
         }
 
-        void IValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+        Task<string> IProcessorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        void IProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
             => _declarations.Add(declaration.FullName, declaration);
 
-        bool IValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+        bool IProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => _declarations.TryGetValue(fullname, out itemDeclaration);
 
         //--- ILambdaSharpParserDependencyProvider Members ---

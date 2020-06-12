@@ -27,12 +27,12 @@ using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.TypeSystem;
-using LambdaSharp.Compiler.Validators;
+using LambdaSharp.Compiler.Processors;
 using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler {
 
-    public abstract class _Init : IValidatorDependencyProvider {
+    public abstract class _Init : IProcessorDependencyProvider {
 
         //--- Types ---
         public class InMemoryLogger : ILogger {
@@ -207,19 +207,19 @@ namespace Tests.LambdaSharp.Compiler {
             missing.Any().Should().Be(false);
         }
 
-        //--- IModuleValidatorDependencyProvider Members ---
-        IEnumerable<AItemDeclaration> IValidatorDependencyProvider.Declarations => Declarations.Values;
+        //--- IModuleProcessorDependencyProvider Members ---
+        IEnumerable<AItemDeclaration> IProcessorDependencyProvider.Declarations => Declarations.Values;
 
-        bool IValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
+        bool IProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
             => throw new NotImplementedException();
 
-        Task<string> IValidatorDependencyProvider.ConvertKmsAliasToArn(string alias)
+        Task<string> IProcessorDependencyProvider.ConvertKmsAliasToArn(string alias)
             => throw new NotImplementedException();
 
-        void IValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+        void IProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
             => Declarations.Add(declaration.FullName, declaration);
 
-        bool IValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+        bool IProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => Declarations.TryGetValue(fullname, out itemDeclaration);
     }
 }
