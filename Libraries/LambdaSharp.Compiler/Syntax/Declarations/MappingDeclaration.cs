@@ -25,15 +25,16 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
     public sealed class MappingDeclaration : AItemDeclaration {
 
         //--- Fields ---
-        private ObjectExpression? _value;
+        private ObjectExpression _value;
 
         //--- Constructors ---
-        public MappingDeclaration(LiteralExpression itemName) : base(itemName) { }
+        public MappingDeclaration(LiteralExpression itemName) : base(itemName)
+            => _value = SetParent(new ObjectExpression());
 
         //--- Properties ---
 
         [SyntaxRequired]
-        public ObjectExpression? Value {
+        public ObjectExpression Value {
             get => _value;
             set => _value = SetParent(value);
         }

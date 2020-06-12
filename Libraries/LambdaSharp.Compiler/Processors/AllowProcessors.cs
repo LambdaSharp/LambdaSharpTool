@@ -40,6 +40,21 @@ namespace LambdaSharp.Compiler.Processors {
             //  - list of fixed resources
             //  - parameter
 
+            // if(allow != null) {
+            //     if(type == null) {
+            //         _builder.Log(Error.AllowAttributeRequiresTypeAttribute, node);
+            //     } else if(type?.Value == "AWS") {
+
+            //         // nothing to do; any 'Allow' expression is legal
+            //     } else if(!IsValidCloudFormationResourceType(type.Value)) {
+            //         _builder.Log(Error.AllowAttributeRequiresCloudFormationType, node);
+            //     } else {
+
+            //         // TODO: ResourceMapping.IsCloudFormationType(node.Type?.Value), "'Allow' attribute can only be used with AWS resource types"
+            //     }
+            // }
+
+
             throw new NotImplementedException();
         }
     }

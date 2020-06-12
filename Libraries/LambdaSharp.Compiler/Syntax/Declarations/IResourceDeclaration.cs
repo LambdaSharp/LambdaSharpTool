@@ -24,6 +24,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
     /// </summary>
     public interface IResourceDeclaration {
 
+        // TODO: how is this different from IInitializedResourceDeclaration?
+
         //--- Properties ---
         string FullName { get; }
         string? CloudFormationType { get; }

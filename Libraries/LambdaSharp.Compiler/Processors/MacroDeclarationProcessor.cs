@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,29 +16,46 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class MacroHandlerValidator : AProcessor {
+    internal sealed class MacroDeclarationProcessor : AProcessor {
 
         //--- Constructors ---
-        public MacroHandlerValidator(IProcessorDependencyProvider provider) : base(provider) { }
+        public MacroDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.InspectType<MacroDeclaration>(node => {
+
+                // check macro handler
+                AExpression? handler = null;
                 if(node.Handler == null) {
 
                     // TODO: error
                 } else if(Provider.TryGetItem(node.Handler.Value, out var referencedDeclaration)) {
+
+                    // TODO: handler could be a AWS::Lambda::Function resource, a parameter, or even a constant
+
+                    // ensure handler is referencing a Lambda function
                     if(!(referencedDeclaration is FunctionDeclaration)) {
                         Logger.Log(Error.HandlerMustBeAFunction, node.Handler);
                     }
+                    handler = Fn.Ref(node.Handler);
                 } else {
                     Logger.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(node.Handler.Value, node);
+                }
+
+                // initialize macro resource properties
+                node.Properties["Name"] = Fn.Sub($"${{DeploymentPrefix}}{node.ItemName}");
+                if(node.Description != null) {
+                    node.Properties["Description"] = node.Description;
+                }
+                if(handler != null) {
+                    node.Properties["FunctionName"] = handler;
                 }
             });
         }

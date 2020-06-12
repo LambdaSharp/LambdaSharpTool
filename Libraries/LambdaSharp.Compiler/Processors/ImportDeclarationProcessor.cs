@@ -16,22 +16,19 @@
  * limitations under the License.
  */
 
-using System;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class ExpressionOptimization : AProcessor {
+    internal sealed class ImportDeclarationProcessor : AProcessor {
 
         //--- Constructors ---
-        public ExpressionOptimization(IProcessorDependencyProvider provider) : base(provider) { }
+        public ImportDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Optimize(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
 
-            // TODO: inline !Ref/!GetAtt expressions in !Sub whenever possible
-            // TODO: remove any unused resources that can be garbage collected
-            throw new NotImplementedException();
+            // TODO:
         }
     }
 }

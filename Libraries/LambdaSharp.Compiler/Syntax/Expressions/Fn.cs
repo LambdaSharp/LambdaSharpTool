@@ -26,9 +26,14 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
     public static class Fn {
 
         //--- Class Methods ---
-        public static ReferenceFunctionExpression Ref(string referenceName, bool resolved = false) => new ReferenceFunctionExpression {
+        public static ReferenceFunctionExpression Ref(string referenceName, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ReferenceFunctionExpression {
             ReferenceName = Literal(referenceName),
-            Resolved = resolved
+            SourceLocation = new SourceLocation(filePath, lineNumber)
+        };
+
+        public static ReferenceFunctionExpression Ref(LiteralExpression referenceName, bool resolved = false) => new ReferenceFunctionExpression {
+            ReferenceName = referenceName,
+            SourceLocation = referenceName.SourceLocation
         };
 
         public static GetAttFunctionExpression GetAtt(string referenceName, string attributeName, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new GetAttFunctionExpression {

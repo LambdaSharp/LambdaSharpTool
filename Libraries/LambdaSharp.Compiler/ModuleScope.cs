@@ -109,9 +109,16 @@ namespace LambdaSharp.Compiler {
             new PseudoParameterProcessor(this).Process(moduleDeclaration);
             new ItemDeclarationProcessor(this).Process(moduleDeclaration);
 
-            // validate declarations
+            // process declarations
             new ParameterDeclarationProcessor(this).Process(moduleDeclaration);
             new ResourceDeclarationProcessor(this).Process(moduleDeclaration);
+            new PackageDeclarationProcessor(this).Process(moduleDeclaration);
+            new ImportDeclarationProcessor(this).Process(moduleDeclaration);
+            new MappingDeclarationProcessor(this).Process(moduleDeclaration);
+            // TODO: FunctionDeclaration
+            // TODO: NestedModuleDeclaration
+            // TODO: ResourceTypeDeclaration (merge in ResourceTypeHandlerValidation)
+            // TODO: VariableDeclaration (maybe?)
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
@@ -120,16 +127,17 @@ namespace LambdaSharp.Compiler {
             new ConstantExpressionProcessor(this).Process(moduleDeclaration);
             new ReferencialIntegrityValidator(this).Validate(moduleDeclaration);
 
+            // TODO: ensure that !GetAtt referenced attributes exist
             // TODO: annotate expression types
-
-            // ensure that constructed resources have all required properties
-            new ResourceInitializationValidator(this).Validate(moduleDeclaration);
-
-            // TODO: ensure that referenced attributes exist
+            // TODO: initialize function constructs
+            // TODO: configure Finalizer dependencies
+            // TODO: validate expression nesting (e.g. !And must contain condition expressions, etc.)
 
             // ensure that handler references are valid
             new ResourceTypeHandlerValidator(this).Validate(moduleDeclaration);
-            new MacroHandlerValidator(this).Validate(moduleDeclaration);
+
+            // ensure that constructed resources have required and necessary properties
+            new ResourceInitializationValidator(this).Validate(moduleDeclaration);
 
             // TODO: needs access to IAM permissions
             new AllowProcessor(this).Validate(moduleDeclaration);
@@ -137,11 +145,10 @@ namespace LambdaSharp.Compiler {
             // validate resource scopes
             new ScopeProcessor(this).Validate(moduleDeclaration);
 
-            // optimize AST
-            new ExpressionOptimization(this).Optimize(moduleDeclaration);
-
             // resolve secrets
             await new EmbeddedSecretsResolver(this).ResolveAsync(moduleDeclaration);
+
+            // TODO: remove any unused resources that can be garbage collected
 
             throw new NotImplementedException();
         }
