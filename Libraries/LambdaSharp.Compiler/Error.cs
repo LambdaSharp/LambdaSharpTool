@@ -94,10 +94,6 @@ namespace LambdaSharp.Compiler {
         public static readonly WarningFunc2 ResourceTypeAmbiguousTypeReference = (p1, p2) => new Warning(0, $"ambiguous resource type '{p1}' [{p2}]");
         #endregion
 
-        #region *** Resource Validation ***
-        public static readonly Warning ResourceContainsTransformAndCannotBeValidated = new Warning(0, "Fn::Transform prevents resource properties to be validated");
-        #endregion
-
         // TODO: keep reviewing warnings
         public static readonly Warning UnableToValidateDependency = new Warning(0, "unable to validate dependency");
 
@@ -171,8 +167,6 @@ namespace LambdaSharp.Compiler {
         #endregion
 
         #region *** Parameter Declaration Validation ***
-        public static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
-        public static readonly Error ParameterAttributeImportExpectedLiteral = new Error(0, "'Import' attribute can only be used with a value parameter type");
         public static readonly Error ParameterImportAttributeIsInvalid = new Error(0, "invalid 'Import' attribute");
         public static readonly Error ParameterImportAttributeCannotHaveVersion = new Error(0, "'Import' attribute cannot have a version");
         public static readonly Error ParameterImportAttributeCannotHaveOrigin = new Error(0, "'Import' attribute cannot have an origin");
@@ -202,11 +196,7 @@ namespace LambdaSharp.Compiler {
         #endregion
 
         #region *** Resource Declaration Validation ***
-        public static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
-        public static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
         public static readonly ErrorFunc2 ResourceUnknownProperty = (p1, p2) => new Error(0, $"unrecognized property '{p1}' on resource type {p2}");
-        public static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
-        public static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
 
         #endregion
 
@@ -229,7 +219,6 @@ namespace LambdaSharp.Compiler {
         public static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
         public static readonly Error RuntimeAttributeMissing = new Error(0, "'Runtime' attribute is required");
         public static readonly Error TimeoutAttributeInvalid = new Error(0, "'Timeout' attribute must have an integer value");
-        public static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
         public static readonly Error VersionAttributeInvalid = new Error(0, "the expected format for the 'Version' attribute is: Major.Minor[.Patch]");
         #endregion
 

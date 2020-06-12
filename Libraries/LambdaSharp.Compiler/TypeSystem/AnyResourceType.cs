@@ -1,6 +1,6 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,20 +17,27 @@
  */
 
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum IntrinsicFunctionReturnType {
-        Unknown,
-        Singular,
-        List
-    }
+    internal class AnyResourceType : IResourceType {
 
-    public sealed class IntrinsicFunctionType {
+        //--- Class Fields ---
+        public static readonly IResourceType Instance = new AnyResourceType();
+
+        //--- Constructors ---
+        private AnyResourceType() { }
 
         //--- Properties ---
-        public List<IntrinsicFunctionReturnType>? ReturnTypes { get; set; }
+        public string Name => "*";
+        public IEnumerable<IProperty> RequiredProperties => Enumerable.Empty<IProperty>();
+
+        //--- Methods ---
+        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? propertyType) {
+            propertyType = new AnyProperty(propertyName);
+            return true;
+        }
     }
 }

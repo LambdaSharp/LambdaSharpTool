@@ -21,10 +21,27 @@ using System.Linq;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Compiler.TypeSystem;
 
 namespace LambdaSharp.Compiler.Validators {
+    using ErrorFunc = Func<string, Error>;
 
     internal sealed class ResourceDeclarationValidator : AValidator {
+
+        //--- Class Fields ---
+
+        #region Errors/Warnings
+        public static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error(0, $"unrecognized property '{parameter}'");
+        public static readonly Error IfAttributeRequiresCloudFormationType = new Error(0, "'If' attribute can only be used with a CloudFormation type");
+        public static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
+        public static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
+        public static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
+        public static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
+        public static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
+        public static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
+        public static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
+        public static readonly Warning ResourceContainsTransformAndCannotBeValidated = new Warning(0, "Fn::Transform prevents resource properties to be validated");
+        #endregion
 
         //--- Constructors ---
         public ResourceDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
@@ -38,12 +55,12 @@ namespace LambdaSharp.Compiler.Validators {
 
                     // referenced resource cannot be conditional
                     if(node.If != null) {
-                        Logger.Log(Error.IfAttributeRequiresCloudFormationType, node.If);
+                        Logger.Log(IfAttributeRequiresCloudFormationType, node.If);
                     }
 
                     // referenced resource cannot have properties
                     if(node.Properties != null) {
-                        Logger.Log(Error.PropertiesAttributeRequiresCloudFormationType, node.Properties);
+                        Logger.Log(PropertiesAttributeRequiresCloudFormationType, node.Properties);
                     }
 
                     // validate Value attribute
@@ -78,15 +95,15 @@ namespace LambdaSharp.Compiler.Validators {
 
                         // validate resource properties for LambdaSharp custom resource type
                         if(node.HasTypeValidation) {
-                            ValidateProperties(node.Type.Value, resourceType, node.Properties);
+                            ValidateProperties(resourceType, node.Properties);
                         }
                     } else {
-                        Logger.Log(Error.ResourceUnknownType(node.Type.Value), node.Type);
+                        Logger.Log(ResourceUnknownType(node.Type.Value), node.Type);
                     }
                 } else {
 
                     // CloudFormation resource must have a type
-                    Logger.Log(Error.TypeAttributeMissing, node);
+                    Logger.Log(TypeAttributeMissing, node);
                 }
             });
 
@@ -99,126 +116,145 @@ namespace LambdaSharp.Compiler.Validators {
                         && (literalExpression.Value != "*")
                     )
                 ) {
-                    Logger.Log(Error.ResourceValueAttributeInvalid, arn);
+                    Logger.Log(ResourceValueAttributeInvalid, arn);
                 }
             }
         }
 
-        private void ValidateProperties(string awsType, ResourceType currentResource, ObjectExpression currentProperties) {
+        private void ValidateProperties(IResourceType currentResource, ObjectExpression currentProperties) {
 
             // 'Fn::Transform' can add arbitrary properties at deployment time, so we can't validate the properties at compile time
             if(currentProperties.ContainsKey("Fn::Transform")) {
-                Logger.Log(Warning.ResourceContainsTransformAndCannotBeValidated, currentProperties);
+                Logger.Log(ResourceContainsTransformAndCannotBeValidated, currentProperties);
             } else {
 
                 // check that all required properties are defined
-                foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
-                    if(!currentProperties.ContainsKey(property.Key)) {
-                        Logger.Log(Error.ResourceMissingProperty(property.Key), currentProperties);
+                foreach(var property in currentResource.RequiredProperties) {
+                    if(!currentProperties.ContainsKey(property.Name)) {
+                        Logger.Log(ResourceMissingProperty(property.Name), currentProperties);
                     }
                 }
             }
 
-            // check that all defined properties exist
+            // check that all referenced properties exist
             foreach(var currentProperty in currentProperties) {
-                if(currentResource.Properties.TryGetValue(currentProperty.Key.Value, out var propertyType)) {
-                    switch(propertyType.Type) {
-                    case "List": {
-                            switch(currentProperty.Value) {
-                            case AFunctionExpression _:
+                if(currentResource.TryGetProperty(currentProperty.Key.Value, out var propertyType)) {
 
-                                // TODO (2019-01-25, bjorg): validate the return type of the function is a list
-                                break;
-                            case ListExpression listExpression:
-                                if(propertyType.ItemType != null) {
-                                    if(!TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResourceType)) {
-                                        throw new ShouldNeverHappenException($"unable to find property type for: {awsType}.{propertyType.ItemType}");
-                                    }
+                    // check if property represents a collection of items or a single item
+                    switch(propertyType.CollectionType) {
+                    case PropertyCollectionType.NoCollection:
 
-                                    // validate all items in list are objects that match the nested resource type
-                                    for(var i = 0; i < listExpression.Count; ++i) {
-                                        var item = listExpression[i];
-                                        if(item is ObjectExpression objectExpressionItem) {
-                                            ValidateProperties(awsType, nestedResourceType, objectExpressionItem);
-                                        } else {
-                                            Logger.Log(Error.ResourcePropertyExpectedMap($"[{i}]"), item);
-                                        }
-                                    }
-                                } else {
+                        // check the property expression type is compatible
+                        switch(currentProperty.Value) {
+                        case AFunctionExpression _:
 
-                                    // TODO (2018-12-06, bjorg): validate list items using the primitive type
-                                }
-                                break;
-                            default:
-                                Logger.Log(Error.ResourcePropertyExpectedList(currentProperty.Key.Value), currentProperty.Value);
-                                break;
-                            }
+                            // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                            break;
+                        case ObjectExpression objectExpression:
+                            ValidateProperties(propertyType.ComplexType, objectExpression);
+                            break;
+                        default:
+                            Logger.Log(ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
+                            break;
                         }
                         break;
-                    case "Map": {
-                            switch(currentProperty.Value) {
-                            case AFunctionExpression _:
+                    case PropertyCollectionType.List:
 
-                                // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                        // check the property expression type is a compatible list
+                        switch(currentProperty.Value) {
+                        case AFunctionExpression _:
+
+                            // TODO (2019-01-25, bjorg): validate the return type of the function is a list
+                            break;
+                        case ListExpression listExpression:
+                            switch(propertyType.ItemType) {
+                            case PropertyItemType.Any:
+
+                                // anything is valid; nothing to do
                                 break;
-                            case ObjectExpression objectExpression:
-                                if(propertyType.ItemType != null) {
-                                    if(!TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResourceType)) {
-                                        throw new ShouldNeverHappenException($"unable to find property type for: {awsType}.{propertyType.ItemType}");
-                                    }
+                            case PropertyItemType.ComplexType:
 
-                                    // validate all values in map are objects that match the nested resource type
-                                    foreach(var kv in objectExpression) {
-                                        var item = kv.Value;
-                                        if(item is ObjectExpression objectExpressionItem) {
-                                            ValidateProperties(awsType, nestedResourceType, objectExpressionItem);
-                                        } else {
-                                            Logger.Log(Error.ResourcePropertyExpectedMap(kv.Key.Value), item);
-                                        }
+                                // validate all items in list are objects that match the nested resource type
+                                for(var i = 0; i < listExpression.Count; ++i) {
+                                    var item = listExpression[i];
+                                    if(item is ObjectExpression objectExpressionItem) {
+                                        ValidateProperties(propertyType.ComplexType, objectExpressionItem);
+                                    } else {
+                                        Logger.Log(ResourcePropertyExpectedMap($"[{i}]"), item);
                                     }
-                                } else {
-
-                                    // TODO (2018-12-06, bjorg): validate map entries using the primitive type
                                 }
                                 break;
-                            default:
-                                Logger.Log(Error.ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
+                            case PropertyItemType.Boolean:
+                            case PropertyItemType.Double:
+                            case PropertyItemType.Integer:
+                            case PropertyItemType.Json:
+                            case PropertyItemType.Long:
+                            case PropertyItemType.String:
+                            case PropertyItemType.Timestamp:
+
+                                // TODO (2018-12-06, bjorg): validate list items using the primitive type
                                 break;
+                            default:
+                                throw new ShouldNeverHappenException();
                             }
+                            break;
+                        default:
+                            Logger.Log(ResourcePropertyExpectedList(currentProperty.Key.Value), currentProperty.Value);
+                            break;
                         }
                         break;
-                    case null:
+                    case PropertyCollectionType.Map:
 
-                        // TODO (2018-12-06, bjorg): validate property value with the primitive type
-                        break;
-                    default: {
-                            switch(currentProperty.Value) {
-                            case AFunctionExpression _:
+                        // check the property expression type is a compatible map
+                        switch(currentProperty.Value) {
+                        case AFunctionExpression _:
 
-                                // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                            // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                            break;
+                        case ObjectExpression objectExpression:
+                            switch(propertyType.ItemType) {
+                            case PropertyItemType.Any:
+
+                                // anything is valid; nothing to do
                                 break;
-                            case ObjectExpression objectExpression:
-                                if(!TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResourceType)) {
-                                    throw new ShouldNeverHappenException($"unable to find property type for: {awsType}.{propertyType.ItemType}");
+                            case PropertyItemType.ComplexType:
+
+                                // validate all values in map are objects that match the nested resource type
+                                foreach(var kv in objectExpression) {
+                                    var item = kv.Value;
+                                    if(item is ObjectExpression objectExpressionItem) {
+                                        ValidateProperties(propertyType.ComplexType, objectExpressionItem);
+                                    } else {
+                                        Logger.Log(ResourcePropertyExpectedMap(kv.Key.Value), item);
+                                    }
                                 }
-                                ValidateProperties(awsType, nestedResourceType, objectExpression);
+                                break;
+                            case PropertyItemType.Boolean:
+                            case PropertyItemType.Double:
+                            case PropertyItemType.Integer:
+                            case PropertyItemType.Json:
+                            case PropertyItemType.Long:
+                            case PropertyItemType.String:
+                            case PropertyItemType.Timestamp:
+
+                                // TODO (2018-12-06, bjorg): validate map entries using the primitive type
                                 break;
                             default:
-                                Logger.Log(Error.ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
-                                break;
+                                throw new ShouldNeverHappenException($"unexpected collection type: {propertyType.CollectionType}");
                             }
+                            break;
+                        default:
+                            Logger.Log(ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
+                            break;
                         }
                         break;
+                    default:
+                        throw new ShouldNeverHappenException();
                     }
                 } else {
-                    Logger.Log(Error.ResourceUnknownProperty(currentProperty.Key.Value, awsType), currentProperty.Key);
+                    Logger.Log(ResourceUnknownProperty(currentProperty.Key.Value), currentProperty.Key);
                 }
             }
         }
-
-        private bool TryGetPropertyItemType(string rootAwsType, string itemTypeName, out ResourceType type)
-            // => PropertyTypes.TryGetValue(rootAwsType + "." + itemTypeName, out type)
-            //     || PropertyTypes.TryGetValue(itemTypeName, out type);
-            => throw new NotImplementedException();
     }
 }

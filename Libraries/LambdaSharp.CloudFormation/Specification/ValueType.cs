@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -18,12 +18,27 @@
 
 using System.Collections.Generic;
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace LambdaSharp.CloudFormation.Specification {
 
-    public sealed class RefOriginType {
+    public sealed class ValueType {
 
         //--- Properties ---
-        public List<string>? Parameters { get; set; }
-        public List<string>? Resources { get; set; }
+
+        // number type
+        public double? NumberMax { get; set; }
+        public double? NumberMin { get; set; }
+
+        // string type
+        public string? AllowedPattern { get; set; }
+        public string? AllowedPatternRegex { get; set; }
+        public int? StringMin { get; set; }
+        public int? StringMax { get; set; }
+
+        // enum type
+        public List<string>? AllowedValues { get; set; }
+
+        // valid origins
+        public Dictionary<string, string>? GetAtt { get; set; }
+        public ValueTypeRefOrigin? Ref { get; set; }
     }
 }

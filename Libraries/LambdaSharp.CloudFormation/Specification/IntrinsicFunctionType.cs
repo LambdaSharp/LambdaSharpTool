@@ -16,34 +16,21 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace LambdaSharp.CloudFormation.Specification {
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum ResourcePropertyUpdateType {
+    public enum IntrinsicFunctionReturnType {
         Unknown,
-        Mutable,
-        Immutable,
-        Conditional
+        Singular,
+        List
     }
 
-    public sealed class ResourcePropertyType {
+    public sealed class IntrinsicFunctionType {
 
         //--- Properties ---
-        public bool DuplicatesAllowed { get; set; }
-        public string? ItemType { get; set; }
-        public string? PrimitiveItemType { get; set; }
-        public string? PrimitiveType { get; set; }
-        public bool Required { get; set; }
-        public string? Type { get; set; }
-        public ResourcePropertyUpdateType UpdateType { get; set; }
-        public ResourcePropertyValueType? Value { get; set; }
-    }
-
-    public sealed class ResourcePropertyValueType {
-
-        //--- Properties ---
-        public string? ValueType { get; set; }
+        public List<IntrinsicFunctionReturnType>? ReturnTypes { get; set; }
     }
 }

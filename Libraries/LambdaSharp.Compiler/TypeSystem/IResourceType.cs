@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,28 +17,15 @@
  */
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    public sealed class ValueType {
+    public interface IResourceType {
 
         //--- Properties ---
-
-        // number type
-        public double? NumberMax { get; set; }
-        public double? NumberMin { get; set; }
-
-        // string type
-        public string? AllowedPattern { get; set; }
-        public string? AllowedPatternRegex { get; set; }
-        public int? StringMin { get; set; }
-        public int? StringMax { get; set; }
-
-        // enum type
-        public List<string>? AllowedValues { get; set; }
-
-        // valid origins
-        public Dictionary<string, string>? GetAtt { get; set; }
-        public RefOriginType? Ref { get; set; }
+        string Name { get; }
+        bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? propertyType);
+        IEnumerable<IProperty> RequiredProperties { get; }
     }
 }

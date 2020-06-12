@@ -18,7 +18,7 @@
 
 using System.Collections.Generic;
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace LambdaSharp.CloudFormation.Specification {
 
     public sealed class ExtendedCloudFormationSpecification {
 
@@ -27,10 +27,10 @@ namespace LambdaSharp.Compiler.TypeSystem {
 
         //--- Properties ---
         public string? ResourceSpecificationVersion { get; set; }
-        public Dictionary<string, ResourceType>? ResourceTypes { get; set; }
-        public Dictionary<string, ResourceType>? PropertyTypes { get; set; }
-        public Dictionary<string, IntrinsicFunctionType>? IntrinsicTypes { get; set; }
-        public Dictionary<string, List<string>>? ParameterTypes { get; set; }
-        public Dictionary<string, ValueType>? ValueTypes { get; set; }
+        public Dictionary<string, ResourceType> ResourceTypes { get; set; } = new Dictionary<string, ResourceType>();
+        public Dictionary<string, ResourceType> PropertyTypes { get; set; } = new Dictionary<string, ResourceType>();
+        public Dictionary<string, IntrinsicFunctionType> IntrinsicTypes { get; set; } = new Dictionary<string, IntrinsicFunctionType>();
+        public Dictionary<string, List<string>> ParameterTypes { get; set; } = new Dictionary<string, List<string>>();
+        public Dictionary<string, ValueType> ValueTypes { get; set; } = new Dictionary<string, ValueType>();
     }
 }

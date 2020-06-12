@@ -24,7 +24,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using LambdaSharp.Compiler.TypeSystem;
+using LambdaSharp.CloudFormation.Specification;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;

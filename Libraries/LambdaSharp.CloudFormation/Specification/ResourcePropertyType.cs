@@ -1,6 +1,6 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2019
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,29 +16,19 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
-namespace LambdaSharp.Compiler {
+namespace LambdaSharp.CloudFormation.Specification {
 
-    public sealed class ResourceType {
-
-        //--- Properties ---
-        public string? ResourceTypeName { get; set; }
-        public string? Documentation { get; set; }
-        public Dictionary<string, AttributeType>? Attributes { get; set; }
-        public Dictionary<string, PropertyType>? Properties { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum ResourcePropertyUpdateType {
+        Unknown,
+        Mutable,
+        Immutable,
+        Conditional
     }
 
-    public sealed class AttributeType {
-
-        //--- Properties ---
-        public string? ItemType { get; set; }
-        public string? PrimitiveItemType { get; set; }
-        public string? PrimitiveType { get; set; }
-        public string? Type { get; set; }
-    }
-
-    public sealed class PropertyType {
+    public sealed class ResourcePropertyType {
 
         //--- Properties ---
         public bool DuplicatesAllowed { get; set; }
@@ -47,5 +37,13 @@ namespace LambdaSharp.Compiler {
         public string? PrimitiveType { get; set; }
         public bool Required { get; set; }
         public string? Type { get; set; }
+        public ResourcePropertyUpdateType UpdateType { get; set; }
+        public ResourcePropertyValueType? Value { get; set; }
+    }
+
+    public sealed class ResourcePropertyValueType {
+
+        //--- Properties ---
+        public string? ValueType { get; set; }
     }
 }

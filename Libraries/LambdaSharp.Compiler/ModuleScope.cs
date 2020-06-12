@@ -25,6 +25,7 @@ using LambdaSharp.CloudFormation;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.Validators;
 
 namespace LambdaSharp.Compiler {
@@ -178,7 +179,7 @@ namespace LambdaSharp.Compiler {
         //--- IModuleValidatorDependencyProvider Members ---
         ILogger IModuleValidatorDependencyProvider.Logger => Logger;
 
-        bool IModuleValidatorDependencyProvider.TryGetResourceType(string resourceTypeName, out ResourceType resourceType) {
+        bool IModuleValidatorDependencyProvider.TryGetResourceType(string resourceTypeName, out IResourceType resourceType) {
 
             // TODO:
             throw new NotImplementedException();

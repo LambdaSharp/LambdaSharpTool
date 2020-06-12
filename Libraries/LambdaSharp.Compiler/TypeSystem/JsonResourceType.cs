@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,27 @@
  */
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    public sealed class ResourceType {
+    internal class JsonResourceType : IResourceType {
+
+        //--- Class Fields ---
+        public static readonly IResourceType Instance = new JsonResourceType();
+
+        //--- Constructors ---
+        private JsonResourceType() { }
 
         //--- Properties ---
-        public string? Documentation { get; set; }
-        public Dictionary<string, ResourcePropertyType>? Properties { get; set; }
-        public Dictionary<string, ResourceAttributeType>? Attributes { get; set; }
+        public string Name => "Json";
+        public IEnumerable<IProperty> RequiredProperties => Enumerable.Empty<IProperty>();
+
+        //--- Methods ---
+        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IProperty? propertyType) {
+            propertyType = new AnyProperty(propertyName);
+            return true;
+        }
     }
 }

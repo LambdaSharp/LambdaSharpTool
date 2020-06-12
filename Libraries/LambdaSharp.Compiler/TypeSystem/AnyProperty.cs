@@ -16,22 +16,19 @@
  * limitations under the License.
  */
 
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.TypeSystem;
+using System;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.TypeSystem {
 
-    public interface IModuleValidatorDependencyProvider {
+    internal class AnyProperty : IProperty {
+
+        //--- Constructors ---
+        public AnyProperty(string propertyName) => Name = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
 
         //--- Properties ---
-        ILogger Logger { get; }
-
-        //--- Methods ---
-        bool TryGetResourceType(string typeName, out IResourceType resourceType);
-        Task<string> ConvertKmsAliasToArn(string alias);
-        void DeclareItem(AItemDeclaration itemDeclaration);
-        bool TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration);
+        public string Name { get; }
+        public PropertyCollectionType CollectionType => PropertyCollectionType.NoCollection;
+        public PropertyItemType ItemType => PropertyItemType.Any;
+        public IResourceType ComplexType => AnyResourceType.Instance;
     }
 }

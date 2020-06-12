@@ -17,21 +17,12 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.TypeSystem;
 
-namespace LambdaSharp.Compiler.Validators {
+namespace LambdaSharp.Compiler.TypeSystem {
 
-    public interface IModuleValidatorDependencyProvider {
-
-        //--- Properties ---
-        ILogger Logger { get; }
+    public interface ITypeDirectory {
 
         //--- Methods ---
-        bool TryGetResourceType(string typeName, out IResourceType resourceType);
-        Task<string> ConvertKmsAliasToArn(string alias);
-        void DeclareItem(AItemDeclaration itemDeclaration);
-        bool TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration);
+        bool TryGetResourceType(string resourceTypeName, [NotNullWhen(true)] out IResourceType? resourceType);
     }
 }

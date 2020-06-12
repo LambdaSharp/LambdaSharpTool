@@ -1,6 +1,6 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,12 +18,30 @@
 
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    public sealed class ResourceAttributeType {
+    public enum PropertyCollectionType {
+        NoCollection,
+        List,
+        Map
+    }
+
+    public enum PropertyItemType {
+        ComplexType,
+        String,
+        Long,
+        Integer,
+        Double,
+        Boolean,
+        Timestamp,
+        Json,
+        Any
+    }
+
+    public interface IProperty {
 
         //--- Properties ---
-        public string? ItemType { get; set; }
-        public string? PrimitiveItemType { get; set; }
-        public string? PrimitiveType { get; set; }
-        public string? Type { get; set; }
+        string Name { get; }
+        PropertyCollectionType CollectionType { get; }
+        PropertyItemType ItemType { get; }
+        IResourceType ComplexType { get; }
     }
 }
