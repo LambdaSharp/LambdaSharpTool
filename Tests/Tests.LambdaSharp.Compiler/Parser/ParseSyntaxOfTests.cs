@@ -47,7 +47,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             // assert
             ExpectedMessages();
             module.Should().NotBeNull();
-            new IntegrityProcessor(this).Validate(module!);
+            new IntegrityValidator(this).Process(module!);
         }
 
 

@@ -18,13 +18,16 @@
 
 using System;
 using System.Linq;
-using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     [SyntaxDeclarationKeyword("Parameter")]
-    public sealed class ParameterDeclaration : AItemDeclaration, IScopedDeclaration {
+    public sealed class ParameterDeclaration :
+        AItemDeclaration,
+        IScopedDeclaration,
+        IInitializedResourceDeclaration
+    {
 
         //--- Fields ---
         private LiteralExpression? _section;
@@ -164,6 +167,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
+        public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool HasSecretType => Type!.Value == "Secret";
+
+        //--- IInitializedResourceDeclaration Members ---
+        LiteralExpression? IInitializedResourceDeclaration.ResourceTypeName => Type;
+        bool IInitializedResourceDeclaration.HasInitialization => Properties != null;
+        ObjectExpression? IInitializedResourceDeclaration.InitializationExpression => Properties;
     }
 }

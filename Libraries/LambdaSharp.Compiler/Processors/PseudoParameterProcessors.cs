@@ -28,7 +28,7 @@ namespace LambdaSharp.Compiler.Processors {
         public PseudoParameterProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.Items.Add(new GroupDeclaration(Fn.Literal("AWS")) {
                 AllowReservedName = true,
                 Description = Fn.Literal("AWS Pseudo-Parameters"),

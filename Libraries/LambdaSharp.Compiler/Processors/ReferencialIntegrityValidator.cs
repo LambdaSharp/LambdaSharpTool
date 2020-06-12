@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -27,7 +27,7 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 namespace LambdaSharp.Compiler.Processors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ReferenceProcessor : AProcessor {
+    internal sealed class ReferencialIntegrityValidator : AProcessor {
 
         //--- Class Fields ---
         #region Errors/Warnings
@@ -42,7 +42,7 @@ namespace LambdaSharp.Compiler.Processors {
         #endregion
 
         //--- Constructors ---
-        public ReferenceProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public ReferencialIntegrityValidator(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

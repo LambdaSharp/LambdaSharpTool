@@ -32,7 +32,7 @@ namespace LambdaSharp.Compiler.Processors {
         public ItemDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
             var logicalIds = new HashSet<string>();
             moduleDeclaration.Inspect(node => {
                 switch(node) {

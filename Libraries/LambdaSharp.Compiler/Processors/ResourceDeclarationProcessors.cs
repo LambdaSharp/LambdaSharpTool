@@ -17,11 +17,8 @@
  */
 
 using System;
-using System.Linq;
-using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
-using LambdaSharp.Compiler.TypeSystem;
 
 namespace LambdaSharp.Compiler.Processors {
     using ErrorFunc = Func<string, Error>;
@@ -31,24 +28,18 @@ namespace LambdaSharp.Compiler.Processors {
         //--- Class Fields ---
 
         #region Errors/Warnings
-        private static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error(0, $"unrecognized property '{parameter}'");
         private static readonly Error IfAttributeRequiresCloudFormationType = new Error(0, "'If' attribute can only be used with a CloudFormation type");
         private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
         private static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
         private static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
         private static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
-        private static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}'");
-        private static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
-        private static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
-        private static readonly ErrorFunc ResourcePropertyExpectedLiteral = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a literal");
-        private static readonly Warning ResourceContainsTransformAndCannotBeValidated = new Warning(0, "Fn::Transform prevents resource properties to be validated");
         #endregion
 
         //--- Constructors ---
         public ResourceDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.InspectType<ResourceDeclaration>(node => {
 
                 // check if declaration is a resource reference
@@ -91,16 +82,9 @@ namespace LambdaSharp.Compiler.Processors {
                         node.Properties = new ObjectExpression();
                     }
 
-                    // check if type is AWS resource type or a LambdaSharp custom resource type
-                    if(Provider.TryGetResourceType(node.Type.Value, out var resourceType)) {
+                    // NOTE (2020-06-12, bjorg): resource initialization is checked by ResourceInitializationValidator
 
-                        // validate resource properties for LambdaSharp custom resource type
-                        if(node.HasTypeValidation) {
-                            ValidateProperties(resourceType, node.Properties);
-                        }
-                    } else {
-                        Logger.Log(ResourceUnknownType(node.Type.Value), node.Type);
-                    }
+                    // nothing further to do
                 } else {
 
                     // CloudFormation resource must have a type
@@ -120,134 +104,6 @@ namespace LambdaSharp.Compiler.Processors {
                     Logger.Log(ResourceValueAttributeInvalid, arn);
                 }
             }
-        }
-
-        private void ValidateProperties(IResourceType currentResource, ObjectExpression currentProperties) {
-
-            // 'Fn::Transform' can add arbitrary properties at deployment time, so we can't validate the properties at compile time
-            if(currentProperties.ContainsKey("Fn::Transform")) {
-                Logger.Log(ResourceContainsTransformAndCannotBeValidated, currentProperties);
-            } else {
-
-                // check that all required properties are defined
-                foreach(var property in currentResource.RequiredProperties) {
-                    if(!currentProperties.ContainsKey(property.Name)) {
-                        Logger.Log(ResourceMissingProperty(property.Name), currentProperties);
-                    }
-                }
-            }
-
-            // check that all referenced properties exist
-            foreach(var currentProperty in currentProperties) {
-                if(currentResource.TryGetProperty(currentProperty.Key.Value, out var propertyType)) {
-
-                    // check if property represents a collection of items or a single item
-                    switch(propertyType.CollectionType) {
-                    case ResourcePropertyCollectionType.NoCollection:
-
-                        // check the property expression type is a compatible list
-                        switch(currentProperty.Value) {
-                        case AFunctionExpression _:
-
-                            // TODO: validate the return type of the function matches the item type
-                            break;
-                        case LiteralExpression _:
-                        case ObjectExpression _:
-
-                            // validate value against item type
-                            Validate(propertyType, currentProperty.Value, allowJson: true, ResourcePropertyExpectedLiteral(currentProperty.Key.Value));
-                            break;
-                        default:
-                            Logger.Log(ResourcePropertyExpectedLiteral(currentProperty.Key.Value), currentProperty.Value);
-                            break;
-                        }
-                        break;
-                    case ResourcePropertyCollectionType.List:
-
-                        // check the property expression type is a compatible list
-                        switch(currentProperty.Value) {
-                        case AFunctionExpression _:
-
-                            // TODO: validate the return type of the function is a list
-                            break;
-                        case ListExpression listExpression:
-
-                            // validate all items in list are objects that match the nested resource type
-                            for(var i = 0; i < listExpression.Count; ++i) {
-                                var item = listExpression[i];
-                                Validate(propertyType, item, allowJson: false, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}[{i}]"));
-                            }
-                            break;
-                        default:
-                            Logger.Log(ResourcePropertyExpectedList(currentProperty.Key.Value), currentProperty.Value);
-                            break;
-                        }
-                        break;
-                    case ResourcePropertyCollectionType.Map:
-
-                        // check the property expression type is a compatible map
-                        switch(currentProperty.Value) {
-                        case AFunctionExpression _:
-
-                            // TODO: validate the return type of the function is a map
-                            break;
-                        case ObjectExpression objectExpression:
-
-                            // validate all values in map are objects that match the nested resource type
-                            foreach(var kv in objectExpression) {
-                                var item = kv.Value;
-                                Validate(propertyType, item, allowJson: false, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}.{kv.Key.Value}"));
-                            }
-                            break;
-                        default:
-                            Logger.Log(ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
-                            break;
-                        }
-                        break;
-                    default:
-                        throw new ShouldNeverHappenException();
-                    }
-                } else {
-                    Logger.Log(ResourceUnknownProperty(currentProperty.Key.Value), currentProperty.Key);
-                }
-            }
-
-            // local function
-            void Validate(IResourceProperty propertyType, AExpression expression, bool allowJson, Error error) {
-                switch(propertyType.ItemType) {
-                case ResourcePropertyItemType.Any:
-
-                    // anything is valid; nothing to do
-                    break;
-                case ResourcePropertyItemType.ComplexType:
-
-                    // validate experssion is an object matching the complex type
-                    if(expression is ObjectExpression objectExpression) {
-                        ValidateProperties(propertyType.ComplexType, objectExpression);
-                    } else {
-                        Logger.Log(error, expression);
-                    }
-                    break;
-                case ResourcePropertyItemType.Boolean:
-                case ResourcePropertyItemType.Double:
-                case ResourcePropertyItemType.Integer:
-                case ResourcePropertyItemType.Long:
-                case ResourcePropertyItemType.String:
-                case ResourcePropertyItemType.Timestamp:
-
-                    // TODO: validate against primitive type
-                    break;
-                case ResourcePropertyItemType.Json:
-                    if(allowJson) {
-
-                        // TODO: validate against JSON type
-                    } else {
-                        throw new ShouldNeverHappenException($"unexpected map item type: {propertyType.ItemType}");
-                    }
-                    break;
-                default:
-                    throw new ShouldNeverHappenException($"unexpected map item type: {propertyType.ItemType}");
-                }            }
         }
     }
 }

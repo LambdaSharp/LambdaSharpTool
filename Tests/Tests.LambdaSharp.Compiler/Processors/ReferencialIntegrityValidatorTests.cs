@@ -22,10 +22,10 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.Processors {
 
-    public class ReferenceProcessorTests : _Processor {
+    public class ReferencialIntegrityValidatorTests : _Processor {
 
         //--- Constructors ---
-        public ReferenceProcessorTests(ITestOutputHelper output) : base(output) { }
+        public ReferencialIntegrityValidatorTests(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
 
@@ -36,7 +36,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ReferenceProcessor(this).Validate(module);
+            new ReferencialIntegrityValidator(this).Validate(module);
 
             // assert
             ExpectedMessages(
@@ -52,7 +52,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ReferenceProcessor(this).Validate(module);
+            new ReferencialIntegrityValidator(this).Validate(module);
 
             // assert
             ExpectedMessages(
@@ -68,7 +68,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ReferenceProcessor(this).Validate(module);
+            new ReferencialIntegrityValidator(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: circular dependency VariableA -> VariableA in Module.yml: line 4, column 5");
@@ -81,7 +81,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ReferenceProcessor(this).Validate(module);
+            new ReferencialIntegrityValidator(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: circular dependency ResourceA -> ResourceB -> ResourceA in Module.yml: line 4, column 5");
@@ -94,7 +94,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ReferenceProcessor(this).Validate(module);
+            new ReferencialIntegrityValidator(this).Validate(module);
 
             // assert
             ExpectedMessages();

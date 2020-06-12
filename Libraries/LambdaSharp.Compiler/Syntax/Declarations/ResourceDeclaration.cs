@@ -24,7 +24,12 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     [SyntaxDeclarationKeyword("Resource")]
-    public sealed class ResourceDeclaration : AItemDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
+    public sealed class ResourceDeclaration :
+        AItemDeclaration,
+        IScopedDeclaration,
+        IConditionalResourceDeclaration,
+        IInitializedResourceDeclaration
+    {
 
         //--- Fields ---
         private AExpression? _if;
@@ -104,8 +109,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         public string? CloudFormationType => (Value == null) ? Type!.Value : null;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
+        public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool HasSecretType => Type!.Value == "Secret";
         public string? IfConditionName => ((ConditionReferenceExpression?)If)?.ReferenceName!.Value;
-        public bool HasTypeValidation => !HasPragma("no-type-validation");
+
+        //--- IInitializedResourceDeclaration Members ---
+        LiteralExpression? IInitializedResourceDeclaration.ResourceTypeName => Type;
+        bool IInitializedResourceDeclaration.HasInitialization => (Value == null) && (Type != null);
+        ObjectExpression? IInitializedResourceDeclaration.InitializationExpression => Properties;
     }
 }

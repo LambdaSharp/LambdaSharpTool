@@ -92,7 +92,7 @@ namespace LambdaSharp.Compiler {
             ValidateModuleInformation(moduleDeclaration);
 
             // validate AST integrity
-            new IntegrityProcessor(this).Validate(moduleDeclaration);
+            new IntegrityValidator(this).Process(moduleDeclaration);
 
             // find module dependencies
             var dependencies = new DependenciesProcessor(this).FindDependencies(moduleDeclaration);
@@ -105,28 +105,31 @@ namespace LambdaSharp.Compiler {
                 moduleDeclaration.CloudFormation?.Version?.Value ?? "15.0.0"
             );
 
-            // register all declarations
-            new PseudoParameterProcessor(this).Validate(moduleDeclaration);
-            new ItemDeclarationProcessor(this).Validate(moduleDeclaration);
+            // register pseudo-parameter and module declarations
+            new PseudoParameterProcessor(this).Process(moduleDeclaration);
+            new ItemDeclarationProcessor(this).Process(moduleDeclaration);
 
             // validate declarations
-            new ParameterDeclarationProcessor(this).Validate(moduleDeclaration);
-            new ResourceDeclarationProcessor(this).Validate(moduleDeclaration);
+            new ParameterDeclarationProcessor(this).Process(moduleDeclaration);
+            new ResourceDeclarationProcessor(this).Process(moduleDeclaration);
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
 
             // evaluate expressions
-            new ConstantExpressionEvaluator(this).Evaluate(moduleDeclaration);
-            new ReferenceProcessor(this).Validate(moduleDeclaration);
+            new ConstantExpressionProcessor(this).Process(moduleDeclaration);
+            new ReferencialIntegrityValidator(this).Validate(moduleDeclaration);
 
             // TODO: annotate expression types
-            // TODO: ensure that constructed resources have all required properties
+
+            // ensure that constructed resources have all required properties
+            new ResourceInitializationValidator(this).Validate(moduleDeclaration);
+
             // TODO: ensure that referenced attributes exist
 
             // ensure that handler references are valid
-            new ResourceTypeHandlerProcessor(this).Validate(moduleDeclaration);
-            new MacroHandlerProcessor(this).Validate(moduleDeclaration);
+            new ResourceTypeHandlerValidator(this).Validate(moduleDeclaration);
+            new MacroHandlerValidator(this).Validate(moduleDeclaration);
 
             // TODO: needs access to IAM permissions
             new AllowProcessor(this).Validate(moduleDeclaration);

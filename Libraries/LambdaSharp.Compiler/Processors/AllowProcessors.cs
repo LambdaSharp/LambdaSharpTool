@@ -29,7 +29,11 @@ namespace LambdaSharp.Compiler.Processors {
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {
 
+            // TODO: generalize this to IAllowDeclaration
+
             // TODO: validate allow statements
+            //  - check if the allowed operations are valid for the specified type
+            //  - special type 'AWS' allows any valid permission (i.e. permissions can be mixed)
             // TODO: add allow statements to IAM role
             //  - resource dynamic
             //  - resource fixed

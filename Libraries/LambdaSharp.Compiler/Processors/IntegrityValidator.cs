@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -22,13 +22,13 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class IntegrityProcessor : AProcessor {
+    internal sealed class IntegrityValidator : AProcessor {
 
         //--- Constructors ---
-        public IntegrityProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public IntegrityValidator(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
             var found = new HashSet<object>();
             moduleDeclaration.Inspect(node => {
 

@@ -18,14 +18,18 @@
 
 using System;
 using System.Linq;
-using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.EventSources;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     [SyntaxDeclarationKeyword("Function")]
-    public sealed class FunctionDeclaration : AItemDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
+    public sealed class FunctionDeclaration :
+        AItemDeclaration,
+        IScopedDeclaration,
+        IConditionalResourceDeclaration,
+        IInitializedResourceDeclaration
+    {
 
         //--- Types ---
         public class VpcExpression : ASyntaxNode {
@@ -162,8 +166,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+        public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionReferenceExpression?)If)?.ReferenceName!.Value;
         public LiteralExpression? Type => Fn.Literal("AWS::Lambda::Function");
+
+        //--- IInitializedResourceDeclaration Members ---
+        LiteralExpression? IInitializedResourceDeclaration.ResourceTypeName => Type;
+        bool IInitializedResourceDeclaration.HasInitialization => true;
+        ObjectExpression? IInitializedResourceDeclaration.InitializationExpression => Properties;
     }
 }

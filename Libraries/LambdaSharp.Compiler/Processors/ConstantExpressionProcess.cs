@@ -26,7 +26,7 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class ConstantExpressionEvaluator : AProcessor {
+    internal sealed class ConstantExpressionProcessor : AProcessor {
 
         //--- Class Fields ---
         private static readonly Regex SubFormatStringRegex = new Regex(@"\$\{(?!\!)[^\}]+\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -37,10 +37,10 @@ namespace LambdaSharp.Compiler.Processors {
         #endregion
 
         //--- Constructors ---
-        public ConstantExpressionEvaluator(IProcessorDependencyProvider provider) : base(provider) { }
+        public ConstantExpressionProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Evaluate(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
             var substitutions = new Dictionary<ISyntaxNode, ISyntaxNode>();
             while(true) {
                 substitutions.Clear();

@@ -40,12 +40,12 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             // arrange
             var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IfTrueExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Validate(module);
+            new ItemDeclarationProcessor(this).Process(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
             // act
-            new ConstantExpressionEvaluator(this).Evaluate(module);
+            new ConstantExpressionProcessor(this).Process(module);
 
             // assert
             ExpectedMessages("WARNING: !If expression is always True in Module.yml: line 5, column 12");
@@ -60,12 +60,12 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             // arrange
             var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IfFalseExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Validate(module);
+            new ItemDeclarationProcessor(this).Process(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
             // act
-            new ConstantExpressionEvaluator(this).Evaluate(module);
+            new ConstantExpressionProcessor(this).Process(module);
 
             // assert
             ExpectedMessages("WARNING: !If expression is always False in Module.yml: line 5, column 12");
@@ -80,12 +80,12 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             // arrange
             var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IsDefinedTrueExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Validate(module);
+            new ItemDeclarationProcessor(this).Process(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
             // act
-            new ConstantExpressionEvaluator(this).Evaluate(module);
+            new ConstantExpressionProcessor(this).Process(module);
 
             // assert
             ExpectedMessages();
@@ -100,12 +100,12 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             // arrange
             var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IsDefinedFalseExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Validate(module);
+            new ItemDeclarationProcessor(this).Process(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
             // act
-            new ConstantExpressionEvaluator(this).Evaluate(module);
+            new ConstantExpressionProcessor(this).Process(module);
 
             // assert
             ExpectedMessages();
@@ -120,12 +120,12 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             // arrange
             var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/JoinExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Validate(module);
+            new ItemDeclarationProcessor(this).Process(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
             // act
-            new ConstantExpressionEvaluator(this).Evaluate(module);
+            new ConstantExpressionProcessor(this).Process(module);
 
             // assert
             ExpectedMessages();
@@ -140,12 +140,12 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             // arrange
             var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/SubExpression.yml");
             var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Validate(module);
+            new ItemDeclarationProcessor(this).Process(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
             // act
-            new ConstantExpressionEvaluator(this).Evaluate(module);
+            new ConstantExpressionProcessor(this).Process(module);
 
             // assert
             ExpectedMessages();

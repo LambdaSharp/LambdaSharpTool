@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -17,7 +17,6 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.Processors;
 using Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation;
@@ -26,17 +25,19 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.Processors {
 
-    public class ResourceDeclarationProcessorTests :
+    public class ResourceInitializationValidatorTests :
         _Processor,
         IProcessorDependencyProvider,
         IClassFixture<CloudFormationTypeSystemFixture>
     {
 
+        // TODO: add tests using Fn::Transform when configuring a resource
+
         //--- Fields ---
         private readonly CloudFormationTypeSystemFixture _typeSystemFixture;
 
         //--- Constructors ---
-        public ResourceDeclarationProcessorTests(ITestOutputHelper output, CloudFormationTypeSystemFixture typeSystemFixture) : base(output)
+        public ResourceInitializationValidatorTests(ITestOutputHelper output, CloudFormationTypeSystemFixture typeSystemFixture) : base(output)
             => _typeSystemFixture = typeSystemFixture ?? throw new System.ArgumentNullException(nameof(typeSystemFixture));
 
         //--- Methods ---
@@ -48,7 +49,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ResourceDeclarationProcessor(this).Validate(module);
+            new ResourceInitializationValidator(this).Validate(module);
 
             // assert
             ExpectedMessages();
@@ -61,7 +62,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ResourceDeclarationProcessor(this).Validate(module);
+            new ResourceInitializationValidator(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: unrecognized property 'Acme' in Module.yml: line 7, column 7");
@@ -74,7 +75,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ResourceDeclarationProcessor(this).Validate(module);
+            new ResourceInitializationValidator(this).Validate(module);
 
             // assert
             ExpectedMessages("ERROR: missing property 'Endpoint' in Module.yml: line 9, column 11");
@@ -87,7 +88,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             var module = LoadTestModule();
 
             // act
-            new ResourceDeclarationProcessor(this).Validate(module);
+            new ResourceInitializationValidator(this).Validate(module);
 
             // assert
             ExpectedMessages();

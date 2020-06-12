@@ -37,8 +37,8 @@ namespace Tests.LambdaSharp.Compiler.Processors {
             ExpectedMessages();
 
             // register declarations
-            new PseudoParameterProcessor(this).Validate(result);
-            new ItemDeclarationProcessor(this).Validate(result);
+            new PseudoParameterProcessor(this).Process(result);
+            new ItemDeclarationProcessor(this).Process(result);
             ExpectedMessages();
             return result;
         }

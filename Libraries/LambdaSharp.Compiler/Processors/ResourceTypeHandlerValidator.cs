@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -21,20 +21,26 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.Processors {
 
-    internal sealed class MacroHandlerProcessor : AProcessor {
+    internal sealed class ResourceTypeHandlerValidator : AProcessor {
 
         //--- Constructors ---
-        public MacroHandlerProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public ResourceTypeHandlerValidator(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectType<MacroDeclaration>(node => {
+            moduleDeclaration.InspectType<ResourceTypeDeclaration>(node => {
                 if(node.Handler == null) {
 
                     // TODO: error
                 } else if(Provider.TryGetItem(node.Handler.Value, out var referencedDeclaration)) {
-                    if(!(referencedDeclaration is FunctionDeclaration)) {
-                        Logger.Log(Error.HandlerMustBeAFunction, node.Handler);
+                    if(referencedDeclaration is FunctionDeclaration) {
+
+                        // nothing to do
+                    } else if((referencedDeclaration is ResourceDeclaration resourceDeclaration) && (resourceDeclaration.Type?.Value == "AWS::SNS::Topic")) {
+
+                        // nothing to do
+                    } else {
+                        Logger.Log(Error.HandlerMustBeAFunctionOrSnsTopic, node.Handler);
                     }
                 } else {
                     Logger.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);

@@ -152,11 +152,10 @@ namespace LambdaSharp.Compiler.Processors {
         public ParameterDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
+        public void Process(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.InspectType<ParameterDeclaration>(node => {
                 ValidateParameterStructure(node);
                 ValidateParemeterType(node);
-                ValidateParameterAllow(node);
             });
         }
 
@@ -315,17 +314,6 @@ namespace LambdaSharp.Compiler.Processors {
                 }
             } else {
                 Logger.Log(UnknownType(node.Type.Value), node.Type);
-            }
-        }
-
-        private void ValidateParameterAllow(ParameterDeclaration node) {
-
-            // TODO: generalize this to IAllowDeclaration
-
-            if(node.Allow != null) {
-
-                // TODO: check if the allowed operations are valid for the specified type
-                // TODO: special type 'AWS' allows any valid permission (i.e. permissions can be mixed)
             }
         }
     }
