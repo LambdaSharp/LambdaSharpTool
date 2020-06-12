@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -16,14 +16,34 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
+using System.Text.Json.Serialization;
 
-    public sealed class AttributeType {
+namespace LambdaSharp.Compiler.TypeSystem {
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum ResourcePropertyUpdateType {
+        Unknown,
+        Mutable,
+        Immutable,
+        Conditional
+    }
+
+    public sealed class ResourcePropertyType {
 
         //--- Properties ---
+        public bool DuplicatesAllowed { get; set; }
         public string? ItemType { get; set; }
         public string? PrimitiveItemType { get; set; }
         public string? PrimitiveType { get; set; }
+        public bool Required { get; set; }
         public string? Type { get; set; }
+        public ResourcePropertyUpdateType UpdateType { get; set; }
+        public ResourcePropertyValueType? Value { get; set; }
+    }
+
+    public sealed class ResourcePropertyValueType {
+
+        //--- Properties ---
+        public string? ValueType { get; set; }
     }
 }

@@ -17,21 +17,28 @@
  */
 
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
-namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
+namespace LambdaSharp.Compiler.TypeSystem {
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-    public enum ReturnType {
-        Unknown,
-        Singular,
-        List
-    }
-
-    public sealed class IntrinsicType {
+    public sealed class ValueType {
 
         //--- Properties ---
-        public List<ReturnType>? ReturnTypes { get; set; }
+
+        // number type
+        public double? NumberMax { get; set; }
+        public double? NumberMin { get; set; }
+
+        // string type
+        public string? AllowedPattern { get; set; }
+        public string? AllowedPatternRegex { get; set; }
+        public int? StringMin { get; set; }
+        public int? StringMax { get; set; }
+
+        // enum type
+        public List<string>? AllowedValues { get; set; }
+
+        // valid origins
+        public Dictionary<string, string>? GetAtt { get; set; }
+        public RefOriginType? Ref { get; set; }
     }
 }

@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 
-namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
+namespace LambdaSharp.Compiler.TypeSystem {
 
     public sealed class RefOriginType {
 

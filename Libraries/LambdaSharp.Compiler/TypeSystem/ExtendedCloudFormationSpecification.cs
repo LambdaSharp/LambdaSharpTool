@@ -18,18 +18,18 @@
 
 using System.Collections.Generic;
 
-namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
+namespace LambdaSharp.Compiler.TypeSystem {
 
-    // TODO: better name?
-    public sealed class SpecificationType {
+    public sealed class ExtendedCloudFormationSpecification {
 
         // CloudFormation specification: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
+        // And then extended with https://github.com/aws-cloudformation/cfn-python-lint
 
         //--- Properties ---
         public string? ResourceSpecificationVersion { get; set; }
         public Dictionary<string, ResourceType>? ResourceTypes { get; set; }
         public Dictionary<string, ResourceType>? PropertyTypes { get; set; }
-        public Dictionary<string, IntrinsicType>? IntrinsicTypes { get; set; }
+        public Dictionary<string, IntrinsicFunctionType>? IntrinsicTypes { get; set; }
         public Dictionary<string, List<string>>? ParameterTypes { get; set; }
         public Dictionary<string, ValueType>? ValueTypes { get; set; }
     }

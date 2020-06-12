@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace LambdaSharp.Compiler.TypeSystem {
 
-namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
-
-    public sealed class ResourceType {
+    public sealed class ResourceAttributeType {
 
         //--- Properties ---
-        public string? Documentation { get; set; }
-        public Dictionary<string, PropertyType>? Properties { get; set; }
-        public Dictionary<string, AttributeType>? Attributes { get; set; }
+        public string? ItemType { get; set; }
+        public string? PrimitiveItemType { get; set; }
+        public string? PrimitiveType { get; set; }
+        public string? Type { get; set; }
     }
 }

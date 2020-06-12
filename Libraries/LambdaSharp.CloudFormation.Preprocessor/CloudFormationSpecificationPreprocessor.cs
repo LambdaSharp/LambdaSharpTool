@@ -24,12 +24,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using LambdaSharp.Compiler.TypeSystem;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.CloudFormation.Preprocessor {
-    using Spec = Preprocessor.ExtendedCloudFormationSpecification.SpecificationType;
 
     public class CloudFormationSpecificationPreprocessor {
 
@@ -70,7 +71,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
 
         //--- Fields ---
         public HttpClient _httpClient;
-        private Dictionary<string, Dictionary<string, JsonPatchDocument<Spec>>> _globalExtendedSpecifications = new Dictionary<string, Dictionary<string, JsonPatchDocument<Spec>>>();
+        private Dictionary<string, Dictionary<string, JsonPatchDocument<ExtendedCloudFormationSpecification>>> _globalExtendedSpecifications = new Dictionary<string, Dictionary<string, JsonPatchDocument<ExtendedCloudFormationSpecification>>>();
 
         //--- Constructors ---
         public CloudFormationSpecificationPreprocessor(HttpClient? httpClient = null) {
@@ -89,7 +90,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
             using var decompressedMemoryStream = new MemoryStream();
             await decompressionStream.CopyToAsync(decompressedMemoryStream);
             var text = Encoding.UTF8.GetString(decompressedMemoryStream.ToArray());
-            var spec = JsonConvert.DeserializeObject<Spec>(text);
+            var spec = JsonConvert.DeserializeObject<ExtendedCloudFormationSpecification>(text);
 
             // apply all patches to original specification
             if(!_globalExtendedSpecifications.Any()) {
@@ -101,7 +102,10 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
 
             // strip all "Documentation" fields to reduce document size
             var json = JObject.FromObject(spec, new JsonSerializer {
-                NullValueHandling = NullValueHandling.Ignore
+                NullValueHandling = NullValueHandling.Ignore,
+                Converters = {
+                    new StringEnumConverter()
+                }
             });
             json.SelectTokens("$.ResourceTypes.*.*..Documentation").ToList().ForEach(property => property.Parent?.Remove());
             json.SelectTokens("$.PropertyTypes..Documentation").ToList().ForEach(property => property.Parent?.Remove());
@@ -156,7 +160,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
 
                 // create entry for each file
                 if(!_globalExtendedSpecifications.TryGetValue(region, out var regionalExtendedSpecifications)) {
-                    regionalExtendedSpecifications = new Dictionary<string, JsonPatchDocument<Spec>>();
+                    regionalExtendedSpecifications = new Dictionary<string, JsonPatchDocument<ExtendedCloudFormationSpecification>>();
                     _globalExtendedSpecifications[region] = regionalExtendedSpecifications;
                 }
 
@@ -168,7 +172,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
                 var text = Encoding.UTF8.GetString(memoryStream.ToArray());
 
                 // store extended specification document
-                var patch = JsonConvert.DeserializeObject<JsonPatchDocument<Spec>>(text);
+                var patch = JsonConvert.DeserializeObject<JsonPatchDocument<ExtendedCloudFormationSpecification>>(text);
                 regionalExtendedSpecifications.Add(key, patch);
             }
         }
@@ -185,7 +189,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
 
                 // create entry for each file
                 if(!_globalExtendedSpecifications.TryGetValue(region, out var regionalExtendedSpecifications)) {
-                    regionalExtendedSpecifications = new Dictionary<string, JsonPatchDocument<Spec>>();
+                    regionalExtendedSpecifications = new Dictionary<string, JsonPatchDocument<ExtendedCloudFormationSpecification>>();
                     _globalExtendedSpecifications[region] = regionalExtendedSpecifications;
                 }
 
@@ -197,7 +201,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
                 var text = Encoding.UTF8.GetString(memoryStream.ToArray());
 
                 // store extended specification document
-                var patch = JsonConvert.DeserializeObject<JsonPatchDocument<Spec>>(text);
+                var patch = JsonConvert.DeserializeObject<JsonPatchDocument<ExtendedCloudFormationSpecification>>(text);
                 regionalExtendedSpecifications.Add(key, patch);
             }
         }

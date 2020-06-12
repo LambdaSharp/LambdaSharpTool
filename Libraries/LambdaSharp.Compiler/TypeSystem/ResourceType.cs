@@ -18,27 +18,13 @@
 
 using System.Collections.Generic;
 
-namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
+namespace LambdaSharp.Compiler.TypeSystem {
 
-    public sealed class ValueType {
+    public sealed class ResourceType {
 
         //--- Properties ---
-
-        // number type
-        public double? NumberMax { get; set; }
-        public double? NumberMin { get; set; }
-
-        // string type
-        public string? AllowedPattern { get; set; }
-        public string? AllowedPatternRegex { get; set; }
-        public int? StringMin { get; set; }
-        public int? StringMax { get; set; }
-
-        // enum type
-        public List<string>? AllowedValues { get; set; }
-
-        // valid origins
-        public Dictionary<string, string>? GetAtt { get; set; }
-        public RefOriginType? Ref { get; set; }
+        public string? Documentation { get; set; }
+        public Dictionary<string, ResourcePropertyType>? Properties { get; set; }
+        public Dictionary<string, ResourceAttributeType>? Attributes { get; set; }
     }
 }
