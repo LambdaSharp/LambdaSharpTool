@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using LambdaSharp.CloudFormation;
 using LambdaSharp.CloudFormation.Template;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
@@ -37,10 +36,13 @@ namespace LambdaSharp.Compiler {
         ILogger Logger { get; }
 
         //--- Methods ---
+
+        // TODO: this should be Async and maybe return a Stream instead?
         string ReadFile(string filePath);
+        Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region, string version);
     }
 
-    public class ModuleScope : IValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
+    public sealed class ModuleScope : IValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
 
         //--- Class Methods ---
         public static bool TryParseModuleFullName(string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
@@ -70,6 +72,7 @@ namespace LambdaSharp.Compiler {
         private string? ModuleNamespace { get; set; }
         private string? ModuleName { get; set; }
         private VersionInfo? ModuleVersion { get; set; }
+        private ITypeSystem CloudFormationSpec { get; set; }
 
         //--- Methods ---
         public async Task<CloudFormationTemplate?> CompileAsync(string filePath) {
@@ -84,9 +87,14 @@ namespace LambdaSharp.Compiler {
 
             // find module dependencies
             var dependencies = new DependenciesValidator(this).FindDependencies(moduleDeclaration);
-            var cloudformationSpec = moduleDeclaration.CloudFormation;
 
             // TODO: download external dependencies
+
+            // load CloudFormation specification
+            CloudFormationSpec = await Provider.LoadCloudFormationSpecificationAsync(
+                moduleDeclaration.CloudFormation?.Region?.Value ?? "us-east-1",
+                moduleDeclaration.CloudFormation?.Version?.Value ?? "15.0.0"
+            );
 
             // validate declarations
             new ParameterDeclarationValidator(this).Validate(moduleDeclaration);
