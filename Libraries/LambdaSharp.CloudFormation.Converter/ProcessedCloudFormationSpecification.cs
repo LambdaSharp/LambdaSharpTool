@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace LambdaSharp.CloudFormation.Preprocessor {
+namespace LambdaSharp.CloudFormation.Converter {
 
     public class ProcessedCloudFormationSpecification {
 

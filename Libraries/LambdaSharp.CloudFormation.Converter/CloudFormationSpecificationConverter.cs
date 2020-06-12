@@ -30,9 +30,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
-namespace LambdaSharp.CloudFormation.Preprocessor {
+namespace LambdaSharp.CloudFormation.Converter {
 
-    public class CloudFormationSpecificationPreprocessor {
+    public class CloudFormationSpecificationConverter {
 
         //--- Constants ---
         private const string CFN_LINT_SOURCE = "https://github.com/aws-cloudformation/cfn-python-lint/archive/master.zip";
@@ -74,7 +74,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
         private Dictionary<string, Dictionary<string, JsonPatchDocument<ExtendedCloudFormationSpecification>>> _globalExtendedSpecifications = new Dictionary<string, Dictionary<string, JsonPatchDocument<ExtendedCloudFormationSpecification>>>();
 
         //--- Constructors ---
-        public CloudFormationSpecificationPreprocessor(HttpClient? httpClient = null) {
+        public CloudFormationSpecificationConverter(HttpClient? httpClient = null) {
             _httpClient = httpClient ?? new HttpClient();
         }
 
