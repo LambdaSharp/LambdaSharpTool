@@ -44,6 +44,14 @@ namespace LambdaSharp.Compiler {
 
     public sealed class ModuleScope : IValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
 
+        // TODO:
+        //  - validate usage against imported definitions
+        //  - detect cycle between custom resource handler and an instance of the custom resource in its handler
+        //  - register custom resource types for the module
+        //  - warn on unrecognized pragmas
+        //  - nested module parameters can only be scalar or list (correct?)
+        //  - lambda environment variable values must be scalar or list (correct?)
+
         //--- Class Methods ---
         public static bool TryParseModuleFullName(string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
             moduleNamespace = "<BAD>";
