@@ -28,7 +28,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         AItemDeclaration,
         IScopedDeclaration,
         IConditionalResourceDeclaration,
-        IInitializedResourceDeclaration
+        IResourceDeclaration
     {
 
         //--- Types ---
@@ -158,22 +158,20 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _pragmas = SetParent(value);
         }
 
-        public string CloudFormationType => "AWS::Lambda::Function";
-
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
-        public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionReferenceExpression?)If)?.ReferenceName!.Value;
         public LiteralExpression? Type => Fn.Literal("AWS::Lambda::Function");
 
-        //--- IInitializedResourceDeclaration Members ---
-        LiteralExpression? IInitializedResourceDeclaration.ResourceTypeName => Type;
-        bool IInitializedResourceDeclaration.HasInitialization => true;
-        ObjectExpression? IInitializedResourceDeclaration.InitializationExpression => Properties;
+        //--- IResourceDeclaration Members ---
+        LiteralExpression? IResourceDeclaration.ResourceTypeName => Fn.Literal("AWS::Lambda::Function");
+        bool IResourceDeclaration.HasInitialization => true;
+        bool IResourceDeclaration.HasPropertiesValidation => !HasPragma("no-type-validation");
+        ObjectExpression IResourceDeclaration.Properties => Properties;
     }
 }

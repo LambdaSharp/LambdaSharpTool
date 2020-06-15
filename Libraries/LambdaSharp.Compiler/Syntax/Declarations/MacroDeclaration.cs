@@ -22,10 +22,7 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     [SyntaxDeclarationKeyword("Macro")]
-    public sealed class MacroDeclaration :
-        AItemDeclaration,
-        IResourceDeclaration
-    {
+    public sealed class MacroDeclaration : AItemDeclaration, IResourceDeclaration {
 
         //--- Fields ---
         private AExpression? _handler;
@@ -44,6 +41,10 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _handler = SetParent(value);
         }
 
-        public string CloudFormationType => "AWS::CloudFormation::Macro";
+        //--- IResourceDeclaration Members ---
+        LiteralExpression? IResourceDeclaration.ResourceTypeName => Fn.Literal("AWS::CloudFormation::Macro");
+        bool IResourceDeclaration.HasInitialization => true;
+        bool IResourceDeclaration.HasPropertiesValidation => false;
+        ObjectExpression IResourceDeclaration.Properties => throw new InvalidOperationException();
     }
 }

@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Linq;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
@@ -28,10 +29,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private LiteralExpression? _module;
         private SyntaxNodeCollection<LiteralExpression> _dependsOn;
         private ObjectExpression? _parameters;
+        private ListExpression _pragmas;
 
         //--- Constructors ---
         public NestedModuleDeclaration(LiteralExpression itemName) : base(itemName) {
             _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _pragmas = SetParent(new ListExpression());
         }
 
         //--- Properties ---
@@ -54,6 +57,18 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _parameters = SetParent(value);
         }
 
-        public string CloudFormationType => "AWS::CloudFormation::Stack";
+        [SyntaxOptional]
+        public ListExpression Pragmas {
+            get => _pragmas;
+            set => _pragmas = SetParent(value);
+        }
+
+        public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
+
+        //--- IResourceDeclaration Members ---
+        LiteralExpression? IResourceDeclaration.ResourceTypeName => Fn.Literal("AWS::CloudFormation::Stack");
+        bool IResourceDeclaration.HasInitialization => true;
+        bool IResourceDeclaration.HasPropertiesValidation => false;
+        ObjectExpression IResourceDeclaration.Properties => throw new InvalidOperationException();
     }
 }

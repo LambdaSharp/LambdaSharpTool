@@ -155,8 +155,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     }
                     if(referencedDeclaration is IResourceDeclaration resourceDeclaration) {
 
-                        // NOTE (2020-01-29, bjorg): we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
-                        if(resourceDeclaration.HasPhysicalId) {
+                        // NOTE (2020-01-29, bjorg): we need to check if 'ResourceDeclaration' is an explicit resource ARN or an instance of a resource
+                        if(resourceDeclaration.HasInitialization) {
                             node.ReferencedDeclaration = referencedDeclaration;
                         } else {
                             Logger.Log(ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
@@ -267,8 +267,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     if(Provider.TryGetItem(referenceName.Value, out var referencedDeclaration)) {
                         if(referencedDeclaration is IResourceDeclaration resourceDeclaration) {
 
-                            // NOTE (2020-01-29, bjorg): we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
-                            if(resourceDeclaration.HasPhysicalId) {
+                            // NOTE (2020-01-29, bjorg): we need to check if 'ResourceDeclaration' is an explicit resource ARN or an instance of a resource
+                            if(resourceDeclaration.HasInitialization) {
                                 node.TrackDependency(referencedDeclaration, referenceName);
                             } else {
                                 Logger.Log(ReferenceMustBeResourceInstance(referenceName.Value), referenceName);

@@ -149,6 +149,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added `!IsDefined` compile-time function.
   * Added 'Documentation' property to `ResourceType` declaration.
   * Added `no-type-validation` pragma to `Function` declaration.
+  * Added `Pragmas` attribute to `Nested` declaration.
 
 ## Releases
 

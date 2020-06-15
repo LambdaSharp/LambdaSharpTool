@@ -26,7 +26,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
     public sealed class ParameterDeclaration :
         AItemDeclaration,
         IScopedDeclaration,
-        IInitializedResourceDeclaration
+        IResourceDeclaration
     {
 
         //--- Fields ---
@@ -167,12 +167,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
-        public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool HasSecretType => Type!.Value == "Secret";
 
-        //--- IInitializedResourceDeclaration Members ---
-        LiteralExpression? IInitializedResourceDeclaration.ResourceTypeName => Type;
-        bool IInitializedResourceDeclaration.HasInitialization => Properties != null;
-        ObjectExpression? IInitializedResourceDeclaration.InitializationExpression => Properties;
+        //--- IResourceDeclaration Members ---
+        LiteralExpression? IResourceDeclaration.ResourceTypeName => Type;
+        bool IResourceDeclaration.HasInitialization => Properties != null;
+        bool IResourceDeclaration.HasPropertiesValidation => !HasPragma("no-type-validation");
+        ObjectExpression IResourceDeclaration.Properties => Properties ?? throw new InvalidOperationException();
     }
 }

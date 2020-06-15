@@ -44,23 +44,22 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectType<IInitializedResourceDeclaration>(node => {
+            moduleDeclaration.InspectType<IResourceDeclaration>(node => {
 
                 // skip resources that are not being initialied or don't want to be validated
-                if(!node.HasInitialization || !node.HasTypeValidation) {
+                if(!node.HasInitialization || !node.HasPropertiesValidation) {
                     return;
                 }
 
                 // validate resource initialization
-                if(node.ResourceTypeName == null) {
-                    throw new ShouldNeverHappenException();
-                }
-                if(Provider.TryGetResourceType(node.ResourceTypeName.Value, out var resourceType)) {
+                if(node.ResourceTypeName != null) {
+                    if(Provider.TryGetResourceType(node.ResourceTypeName.Value, out var resourceType)) {
 
-                    // validate resource properties for LambdaSharp custom resource type
-                    ValidateProperties(resourceType, node.InitializationExpression ?? new ObjectExpression());
-                } else {
-                    Logger.Log(ResourceUnknownType(node.ResourceTypeName.Value), node.ResourceTypeName);
+                        // validate resource properties for LambdaSharp custom resource type
+                        ValidateProperties(resourceType, node.Properties);
+                    } else {
+                        Logger.Log(ResourceUnknownType(node.ResourceTypeName.Value), node.ResourceTypeName);
+                    }
                 }
             });
         }

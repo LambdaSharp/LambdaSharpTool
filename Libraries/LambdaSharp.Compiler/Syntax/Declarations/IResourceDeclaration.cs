@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,19 +16,20 @@
  * limitations under the License.
  */
 
+using LambdaSharp.Compiler.Syntax.Expressions;
+
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     /// <summary>
-    /// The <see cref="IResourceDeclaration"/> interface indicates a CloudFormation resource that
-    /// is created by the template.
+    /// The <see cref="IResourceDeclaration"/> interface indicates a
+    /// resource that is being initialized by CloudFormation.
     /// </summary>
     public interface IResourceDeclaration {
 
-        // TODO: how is this different from IInitializedResourceDeclaration?
-
         //--- Properties ---
-        string FullName { get; }
-        string? CloudFormationType { get; }
-        bool HasPhysicalId => CloudFormationType != null;
+        LiteralExpression? ResourceTypeName { get; }
+        bool HasInitialization { get; }
+        bool HasPropertiesValidation { get; }
+        ObjectExpression Properties { get; }
     }
 }
