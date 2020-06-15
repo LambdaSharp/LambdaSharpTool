@@ -47,5 +47,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         bool IResourceDeclaration.HasPropertiesValidation => false;
         ObjectExpression IResourceDeclaration.Properties => throw new InvalidOperationException();
         AExpression? IResourceDeclaration.Condition => null;
+        AExpression IResourceDeclaration.ResourceReference => Fn.Ref(FullName);
     }
 }

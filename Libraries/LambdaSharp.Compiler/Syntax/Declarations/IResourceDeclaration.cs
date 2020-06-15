@@ -27,10 +27,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
     public interface IResourceDeclaration {
 
         //--- Properties ---
+        string FullName { get; }
         LiteralExpression? ResourceTypeName { get; }
         bool HasInitialization { get; }
         bool HasPropertiesValidation { get; }
         ObjectExpression Properties { get; }
         AExpression? Condition { get; }
+        AExpression ResourceReference { get; }
     }
 }

@@ -82,6 +82,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
+        public static IfFunctionExpression If(AExpression condition, AExpression ifTrue, AExpression ifFalse, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new IfFunctionExpression {
+            Condition = condition ?? throw new ArgumentNullException(nameof(condition)),
+            IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue)),
+            IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
+        };
+
         public static LiteralExpression Literal(string value, SourceLocation sourceLocation)
             => new LiteralExpression(value, LiteralType.String) {
                 SourceLocation = sourceLocation

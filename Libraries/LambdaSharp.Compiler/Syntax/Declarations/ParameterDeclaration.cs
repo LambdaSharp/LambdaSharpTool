@@ -177,5 +177,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         // TODO: this should probably not always be null
         AExpression? IResourceDeclaration.Condition => null;
+
+        // TODO: reference is either to parameter or optionally created resource
+        AExpression IResourceDeclaration.ResourceReference => throw new NotImplementedException();
     }
 }

@@ -136,6 +136,9 @@ namespace LambdaSharp.Compiler {
             // TODO: needs access to IAM permissions
             new AllowProcessor(this).Validate(moduleDeclaration);
 
+            // find all resource dependencies for the 'Finalizer' invocation
+            new FinalizerDependenciesProcessor(this).Process(moduleDeclaration);
+
             // resolve secrets
             await new EmbeddedSecretsProcessor(this).ProcessAsync(moduleDeclaration);
 
