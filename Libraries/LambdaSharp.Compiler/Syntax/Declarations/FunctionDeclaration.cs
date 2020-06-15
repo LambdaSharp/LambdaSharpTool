@@ -27,7 +27,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
     public sealed class FunctionDeclaration :
         AItemDeclaration,
         IScopedDeclaration,
-        IConditionalResourceDeclaration,
         IResourceDeclaration
     {
 
@@ -173,5 +172,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         bool IResourceDeclaration.HasInitialization => true;
         bool IResourceDeclaration.HasPropertiesValidation => !HasPragma("no-type-validation");
         ObjectExpression IResourceDeclaration.Properties => Properties;
+        AExpression? IResourceDeclaration.Condition => If;
     }
 }

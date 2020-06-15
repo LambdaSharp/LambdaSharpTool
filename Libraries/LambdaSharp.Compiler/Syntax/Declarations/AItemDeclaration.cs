@@ -180,12 +180,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                             throw new ShouldNeverHappenException();
                         }
                     } else if(
-                        (parent is IConditionalResourceDeclaration conditionalResource)
-                        && (conditionalResource.If != null)
+                        (parent is IResourceDeclaration resourceDeclaration)
+                        && (resourceDeclaration.Condition != null)
                     ) {
 
                         // reference comes from a resource with a condition
-                        conditions.Add(new ConditionBranch(condition: true, conditionalResource.If));
+                        conditions.Add(new ConditionBranch(condition: true, resourceDeclaration.Condition));
                     }
                     child = parent;
                 }

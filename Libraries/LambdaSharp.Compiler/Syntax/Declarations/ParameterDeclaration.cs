@@ -174,5 +174,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         bool IResourceDeclaration.HasInitialization => Properties != null;
         bool IResourceDeclaration.HasPropertiesValidation => !HasPragma("no-type-validation");
         ObjectExpression IResourceDeclaration.Properties => Properties ?? throw new InvalidOperationException();
+
+        // TODO: this should probably not always be null
+        AExpression? IResourceDeclaration.Condition => null;
     }
 }

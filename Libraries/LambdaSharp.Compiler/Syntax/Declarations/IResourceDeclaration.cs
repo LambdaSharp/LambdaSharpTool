@@ -31,5 +31,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         bool HasInitialization { get; }
         bool HasPropertiesValidation { get; }
         ObjectExpression Properties { get; }
+        AExpression? Condition { get; }
     }
 }
