@@ -24,7 +24,7 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class EmbeddedSecretsResolver : ASyntaxProcessor {
+    internal sealed class EmbeddedSecretsProcessor : ASyntaxProcessor {
 
         //--- Class Fields ---
         private static Regex SecretArnRegex = new Regex(@"^arn:aws:kms:[a-z\-]+-\d:\d{12}:key\/[a-fA-F0-9\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -38,10 +38,10 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         #endregion
 
         //--- Constructors ---
-        public EmbeddedSecretsResolver(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
+        public EmbeddedSecretsProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public async Task ResolveAsync(ModuleDeclaration moduleDeclaration) {
+        public async Task ProcessAsync(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case ModuleDeclaration innerModuleDeclaration:

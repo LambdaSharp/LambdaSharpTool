@@ -23,10 +23,10 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class DependenciesProcessor : ASyntaxProcessor {
+    internal sealed class ExternalDependenciesProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public DependenciesProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
+        public ExternalDependenciesProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public IEnumerable<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)> FindDependencies(ModuleDeclaration moduleDeclaration) {

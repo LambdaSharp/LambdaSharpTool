@@ -22,10 +22,10 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class IntegrityValidator : ASyntaxProcessor {
+    internal sealed class SyntaxTreeIntegrityProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public IntegrityValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
+        public SyntaxTreeIntegrityProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {

@@ -31,7 +31,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static ReferenceFunctionExpression Ref(LiteralExpression referenceName, bool resolved = false) => new ReferenceFunctionExpression {
+        public static ReferenceFunctionExpression Ref(LiteralExpression referenceName) => new ReferenceFunctionExpression {
             ReferenceName = referenceName,
             SourceLocation = referenceName.SourceLocation
         };

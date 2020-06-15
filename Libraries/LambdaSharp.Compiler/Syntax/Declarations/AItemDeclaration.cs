@@ -194,8 +194,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             }
         }
 
-        public void TrackMissingDependency(string declarationFullName, ASyntaxNode dependentNode)
-            => _missingDependencies.Add(new MissingDependencyRecord(declarationFullName, dependentNode));
+        public void TrackMissingDependency(string declarationFullName, AExpression dependentExpression)
+            => _missingDependencies.Add(new MissingDependencyRecord(declarationFullName, dependentExpression));
 
         public void UntrackDependency(AExpression dependentExpression)
             => _reverseDependencies.RemoveAll(reverseDependency => reverseDependency.Expression == dependentExpression);

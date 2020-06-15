@@ -98,7 +98,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         case ObjectExpression _:
 
                             // validate value against item type
-                            Validate(propertyType, currentProperty.Value, allowJson: true, ResourcePropertyExpectedLiteral(currentProperty.Key.Value));
+                            Validate(propertyType, currentProperty.Value, ResourcePropertyExpectedLiteral(currentProperty.Key.Value));
                             break;
                         default:
                             Logger.Log(ResourcePropertyExpectedLiteral(currentProperty.Key.Value), currentProperty.Value);
@@ -118,7 +118,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                             // validate all items in list are objects that match the nested resource type
                             for(var i = 0; i < listExpression.Count; ++i) {
                                 var item = listExpression[i];
-                                Validate(propertyType, item, allowJson: false, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}[{i}]"));
+                                Validate(propertyType, item, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}[{i}]"));
                             }
                             break;
                         default:
@@ -139,7 +139,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                             // validate all values in map are objects that match the nested resource type
                             foreach(var kv in objectExpression) {
                                 var item = kv.Value;
-                                Validate(propertyType, item, allowJson: false, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}.{kv.Key.Value}"));
+                                Validate(propertyType, item, ResourcePropertyExpectedMap($"{currentProperty.Key.Value}.{kv.Key.Value}"));
                             }
                             break;
                         default:
@@ -156,7 +156,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             }
 
             // local function
-            void Validate(IResourceProperty propertyType, AExpression expression, bool allowJson, Error error) {
+            void Validate(IResourceProperty propertyType, AExpression expression, Error error) {
                 switch(propertyType.ItemType) {
                 case ResourcePropertyItemType.Any:
 
@@ -181,12 +181,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     // TODO: validate against primitive type
                     break;
                 case ResourcePropertyItemType.Json:
-                    if(allowJson) {
 
-                        // TODO: validate against JSON type
-                    } else {
-                        throw new ShouldNeverHappenException($"unexpected map item type: {propertyType.ItemType}");
-                    }
+                    // TODO: validate against JSON type
                     break;
                 default:
                     throw new ShouldNeverHappenException($"unexpected map item type: {propertyType.ItemType}");

@@ -39,6 +39,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         private static readonly ErrorFunc IdentifierMustReferToAConditionDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
         private static readonly ErrorFunc IdentifierMustReferToAMappingDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
         private static readonly ErrorFunc CircularDependencyDetected = parameter => new Error(0, $"circular dependency {parameter}");
+        private static readonly ErrorFunc ScopeReferenceDoesNotExist = parameter => new Error(0, $"undefined reference to {parameter} in 'Scope' attribute");
+        private static readonly Error HandlerMustBeLiteralOrRefExpression = new Error(0, "'Handler' attribute must be a literal or !Ref expression");
         #endregion
 
         //--- Constructors ---
@@ -46,6 +48,36 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {
+
+            // convert literal expression into a !Ref expression for 'Macro' and 'ResourceType' handlers
+            moduleDeclaration.Inspect(node => {
+                switch(node) {
+                case MacroDeclaration macroDeclaration:
+                    if(macroDeclaration.Handler is LiteralExpression macroHandlerLiteralExpression  ) {
+                        macroDeclaration.Handler = Fn.Ref(macroHandlerLiteralExpression);
+                    } else if(!(macroDeclaration.Handler is ReferenceFunctionExpression)) {
+                        Logger.Log(HandlerMustBeLiteralOrRefExpression, (ASyntaxNode?)macroDeclaration.Handler ?? macroDeclaration);
+                    }
+                    break;
+                case ResourceTypeDeclaration resourceTypeDeclaration:
+                    if(resourceTypeDeclaration.Handler is LiteralExpression resourceTypeHandlerLiteralExpression) {
+                        resourceTypeDeclaration.Handler = Fn.Ref(resourceTypeHandlerLiteralExpression);
+                    } else if(!(resourceTypeDeclaration.Handler is ReferenceFunctionExpression)) {
+                        Logger.Log(HandlerMustBeLiteralOrRefExpression, (ASyntaxNode?)resourceTypeDeclaration.Handler ?? resourceTypeDeclaration);
+                    }
+                    break;
+                }
+            });
+
+            // track 'Scope' references
+            moduleDeclaration.InspectType<IScopedDeclaration>(node => {
+                if(!(node is AItemDeclaration itemDeclaration)) {
+                    throw new ShouldNeverHappenException($"unexpected type {node.GetType().FullName}");
+                }
+                foreach(var scope in node.Scope ?? Enumerable.Empty<LiteralExpression>()) {
+                    ValidateScope(itemDeclaration, scope);
+                }
+            });
 
             // check for referential integrity
             moduleDeclaration.Inspect(node => {
@@ -82,6 +114,37 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             return;
 
             // local functions
+            void ValidateScope(AItemDeclaration declaration, LiteralExpression scope) {
+                switch(scope.Value) {
+                case "*":
+                case "all":
+
+                    // register declaration as dependency with all function declarations
+                    foreach(var functionDeclaration in Provider.Declarations.OfType<FunctionDeclaration>()) {
+                        functionDeclaration.TrackDependency(declaration, scope);
+                    }
+                    break;
+                case "public":
+
+                    // nothing to do; 'public' is a reserved scope keyword without dependency implications
+                    break;
+                default:
+
+                    // validate function reference and track declaration dependency
+                    if(Provider.TryGetItem(scope.Value, out var scopeReferenceDeclaration)) {
+                        if(scopeReferenceDeclaration is FunctionDeclaration functionDeclaration) {
+                            functionDeclaration.TrackDependency(declaration, scope);
+                        } else {
+                            Logger.Log(Error.ReferenceMustBeFunction(scope.Value), scope);
+                        }
+                    } else {
+                        Logger.Log(ScopeReferenceDoesNotExist(scope.Value), scope);
+                        declaration.TrackMissingDependency(scope.Value, scope);
+                    }
+                    break;
+                }
+            }
+
             void ValidateGetAttFunctionExpression(GetAttFunctionExpression node) {
                 var referenceName = node.ReferenceName;
 
@@ -215,7 +278,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         }
                     } else {
                         Logger.Log(ReferenceDoesNotExist(referenceName.Value), node);
-                        node.TrackMissingDependency(referenceName.Value, node);
+                        node.TrackMissingDependency(referenceName.Value, referenceName);
                     }
                 }
             }
