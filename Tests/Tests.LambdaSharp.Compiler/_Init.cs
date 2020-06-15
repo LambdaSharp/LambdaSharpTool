@@ -27,12 +27,12 @@ using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.TypeSystem;
-using LambdaSharp.Compiler.Processors;
+using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler {
 
-    public abstract class _Init : IProcessorDependencyProvider {
+    public abstract class _Init : ISyntaxProcessorDependencyProvider {
 
         //--- Types ---
         public class InMemoryLogger : ILogger {
@@ -208,18 +208,18 @@ namespace Tests.LambdaSharp.Compiler {
         }
 
         //--- IModuleProcessorDependencyProvider Members ---
-        IEnumerable<AItemDeclaration> IProcessorDependencyProvider.Declarations => Declarations.Values;
+        IEnumerable<AItemDeclaration> ISyntaxProcessorDependencyProvider.Declarations => Declarations.Values;
 
-        bool IProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
+        bool ISyntaxProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
             => throw new NotImplementedException();
 
-        Task<string> IProcessorDependencyProvider.ConvertKmsAliasToArn(string alias)
+        Task<string> ISyntaxProcessorDependencyProvider.ConvertKmsAliasToArn(string alias)
             => throw new NotImplementedException();
 
-        void IProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+        void ISyntaxProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
             => Declarations.Add(declaration.FullName, declaration);
 
-        bool IProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+        bool ISyntaxProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => Declarations.TryGetValue(fullname, out itemDeclaration);
     }
 }

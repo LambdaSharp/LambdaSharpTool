@@ -21,12 +21,12 @@ using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class DependenciesProcessor : AProcessor {
+    internal sealed class DependenciesProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public DependenciesProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public DependenciesProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public IEnumerable<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)> FindDependencies(ModuleDeclaration moduleDeclaration) {

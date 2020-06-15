@@ -22,12 +22,12 @@ using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class ScopeProcessor : AProcessor {
+    internal sealed class ScopeProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public ScopeProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public ScopeProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

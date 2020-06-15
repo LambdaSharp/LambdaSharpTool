@@ -18,21 +18,21 @@
 
 using System.Runtime.CompilerServices;
 using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.Processors;
+using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Processors {
+namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
-    public abstract class _Processor : _Init {
+    public abstract class _SyntaxProcessor : _Init {
 
         //--- Constructors ---
-        protected _Processor(ITestOutputHelper output) : base(output) { }
+        protected _SyntaxProcessor(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
         protected ModuleDeclaration LoadTestModule([CallerMemberName] string testName = "") {
 
             // parse test source
-            var result = NewParser($"@Processors/{GetType().Name}/{testName}.yml").ParseModule();
+            var result = NewParser($"@SyntaxProcessors/{GetType().Name}/{testName}.yml").ParseModule();
             ShouldNotBeNull(result);
             ExpectedMessages();
 

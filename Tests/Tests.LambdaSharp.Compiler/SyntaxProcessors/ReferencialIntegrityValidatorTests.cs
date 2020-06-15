@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-using LambdaSharp.Compiler.Processors;
+using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Processors {
+namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
-    public class ReferencialIntegrityValidatorTests : _Processor {
+    public class ReferencialIntegrityValidatorTests : _SyntaxProcessor {
 
         //--- Constructors ---
         public ReferencialIntegrityValidatorTests(ITestOutputHelper output) : base(output) { }

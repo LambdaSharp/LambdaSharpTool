@@ -20,16 +20,16 @@ using System;
 using System.Collections.Generic;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ItemDeclarationProcessor : AProcessor {
+    internal sealed class ItemDeclarationProcessor : ASyntaxProcessor {
 
         //--- Class Fields ---
         private static readonly ErrorFunc ReservedName = parameter => new Error(0, $"'{parameter}' is a reserved name");
 
         //--- Constructors ---
-        public ItemDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public ItemDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {

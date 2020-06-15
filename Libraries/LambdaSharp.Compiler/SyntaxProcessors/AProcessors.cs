@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal abstract class AProcessor {
+    internal abstract class ASyntaxProcessor {
 
         //--- Constructors ---
-        public AProcessor(IProcessorDependencyProvider provider)
+        public ASyntaxProcessor(ISyntaxProcessorDependencyProvider provider)
             => Provider = provider ?? throw new System.ArgumentNullException(nameof(provider));
 
         //--- Properties ---
-        protected IProcessorDependencyProvider Provider { get; }
+        protected ISyntaxProcessorDependencyProvider Provider { get; }
         protected ILogger Logger => Provider.Logger;
     }
 }

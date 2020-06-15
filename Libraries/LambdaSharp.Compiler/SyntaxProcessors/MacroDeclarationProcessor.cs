@@ -19,12 +19,12 @@
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class MacroDeclarationProcessor : AProcessor {
+    internal sealed class MacroDeclarationProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public MacroDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public MacroDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {

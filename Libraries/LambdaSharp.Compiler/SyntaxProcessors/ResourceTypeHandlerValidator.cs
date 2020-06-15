@@ -19,12 +19,12 @@
 using System.Collections.Generic;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class ResourceTypeHandlerValidator : AProcessor {
+    internal sealed class ResourceTypeHandlerValidator : ASyntaxProcessor {
 
         //--- Constructors ---
-        public ResourceTypeHandlerValidator(IProcessorDependencyProvider provider) : base(provider) { }
+        public ResourceTypeHandlerValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

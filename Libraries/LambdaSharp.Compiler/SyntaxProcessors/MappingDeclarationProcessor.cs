@@ -21,12 +21,12 @@ using System.Linq;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class MappingDeclarationProcessor : AProcessor {
+    internal sealed class MappingDeclarationProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public MappingDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public MappingDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {

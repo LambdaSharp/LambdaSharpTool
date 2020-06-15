@@ -22,10 +22,10 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.TypeSystem;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ResourceInitializationValidator : AProcessor {
+    internal sealed class ResourceInitializationValidator : ASyntaxProcessor {
 
         //--- Class Fields ---
 
@@ -40,7 +40,7 @@ namespace LambdaSharp.Compiler.Processors {
         #endregion
 
         //--- Constructors ---
-        public ResourceInitializationValidator(IProcessorDependencyProvider provider) : base(provider) { }
+        public ResourceInitializationValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,24 +16,19 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.TypeSystem;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    public interface IProcessorDependencyProvider {
+    internal sealed class ImportDeclarationProcessor : ASyntaxProcessor {
 
-        //--- Properties ---
-        ILogger Logger { get; }
-        IEnumerable<AItemDeclaration> Declarations { get; }
+        //--- Constructors ---
+        public ImportDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        bool TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType);
-        Task<string> ConvertKmsAliasToArn(string alias);
-        void DeclareItem(AItemDeclaration itemDeclaration);
-        bool TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration);
+        public void Process(ModuleDeclaration moduleDeclaration) {
+
+            // TODO:
+        }
     }
 }

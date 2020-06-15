@@ -20,12 +20,12 @@ using System;
 using System.Collections.Generic;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class IntegrityValidator : AProcessor {
+    internal sealed class IntegrityValidator : ASyntaxProcessor {
 
         //--- Constructors ---
-        public IntegrityValidator(IProcessorDependencyProvider provider) : base(provider) { }
+        public IntegrityValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {

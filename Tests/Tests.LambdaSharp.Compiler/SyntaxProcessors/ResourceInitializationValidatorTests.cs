@@ -18,16 +18,16 @@
 
 using System.Diagnostics.CodeAnalysis;
 using LambdaSharp.Compiler.TypeSystem;
-using LambdaSharp.Compiler.Processors;
+using LambdaSharp.Compiler.SyntaxProcessors;
 using Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Processors {
+namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
     public class ResourceInitializationValidatorTests :
-        _Processor,
-        IProcessorDependencyProvider,
+        _SyntaxProcessor,
+        ISyntaxProcessorDependencyProvider,
         IClassFixture<CloudFormationTypeSystemFixture>
     {
 
@@ -99,7 +99,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
         protected ITypeSystem TypeSystem => _typeSystemFixture.TypeSystem;
 
         //--- IModuleProcessorDependencyProvider Members ---
-        bool IProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
+        bool ISyntaxProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
             => TypeSystem.TryGetResourceType(typeName, out resourceType);
     }
 }

@@ -18,7 +18,7 @@
 
 using FluentAssertions;
 using LambdaSharp.Compiler.Syntax.Expressions;
-using LambdaSharp.Compiler.Processors;
+using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit;
 using Xunit.Abstractions;
 

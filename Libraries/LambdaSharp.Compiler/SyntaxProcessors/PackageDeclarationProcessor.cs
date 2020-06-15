@@ -18,12 +18,12 @@
 
 using LambdaSharp.Compiler.Syntax.Declarations;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class PackageDeclarationProcessor : AProcessor {
+    internal sealed class PackageDeclarationProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public PackageDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public PackageDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {

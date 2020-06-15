@@ -27,7 +27,7 @@ using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.TypeSystem;
-using LambdaSharp.Compiler.Processors;
+using LambdaSharp.Compiler.SyntaxProcessors;
 
 namespace LambdaSharp.Compiler {
 
@@ -43,7 +43,7 @@ namespace LambdaSharp.Compiler {
         Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region, string version);
     }
 
-    public sealed class ModuleScope : IProcessorDependencyProvider, ILambdaSharpParserDependencyProvider {
+    public sealed class ModuleScope : ISyntaxProcessorDependencyProvider, ILambdaSharpParserDependencyProvider {
 
         // TODO:
         //  - validate usage against imported definitions
@@ -206,25 +206,25 @@ namespace LambdaSharp.Compiler {
         }
 
         //--- IModuleProcessorDependencyProvider Members ---
-        ILogger IProcessorDependencyProvider.Logger => Logger;
-        IEnumerable<AItemDeclaration> IProcessorDependencyProvider.Declarations => _declarations.Values;
+        ILogger ISyntaxProcessorDependencyProvider.Logger => Logger;
+        IEnumerable<AItemDeclaration> ISyntaxProcessorDependencyProvider.Declarations => _declarations.Values;
 
-        bool IProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType) {
-
-            // TODO:
-            throw new NotImplementedException();
-        }
-
-        Task<string> IProcessorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+        bool ISyntaxProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType) {
 
             // TODO:
             throw new NotImplementedException();
         }
 
-        void IProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+        Task<string> ISyntaxProcessorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        void ISyntaxProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
             => _declarations.Add(declaration.FullName, declaration);
 
-        bool IProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+        bool ISyntaxProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => _declarations.TryGetValue(fullname, out itemDeclaration);
 
         //--- ILambdaSharpParserDependencyProvider Members ---

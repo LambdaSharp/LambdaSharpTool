@@ -23,9 +23,9 @@ using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class ResourceTypeDeclarationProcessor : AProcessor {
+    internal sealed class ResourceTypeDeclarationProcessor : ASyntaxProcessor {
 
         //--- Class Fields ---
         private static readonly HashSet<string> _reservedResourceTypePrefixes = new HashSet<string> {
@@ -60,7 +60,7 @@ namespace LambdaSharp.Compiler.Processors {
         }
 
         //--- Constructors ---
-        public ResourceTypeDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public ResourceTypeDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public IEnumerable<ModuleManifestResourceType> FindResourceTypes(ModuleDeclaration moduleDeclaration) {

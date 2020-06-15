@@ -20,10 +20,10 @@ using System;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ResourceDeclarationProcessor : AProcessor {
+    internal sealed class ResourceDeclarationProcessor : ASyntaxProcessor {
 
         //--- Class Fields ---
 
@@ -36,7 +36,7 @@ namespace LambdaSharp.Compiler.Processors {
         #endregion
 
         //--- Constructors ---
-        public ResourceDeclarationProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public ResourceDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {

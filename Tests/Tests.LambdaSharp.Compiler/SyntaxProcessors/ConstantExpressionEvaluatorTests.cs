@@ -21,13 +21,13 @@
 using FluentAssertions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
-using LambdaSharp.Compiler.Processors;
+using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Processors {
+namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
-    public class ConstantExpressionEvaluatorTests : _Init {
+    public class ConstantExpressionEvaluatorTests : _SyntaxProcessor {
 
         //--- Constructors ---
         public ConstantExpressionEvaluatorTests(ITestOutputHelper output) : base(output) { }
@@ -38,11 +38,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
         public void EvaluateIfTrueExpression() {
 
             // arrange
-            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IfTrueExpression.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Process(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ConstantExpressionProcessor(this).Process(module);
@@ -58,11 +54,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
         public void EvaluateIfFalseExpression() {
 
             // arrange
-            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IfFalseExpression.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Process(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ConstantExpressionProcessor(this).Process(module);
@@ -78,11 +70,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
         public void EvaluateIsDefinedTrueExpression() {
 
             // arrange
-            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IsDefinedTrueExpression.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Process(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ConstantExpressionProcessor(this).Process(module);
@@ -98,11 +86,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
         public void EvaluateIsDefinedFalseExpression() {
 
             // arrange
-            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/IsDefinedFalseExpression.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Process(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ConstantExpressionProcessor(this).Process(module);
@@ -118,11 +102,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
         public void EvaluateJoinExpression() {
 
             // arrange
-            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/JoinExpression.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Process(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ConstantExpressionProcessor(this).Process(module);
@@ -138,11 +118,7 @@ namespace Tests.LambdaSharp.Compiler.Processors {
         public void EvaluateSubExpression() {
 
             // arrange
-            var parser = NewParser("@Processors/ConstantExpressionEvaluatorTests/SubExpression.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationProcessor(this).Process(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ConstantExpressionProcessor(this).Process(module);

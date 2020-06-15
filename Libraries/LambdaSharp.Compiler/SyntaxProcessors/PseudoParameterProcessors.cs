@@ -20,12 +20,12 @@ using System;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Processors {
+namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class PseudoParameterProcessor : AProcessor {
+    internal sealed class PseudoParameterProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public PseudoParameterProcessor(IProcessorDependencyProvider provider) : base(provider) { }
+        public PseudoParameterProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {
