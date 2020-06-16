@@ -34,7 +34,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         //--- Constructors ---
         public NestedModuleDeclaration(LiteralExpression itemName) : base(itemName) {
             _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _pragmas = SetParent(new ListExpression());
+            _pragmas = Adopt(new ListExpression());
         }
 
         //--- Properties ---
@@ -42,7 +42,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxRequired]
         public LiteralExpression? Module {
             get => _module;
-            set => _module = SetParent(value);
+            set => _module = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -54,13 +54,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public ObjectExpression? Parameters {
             get => _parameters;
-            set => _parameters = SetParent(value);
+            set => _parameters = Adopt(value);
         }
 
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = SetParent(value);
+            set => _pragmas = Adopt(value);
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));

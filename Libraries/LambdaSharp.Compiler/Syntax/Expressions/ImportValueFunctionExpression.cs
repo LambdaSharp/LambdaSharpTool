@@ -40,7 +40,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public AExpression SharedValueToImport {
             get => _sharedValueToImport ?? throw new InvalidOperationException();
-            set => _sharedValueToImport = SetParent(value ?? throw new ArgumentNullException());
+            set => _sharedValueToImport = Adopt(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---

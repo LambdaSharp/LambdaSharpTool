@@ -36,7 +36,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public LiteralExpression ReferenceName {
             get => _referenceName ?? throw new InvalidOperationException();
-            set => _referenceName = SetParent(value ?? throw new ArgumentNullException());
+            set => _referenceName = Adopt(value ?? throw new ArgumentNullException());
         }
 
         public AItemDeclaration? ReferencedDeclaration {

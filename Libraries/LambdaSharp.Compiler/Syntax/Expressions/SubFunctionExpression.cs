@@ -42,7 +42,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Constructors ---
         public SubFunctionExpression() {
-            _parameters = SetParent(new ObjectExpression());
+            _parameters = Adopt(new ObjectExpression());
         }
 
         //--- Properties ---
@@ -51,13 +51,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public LiteralExpression FormatString {
             get => _formatString ?? throw new InvalidOperationException();
-            set => _formatString = SetParent(value ?? throw new ArgumentNullException());
+            set => _formatString = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxHidden]
         public ObjectExpression Parameters {
             get => _parameters ?? throw new InvalidOperationException();
-            set => _parameters = SetParent(value ?? throw new ArgumentNullException());
+            set => _parameters = Adopt(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---

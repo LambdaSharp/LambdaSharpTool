@@ -75,7 +75,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
-            ItemName = SetParent(itemName ?? throw new ArgumentNullException(nameof(itemName)));
+            ItemName = Adopt(itemName ?? throw new ArgumentNullException(nameof(itemName)));
         }
 
         //--- Properties ---
@@ -83,7 +83,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public LiteralExpression? Description {
             get => _description;
-            set => _description = SetParent(value);
+            set => _description = Adopt(value);
         }
 
         [SyntaxHidden]

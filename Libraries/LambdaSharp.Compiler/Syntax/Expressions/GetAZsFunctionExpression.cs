@@ -32,7 +32,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public AExpression Region {
             get => _region ?? throw new InvalidOperationException();
-            set => _region = SetParent(value ?? throw new ArgumentNullException());
+            set => _region = Adopt(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---

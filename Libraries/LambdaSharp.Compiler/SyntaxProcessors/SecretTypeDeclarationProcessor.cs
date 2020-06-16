@@ -91,17 +91,14 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     },
                     DiscardIfNotReachable = true
                 };
-                parent.Adopt(decoderResourceDeclaration);
-                Provider.DeclareItem(decoderResourceDeclaration);
+                Provider.DeclareItem(parent.Adopt(decoderResourceDeclaration));
 
                 // add variable to retrieve decrypted secret
                 var plaintextVariableDeclaration = new VariableDeclaration(Fn.Literal("Plaintext")) {
                     Value = Fn.GetAtt(decoderResourceDeclaration.FullName, "Plaintext")
                 };
-                parent.Adopt(plaintextVariableDeclaration);
-                Provider.DeclareItem(plaintextVariableDeclaration);
+                Provider.DeclareItem(parent.Adopt(plaintextVariableDeclaration));
             }
-
         }
 
         private void ValidateEncryptContext(ObjectExpression? encryptionContext) {

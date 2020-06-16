@@ -40,19 +40,19 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public LiteralExpression MapName {
             get => _mapName ?? throw new InvalidOperationException();
-            set => _mapName = SetParent(value ?? throw new ArgumentNullException());
+            set => _mapName = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxHidden]
         public AExpression TopLevelKey {
             get => _topLevelKey ?? throw new InvalidOperationException();
-            set => _topLevelKey = SetParent(value ?? throw new ArgumentNullException());
+            set => _topLevelKey = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxHidden]
         public AExpression SecondLevelKey {
             get => _secondLevelKey ?? throw new InvalidOperationException();
-            set => _secondLevelKey = SetParent(value ?? throw new ArgumentNullException());
+            set => _secondLevelKey = Adopt(value ?? throw new ArgumentNullException());
         }
 
         public MappingDeclaration? ReferencedDeclaration {

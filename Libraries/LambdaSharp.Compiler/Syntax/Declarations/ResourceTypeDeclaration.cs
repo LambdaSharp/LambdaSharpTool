@@ -39,25 +39,25 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             [SyntaxRequired]
             public LiteralExpression Name {
                 get => _name ?? throw new InvalidOperationException();
-                set => _name = SetParent(value ?? throw new ArgumentNullException());
+                set => _name = Adopt(value ?? throw new ArgumentNullException());
             }
 
             [SyntaxOptional]
             public LiteralExpression? Description {
                 get => _description;
-                set => _description = SetParent(value);
+                set => _description = Adopt(value);
             }
 
             [SyntaxOptional]
             public LiteralExpression? Type {
                 get => _type;
-                set => _type = SetParent(value);
+                set => _type = Adopt(value);
             }
 
             [SyntaxOptional]
             public LiteralExpression? Required {
                 get => _required;
-                set => _required = SetParent(value);
+                set => _required = Adopt(value);
             }
         }
 
@@ -73,19 +73,19 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             [SyntaxRequired]
             public LiteralExpression Name {
                 get => _name ?? throw new InvalidOperationException();
-                set => _name = SetParent(value ?? throw new ArgumentNullException());
+                set => _name = Adopt(value ?? throw new ArgumentNullException());
             }
 
             [SyntaxOptional]
             public LiteralExpression? Description {
                 get => _description;
-                set => _description = SetParent(value);
+                set => _description = Adopt(value);
             }
 
             [SyntaxOptional]
             public LiteralExpression? Type {
                 get => _type;
-                set => _type = SetParent(value);
+                set => _type = Adopt(value);
             }
         }
 
@@ -106,13 +106,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxRequired]
         public AExpression? Handler {
             get => _handler;
-            set => _handler = SetParent(value);
+            set => _handler = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Documentation {
             get => _documentation;
-            set => _documentation = SetParent(value);
+            set => _documentation = Adopt(value);
         }
 
         [SyntaxOptional]

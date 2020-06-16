@@ -30,7 +30,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public MacroDeclaration(LiteralExpression keywordValue) : base(keywordValue) {
-            _properties = SetParent(new ObjectExpression());
+            _properties = Adopt(new ObjectExpression());
         }
 
         //--- Properties ---
@@ -38,7 +38,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxRequired]
         public AExpression? Handler {
             get => _handler;
-            set => _handler = SetParent(value);
+            set => _handler = Adopt(value);
         }
 
         //--- IResourceDeclaration Members ---

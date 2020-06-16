@@ -52,7 +52,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         public ObjectExpression() => _pairs = new List<KeyValuePair>();
 
         public ObjectExpression(IEnumerable<KeyValuePair> pairs)
-            => _pairs = pairs.Select(pair => new KeyValuePair(SetParent(pair.Key), SetParent(pair.Value))).ToList();
+            => _pairs = pairs.Select(pair => new KeyValuePair(Adopt(pair.Key), Adopt(pair.Value))).ToList();
 
         //--- Operators ---
         public AExpression this[string key] {
@@ -82,10 +82,10 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
                     var pair = _pairs[index];
                     if(!object.ReferenceEquals(pair.Value, value)) {
                         UnsetParent(pair.Value);
-                        pair.SetValue(SetParent(value));
+                        pair.SetValue(Adopt(value));
                     }
                 } else {
-                    _pairs.Add(new KeyValuePair(SetParent(key), SetParent(value)));
+                    _pairs.Add(new KeyValuePair(Adopt(key), Adopt(value)));
                 }
             }
         }
@@ -140,7 +140,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
                 var result = new T {
                     SourceLocation = SourceLocation
                 };
-                this[key] = SetParent(result);
+                this[key] = Adopt(result);
                 return result;
             }
         }

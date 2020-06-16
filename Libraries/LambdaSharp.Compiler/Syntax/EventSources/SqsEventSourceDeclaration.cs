@@ -29,14 +29,14 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
 
         //--- Constructors ---
         public SqsEventSourceDeclaration(AExpression eventSource)
-            => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+            => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
         public AExpression? BatchSize {
             get => _batchSize;
-            set => _batchSize = SetParent(value);
+            set => _batchSize = Adopt(value);
         }
 
         public AExpression EventSource { get; }

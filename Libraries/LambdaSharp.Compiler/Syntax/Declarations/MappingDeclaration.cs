@@ -29,14 +29,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public MappingDeclaration(LiteralExpression itemName) : base(itemName)
-            => _value = SetParent(new ObjectExpression());
+            => _value = Adopt(new ObjectExpression());
 
         //--- Properties ---
 
         [SyntaxRequired]
         public ObjectExpression Value {
             get => _value;
-            set => _value = SetParent(value);
+            set => _value = Adopt(value);
         }
     }
 }

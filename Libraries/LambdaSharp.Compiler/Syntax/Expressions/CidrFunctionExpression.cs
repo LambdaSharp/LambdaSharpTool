@@ -36,19 +36,19 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public AExpression IpBlock {
             get => _ipBlock ?? throw new InvalidOperationException();
-            set => _ipBlock = SetParent(value ?? throw new ArgumentNullException());
+            set => _ipBlock = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxHidden]
         public AExpression Count {
             get => _count ?? throw new InvalidOperationException();
-            set => _count = SetParent(value ?? throw new ArgumentNullException());
+            set => _count = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxHidden]
         public AExpression CidrBits {
             get => _cidrBits ?? throw new InvalidOperationException();
-            set => _cidrBits = SetParent(value ?? throw new ArgumentNullException());
+            set => _cidrBits = Adopt(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---

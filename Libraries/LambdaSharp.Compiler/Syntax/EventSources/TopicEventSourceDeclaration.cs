@@ -28,14 +28,14 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         private ObjectExpression? _filters;
 
         //--- Constructors ---
-        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
         public ObjectExpression? Filters {
             get => _filters;
-            set => _filters = SetParent(value);
+            set => _filters = Adopt(value);
         }
 
         public AExpression EventSource { get; }

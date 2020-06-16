@@ -37,13 +37,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public AExpression LeftValue {
             get => _leftValue ?? throw new InvalidOperationException();
-            set => _leftValue = SetParent(value ?? throw new ArgumentNullException());
+            set => _leftValue = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxHidden]
         public AExpression RightValue {
             get => _rightValue ?? throw new InvalidOperationException();
-            set => _rightValue = SetParent(value ?? throw new ArgumentNullException());
+            set => _rightValue = Adopt(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---

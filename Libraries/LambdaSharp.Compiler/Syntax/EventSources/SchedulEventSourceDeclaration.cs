@@ -28,14 +28,14 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         private LiteralExpression? _name;
 
         //--- Constructors ---
-        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
         public LiteralExpression? Name {
             get => _name;
-            set => _name = SetParent(value);
+            set => _name = Adopt(value);
         }
 
         public AExpression EventSource { get; }

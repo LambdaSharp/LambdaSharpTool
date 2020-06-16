@@ -36,7 +36,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public AExpression Value {
             get => _value ?? throw new InvalidOperationException();
-            set => _value = SetParent(value ?? throw new ArgumentNullException());
+            set => _value = Adopt(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---

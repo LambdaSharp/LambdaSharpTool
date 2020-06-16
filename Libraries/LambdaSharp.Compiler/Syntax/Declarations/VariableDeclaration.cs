@@ -40,7 +40,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public LiteralExpression? Type {
             get => type;
-            set => type = SetParent(value);
+            set => type = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -52,13 +52,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxRequired]
         public AExpression? Value {
             get => _value;
-            set => _value = SetParent(value);
+            set => _value = Adopt(value);
         }
 
         [SyntaxOptional]
         public ObjectExpression? EncryptionContext {
             get => _encryptionContext;
-            set => _encryptionContext = SetParent(value);
+            set => _encryptionContext = Adopt(value);
         }
 
         public bool HasSecretType => Type!.Value == "Secret";

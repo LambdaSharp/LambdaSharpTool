@@ -30,26 +30,26 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         private AExpression? _maximumBatchingWindowInSeconds;
 
         //--- Constructors ---
-        public KinesisEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public KinesisEventSourceDeclaration(AExpression eventSource) => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
         public AExpression? BatchSize {
             get => _batchSize;
-            set => _batchSize = SetParent(value);
+            set => _batchSize = Adopt(value);
         }
 
         [SyntaxOptional]
         public AExpression? StartingPosition {
             get => _startingPosition;
-            set => _startingPosition = SetParent(value);
+            set => _startingPosition = Adopt(value);
         }
 
         [SyntaxOptional]
         public AExpression? MaximumBatchingWindowInSeconds {
             get => _maximumBatchingWindowInSeconds;
-            set => _maximumBatchingWindowInSeconds = SetParent(value);
+            set => _maximumBatchingWindowInSeconds = Adopt(value);
         }
 
         public AExpression EventSource { get; }

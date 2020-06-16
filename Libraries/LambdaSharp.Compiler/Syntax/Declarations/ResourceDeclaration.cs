@@ -45,8 +45,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public ResourceDeclaration(LiteralExpression itemName) : base(itemName) {
             _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _properties = SetParent(new ObjectExpression());
-            _pragmas = SetParent(new ListExpression());
+            _properties = Adopt(new ObjectExpression());
+            _pragmas = Adopt(new ListExpression());
         }
 
         //--- Properties ---
@@ -54,13 +54,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public AExpression? If {
             get => _if;
-            set => _if = SetParent(value);
+            set => _if = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Type {
             get => _type;
-            set => _type = SetParent(value);
+            set => _type = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -78,7 +78,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public AExpression? Value {
             get => _value;
-            set => _value = SetParent(value);
+            set => _value = Adopt(value);
         }
 
         // TODO: allow conditional dependencies
@@ -91,19 +91,19 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public ObjectExpression Properties {
             get => _properties;
-            set => _properties = SetParent(value);
+            set => _properties = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? DefaultAttribute {
             get => _defaultAttribute;
-            set => _defaultAttribute = SetParent(value);
+            set => _defaultAttribute = Adopt(value);
         }
 
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = SetParent(value);
+            set => _pragmas = Adopt(value);
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));

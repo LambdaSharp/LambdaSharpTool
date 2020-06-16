@@ -41,32 +41,32 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         }
 
         //--- Constructors ---
-        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
         public LiteralExpression? Integration {
             get => _integration;
-            set => _integration = SetParent(value);
+            set => _integration = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? OperationName {
             get => _operationName;
-            set => _operationName = SetParent(value);
+            set => _operationName = Adopt(value);
         }
 
         [SyntaxOptional]
         public AExpression? ApiKeyRequired {
             get => _apiKeyRequired;
-            set => _apiKeyRequired = SetParent(value);
+            set => _apiKeyRequired = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? AuthorizationType {
             get => _authorizationType;
-            set => _authorizationType = SetParent(value);
+            set => _authorizationType = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -78,13 +78,13 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         [SyntaxOptional]
         public AExpression? AuthorizerId {
             get => _authorizerId;
-            set => _authorizerId = SetParent(value);
+            set => _authorizerId = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Invoke {
             get => _invoke;
-            set => _invoke = SetParent(value);
+            set => _invoke = Adopt(value);
         }
 
         public LiteralExpression EventSource { get; }

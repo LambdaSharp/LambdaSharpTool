@@ -42,13 +42,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             [SyntaxRequired]
             public AExpression? SecurityGroupIds {
                 get => _securityGroupIds;
-                set => _securityGroupIds = SetParent(value);
+                set => _securityGroupIds = Adopt(value);
             }
 
             [SyntaxRequired]
             public AExpression? SubnetIds {
                 get => _subnetIds;
-                set => _subnetIds = SetParent(value);
+                set => _subnetIds = Adopt(value);
             }
         }
 
@@ -70,10 +70,10 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         //--- Constructors ---
         public FunctionDeclaration(LiteralExpression itemName) : base(itemName) {
             _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _environment = SetParent(new ObjectExpression());
-            _properties = SetParent(new ObjectExpression());
+            _environment = Adopt(new ObjectExpression());
+            _properties = Adopt(new ObjectExpression());
             _sources = new SyntaxNodeCollection<AEventSourceDeclaration>();
-            _pragmas = SetParent(new ListExpression());
+            _pragmas = Adopt(new ListExpression());
         }
 
         //--- Properties ---
@@ -87,62 +87,62 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public AExpression? If {
             get => _if;
-            set => _if = SetParent(value);
+            set => _if = Adopt(value);
         }
 
         [SyntaxRequired]
         public AExpression? Memory {
             get => _memory;
-            set => _memory = SetParent(value);
+            set => _memory = Adopt(value);
         }
 
         [SyntaxRequired]
         public AExpression? Timeout {
             get => _timeout;
-            set => _timeout = SetParent(value);
+            set => _timeout = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Project {
             get => _project;
-            set => _project = SetParent(value);
+            set => _project = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Runtime {
             get => _runtime;
-            set => _runtime = SetParent(value);
+            set => _runtime = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Language {
             get => _language;
-            set => _language = SetParent(value);
+            set => _language = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Handler {
             get => _handler;
-            set => _handler = SetParent(value);
+            set => _handler = Adopt(value);
         }
 
         // TODO (2020-01-30, bjorg): this notation is deprecated, use `VpcConfig` in `Properties` instead
         [SyntaxOptional]
         public VpcExpression? Vpc {
             get => _vpc;
-            set => _vpc = SetParent(value);
+            set => _vpc = Adopt(value);
         }
 
         [SyntaxOptional]
         public ObjectExpression Environment {
             get => _environment;
-            set => _environment = SetParent(value);
+            set => _environment = Adopt(value);
         }
 
         [SyntaxOptional]
         public ObjectExpression Properties {
             get => _properties;
-            set => _properties = SetParent(value);
+            set => _properties = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -154,7 +154,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = SetParent(value);
+            set => _pragmas = Adopt(value);
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));

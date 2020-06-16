@@ -25,7 +25,7 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
     public sealed class AlexaEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Constructors ---
-        public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         public AExpression EventSource { get; }
     }

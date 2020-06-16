@@ -30,7 +30,7 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         private LiteralExpression? _suffix;
 
         //--- Constructors ---
-        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -43,13 +43,13 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         [SyntaxOptional]
         public LiteralExpression? Prefix {
             get => _prefix;
-            set => _prefix = SetParent(value);
+            set => _prefix = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Suffix {
             get => _suffix;
-            set => _suffix = SetParent(value);
+            set => _suffix = Adopt(value);
         }
 
         public AExpression EventSource { get; }

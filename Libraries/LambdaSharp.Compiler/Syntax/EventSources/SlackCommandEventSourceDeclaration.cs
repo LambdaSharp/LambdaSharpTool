@@ -25,7 +25,7 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
     public sealed class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Constructors ---
-        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = Adopt(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
         public string[]? SlackPath { get; set; }

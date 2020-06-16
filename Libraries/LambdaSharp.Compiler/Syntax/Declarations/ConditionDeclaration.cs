@@ -35,7 +35,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxRequired]
         public AExpression? Value {
             get => _value;
-            set => _value = SetParent(value);
+            set => _value = Adopt(value);
         }
     }
 }

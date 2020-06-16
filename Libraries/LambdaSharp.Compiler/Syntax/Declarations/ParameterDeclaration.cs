@@ -53,7 +53,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public ParameterDeclaration(LiteralExpression itemName) : base(itemName) {
             _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _allowedValues = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _pragmas = SetParent(new ListExpression());
+            _pragmas = Adopt(new ListExpression());
         }
 
         //--- Properties ---
@@ -61,19 +61,19 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public LiteralExpression? Section {
             get => _section;
-            set => _section = SetParent(value);
+            set => _section = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Label {
             get => _label;
-            set => _label = SetParent(value);
+            set => _label = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Type {
             get => _type;
-            set => _type = SetParent(value);
+            set => _type = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -85,25 +85,25 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public LiteralExpression? NoEcho {
             get => _noEcho;
-            set => _noEcho = SetParent(value);
+            set => _noEcho = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? Default {
             get => _default;
-            set => _default = SetParent(value);
+            set => _default = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? ConstraintDescription {
             get => _constraintDescription;
-            set => _constraintDescription = SetParent(value);
+            set => _constraintDescription = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? AllowedPattern {
             get => _allowedPattern;
-            set => _allowedPattern = SetParent(value);
+            set => _allowedPattern = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -115,25 +115,25 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public LiteralExpression? MaxLength {
             get => _maxLength;
-            set => _maxLength = SetParent(value);
+            set => _maxLength = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? MaxValue {
             get => _maxValue;
-            set => _maxValue = SetParent(value);
+            set => _maxValue = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? MinLength {
             get => _minLength;
-            set => _minLength = SetParent(value);
+            set => _minLength = Adopt(value);
         }
 
         [SyntaxOptional]
         public LiteralExpression? MinValue {
             get => _minValue;
-            set => _minValue = SetParent(value);
+            set => _minValue = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -145,25 +145,25 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public ObjectExpression? Properties {
             get => _properties;
-            set => _properties = SetParent(value);
+            set => _properties = Adopt(value);
         }
 
         [SyntaxOptional]
         public ObjectExpression? EncryptionContext {
             get => _encryptionContext;
-            set => _encryptionContext = SetParent(value);
+            set => _encryptionContext = Adopt(value);
         }
 
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = SetParent(value);
+            set => _pragmas = Adopt(value);
         }
 
         [SyntaxHidden]
         public LiteralExpression? Import {
             get => _import;
-            set => _import = SetParent(value);
+            set => _import = Adopt(value);
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));

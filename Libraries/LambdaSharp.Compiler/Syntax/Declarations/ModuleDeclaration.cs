@@ -38,13 +38,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             [SyntaxRequired]
             public LiteralExpression? Version {
                 get => _version;
-                set => _version = SetParent(value);
+                set => _version = Adopt(value);
             }
 
             [SyntaxRequired]
             public LiteralExpression? Region {
                 get => _region;
-                set => _region = SetParent(value);
+                set => _region = Adopt(value);
             }
         }
 
@@ -61,9 +61,9 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public ModuleDeclaration(LiteralExpression moduleName) {
-            ModuleName = SetParent(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
-            _version = SetParent(Fn.Literal("1.0-DEV"));
-            _pragmas = SetParent(new ListExpression());
+            ModuleName = Adopt(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
+            _version = Adopt(Fn.Literal("1.0-DEV"));
+            _pragmas = Adopt(new ListExpression());
             _secrets = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _using = SetParent(new SyntaxNodeCollection<UsingModuleDeclaration>());
             _items = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
@@ -74,19 +74,19 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public LiteralExpression Version {
             get => _version;
-            set => _version = SetParent(value ?? throw new ArgumentNullException());
+            set => _version = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
         public LiteralExpression? Description {
             get => _description;
-            set => _description = SetParent(value);
+            set => _description = Adopt(value);
         }
 
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = SetParent(value ?? throw new ArgumentNullException());
+            set => _pragmas = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -110,7 +110,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public CloudFormationSpecExpression? CloudFormation {
             get => _cloudformation;
-            set => _cloudformation = SetParent(value);
+            set => _cloudformation = Adopt(value);
         }
 
         public LiteralExpression ModuleName { get; }

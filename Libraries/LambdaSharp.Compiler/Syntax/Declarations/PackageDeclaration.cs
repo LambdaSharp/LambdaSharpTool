@@ -46,7 +46,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxRequired]
         public LiteralExpression? Files {
             get => _files;
-            set => _files = SetParent(value);
+            set => _files = Adopt(value);
         }
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();

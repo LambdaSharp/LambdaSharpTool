@@ -35,13 +35,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         [SyntaxHidden]
         public LiteralExpression MacroName {
             get => _macroName ?? throw new InvalidOperationException();
-            set => _macroName = SetParent(value ?? throw new ArgumentNullException());
+            set => _macroName = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxHidden]
         public ObjectExpression? Parameters {
             get => _parameters;
-            set => _parameters = SetParent(value);
+            set => _parameters = Adopt(value);
         }
 
         //--- Methods ---

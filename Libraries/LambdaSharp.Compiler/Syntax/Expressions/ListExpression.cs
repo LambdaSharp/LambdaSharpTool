@@ -33,7 +33,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         public ListExpression() => _items = new List<AExpression>();
 
         public ListExpression(IEnumerable<AExpression> items)
-            => _items = items.Select(item => SetParent(item)).ToList();
+            => _items = items.Select(item => Adopt(item)).ToList();
 
         //--- Properties ---
         public int Count => _items.Count;
@@ -44,7 +44,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             set {
                 if(!object.ReferenceEquals(_items[index], value)) {
                     UnsetParent(_items[index]);
-                    _items[index]  = SetParent(value ?? throw new ArgumentNullException(nameof(value)));
+                    _items[index]  = Adopt(value ?? throw new ArgumentNullException(nameof(value)));
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         public override ASyntaxNode CloneNode() => new ListExpression(_items.Select(item => item.Clone()));
 
-        public void Add(AExpression expression) => _items.Add(SetParent(expression));
+        public void Add(AExpression expression) => _items.Add(Adopt(expression));
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();

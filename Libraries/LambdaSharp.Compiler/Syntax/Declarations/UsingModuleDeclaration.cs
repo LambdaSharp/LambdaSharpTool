@@ -29,14 +29,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public UsingModuleDeclaration(LiteralExpression moduleName)
-            => ModuleName = SetParent(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
+            => ModuleName = Adopt(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
 
         //--- Properties ---
 
         [SyntaxOptional]
         public LiteralExpression? Description {
             get => _description;
-            set => _description = SetParent(value);
+            set => _description = Adopt(value);
         }
 
         public LiteralExpression ModuleName { get; }
