@@ -18,7 +18,7 @@
 
 using System.Collections.Generic;
 
-namespace LambdaSharp.CloudFormation {
+namespace LambdaSharp.CloudFormation.Template {
 
     public class CloudFormationParameter {
 
