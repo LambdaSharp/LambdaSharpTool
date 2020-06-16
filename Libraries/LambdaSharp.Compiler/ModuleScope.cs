@@ -110,10 +110,9 @@ namespace LambdaSharp.Compiler {
             new ItemDeclarationProcessor(this).Process(moduleDeclaration);
 
             // process declarations
-            new ParameterDeclarationProcessor(this).Process(moduleDeclaration);
+            new ParameterAndImportDeclarationProcessor(this).Process(moduleDeclaration);
             new ResourceDeclarationProcessor(this).Process(moduleDeclaration);
             new PackageDeclarationProcessor(this).Process(moduleDeclaration);
-            new ImportDeclarationProcessor(this).Process(moduleDeclaration);
             new MappingDeclarationProcessor(this).Process(moduleDeclaration);
             new FunctionDeclarationProcessor(this).Process(moduleDeclaration);
             // TODO: NestedModuleDeclaration

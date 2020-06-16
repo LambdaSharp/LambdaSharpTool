@@ -285,7 +285,6 @@ namespace LambdaSharp.Compiler {
         public static readonly Error LanguageAttributeInvalid = new Error(0, "'Language' attribute must be a support project language");
         public static readonly Error LanguageAttributeMissing = new Error(0, "'Language' attribute is required");
         public static readonly Error MemoryAttributeInvalid = new Error(0, "'Memory' attribute must have an integer value");
-        public static readonly Error ModuleAttributeInvalid = new Error(0, "'Module' attribute must be a module reference");
         public static readonly Error ModuleNameAttributeInvalid = new Error(0, "'Module' attribute must have format 'Namespace.Name'");
         public static readonly Error ProjectAttributeInvalid = new Error(0, "'Project' attribute project must refer a supported project file or folder");
         public static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");

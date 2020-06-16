@@ -34,6 +34,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         //--- Constructors ---
         public ImportDeclaration(LiteralExpression itemName) : base(itemName) {
             _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            DiscardIfNotReachable = true;
         }
 
         //--- Properties ---
@@ -69,5 +70,30 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public bool HasSecretType => Type!.Value == "Secret";
+
+        //--- Methods ---
+        public void GetModuleAndExportName(
+            out string moduleReference,
+            out string exportName
+        ) {
+            if(Module == null) {
+                throw new InvalidOperationException();
+            }
+            var split = Module.Value.Split("::", 2);
+            if(split != null) {
+                if(split.Length == 2) {
+                    moduleReference = split[0];
+                    exportName = split[1];
+                } else {
+
+                    // assume the item name matches the export name
+                    moduleReference = split[0];
+                    exportName = ItemName.Value;
+                }
+            } else {
+                moduleReference = null;
+                exportName = null;
+            }
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {
 
-            // TODO: generalize this to IAllowDeclaration
+            // TODO: generalize this to IAllowDeclaration (ImportDeclaration, ParameterDeclaration, ResourceDeclaration, ...)
 
             // TODO: validate allow statements
             //  - check if the allowed operations are valid for the specified type

@@ -25,6 +25,12 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
     internal sealed class ExternalDependenciesProcessor : ASyntaxProcessor {
 
+        //--- Class Fields ---
+
+        #region Errors/Warnings
+        private static readonly Error ModuleAttributeInvalidModuleInfo = new Error(0, "'Module' attribute must be a module reference");
+        #endregion
+
         //--- Constructors ---
         public ExternalDependenciesProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
@@ -44,7 +50,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                     // check if module reference is valid
                     if(!ModuleInfo.TryParse(usingModuleDeclaration.ModuleName.Value, out var usingModuleInfo)) {
-                        Logger.Log(Error.ModuleAttributeInvalid, usingModuleDeclaration.ModuleName);
+                        Logger.Log(ModuleAttributeInvalidModuleInfo, usingModuleDeclaration.ModuleName);
                     } else {
 
                         // default to deployment bucket as origin when missing
@@ -60,7 +66,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                     // check if module reference is valid
                     if(!ModuleInfo.TryParse(nestedModuleDeclaration.Module?.Value, out var nestedModuleInfo)) {
-                        Logger.Log(Error.ModuleAttributeInvalid, (ISyntaxNode?)nestedModuleDeclaration.Module ?? (ISyntaxNode)nestedModuleDeclaration);
+                        Logger.Log(ModuleAttributeInvalidModuleInfo, (ISyntaxNode?)nestedModuleDeclaration.Module ?? nestedModuleDeclaration);
                     } else {
 
                         // default to deployment bucket as origin when missing
@@ -70,6 +76,23 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                         // add module reference as a nested dependency
                         result.Add((node, ModuleManifestDependencyType.Nested, nestedModuleInfo.ToString()));
+                    }
+                    break;
+                case ImportDeclaration importDeclaration:
+                    importDeclaration.GetModuleAndExportName(out var importModuleName, out var importExportName);
+
+                    // check if module reference is valid
+                    if(!ModuleInfo.TryParse(importModuleName, out var importModuleInfo)) {
+                        Logger.Log(ModuleAttributeInvalidModuleInfo, (ISyntaxNode?)importDeclaration.Module ?? importDeclaration);
+                    } else {
+
+                        // default to deployment bucket as origin when missing
+                        if(importModuleInfo.Origin == null) {
+                            importModuleInfo = importModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
+                        }
+
+                        // add module reference as a shared dependency
+                        result.Add((node, ModuleManifestDependencyType.Shared, importModuleInfo.ToString()));
                     }
                     break;
                 }

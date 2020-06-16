@@ -27,7 +27,7 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ParameterDeclarationProcessor : ASyntaxProcessor {
+    internal sealed class ParameterAndImportDeclarationProcessor : ASyntaxProcessor {
 
         //--- Constants ---
         private const int MAX_PARAMETER_DESCRIPTION_LENGTH = 4_000;
@@ -149,17 +149,25 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         private static bool IsCloudFormationParameterType(string type) => _cloudFormationParameterTypes.Contains(type);
 
         //--- Constructors ---
-        public ParameterDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
+        public ParameterAndImportDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Process(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectType<ParameterDeclaration>(node => {
-                ValidateParameterStructure(node);
-                ValidateParemeterType(node);
+            moduleDeclaration.Inspect(node => {
+                switch(node) {
+                case ParameterDeclaration parameterDeclaration:
+                    ValidateStructure(parameterDeclaration);
+                    ValidateParemeterType(parameterDeclaration);
+                    break;
+                case ImportDeclaration importDeclaration:
+                    ValidateStructure(importDeclaration);
+                    ValidateImportType(importDeclaration);
+                    break;
+                }
             });
         }
 
-        private void ValidateParameterStructure(ParameterDeclaration node) {
+        private void ValidateStructure(AItemDeclaration node) {
 
             // ensure parameter declaration is a child of the module declaration (nesting is not allowed)
             if(!(node.GetParents().OfType<ADeclaration>().FirstOrDefault() is ModuleDeclaration)) {
@@ -277,17 +285,9 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
             // only the 'Secret' type can have the 'EncryptionContext' attribute
             if(node.Type.Value == "Secret") {
+                ValidateEncryptContext(node.EncryptionContext);
 
-                // all 'EncryptionContext' values must be literal values
-                if(node.EncryptionContext != null) {
-
-                    // all expressions must be literals for the EncryptionContext
-                    foreach(var kv in node.EncryptionContext) {
-                        if(!(kv.Value is LiteralExpression)) {
-                            Logger.Log(EncryptionContextExpectedLiteralStringExpression, kv.Value);
-                        }
-                    }
-                }
+                // TODO: add resource for decrypting secret
             } else {
 
                 // ensure Secret parameter options are not used
@@ -314,6 +314,51 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 }
             } else {
                 Logger.Log(UnknownType(node.Type.Value), node.Type);
+            }
+        }
+
+        private void ValidateImportType(ImportDeclaration node) {
+
+            // assume 'String' type when 'Type' attribute is omitted
+            if(node.Type == null) {
+                Logger.Log(AssumingStringType, node);
+                node.Type = Fn.Literal("String", node.SourceLocation);
+            }
+
+            // only the 'Secret' type can have the 'EncryptionContext' attribute
+            if(node.Type.Value == "Secret") {
+                ValidateEncryptContext(node.EncryptionContext);
+
+                // TODO: add resource for decrypting secret
+            } else {
+
+                // ensure Secret parameter options are not used
+                if(node.EncryptionContext != null) {
+                    Logger.Log(EncryptionContextAttributeRequiresSecretType, node.EncryptionContext);
+                }
+
+                // validate the import type
+                if(
+                    (node.Type.Value != "String")
+                    && (node.Type.Value != "Number")
+                    && !Provider.TryGetResourceType(node.Type.Value, out var _)
+                ) {
+                    Logger.Log(UnknownType(node.Type.Value), node.Type);
+                }
+            }
+        }
+
+        private void ValidateEncryptContext(ObjectExpression? encryptionContext) {
+
+            // all 'EncryptionContext' values must be literal values
+            if(encryptionContext != null) {
+
+                // all expressions must be literals for the EncryptionContext
+                foreach(var kv in encryptionContext) {
+                    if(!(kv.Value is LiteralExpression)) {
+                        Logger.Log(EncryptionContextExpectedLiteralStringExpression, kv.Value);
+                    }
+                }
             }
         }
     }
