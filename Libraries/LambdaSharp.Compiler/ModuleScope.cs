@@ -128,8 +128,6 @@ namespace LambdaSharp.Compiler {
             new ReferencialIntegrityValidator(this).Validate(moduleDeclaration);
             new ExpressionTypeProcessor(this).Process(moduleDeclaration);
 
-            // TODO: configure Finalizer dependencies
-
             // ensure that constructed resources have required and necessary properties
             new ResourceInitializationValidator(this).Validate(moduleDeclaration);
 

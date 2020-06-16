@@ -27,7 +27,7 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         //--- Fields ---
         private LiteralExpression? _integration;
         private LiteralExpression? _operationName;
-        private LiteralExpression? _apiKeyRequired;
+        private AExpression? _apiKeyRequired;
         private LiteralExpression? _authorizationType;
         private SyntaxNodeCollection<LiteralExpression>? _authorizationScopes;
         private AExpression? _authorizerId;
@@ -58,7 +58,7 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         }
 
         [SyntaxOptional]
-        public LiteralExpression? ApiKeyRequired {
+        public AExpression? ApiKeyRequired {
             get => _apiKeyRequired;
             set => _apiKeyRequired = SetParent(value);
         }

@@ -119,8 +119,11 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 case "*":
                 case "all":
 
-                    // register declaration as dependency with all function declarations
-                    foreach(var functionDeclaration in Provider.Declarations.OfType<FunctionDeclaration>()) {
+                    // register declaration as dependency with all function declarations that allow wildcard scopes
+                    foreach(var functionDeclaration in Provider.Declarations
+                        .OfType<FunctionDeclaration>()
+                        .Where(functionDeclaration => functionDeclaration.HasWildcardScopedVariables)
+                    ) {
                         functionDeclaration.TrackDependency(declaration, scope);
                     }
                     break;
