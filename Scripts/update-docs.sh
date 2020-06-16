@@ -17,7 +17,7 @@ fi
 
 # write current version to `version.txt`, which is used by docfx
 echo "*** WRITING VERSION TO FILE: $LAMBDASHARP_VERSION"
-echo $LAMBDASHARP_VERSION > $LAMBDASHARP/src/DocFX/version.txt
+echo $LAMBDASHARP_VERSION > $LAMBDASHARP/Docs/version.txt
 
 # clean-out current documentation folder
 echo "*** DELETING OLD DOCUMENTATION"
@@ -30,5 +30,5 @@ git checkout master -- CNAME
 
 # generate new documentation
 echo "*** GENERATING NEW DOCUMENTATION"
-cd $LAMBDASHARP/src/DocFx
+cd $LAMBDASHARP/Docs
 docfx docfx.json --force

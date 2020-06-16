@@ -12,9 +12,9 @@ fi
 
 # write current version to `version.txt`, which is used by docfx
 echo "*** WRITING VERSION TO FILE: $LAMBDASHARP_VERSION"
-echo $LAMBDASHARP_VERSION > $LAMBDASHARP/src/DocFX/version.txt
+echo $LAMBDASHARP_VERSION > $LAMBDASHARP/Docs/version.txt
 
 # generate new documentation
 echo "*** SERVING DOCUMENTATION (HIT ENTER TO STOP)"
-cd $LAMBDASHARP/src/DocFx
+cd $LAMBDASHARP/Docs
 docfx docfx.json --serve
