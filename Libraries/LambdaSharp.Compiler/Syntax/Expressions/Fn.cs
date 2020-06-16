@@ -58,6 +58,12 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
+        public static JoinFunctionExpression Join(string separator, IEnumerable<AExpression> values, SourceLocation sourceLocation) => new JoinFunctionExpression {
+            Delimiter = Literal(separator),
+            Values = new ListExpression(values ?? throw new ArgumentNullException(nameof(values))),
+            SourceLocation = sourceLocation
+        };
+
         public static SelectFunctionExpression Select(string index, AExpression values, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new SelectFunctionExpression {
             Index = Literal(index),
             Values = values ?? throw new ArgumentNullException(nameof(values)),

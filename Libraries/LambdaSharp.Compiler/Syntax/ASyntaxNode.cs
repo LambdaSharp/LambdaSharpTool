@@ -149,6 +149,8 @@ namespace LambdaSharp.Compiler.Syntax {
             return inspector(this);
         }
 
+        public void Adopt(ASyntaxNode node) => SetParent(node);
+
         [return: NotNullIfNotNull("node") ]
         protected T? SetParent<T>(T? node) where T : ASyntaxNode => (T?)SetParent(node, this);
 

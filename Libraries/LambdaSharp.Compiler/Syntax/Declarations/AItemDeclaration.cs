@@ -110,7 +110,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             }
         }
 
-        public bool DiscardIfNotReachable { get; set; }
+        public virtual bool DiscardIfNotReachable { get; set; }
         public bool AllowReservedName { get; set; }
 
         /// <summary>

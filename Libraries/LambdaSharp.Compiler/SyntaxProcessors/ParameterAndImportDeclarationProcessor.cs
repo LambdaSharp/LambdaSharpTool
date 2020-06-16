@@ -74,7 +74,6 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         // Property: EncryptionContext
         private static readonly Error EncryptionContextAttributeRequiresSecretType = new Error(0, "'EncryptionContext' attribute can only be used with 'Secret' type");
-        private static readonly Error EncryptionContextExpectedLiteralStringExpression = new Error(0, "'EncryptionContext' expected literal string expression");
 
         // Property: Allow, Import, Properties
         private static readonly Error AllowAttributeRequiresCloudFormationType = new Error(0, "'Allow' attribute can only be used with a CloudFormation type");
@@ -283,19 +282,6 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 }
             }
 
-            // only the 'Secret' type can have the 'EncryptionContext' attribute
-            if(node.Type.Value == "Secret") {
-                ValidateEncryptContext(node.EncryptionContext);
-
-                // TODO: add resource for decrypting secret
-            } else {
-
-                // ensure Secret parameter options are not used
-                if(node.EncryptionContext != null) {
-                    Logger.Log(EncryptionContextAttributeRequiresSecretType, node.EncryptionContext);
-                }
-            }
-
             // only CloudFormation resource types can have 'Properties' or 'Allow' attributes
             if(IsCloudFormationParameterType(node.Type.Value)) {
 
@@ -325,40 +311,14 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 node.Type = Fn.Literal("String", node.SourceLocation);
             }
 
-            // only the 'Secret' type can have the 'EncryptionContext' attribute
-            if(node.Type.Value == "Secret") {
-                ValidateEncryptContext(node.EncryptionContext);
-
-                // TODO: add resource for decrypting secret
-            } else {
-
-                // ensure Secret parameter options are not used
-                if(node.EncryptionContext != null) {
-                    Logger.Log(EncryptionContextAttributeRequiresSecretType, node.EncryptionContext);
-                }
-
-                // validate the import type
-                if(
-                    (node.Type.Value != "String")
-                    && (node.Type.Value != "Number")
-                    && !Provider.TryGetResourceType(node.Type.Value, out var _)
-                ) {
-                    Logger.Log(UnknownType(node.Type.Value), node.Type);
-                }
-            }
-        }
-
-        private void ValidateEncryptContext(ObjectExpression? encryptionContext) {
-
-            // all 'EncryptionContext' values must be literal values
-            if(encryptionContext != null) {
-
-                // all expressions must be literals for the EncryptionContext
-                foreach(var kv in encryptionContext) {
-                    if(!(kv.Value is LiteralExpression)) {
-                        Logger.Log(EncryptionContextExpectedLiteralStringExpression, kv.Value);
-                    }
-                }
+            // validate the import type
+            if(
+                (node.Type.Value != "String")
+                && (node.Type.Value != "Secret")
+                && (node.Type.Value != "Number")
+                && !Provider.TryGetResourceType(node.Type.Value, out var _)
+            ) {
+                Logger.Log(UnknownType(node.Type.Value), node.Type);
             }
         }
     }

@@ -46,7 +46,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 substitutions.Clear();
 
                 // find expressions that can be substituted
-                moduleDeclaration.InspectType<AExpression>(expression => Evaluate(expression, substitutions));
+                moduleDeclaration.InspectType<AExpression>(node => Evaluate(node, substitutions));
 
                 // stop when no more substitutions can be found
                 if(!substitutions.Any()) {

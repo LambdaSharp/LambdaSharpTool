@@ -80,19 +80,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 throw new InvalidOperationException();
             }
             var split = Module.Value.Split("::", 2);
-            if(split != null) {
-                if(split.Length == 2) {
-                    moduleReference = split[0];
-                    exportName = split[1];
-                } else {
-
-                    // assume the item name matches the export name
-                    moduleReference = split[0];
-                    exportName = ItemName.Value;
-                }
+            if(split.Length == 2) {
+                moduleReference = split[0];
+                exportName = split[1];
             } else {
-                moduleReference = null;
-                exportName = null;
+
+                // assume the item name matches the export name
+                moduleReference = split[0];
+                exportName = ItemName.Value;
             }
         }
     }

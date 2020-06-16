@@ -118,6 +118,7 @@ namespace LambdaSharp.Compiler {
             // TODO: NestedModuleDeclaration
             // TODO: ResourceTypeDeclaration
             // TODO: VariableDeclaration (maybe?)
+            new SecretTypeDeclarationProcessor(this).Process(moduleDeclaration);
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);

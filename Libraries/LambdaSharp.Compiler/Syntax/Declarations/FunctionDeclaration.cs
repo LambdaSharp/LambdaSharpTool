@@ -163,6 +163,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+        public override bool DiscardIfNotReachable => base.DiscardIfNotReachable || HasPragma("discard-if-not-used");
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionReferenceExpression?)If)?.ReferenceName!.Value;
         public LiteralExpression? Type => Fn.Literal("AWS::Lambda::Function");
