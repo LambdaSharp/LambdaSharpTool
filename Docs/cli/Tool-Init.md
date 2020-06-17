@@ -85,6 +85,12 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 (optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)
 </dd>
 
+<dt><code>--skip-apigateway-check</code></dt>
+<dd>
+
+(optional) Skip API Gateway role check during deployment tier initialization
+</dd>
+
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>
 

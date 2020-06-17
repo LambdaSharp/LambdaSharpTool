@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.0.2) - TBD
+# LambdaSharp "Hicetas" Release (v0.8.0.3) - TBD
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -138,6 +138,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 ### Fixes
 * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
 
+
 ## WIP
 
 ### (v0.8.1.0) - TBD
@@ -151,20 +152,43 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added `no-type-validation` pragma to `Function` declaration.
   * Added `Pragmas` attribute to `Nested` declaration.
 
+
 ## Releases
 
-### (v0.8.0.2) - TBD
+### (v0.8.0.3) - TBD
+
+* Samples
+  * Fixed _VpcFunctionSample_ to use `CommaDelimitedList` instead of `CommaDelimitedString`. [Issue #147](https://github.com/LambdaSharp/LambdaSharpTool/issues/147)
+* Misc
+  * Moved documentation from `src/DocFx` to `Docs`
+
+### (v0.8.0.2) - 2020-06-02
 
 #### Features
 
-* LambdaSharp.S3.IO
-  * Added `Encoding` property for `LambdaSharp::S3::IO` to enable encoding content when deploying to an S3 bucket.
+* LambdaSharp CLI
+  * Added `--skip-apigateway-check` to `lash init` to bypass API Gateway role creation/update operation during deployment tier initialization.
+
+* LambdaSharp SDK
+  * Added the virtual `DebugLoggingEnabled` property to `ALambdaFunction` as the preferred way to check if debug logging is enabled.
+
+* LambdaSharp Syntax
   * Added pragma for overriding `Module::Role.PermissionsBoundary` (contributed by @yurigorokhov).
+
+* LambdaSharp Modules
+  * Added `Encoding` property for `LambdaSharp::S3::IO` to enable compression encoding for content before it is deployed to an S3 bucket.
+  * Added `Content-MD5` checksum header for S3 uploads performed by `LambdaSharp::S3::Unzip` to ensure end-to-end data integrity.
+
+* Samples
+  * Added _DebugSample_ showing how to use `LogDebug()` and `DebugLoggingEnabled`.
 
 #### Fixes
 
 * LambdaSharp CLI
     * Added support to all commands for `--no-ansi`, `--quiet`, and `--verbose` options.
+
+* LambdaSharp Modules
+  * Removed unnecessary S3 access policy from _LambdaSharp.Core_ that granted read access to `serverlessrepo.amazonaws.com` for deployment buckets.
 
 ### (v0.8.0.1) - 2020-05-18
 
