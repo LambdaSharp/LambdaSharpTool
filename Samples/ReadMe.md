@@ -30,3 +30,4 @@ Please refer to the [Folder Structure Documentation](https://lambdasharp.net/art
 1. [Lambda Function in VPC](VpcFunctionSample/)
 1. [Lambda Function with Lambda Layer](LambdaLayerSample/)
 1. [ASP.NET Core Blazor WebAssembly Website](BlazorSample/)
+1. [Debug Logging](DebugSample/)

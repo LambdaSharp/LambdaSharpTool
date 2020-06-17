@@ -101,6 +101,7 @@ namespace LambdaSharp.Tool {
         public static string ResetColor => UseAnsiConsole ? AnsiTerminal.Reset : "";
         public static string OutputColor => UseAnsiConsole ? AnsiTerminal.Green : "";
         public static string InfoColor => UseAnsiConsole ? AnsiTerminal.Yellow : "";
+        public static string AlertColor => UseAnsiConsole ? (AnsiTerminal.Black + AnsiTerminal.BackgroundRed) : "";
         private static VersionInfo _toolVersion;
 
         private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
@@ -366,6 +367,6 @@ namespace LambdaSharp.Tool {
                 : Prompt.GetYesNo($"|=> {message}", defaultAnswer);
         }
 
-        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin, moduleInfo.Namespace, moduleInfo.Name);
+        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
     }
 }

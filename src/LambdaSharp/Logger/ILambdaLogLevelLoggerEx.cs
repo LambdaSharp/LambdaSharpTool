@@ -69,7 +69,7 @@ namespace LambdaSharp.Logger {
         /// <param name="exception">The exception to log. The exception is logged with its message, stacktrace, and any nested exceptions.</param>
         /// <seealso cref="LambdaLogLevel"/>
         public static void LogError(this ILambdaLogLevelLogger logger, Exception exception)
-            => logger.Log(LambdaLogLevel.ERROR, exception, exception.Message, new object[0]);
+            => logger.Log(LambdaLogLevel.ERROR, exception, exception.Message, Array.Empty<object>());
 
         /// <summary>
         /// Log an exception with a custom message as an error. This message will be reported if an error aggregator is configured for the <c>LambdaSharp.Core</c> module.
@@ -93,7 +93,7 @@ namespace LambdaSharp.Logger {
         /// <param name="exception">The exception to log. The exception is logged with its message, stacktrace, and any nested exceptions.</param>
         /// <seealso cref="LambdaLogLevel"/>
         public static void LogErrorAsInfo(this ILambdaLogLevelLogger logger, Exception exception)
-            => logger.Log(LambdaLogLevel.INFO, exception, exception.Message, new object[0]);
+            => logger.Log(LambdaLogLevel.INFO, exception, exception.Message, Array.Empty<object>());
 
         /// <summary>
         /// Log an exception with a custom message as an information message. This message will only appear in the log and not be forwarded to an error aggregator.
@@ -121,7 +121,7 @@ namespace LambdaSharp.Logger {
         /// <param name="exception">The exception to log. The exception is logged with its message, stacktrace, and any nested exceptions.</param>
         /// <seealso cref="LambdaLogLevel"/>
         public static void LogErrorAsWarning(this ILambdaLogLevelLogger logger, Exception exception)
-            => logger.Log(LambdaLogLevel.WARNING, exception, exception.Message, new object[0]);
+            => logger.Log(LambdaLogLevel.WARNING, exception, exception.Message, Array.Empty<object>());
 
         /// <summary>
         /// Log an exception with a custom message as a warning. This message will be reported if an error aggregator is configured for the <c>LambdaSharp.Core</c> module.

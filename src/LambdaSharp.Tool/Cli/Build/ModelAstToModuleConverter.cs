@@ -143,7 +143,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         LogError("invalid api format");
                         return new RestApiSource {
                             HttpMethod = "ANY",
-                            Path = new string[0],
+                            Path = Array.Empty<string>(),
                             Integration = ApiGatewaySourceIntegration.RequestResponse
                         };
                     }
@@ -466,7 +466,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Validate(int.TryParse(node.Memory, out _), "invalid 'Memory' value");
                     Validate(node.Timeout != null, "missing 'Timeout' attribute");
                     Validate(int.TryParse(node.Timeout, out _), "invalid 'Timeout' value");
-                    ValidateFunctionSource(node.Sources ?? new FunctionSourceNode[0]);
+                    ValidateFunctionSource(node.Sources ?? Array.Empty<FunctionSourceNode>());
 
                     // determine function type
                     var project = node.Project;
@@ -901,7 +901,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private IList<string> ConvertScope(object scope) {
             if(scope == null) {
-                return new string[0];
+                return Array.Empty<string>();
             }
             return AtLocation("Scope", () => {
                 return (scope == null)
