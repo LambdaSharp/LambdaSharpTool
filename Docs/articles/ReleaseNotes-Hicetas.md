@@ -147,6 +147,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * Modules
   * Fixed an issue in _LambdaSharp.Core_ that caused function registrations not to be updated.
+  * Fixed an issue in _LambdaSharp.Core_ that caused near out-of-memory Lambda usage reports to trigger an an out-of-memory error notification instead of a warning.
 
 * Samples
   * Fixed _VpcFunctionSample_ to use `CommaDelimitedList` instead of `CommaDelimitedString`. [Issue #147](https://github.com/LambdaSharp/LambdaSharpTool/issues/147)
