@@ -1,0 +1,9 @@
+Module: My.Module
+Items:
+
+  - Resource: ResourceA
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Hello
+      Subscription:
+        - Protocol: email

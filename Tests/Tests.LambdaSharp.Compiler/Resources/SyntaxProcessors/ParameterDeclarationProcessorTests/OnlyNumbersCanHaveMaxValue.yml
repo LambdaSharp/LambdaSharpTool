@@ -1,0 +1,6 @@
+Module: My.Module
+Items:
+
+  - Parameter: ParameterA
+    Type: String
+    MaxValue: 0

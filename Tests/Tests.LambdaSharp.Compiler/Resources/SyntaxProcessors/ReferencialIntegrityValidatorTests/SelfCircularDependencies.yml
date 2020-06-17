@@ -1,0 +1,8 @@
+Module: My.Module
+Items:
+
+  - Variable: VariableA
+    Value: !Ref VariableA
+
+  - Variable: VariableB
+    Value: hello

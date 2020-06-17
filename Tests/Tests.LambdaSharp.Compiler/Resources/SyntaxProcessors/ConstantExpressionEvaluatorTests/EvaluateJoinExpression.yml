@@ -1,0 +1,11 @@
+Module: My.Module
+Items:
+
+  - Variable: MyJoinExpression
+    Value: !Join [ " ", [ !Ref VariableA, !Ref VariableB, "!" ]]
+
+  - Variable: VariableA
+    Value: "Hello"
+
+  - Variable: VariableB
+    Value: "world"

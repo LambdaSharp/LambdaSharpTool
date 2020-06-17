@@ -1,0 +1,11 @@
+Module: My.Module
+Items:
+
+  - Resource: ResourceA
+    Type: Custom::ResourceType
+    DependsOn: ResourceB
+
+  - Resource: ResourceB
+    Type: Custom::ResourceType
+    Properties:
+      Prop: !Ref ResourceA

@@ -1,0 +1,5 @@
+Module: My.Module
+Items:
+
+  - Resource: ResourceA
+    Type: AWS::SNS::Topic
