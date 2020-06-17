@@ -17,6 +17,7 @@
  */
 
 using System.Linq;
+using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
@@ -41,67 +42,30 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 switch(node) {
                 case ParameterDeclaration parameterDeclaration:
                     if(parameterDeclaration.Type?.Value == "Secret") {
-                        ValidateEncryptContext(parameterDeclaration.EncryptionContext);
+                        ValidateEncryptionContext(parameterDeclaration, parameterDeclaration.EncryptionContext);
                     } else if(parameterDeclaration.EncryptionContext != null) {
                         Logger.Log(EncryptionContextAttributeRequiresSecretType, parameterDeclaration.EncryptionContext);
                     }
                     break;
                 case ImportDeclaration importDeclaration:
                     if(importDeclaration.Type?.Value == "Secret") {
-                        ValidateEncryptContext(importDeclaration.EncryptionContext);
+                        ValidateEncryptionContext(importDeclaration, importDeclaration.EncryptionContext);
                     } else if(importDeclaration.EncryptionContext != null) {
                         Logger.Log(EncryptionContextAttributeRequiresSecretType, importDeclaration.EncryptionContext);
                     }
                     break;
                 case VariableDeclaration variableDeclaration:
                     if(variableDeclaration.Type?.Value == "Secret") {
-                        ValidateEncryptContext(variableDeclaration.EncryptionContext);
+                        ValidateEncryptionContext(variableDeclaration, variableDeclaration.EncryptionContext);
                     } else if(variableDeclaration.EncryptionContext != null) {
                         Logger.Log(EncryptionContextAttributeRequiresSecretType, variableDeclaration.EncryptionContext);
                     }
                     break;
                 }
             });
-
-            // local functions
-            void Foo(AItemDeclaration parent, ObjectExpression? encryptionContext) {
-
-                // set declaration expression
-                AExpression declarationExpression;
-                if(encryptionContext != null) {
-                    declarationExpression = Fn.Join(
-                        "|",
-                        new AExpression[] {
-                            Fn.Ref(parent.FullName)
-                        }.Union(
-                            encryptionContext.Select(kv => Fn.Literal($"{kv.Key}={kv.Value}"))
-                        ).ToArray()
-                    );
-                } else {
-                    declarationExpression = Fn.Ref(parent.FullName);
-                }
-
-                // add resource for decrypting secret
-                var decoderResourceDeclaration = new ResourceDeclaration(Fn.Literal("Decoder")) {
-
-                    // TODO: let's register this as a local custom resource type!
-                    Type = Fn.Literal("Module::DecryptSecret"),
-                    Properties = {
-                        ["Ciphertext"] = Fn.Ref(parent.FullName)
-                    },
-                    DiscardIfNotReachable = true
-                };
-                Provider.DeclareItem(parent.Adopt(decoderResourceDeclaration));
-
-                // add variable to retrieve decrypted secret
-                var plaintextVariableDeclaration = new VariableDeclaration(Fn.Literal("Plaintext")) {
-                    Value = Fn.GetAtt(decoderResourceDeclaration.FullName, "Plaintext")
-                };
-                Provider.DeclareItem(parent.Adopt(plaintextVariableDeclaration));
-            }
         }
 
-        private void ValidateEncryptContext(ObjectExpression? encryptionContext) {
+        private void ValidateEncryptionContext(AItemDeclaration parent, ObjectExpression? encryptionContext) {
 
             // all 'EncryptionContext' values must be literal values
             if(encryptionContext != null) {
@@ -113,6 +77,38 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     }
                 }
             }
+
+            // set declaration expression
+            AExpression declarationExpression;
+            if(encryptionContext != null) {
+                declarationExpression = Fn.Join(
+                    "|",
+                    new AExpression[] {
+                        Fn.Ref(parent.FullName)
+                    }.Union(
+                        encryptionContext.Select(kv => Fn.Literal($"{kv.Key}={kv.Value}"))
+                    ).ToArray()
+                );
+            } else {
+                declarationExpression = Fn.Ref(parent.FullName);
+            }
+
+            // add resource for decrypting secret
+            var decoderResourceDeclaration = new ResourceDeclaration(Fn.Literal("Decoder")) {
+                Type = Fn.Literal("Custom::DecryptSecret"),
+                Properties = {
+                    ["ServiceToken"] = Fn.GetAtt("Module::DecryptSecretFunction", "Arn"),
+                    ["Ciphertext"] = Fn.Ref(parent.FullName)
+                },
+                DiscardIfNotReachable = true
+            };
+            Provider.DeclareItem(parent.Adopt(decoderResourceDeclaration));
+
+            // add variable to retrieve decrypted secret
+            var plaintextVariableDeclaration = new VariableDeclaration(Fn.Literal("Plaintext")) {
+                Value = Fn.GetAtt(decoderResourceDeclaration.FullName, "Plaintext")
+            };
+            Provider.DeclareItem(parent.Adopt(plaintextVariableDeclaration));
         }
     }
 }

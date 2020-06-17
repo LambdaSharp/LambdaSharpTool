@@ -121,6 +121,8 @@ namespace LambdaSharp.Compiler {
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
 
+            // TODO: after this point, declarations exist outside of ModuleDeclaration that need to be processed
+
             // evaluate expressions
             new ConstantExpressionProcessor(this).Process(moduleDeclaration);
             new ReferencialIntegrityValidator(this).Validate(moduleDeclaration);
