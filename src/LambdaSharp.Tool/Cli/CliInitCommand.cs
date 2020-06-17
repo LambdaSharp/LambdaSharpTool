@@ -210,6 +210,9 @@ namespace LambdaSharp.Tool.Cli {
                         // it's a pre-release, which always needs to be updated
                         || settings.ToolVersion.IsPreRelease
 
+                        // we're running in contributor mode, which means new binaries may be built
+                        || (lambdaSharpPath != null)
+
                         // deployment tier is running core services state is different from requested state
                         || (settings.CoreServices != coreServices)
                         || await IsNewerCoreModuleVersionAvailable();
@@ -340,7 +343,7 @@ namespace LambdaSharp.Tool.Cli {
             if(coreServices == CoreServices.Disabled) {
                 if(!updated) {
                     Console.WriteLine();
-                    Console.WriteLine("No update required");
+                    Console.WriteLine("Core Services disabled. No update required");
                 }
                 return true;
             }

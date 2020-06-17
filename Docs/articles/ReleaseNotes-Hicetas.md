@@ -143,25 +143,31 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.0.3) - TBD
 
+#### Fixes
+
+* Modules
+  * Fixed an issue in _LambdaSharp.Core_ that caused function registrations not to be updated.
+
 * Samples
   * Fixed _VpcFunctionSample_ to use `CommaDelimitedList` instead of `CommaDelimitedString`. [Issue #147](https://github.com/LambdaSharp/LambdaSharpTool/issues/147)
-* Misc
+
+#### Misc
   * Moved documentation from `src/DocFx` to `Docs`
 
 ### (v0.8.0.2) - 2020-06-02
 
 #### Features
 
-* LambdaSharp CLI
+* CLI
   * Added `--skip-apigateway-check` to `lash init` to bypass API Gateway role creation/update operation during deployment tier initialization.
 
-* LambdaSharp SDK
+* SDK
   * Added the virtual `DebugLoggingEnabled` property to `ALambdaFunction` as the preferred way to check if debug logging is enabled.
 
-* LambdaSharp Syntax
+* Syntax
   * Added pragma for overriding `Module::Role.PermissionsBoundary` (contributed by @yurigorokhov).
 
-* LambdaSharp Modules
+* Modules
   * Added `Encoding` property for `LambdaSharp::S3::IO` to enable compression encoding for content before it is deployed to an S3 bucket.
   * Added `Content-MD5` checksum header for S3 uploads performed by `LambdaSharp::S3::Unzip` to ensure end-to-end data integrity.
 
@@ -170,15 +176,15 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Fixes
 
-* LambdaSharp CLI
+* CLI
     * Added support to all commands for `--no-ansi`, `--quiet`, and `--verbose` options.
 
-* LambdaSharp Modules
+* Modules
   * Removed unnecessary S3 access policy from _LambdaSharp.Core_ that granted read access to `serverlessrepo.amazonaws.com` for deployment buckets.
 
 ### (v0.8.0.1) - 2020-05-18
 
 #### Fixes
 
-* LambdaSharp CLI
+* CLI
     * Added fixes from v0.7.0.17 release.
