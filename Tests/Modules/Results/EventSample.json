@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Module description (v1.0-DEV)",
+  "Description": "Sample module to demonstrate sending and receiving events (v1.0-DEV)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6DDA38E9A5F89DB96994E4B268960BB9"
+      "Default": "C80EFCB0F37F09F8F01D65BF37BFE31F"
     }
   },
   "Resources": {
@@ -839,7 +839,7 @@
         "EventBusName": "default",
         "EventPattern": {
           "source": [
-            "Sample.Event"
+            "MySample"
           ],
           "detail-type": [
             "MyEvent"
@@ -907,7 +907,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.2"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1136,8 +1136,8 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.Event:1.0-DEV",
-      "Description": "Module description",
-      "TemplateChecksum": "6DDA38E9A5F89DB96994E4B268960BB9",
+      "Description": "Sample module to demonstrate sending and receiving events",
+      "TemplateChecksum": "C80EFCB0F37F09F8F01D65BF37BFE31F",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

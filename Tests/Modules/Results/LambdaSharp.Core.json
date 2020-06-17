@@ -95,7 +95,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "ACC83453FD04D15A1FF6806AFE6FA70B"
+      "Default": "52DB776DE1ADE62A7AB84A2541AE39E5"
     }
   },
   "Resources": {
@@ -658,30 +658,6 @@
       "Condition": "CreateDeploymentBucket",
       "Properties": {}
     },
-    "DeploymentBucketPolicy": {
-      "Type": "AWS::S3::BucketPolicy",
-      "Condition": "CreateDeploymentBucket",
-      "Properties": {
-        "Bucket": {
-          "Ref": "DeploymentBucketResource"
-        },
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "serverlessrepo.amazonaws.com"
-              },
-              "Action": "s3:GetObject",
-              "Resource": {
-                "Fn::Sub": "${DeploymentBucketResource.Arn}/*"
-              }
-            }
-          ]
-        }
-      }
-    },
     "ModuleRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -1121,7 +1097,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.2"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1335,7 +1311,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "ACC83453FD04D15A1FF6806AFE6FA70B",
+      "TemplateChecksum": "52DB776DE1ADE62A7AB84A2541AE39E5",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
