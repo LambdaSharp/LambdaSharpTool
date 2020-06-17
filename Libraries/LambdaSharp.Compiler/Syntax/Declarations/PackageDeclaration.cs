@@ -31,7 +31,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public PackageDeclaration(LiteralExpression itemName) : base(itemName) {
-            _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _scope = Adopt(new SyntaxNodeCollection<LiteralExpression>());
         }
 
         //--- Properties --
@@ -39,7 +39,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value ?? throw new ArgumentNullException());
+            set => _scope = Adopt(value ?? throw new ArgumentNullException());
         }
 
         // TODO: shouldn't this be List<LiteralExpression>?

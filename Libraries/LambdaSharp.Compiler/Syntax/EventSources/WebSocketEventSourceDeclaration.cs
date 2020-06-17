@@ -58,7 +58,7 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression>? AuthorizationScopes {
             get => _authorizationScopes;
-            set => _authorizationScopes = SetParent(value);
+            set => _authorizationScopes = Adopt(value);
         }
 
         [SyntaxOptional]

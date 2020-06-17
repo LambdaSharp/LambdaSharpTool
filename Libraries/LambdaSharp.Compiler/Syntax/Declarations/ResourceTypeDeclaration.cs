@@ -97,8 +97,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public ResourceTypeDeclaration(LiteralExpression itemName) : base(itemName) {
-            _properties = SetParent(new SyntaxNodeCollection<PropertyTypeExpression>());
-            _attributes = SetParent(new SyntaxNodeCollection<AttributeTypeExpression>());
+            _properties = Adopt(new SyntaxNodeCollection<PropertyTypeExpression>());
+            _attributes = Adopt(new SyntaxNodeCollection<AttributeTypeExpression>());
         }
 
         //--- Properties ---

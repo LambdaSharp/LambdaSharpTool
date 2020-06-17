@@ -51,8 +51,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public ParameterDeclaration(LiteralExpression itemName) : base(itemName) {
-            _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _allowedValues = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _scope = Adopt(new SyntaxNodeCollection<LiteralExpression>());
+            _allowedValues = Adopt(new SyntaxNodeCollection<LiteralExpression>());
             _pragmas = Adopt(new ListExpression());
         }
 
@@ -79,7 +79,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value ?? throw new ArgumentNullException());
+            set => _scope = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -109,7 +109,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> AllowedValues {
             get => _allowedValues;
-            set => _allowedValues = SetParent(value);
+            set => _allowedValues = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -139,7 +139,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression>? Allow {
             get => _allow;
-            set => _allow = SetParent(value);
+            set => _allow = Adopt(value);
         }
 
         [SyntaxOptional]

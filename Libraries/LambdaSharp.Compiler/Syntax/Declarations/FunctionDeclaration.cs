@@ -69,7 +69,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public FunctionDeclaration(LiteralExpression itemName) : base(itemName) {
-            _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _scope = Adopt(new SyntaxNodeCollection<LiteralExpression>());
             _environment = Adopt(new ObjectExpression());
             _properties = Adopt(new ObjectExpression());
             _sources = new SyntaxNodeCollection<AEventSourceDeclaration>();
@@ -81,7 +81,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value ?? throw new ArgumentNullException());
+            set => _scope = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -148,7 +148,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<AEventSourceDeclaration> Sources {
             get => _sources;
-            set => _sources = SetParent(value);
+            set => _sources = Adopt(value);
         }
 
         [SyntaxOptional]

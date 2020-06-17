@@ -178,18 +178,10 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         [return: NotNullIfNotNull("node") ]
-        public T? Adopt<T>(T node) where T : ASyntaxNode => (T?)SetParent(node, this);
+        public T? Adopt<T>(T? node) where T : ASyntaxNode => (T?)SetParent(node, this);
 
         [return: NotNullIfNotNull("list") ]
-        protected SyntaxNodeCollection<T>? SetParent<T>(SyntaxNodeCollection<T>? list) where T : ASyntaxNode {
-            if(list != null) {
-                list.Parent = this;
-            }
-            return list;
-        }
-
-        [return: NotNullIfNotNull("list") ]
-        protected SyntaxNodeCollection<AItemDeclaration>? SetParent(SyntaxNodeCollection<AItemDeclaration>? list) {
+        protected SyntaxNodeCollection<T>? Adopt<T>(SyntaxNodeCollection<T>? list) where T : ASyntaxNode {
             if(list != null) {
                 list.Parent = this;
             }

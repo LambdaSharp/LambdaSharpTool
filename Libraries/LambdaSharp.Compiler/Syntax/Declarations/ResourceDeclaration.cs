@@ -43,8 +43,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public ResourceDeclaration(LiteralExpression itemName) : base(itemName) {
-            _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _scope = Adopt(new SyntaxNodeCollection<LiteralExpression>());
+            _dependsOn = Adopt(new SyntaxNodeCollection<LiteralExpression>());
             _properties = Adopt(new ObjectExpression());
             _pragmas = Adopt(new ListExpression());
         }
@@ -66,13 +66,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value ?? throw new ArgumentNullException());
+            set => _scope = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression>? Allow {
             get => _allow;
-            set => _allow = SetParent(value);
+            set => _allow = Adopt(value);
         }
 
         [SyntaxOptional]
@@ -85,7 +85,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> DependsOn {
             get => _dependsOn;
-            set => _dependsOn = SetParent(value);
+            set => _dependsOn = Adopt(value);
         }
 
         [SyntaxOptional]
