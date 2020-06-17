@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.TypeSystem;
 
@@ -35,5 +36,6 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         Task<string> ConvertKmsAliasToArn(string alias);
         void DeclareItem(AItemDeclaration itemDeclaration);
         bool TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration);
+        Task<ModuleManifest> ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo);
     }
 }

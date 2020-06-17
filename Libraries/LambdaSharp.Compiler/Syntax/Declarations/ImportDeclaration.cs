@@ -58,6 +58,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         [SyntaxRequired]
+        // TODO: rename to 'From'?
         public LiteralExpression? Module {
             get => _module;
             set => _module = Adopt(value);

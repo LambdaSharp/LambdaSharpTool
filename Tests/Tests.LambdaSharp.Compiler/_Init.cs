@@ -29,6 +29,7 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit.Abstractions;
+using LambdaSharp.Compiler.Model;
 
 namespace Tests.LambdaSharp.Compiler {
 
@@ -210,6 +211,8 @@ namespace Tests.LambdaSharp.Compiler {
         //--- IModuleProcessorDependencyProvider Members ---
         IEnumerable<AItemDeclaration> ISyntaxProcessorDependencyProvider.Declarations => Declarations.Values;
 
+        ILogger ISyntaxProcessorDependencyProvider.Logger => Logger;
+
         bool ISyntaxProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
             => throw new NotImplementedException();
 
@@ -221,5 +224,8 @@ namespace Tests.LambdaSharp.Compiler {
 
         bool ISyntaxProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => Declarations.TryGetValue(fullname, out itemDeclaration);
+
+        Task<ModuleManifest> ISyntaxProcessorDependencyProvider.ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo)
+            => throw new NotImplementedException();
     }
 }

@@ -17,10 +17,10 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
@@ -105,7 +105,35 @@ namespace LambdaSharp.Compiler.Syntax {
             }
         }
 
+        public virtual async Task InspectAsync(Func<ASyntaxNode, Task>? entryInspector, Func<ASyntaxNode, Task>? exitInspector) {
+            var node = this as ASyntaxNode;
+            if((node != null) && (entryInspector != null)) {
+                await entryInspector(node);
+            }
+            foreach(var property in GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
+                .Where(property =>
+                    (property.GetCustomAttribute<ASyntaxAttribute>() != null)
+                    && typeof(ISyntaxNode).IsAssignableFrom(property.PropertyType)
+                )
+            ) {
+
+                // skip null values
+                var value = (ISyntaxNode?)property.GetValue(this);
+                if(value == null) {
+                    continue;
+                }
+
+                // recurse into property value
+                await value.InspectAsync(entryInspector, exitInspector);
+            }
+            if((node != null) && (exitInspector != null)) {
+                await exitInspector(node);
+            }
+        }
+
         public void Inspect(Action<ASyntaxNode> inspector) => Inspect(inspector, exitInspector: null);
+        public Task InspectAsync(Func<ASyntaxNode, Task> inspector) => InspectAsync(inspector, exitInspector: null);
 
         public void InspectType<T>(Action<T> inspector)
             => Inspect(node => {

@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
 using LambdaSharp.Compiler.Exceptions;
 
 namespace LambdaSharp.Compiler.Syntax {
@@ -73,6 +74,12 @@ namespace LambdaSharp.Compiler.Syntax {
         public void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector) {
             foreach(var node in _nodes) {
                 node.Inspect(entryInspector, exitInspector);
+            }
+        }
+
+        public async Task InspectAsync(Func<ASyntaxNode, Task>? entryInspector, Func<ASyntaxNode, Task>? exitInspector) {
+            foreach(var node in _nodes) {
+                await node.InspectAsync(entryInspector, exitInspector);
             }
         }
 
