@@ -18,29 +18,24 @@
 
 using System;
 using System.IO;
-using Amazon.Lambda.Serialization.Json;
-using Newtonsoft.Json;
+using System.Text.Json;
+using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.Lambda.Serialization.SystemTextJson.Converters;
 
 namespace LambdaSharp.Serialization {
 
     /// <summary>
-    /// Custom ILambdaSerializer implementation which uses Newtonsoft.Json.JsonSerializer
+    /// Custom ILambdaSerializer implementation which uses System.Text.Json
     /// for serialization.
+    ///
+    /// <para>
+    /// If the environment variable LAMBDA_NET_SERIALIZER_DEBUG is set to true the JSON coming
+    /// in from Lambda and being sent back to Lambda will be logged.
+    /// </para>
     /// </summary>
-    public class LambdaJsonSerializer : Amazon.Lambda.Serialization.Json.JsonSerializer {
-
-        //--- Class Fields ---
-        private static JsonSerializerSettings _staticSettings;
+    public class LambdaJsonSerializer : DefaultLambdaJsonSerializer {
 
         //--- Constructors ---
-
-        /// <summary>
-        /// Constructs instance of serializer.
-        /// </summary>
-        public LambdaJsonSerializer() : base(settings => {
-            settings.NullValueHandling = NullValueHandling.Ignore;
-            _staticSettings = settings;
-        }) { }
 
         /// <summary>
         /// The <see cref="Deserialize(Stream, Type)"/> method deserializes the JSON object from a <c>string</c>.
@@ -50,9 +45,16 @@ namespace LambdaSharp.Serialization {
         /// <returns>Deserialized instance.</returns>
         public object Deserialize(Stream stream, Type type) {
             try {
-                using(var reader = new StreamReader(stream)) {
-                    return JsonConvert.DeserializeObject(reader.ReadToEnd(), type, _staticSettings);
+                byte[] utf8Json;
+                if(stream is MemoryStream ms) {
+                    utf8Json = ms.ToArray();
+                } else {
+                    using(var copy = new MemoryStream()) {
+                        stream.CopyTo(copy);
+                        utf8Json = copy.ToArray();
+                    }
                 }
+                return System.Text.Json.JsonSerializer.Deserialize(utf8Json, type, SerializerOptions);
             } catch(Exception e) {
                 string message;
                 if(type == typeof(string)) {

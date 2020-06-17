@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,26 +16,33 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Records {
+using System;
+
+namespace LambdaSharp.Records.ErrorReports {
 
     /// <summary>
-    /// The abstract <see cref="ALambdaRecord"/> class is the base class for all
-    /// structured log records.
+    /// The <see cref="LambdaErrorReportExceptionInfo"/> class describes a runtime exception.
     /// </summary>
-    public abstract class ALambdaRecord {
+    public class LambdaErrorReportExceptionInfo {
 
         //--- Properties ---
 
         /// <summary>
-        /// The <see cref="Type"/> property determines the type of the Lambda record.
+        /// The <see cref="Type"/> property holds the full exception type name.
         /// </summary>
-        /// <value>The source of the Lambda record.</value>
+        /// <value>The type name of the exception.</value>
         public string? Type { get; set; }
 
         /// <summary>
-        /// The <see cref="Version"/> property determines the format version of the Lambda record.
+        /// The <see cref="Message"/> property holds the exception message.
         /// </summary>
-        /// <value>The format version.</value>
-        public string? Version { get; set; }
+        /// <value>The exception message.</value>
+        public string? Message { get; set; }
+
+        /// <summary>
+        /// The <see cref="StackTrace"/> property holds the unparsed exception stack trace.
+        /// </summary>
+        /// <value>The exception stack trace.</value>
+        public string? StackTrace { get; set; }
     }
 }

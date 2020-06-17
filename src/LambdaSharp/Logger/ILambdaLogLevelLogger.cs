@@ -40,7 +40,7 @@ namespace LambdaSharp.Logger {
         /// <param name="exception">Optional exception to log. The exception is logged with its description and stacktrace. This parameter can be <c>null</c>.</param>
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
-        void Log(LambdaLogLevel level, Exception exception, string format, params object[] arguments);
+        void Log(LambdaLogLevel level, Exception? exception, string? format, params object[] arguments);
 
         /// <summary>
         /// Log a <see cref="ALambdaRecord"/> record instance.

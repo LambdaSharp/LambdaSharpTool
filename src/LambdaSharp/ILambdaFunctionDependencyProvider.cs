@@ -46,13 +46,6 @@ namespace LambdaSharp {
         ILambdaConfigSource ConfigSource { get; }
 
         /// <summary>
-        /// Retrieves the <see cref="ILambdaSerializer"/> instance used for serializing/deserializing JSON data.
-        /// </summary>
-        /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
-        [Obsolete("Use ALambdaFunction.LambdaSerializer instead. This property will be removed in the next major release.")]
-        ILambdaSerializer JsonSerializer { get; }
-
-        /// <summary>
         /// The <see cref="DebugLoggingEnabled"/> property indicates if the the requests received and responses emitted
         /// by this Lambda function should be shown in the CloudWatch logs. This can be useful to determine check for
         /// issues caused by inconsistencies in serialization or deserialization.
@@ -77,7 +70,7 @@ namespace LambdaSharp {
         /// <param name="secretBytes">Array containing the encrypted bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string> encryptionContext = null);
+        Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string>? encryptionContext = null);
 
         /// <summary>
         /// Encrypt a sequence of bytes using the specified KMS key. The Lambda function requires
@@ -87,7 +80,7 @@ namespace LambdaSharp {
         /// <param name="encryptionKeyId">The KMS key ID used encrypt the plaintext bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId = null, Dictionary<string, string> encryptionContext = null);
+        Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string>? encryptionContext = null);
 
         /// <summary>
         /// Send a message to the specified SQS queue. The Lambda function requires <c>sqs:SendMessage</c> permission
@@ -97,7 +90,7 @@ namespace LambdaSharp {
         /// <param name="message">The message to send.</param>
         /// <param name="messageAttributes">Optional attributes for the message.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task SendMessageToQueueAsync(string queueUrl, string message, IEnumerable<KeyValuePair<string, string>> messageAttributes = null);
+        Task SendMessageToQueueAsync(string queueUrl, string message, IEnumerable<KeyValuePair<string, string>>? messageAttributes = null);
 
         /// <summary>
         /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).

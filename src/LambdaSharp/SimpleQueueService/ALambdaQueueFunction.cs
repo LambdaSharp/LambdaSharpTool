@@ -43,7 +43,7 @@ namespace LambdaSharp.SimpleQueueService {
     public abstract class ALambdaQueueFunction<TMessage> : ALambdaFunction {
 
         //--- Fields ---
-        private SQSEvent.SQSMessage _currentRecord;
+        private SQSEvent.SQSMessage? _currentRecord;
 
         //--- Constructors ---
 
@@ -58,7 +58,7 @@ namespace LambdaSharp.SimpleQueueService {
         /// custom implementation of <see cref="ILambdaQueueFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaQueueFunctionDependencyProvider"/>.</param>
-        protected ALambdaQueueFunction(ILambdaQueueFunctionDependencyProvider provider) : base(provider ?? new LambdaQueueFunctionDependencyProvider()) { }
+        protected ALambdaQueueFunction(ILambdaQueueFunctionDependencyProvider? provider) : base(provider ?? new LambdaQueueFunctionDependencyProvider()) { }
 
         //--- Properties ---
 
@@ -73,10 +73,10 @@ namespace LambdaSharp.SimpleQueueService {
         /// The <see cref="CurrentRecord"/> property holds the SQS queue message record that is currently being processed.
         /// </summary>
         /// <remarks>
-        /// This property is only set during the invocation of <see cref="ProcessMessageStreamAsync(Stream)"/>. Otherwise, it returns <c>null</c>.
+        /// This property is only set during the invocation of <see cref="ProcessMessageStreamAsync(Stream)"/>.  Otherwise, it throws an <see cref="InvalidOperationException" />.
         /// </remarks>
         /// <value>The <see cref="SQSEvent.SQSMessage"/> instance.</value>
-        protected SQSEvent.SQSMessage CurrentRecord => _currentRecord;
+        protected SQSEvent.SQSMessage CurrentRecord => _currentRecord ?? throw new InvalidOperationException();
 
         //--- Abstract Methods ---
 
@@ -154,7 +154,7 @@ namespace LambdaSharp.SimpleQueueService {
 
                         // NOTE (2020-04-22, bjorg): always log an error since the intent is to send
                         //  this message to the dead-letter queue.
-                        LogError(e);
+                    LogError(e);
                         try {
 
                             // attempt to send failed message to the dead-letter queue
@@ -165,7 +165,7 @@ namespace LambdaSharp.SimpleQueueService {
 
                             // record failed processing metrics
                             metrics.Add(("MessageDead.Count", 1, LambdaMetricUnit.Count));
-                        } catch {
+                    } catch {
 
                             // record attempted processing metrics
                             metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
@@ -188,12 +188,12 @@ namespace LambdaSharp.SimpleQueueService {
             if((sqsEvent.Records.Count != successfulMessages.Count) && (successfulMessages.Count > 0)) {
 
                 // delete all messages that were successfully processed to avoid them being tried again
-                await Provider.DeleteMessagesFromQueueAsync(
+                    await Provider.DeleteMessagesFromQueueAsync(
                     eventSourceArn,
-                    successfulMessages.Select(message =>
-                        (MessageId: message.MessageId, ReceiptHandle: message.ReceiptHandle)
-                    )
-                );
+                        successfulMessages.Select(message =>
+                            (MessageId: message.MessageId, ReceiptHandle: message.ReceiptHandle)
+                        )
+                    );
 
                 // fail invocation to prevent messages from being deleted
                 throw new LambdaAbortException($"processing failed: {sqsEvent.Records.Count - successfulMessages.Count} errors ({successfulMessages.Count} messages succeeded)");

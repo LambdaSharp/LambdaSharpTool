@@ -73,7 +73,7 @@ namespace LambdaSharp.ConfigSource {
         /// </summary>
         /// <param name="key">The configuration key.</param>
         /// <returns>The configuration value or <c>null</c> if the key does not exist.</returns>
-        public string Read(string key) {
+        public string? Read(string key) {
 
             // check if key contains invalid characters
             if(key.Any(c => !char.IsLetterOrDigit(c))) {
@@ -95,11 +95,15 @@ namespace LambdaSharp.ConfigSource {
             return _parameters.Keys
                 .Select(ExtractSubKey)
                 .Where(key => key != null)
+
+                // NOTE (2020-04-02, bjorg): this Cast() operation is only needed to indicate the string values are non-null
+                .Cast<string>()
+
                 .Distinct()
                 .ToArray();
 
             // local functions
-            string ExtractSubKey(string key) {
+            string? ExtractSubKey(string key) {
 
                 // key doesn't match the prefix
                 if(!key.StartsWith(subpath, StringComparison.Ordinal)) {

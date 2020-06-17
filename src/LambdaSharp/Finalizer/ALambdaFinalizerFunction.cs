@@ -49,7 +49,7 @@ namespace LambdaSharp.Finalizer {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaFinalizerFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaFinalizerFunction(ILambdaFunctionDependencyProvider? provider) : base(provider) { }
 
         //--- Methods ---
 

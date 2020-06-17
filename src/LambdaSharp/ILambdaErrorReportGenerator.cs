@@ -17,7 +17,8 @@
  */
 
 using System;
-using LambdaSharp.ErrorReports;
+using System.Linq;
+using LambdaSharp.Records.ErrorReports;
 
 namespace LambdaSharp {
 
@@ -26,6 +27,38 @@ namespace LambdaSharp {
     /// <see cref="LambdaErrorReport"/> instances.
     /// </summary>
     public interface ILambdaErrorReportGenerator {
+
+        /// <summary>
+        /// The <see cref="FormatMessage(string,object[])"/> method behaves identically to the <see cref="string.Format(string,object[])"/> method
+        /// when the <paramref name="format"/> parameter is not <c>null</c> and the <paramref name="args"/> parameter is non-empty.
+        /// If the <paramref name="format"/> parameter is <c>null</c>, this method returns <c>null</c>. If the <paramref name="args"/> parameter is empty,
+        /// this method return the value of the <paramref name="format"/> parameter.
+        /// </summary>
+        /// <param name="format">An optional message.</param>
+        /// <param name="args">Optional arguments for the error message.</param>
+        /// <returns>The formatted string.</returns>
+        public static string? FormatMessage(string? format, object?[]? args) {
+            if(format == null) {
+                return null;
+            }
+            if((args == null) || (args.Length == 0)) {
+                return format;
+            }
+            try {
+                return string.Format(format, args);
+            } catch {
+                return $@"{format}({string.Join(", ", args.Select(SafeToString))})";
+            }
+
+            // local functions
+            string SafeToString(object? arg) {
+                try {
+                    return arg?.ToString() ?? "<NULL>";
+                } catch {
+                    return "<ERROR>";
+                }
+            }
+        }
 
         //--- Methods ---
 
@@ -43,6 +76,6 @@ namespace LambdaSharp {
         /// <param name="format">An optional message.</param>
         /// <param name="args">Optional arguments for the error message.</param>
         /// <returns>A new <see cref="LambdaErrorReport"/> instance.</returns>
-        LambdaErrorReport CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args);
+        LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object[] args);
     }
 }

@@ -36,7 +36,7 @@ namespace LambdaSharp.SimpleNotificationService {
     public abstract class ALambdaTopicFunction<TMessage> : ALambdaFunction {
 
         //--- Fields ---
-        private SNSEvent.SNSMessage _currentRecord;
+        private SNSEvent.SNSMessage? _currentRecord;
 
         //--- Constructors ---
 
@@ -51,7 +51,7 @@ namespace LambdaSharp.SimpleNotificationService {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaTopicFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaTopicFunction(ILambdaFunctionDependencyProvider? provider) : base(provider) { }
 
         //--- Properties ---
 
@@ -59,10 +59,10 @@ namespace LambdaSharp.SimpleNotificationService {
         /// The <see cref="CurrentRecord"/> property holds the SNS message record that is currently being processed.
         /// </summary>
         /// <remarks>
-        /// This property is only set during the invocation of <see cref="ProcessMessageStreamAsync(Stream)"/>. Otherwise, it returns <c>null</c>.
+        /// This property is only set during the invocation of <see cref="ProcessMessageStreamAsync(Stream)"/>.  Otherwise, it throws an <see cref="InvalidOperationException" />.
         /// </remarks>
         /// <value>The <see cref="SNSEvent.SNSMessage"/> instance.</value>
-        protected SNSEvent.SNSMessage CurrentRecord => _currentRecord;
+        protected SNSEvent.SNSMessage CurrentRecord => _currentRecord ?? throw new InvalidOperationException();
 
         //--- Abstract Methods ---
 

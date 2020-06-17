@@ -45,7 +45,7 @@ namespace LambdaSharp.ConfigSource {
         /// </summary>
         /// <param name="key">The configuration key.</param>
         /// <returns>The configuration value or <c>null</c> if the key does not exist.</returns>
-        public string Read(string key) => null;
+        public string? Read(string key) => null;
 
         /// <summary>
         /// The <see cref="ReadAllKeys()"/> method returns all defined configuration keys.

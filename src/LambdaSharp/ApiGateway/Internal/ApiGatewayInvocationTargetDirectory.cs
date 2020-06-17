@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -38,10 +39,16 @@ namespace LambdaSharp.ApiGateway.Internal {
         internal class InvocationTargetState {
 
             //--- Properties ---
-            public string PathQueryParametersJson { get; set; }
+            public string? PathQueryParametersJson { get; set; }
         }
 
-        private static Func<APIGatewayProxyRequest, InvocationTargetState, object> CreateParameterResolver(ILambdaSerializer serializer, MethodInfo method, ParameterInfo parameter) {
+        private void AssertReturnIsNotNull(MethodInfo method, [NotNull] object? returnValue) {
+            if(returnValue == null) {
+                throw new ApiGatewayInvocationTargetReturnException(method, "cannot be null");
+            }
+        }
+
+        private static Func<APIGatewayProxyRequest, InvocationTargetState, object?> CreateParameterResolver(ILambdaSerializer serializer, MethodInfo method, ParameterInfo parameter) {
 
             // check if [FromUri] or [FromBody] attributes are present
             var hasFromUriAttribute = parameter.GetCustomAttribute<FromUriAttribute>() != null;
@@ -66,7 +73,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                 if(isSimpleType) {
 
                     // create function for getting default parameter value
-                    Func<object> getDefaultValue;
+                    Func<object?> getDefaultValue;
                     if(parameter.IsOptional) {
                         getDefaultValue = () => parameter.DefaultValue;
                     } else if((Nullable.GetUnderlyingType(parameter.ParameterType) == null) && (parameter.ParameterType.IsValueType || parameter.ParameterType == typeof(string))) {
@@ -77,7 +84,7 @@ namespace LambdaSharp.ApiGateway.Internal {
 
                     // create function to resolve parameter
                     return (request, state) => {
-                        string value = null;
+                        string? value = null;
 
                         // attempt to resolve the parameter from stage variables, path parameters, and query string parameters
                         var success = (request.PathParameters?.TryGetValue(parameter.Name, out value) ?? false)
@@ -174,7 +181,7 @@ namespace LambdaSharp.ApiGateway.Internal {
             _mappings.Add(key, (methodDelegate, isAsync));
         }
 
-        public bool TryGetInvocationTarget(string key, out InvocationTargetDelegate invocationTarget, out bool isAsync) {
+        public bool TryGetInvocationTarget(string key, [NotNullWhen(true)] out InvocationTargetDelegate? invocationTarget, out bool isAsync) {
             if(_mappings.TryGetValue(key, out var tuple)) {
                 (invocationTarget, isAsync) = tuple;
                 return true;
@@ -196,7 +203,9 @@ namespace LambdaSharp.ApiGateway.Internal {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
-                        return await (Task<APIGatewayProxyResponse>)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        var result = method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        AssertReturnIsNotNull(method, result);
+                        return await (Task<APIGatewayProxyResponse>)result;
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
@@ -209,7 +218,9 @@ namespace LambdaSharp.ApiGateway.Internal {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
-                        return (APIGatewayProxyResponse)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        var result = method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        AssertReturnIsNotNull(method, result);
+                        return (APIGatewayProxyResponse)result;
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
@@ -223,7 +234,8 @@ namespace LambdaSharp.ApiGateway.Internal {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
-                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        var task = (Task?)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        AssertReturnIsNotNull(method, task);
                         await task;
                         var result = resolveReturnValue.GetValue(task);
                         return (result != null)
@@ -249,7 +261,8 @@ namespace LambdaSharp.ApiGateway.Internal {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
-                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        var task = (Task?)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        AssertReturnIsNotNull(method, task);
                         await task;
                         return new APIGatewayProxyResponse {
                             StatusCode = 200

@@ -69,7 +69,7 @@ namespace LambdaSharp.Logger {
         /// <param name="exception">The exception to log. The exception is logged with its message, stacktrace, and any nested exceptions.</param>
         /// <seealso cref="LambdaLogLevel"/>
         public static void LogError(this ILambdaLogLevelLogger logger, Exception exception)
-            => logger.Log(LambdaLogLevel.ERROR, exception, exception.Message, new object[0]);
+            => logger.Log(LambdaLogLevel.ERROR, exception, exception.Message, Array.Empty<object>());
 
         /// <summary>
         /// Log an exception with a custom message as an error. This message will be reported if an error aggregator is configured for the <c>LambdaSharp.Core</c> module.
@@ -79,7 +79,7 @@ namespace LambdaSharp.Logger {
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogError(this ILambdaLogLevelLogger logger, Exception exception, string format, params object[] arguments)
+        public static void LogError(this ILambdaLogLevelLogger logger, Exception exception, string? format, params object[] arguments)
             => logger.Log(LambdaLogLevel.ERROR, exception, format, arguments);
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace LambdaSharp.Logger {
         /// <param name="exception">The exception to log. The exception is logged with its message, stacktrace, and any nested exceptions.</param>
         /// <seealso cref="LambdaLogLevel"/>
         public static void LogErrorAsInfo(this ILambdaLogLevelLogger logger, Exception exception)
-            => logger.Log(LambdaLogLevel.INFO, exception, exception.Message, new object[0]);
+            => logger.Log(LambdaLogLevel.INFO, exception, exception.Message, Array.Empty<object>());
 
         /// <summary>
         /// Log an exception with a custom message as an information message. This message will only appear in the log and not be forwarded to an error aggregator.
@@ -121,7 +121,7 @@ namespace LambdaSharp.Logger {
         /// <param name="exception">The exception to log. The exception is logged with its message, stacktrace, and any nested exceptions.</param>
         /// <seealso cref="LambdaLogLevel"/>
         public static void LogErrorAsWarning(this ILambdaLogLevelLogger logger, Exception exception)
-            => logger.Log(LambdaLogLevel.WARNING, exception, exception.Message, new object[0]);
+            => logger.Log(LambdaLogLevel.WARNING, exception, exception.Message, Array.Empty<object>());
 
         /// <summary>
         /// Log an exception with a custom message as a warning. This message will be reported if an error aggregator is configured for the <c>LambdaSharp.Core</c> module.
@@ -231,7 +231,24 @@ namespace LambdaSharp.Logger {
                             Dimensions = metricDimensions,
                             Metrics = metrics.Select(metric => new CloudWatchMetricValue {
                                 Name = metric.Name,
-                                Unit = ConvertUnit(metric.Unit)
+                                Unit = metric.Unit switch {
+
+                                    // these enum names need to be mapped to their correct CloudWatch metrics unit counterpart
+                                    LambdaMetricUnit.BytesPerSecond => "Bytes/Second",
+                                    LambdaMetricUnit.KilobytesPerSecond => "Kilobytes/Second",
+                                    LambdaMetricUnit.MegabytesPerSecond => "Megabytes/Second",
+                                    LambdaMetricUnit.GigabytesPerSecond => "Gigabytes/Second",
+                                    LambdaMetricUnit.TerabytesPerSecond => "Terabytes/Second",
+                                    LambdaMetricUnit.BitsPerSecond => "Bits/Second",
+                                    LambdaMetricUnit.KilobitsPerSecond => "Kilobits/Second",
+                                    LambdaMetricUnit.MegabitsPerSecond => "Megabits/Second",
+                                    LambdaMetricUnit.GigabitsPerSecond => "Gigabits/Second",
+                                    LambdaMetricUnit.TerabitsPerSecond => "Terabits/Second",
+                                    LambdaMetricUnit.CountPerSecond => "Count/Second",
+
+                                    // the remaining enums are good as is
+                                    _ => metric.Unit.ToString()
+                                }
                             }).ToList()
                         }
                     }
@@ -251,39 +268,6 @@ namespace LambdaSharp.Logger {
                     throw new ArgumentException($"{parameterType} name cannot be named '{name}'");
                 default:
                     break;
-                }
-            }
-
-            string ConvertUnit(LambdaMetricUnit unit) {
-                switch(unit) {
-
-                // these enum names need to be mapped to their correct CloudWatch metrics unit counterpart
-                case LambdaMetricUnit.BytesPerSecond:
-                    return "Bytes/Second";
-                case LambdaMetricUnit.KilobytesPerSecond:
-                    return "Kilobytes/Second";
-                case LambdaMetricUnit.MegabytesPerSecond:
-                    return "Megabytes/Second";
-                case LambdaMetricUnit.GigabytesPerSecond:
-                    return "Gigabytes/Second";
-                case LambdaMetricUnit.TerabytesPerSecond:
-                    return "Terabytes/Second";
-                case LambdaMetricUnit.BitsPerSecond:
-                    return "Bits/Second";
-                case LambdaMetricUnit.KilobitsPerSecond:
-                    return "Kilobits/Second";
-                case LambdaMetricUnit.MegabitsPerSecond:
-                    return "Megabits/Second";
-                case LambdaMetricUnit.GigabitsPerSecond:
-                    return "Gigabits/Second";
-                case LambdaMetricUnit.TerabitsPerSecond:
-                    return "Terabits/Second";
-                case LambdaMetricUnit.CountPerSecond:
-                    return "Count/Second";
-
-                // the remaining enums are good as is
-                default:
-                    return unit.ToString();
                 }
             }
         }

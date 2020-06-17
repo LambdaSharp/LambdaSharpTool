@@ -18,7 +18,9 @@
 
 namespace LambdaSharp.CustomResource.Internal {
 
-    internal class CloudFormationResourceRequest<TProperties> {
+    internal class CloudFormationResourceRequest<TProperties>
+        where TProperties : class
+    {
 
         //--- Properties ---
 
@@ -30,7 +32,7 @@ namespace LambdaSharp.CustomResource.Internal {
 
         /// The response URL identifies a presigned S3 bucket that receives
         /// responses from the custom resource provider to AWS CloudFormation.
-        public string ResponseURL { get; set; }
+        public string? ResponseURL { get; set; }
 
         /// The Amazon Resource Name (ARN) that identifies the stack that
         /// contains the custom resource.
@@ -38,38 +40,38 @@ namespace LambdaSharp.CustomResource.Internal {
         /// Combining the StackId with the RequestId forms a value that you
         /// can use to uniquely identify a request on a particular custom
         /// resource.
-        public string StackId { get; set; }
+        public string? StackId { get; set; }
 
         /// A unique ID for the request.
         ///
         /// Combining the StackId with the RequestId forms a value that you
         /// can use to uniquely identify a request on a particular custom
         /// resource.
-        public string RequestId { get; set; }
+        public string? RequestId { get; set; }
 
         /// The template developer-chosen resource type of the custom resource
         /// in the AWS CloudFormation template. Custom resource type names can
         /// be up to 60 characters long and can include alphanumeric and the
         /// following characters: _@-.
-        public string ResourceType { get; set; }
+        public string? ResourceType { get; set; }
 
         /// The template developer-chosen name (logical ID) of the custom
         /// resource in the AWS CloudFormation template. This is provided to
         /// facilitate communication between the custom resource provider and
         /// the template developer.
-        public string LogicalResourceId { get; set; }
+        public string? LogicalResourceId { get; set; }
 
         /// A required custom resource provider-defined physical ID that is
         /// unique for that provider.
-        public string PhysicalResourceId { get; set; }
+        public string? PhysicalResourceId { get; set; }
 
         /// This field contains the contents of the Properties object sent by
         /// the template developer. Its contents are defined by the custom
         /// resource provider.
-        public TProperties ResourceProperties { get; set; }
+        public TProperties? ResourceProperties { get; set; }
 
         /// Used only for Update requests. Contains the resource properties
         /// that were declared previous to the update request.
-        public TProperties OldResourceProperties { get; set; }
+        public TProperties? OldResourceProperties { get; set; }
     }
 }

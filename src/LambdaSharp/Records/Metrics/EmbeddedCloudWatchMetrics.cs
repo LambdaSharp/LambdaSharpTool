@@ -18,7 +18,7 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace LambdaSharp.Records.Metrics {
 
@@ -45,8 +45,8 @@ namespace LambdaSharp.Records.Metrics {
         /// <summary>
         /// Embedded CloudWatch metrics metadata object.
         /// </summary>
-        [JsonProperty("_aws")]
-        public EmbeddedCloudWatchMetrics Aws { get; set; }
+        [JsonPropertyName("_aws")]
+        public EmbeddedCloudWatchMetrics? Aws { get; set; }
 
         /// <summary>
         /// Dictionary for holding metric target members that are added at the root of the object serialization.
@@ -85,7 +85,7 @@ namespace LambdaSharp.Records.Metrics {
         /// The namespace underwhich the metrics are aggregated.
         /// </summary>
         /// <value></value>
-        public string Namespace { get; set; }
+        public string? Namespace { get; set; }
 
         /// <summary>
         /// The dimensions by which the metrics are partitioned.
@@ -109,11 +109,11 @@ namespace LambdaSharp.Records.Metrics {
         /// <summary>
         /// Metric name.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Metric unit.
         /// </summary>
-        public string Unit { get; set; }
+        public string? Unit { get; set; }
     }
 }
