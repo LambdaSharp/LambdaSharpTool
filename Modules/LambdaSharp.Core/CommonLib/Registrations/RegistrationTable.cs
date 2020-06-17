@@ -32,12 +32,13 @@ namespace LambdaSharp.Core.Registrations {
         public RegistrationTable(IAmazonDynamoDB dynamoClient, string tableName)
             => _table = Table.LoadTable(dynamoClient, tableName);
 
-        public async Task<OwnerMetaData> GetOwnerMetaDataAsync(string id) {
+        public async Task<OwnerMetaData?> GetOwnerMetaDataAsync(string id) {
             var document = await _table.GetItemAsync(id);
             if(document == null) {
                 return null;
             }
             return new OwnerMetaData {
+                ModuleInfo = TryGetAsString("ModuleInfo"),
                 Module = TryGetAsString("Module"),
                 ModuleId = TryGetAsString("ModuleId"),
                 FunctionId = TryGetAsString("FunctionId"),
@@ -53,7 +54,7 @@ namespace LambdaSharp.Core.Registrations {
             };
 
             // local functions
-            string TryGetAsString(string key)
+            string? TryGetAsString(string key)
                 => document.TryGetValue(key, out var entry) ? entry.AsString() : null;
 
             int TryGetAsInt(string key)
@@ -66,6 +67,7 @@ namespace LambdaSharp.Core.Registrations {
         public async Task PutOwnerMetaDataAsync(string id, OwnerMetaData owner) {
             var document = new Document {
                 ["Id"] = id,
+                ["ModuleInfo"] = owner.ModuleInfo,
                 ["Module"] = owner.Module,
                 ["ModuleId"] = owner.ModuleId
             };

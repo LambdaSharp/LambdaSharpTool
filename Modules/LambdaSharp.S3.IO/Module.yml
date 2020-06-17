@@ -1,5 +1,5 @@
 # LambdaSharp (λ#)
-# Copyright (C) 2018-2019
+# Copyright (C) 2018-2020
 # lambdasharp.net
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,6 +42,10 @@ Items:
         Description: Source S3 key for the zip file
         Type: String
         Required: true
+
+      - Name: Encoding
+        Description: "Encode all unzipped files (one of: NONE, BROTLI, or GZIP)"
+        Required: false
 
     Attributes:
 

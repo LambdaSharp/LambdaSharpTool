@@ -20,6 +20,7 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -27,44 +28,53 @@ using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.CustomResource;
 using LambdaSharp.Exceptions;
+using LambdaSharp.Serialization;
 
 namespace LambdaSharp.Core.RegistrationFunction {
 
     public class RegistrationResourceProperties {
 
         //--- Properties ---
-        public string ResourceType { get; set; }
-        public string Module { get; set; }
-        public string ModuleId { get; set; }
-        public string FunctionId { get; set; }
-        public string FunctionName { get; set; }
-        public string FunctionLogGroupName { get; set; }
+        public string? ResourceType { get; set; }
+        public string? ModuleInfo { get; set; }
+        public string? Module { get; set; }
+        public string? ModuleId { get; set; }
+        public string? FunctionId { get; set; }
+        public string? FunctionName { get; set; }
+        public string? FunctionLogGroupName { get; set; }
+
+        [JsonConverter(typeof(JsonParseIntConverter))]
         public int FunctionMaxMemory { get; set; }
+
+        [JsonConverter(typeof(JsonParseIntConverter))]
         public int FunctionMaxDuration { get; set; }
-        public string FunctionPlatform { get; set; }
-        public string FunctionFramework { get; set; }
-        public string FunctionLanguage { get; set; }
+        public string? FunctionPlatform { get; set; }
+        public string? FunctionFramework { get; set; }
+        public string? FunctionLanguage { get; set; }
 
         //--- Methods ---
-        public string GetModuleFullName() {
-            if(Module == null) {
+        public string? GetModuleInfo() => ModuleInfo ?? Module;
+
+        public string? GetModuleFullName() {
+            var moduleInfo = GetModuleInfo();
+            if(moduleInfo == null) {
                 return null;
             }
-            var index = Module.IndexOfAny(new[] { ':', '@' });
+            var index = moduleInfo.IndexOfAny(new[] { ':', '@' });
             if(index < 0) {
-                return Module;
+                return moduleInfo;
             }
-            return Module.Substring(0, index);
+            return moduleInfo.Substring(0, index);
         }
 
-        public string GetModuleNamespace() => GetModuleFullName().Split('.', 2)[0];
-        public string GetModuleName() => GetModuleFullName().Split('.', 2)[1];
+        public string? GetModuleNamespace() => GetModuleFullName()?.Split('.', 2)[0];
+        public string? GetModuleName() => GetModuleFullName()?.Split('.', 2)[1];
     }
 
     public class RegistrationResourceAttributes {
 
         //--- Properties ---
-        public string Registration { get; set; }
+        public string? Registration { get; set; }
     }
 
     public class RegistrarException : ALambdaException {
@@ -79,10 +89,10 @@ namespace LambdaSharp.Core.RegistrationFunction {
         private const int PROJECT_HASH_LENGTH = 6;
 
         //--- Fields ---
-        private RegistrationTable _registrations;
-        private RollbarClient _rollbarClient;
-        private string _rollbarProjectPattern;
-        private string _coreSecretsKey;
+        private RegistrationTable? _registrations;
+        private RollbarClient? _rollbarClient;
+        private string? _rollbarProjectPattern;
+        private string? _coreSecretsKey;
 
         //--- Properties ---
         private RegistrationTable Registrations => _registrations ?? throw new InvalidOperationException();
@@ -103,7 +113,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             _coreSecretsKey = config.ReadText("CoreSecretsKey");
 
             // set default project pattern if none is specified
-            if(_rollbarProjectPattern == "") {
+            if(string.IsNullOrEmpty(_rollbarProjectPattern)) {
                 var rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
                 _rollbarProjectPattern = $"{rollbarProjectPrefix}{{ModuleFullName}}";
             }
@@ -126,46 +136,13 @@ namespace LambdaSharp.Core.RegistrationFunction {
             // determine the kind of registration that is requested
             switch(properties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
-                    LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.Module}");
+                    LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.GetModuleInfo()}");
                     var owner = PopulateOwnerMetaData(properties);
 
                     // create new rollbar project
-                    if(RollbarClient.HasTokens) {
-                        var name = Regex.Replace(_rollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
-                            var value = match.ToString();
-                            switch(value) {
-                            case "{ModuleFullName}":
-                                return properties.GetModuleFullName();
-                            case "{ModuleNamespace}":
-                                return properties.GetModuleNamespace();
-                            case "{ModuleName}":
-                                return properties.GetModuleName();
-                            default:
-
-                                // remove curly braces for unrecognized placeholders
-                                return value.Substring(1, value.Length - 2);
-                            }
-                        });
-
-                        // NOTE (2020-02-19, bjorg): Rollbar projects cannot exceed 32 characters
-                        if(name.Length > 32) {
-                            using(var crypto = new SHA256Managed()) {
-                                var hash = string.Concat(crypto.ComputeHash(Encoding.UTF8.GetBytes(name)).Select(x => x.ToString("X2")));
-
-                                // keep first X characters for original project name, append (32-X) characters from the hash
-                                name = name.Substring(0, 32 - PROJECT_HASH_LENGTH) + hash.Substring(0, PROJECT_HASH_LENGTH);
-                            }
-                        }
-                        var project = await RollbarClient.FindProjectByName(name)
-                            ?? await RollbarClient.CreateProject(name);
-                        var tokens = await RollbarClient.ListProjectTokens(project.Id);
-                        var token = tokens.FirstOrDefault(t => t.Name == "post_server_item").AccessToken;
-                        if(token == null) {
-                            throw new RegistrarException("internal error: unable to retrieve token for new Rollbar project");
-                        }
-                        owner.RollbarProjectId = project.Id;
-                        owner.RollbarAccessToken = await EncryptSecretAsync(token, CoreSecretsKey);
-                    }
+                    var rollbarProject = await RegisterRollbarProject(properties);
+                    owner.RollbarProjectId = rollbarProject.ProjectId;
+                    owner.RollbarAccessToken = rollbarProject.ProjectAccessToken;
 
                     // create owner record
                     await Registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
@@ -203,7 +180,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             // determine the kind of de-registration that is requested
             switch(properties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
-                    LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.Module}");
+                    LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.GetModuleInfo()}");
 
                     // delete old rollbar project
 
@@ -259,12 +236,26 @@ namespace LambdaSharp.Core.RegistrationFunction {
                 }
             };
 
-        private OwnerMetaData PopulateOwnerMetaData(RegistrationResourceProperties properties, OwnerMetaData owner = null) {
+        private OwnerMetaData PopulateOwnerMetaData(RegistrationResourceProperties properties, OwnerMetaData? owner = null) {
             if(owner == null) {
                 owner = new OwnerMetaData();
             }
+
+            // support pre-0.8 notation where only 'Module' is present in the properties (no 'ModuleInfo')
+            string? moduleInfo = null;
+            string? module = null;
+            if(properties.ModuleInfo != null) {
+                moduleInfo = properties.ModuleInfo;
+                module = properties.ModuleInfo.Split(':', 2)[0];
+            } else if(properties.Module != null) {
+                moduleInfo = properties.Module;
+                module = properties.Module?.Split(':', 2)[0];
+            }
+
+            // create/update owner record
             owner.ModuleId = properties.ModuleId ?? owner.ModuleId;
-            owner.Module = properties.Module ?? owner.Module;
+            owner.Module = module ?? owner.Module;
+            owner.ModuleInfo = moduleInfo ?? owner.ModuleInfo;
             owner.FunctionId = properties.FunctionId ?? owner.FunctionId;
             owner.FunctionName = properties.FunctionName ?? owner.FunctionName;
             owner.FunctionLogGroupName = properties.FunctionLogGroupName ?? owner.FunctionLogGroupName;
@@ -274,6 +265,51 @@ namespace LambdaSharp.Core.RegistrationFunction {
             owner.FunctionMaxMemory = Math.Max(properties.FunctionMaxMemory, owner.FunctionMaxMemory);
             owner.FunctionMaxDuration = TimeSpan.FromSeconds(Math.Max(properties.FunctionMaxDuration, owner.FunctionMaxDuration.TotalSeconds));
             return owner;
+        }
+
+        private async Task<(int ProjectId, string? ProjectAccessToken)> RegisterRollbarProject(RegistrationResourceProperties properties) {
+            if(!RollbarClient.HasTokens) {
+                return (ProjectId: 0, ProjectAccessToken: null);
+            }
+
+            // generate the Rollbar project name
+            var name = Regex.Replace(_rollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
+                var value = match.ToString();
+                switch(value) {
+                case "{ModuleFullName}":
+                    return properties.GetModuleFullName();
+                case "{ModuleNamespace}":
+                    return properties.GetModuleNamespace();
+                case "{ModuleName}":
+                    return properties.GetModuleName();
+                default:
+
+                    // remove curly braces for unrecognized placeholders
+                    return value.Substring(1, value.Length - 2);
+                }
+            });
+
+            // NOTE (2020-02-19, bjorg): Rollbar projects cannot exceed 32 characters
+            if(name.Length > 32) {
+                using(var crypto = new SHA256Managed()) {
+                    var hash = string.Concat(crypto.ComputeHash(Encoding.UTF8.GetBytes(name)).Select(x => x.ToString("X2")));
+
+                    // keep first X characters for original project name, append (32-X) characters from the hash
+                    name = name.Substring(0, 32 - PROJECT_HASH_LENGTH) + hash.Substring(0, PROJECT_HASH_LENGTH);
+                }
+            }
+
+            // find or create Rollbar project
+            var project = await RollbarClient.FindProjectByName(name)
+                ?? await RollbarClient.CreateProject(name);
+
+            // retrieve access token for Rollbar project
+            var tokens = await RollbarClient.ListProjectTokens(project.Id);
+            var token = tokens.FirstOrDefault(t => t.Name == "post_server_item").AccessToken;
+            if(token == null) {
+                throw new RegistrarException("internal error: unable to retrieve token for new Rollbar project");
+            }
+            return (ProjectId: project.Id, ProjectAccessToken: await EncryptSecretAsync(token, CoreSecretsKey));
         }
     }
 }
