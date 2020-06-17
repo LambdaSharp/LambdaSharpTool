@@ -96,23 +96,15 @@ namespace LambdaSharp.Tool.Cli.Tier {
             if(moduleDetails.Any()) {
                 var columnsWithWidth = columns.Select((column, index) => (ColumnTitle: column.ColumnTitle, GetColumnValue: column.GetColumnValue, ColumnWidth: Math.Max(column.ColumnTitle.Length, moduleDetails.Max(module => column.GetColumnValue(module)?.Length ?? 0)) + ((index != (columns.Length - 1)) ? 4 : 0)));
                 Console.WriteLine();
-                if(Settings.UseAnsiConsole) {
-                    Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier {AnsiTerminal.Yellow}{Settings.TierName}{AnsiTerminal.Reset}");
-                } else {
-                    Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier {Settings.TierName}");
-                }
+                Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier {Settings.InfoColor}{Settings.TierName}{Settings.ResetColor}");
                 Console.WriteLine();
 
                 // compute the width of every column by getting the max string length of the column name and all possible values for the column
-                if(Settings.UseAnsiConsole) {
-                    Console.Write(AnsiTerminal.BrightWhite);
-                }
+                Console.Write(Settings.HighContrastColor);
                 foreach(var column in columnsWithWidth) {
                     Console.Write(column.ColumnTitle.PadRight(column.ColumnWidth));
                 }
-                if(Settings.UseAnsiConsole) {
-                    Console.Write(AnsiTerminal.Reset);
-                }
+                Console.Write(Settings.ResetColor);
                 Console.WriteLine();
                 foreach(var summary in moduleDetails) {
                     foreach(var column in columnsWithWidth) {

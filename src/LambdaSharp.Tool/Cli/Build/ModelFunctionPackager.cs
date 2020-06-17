@@ -236,11 +236,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // only skip compilation if we were able to apply the invocation schemas (or didn't have to)
                         if(success) {
-                            if(Settings.UseAnsiConsole) {
-                                Console.WriteLine($"=> Skipping function {AnsiTerminal.Yellow}{function.Name}{AnsiTerminal.Reset} (no changes found)");
-                            } else {
-                                Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
-                            }
+                            Console.WriteLine($"=> Skipping function {Settings.InfoColor}{function.Name}{Settings.ResetColor} (no changes found)");
 
                             // keep the existing package
                             _existingPackages.Remove(functionPackage);
@@ -291,11 +287,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             var isAmazonLinux2 = Settings.IsAmazonLinux2();
             var isReadyToRun = isNetCore31OrLater && isAmazonLinux2;
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Building function {AnsiTerminal.Yellow}{function.Name}{AnsiTerminal.Reset} [{targetFramework}, {buildConfiguration}{readyToRunText}]");
-            } else {
-                Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}{readyToRunText}]");
-            }
+            Console.WriteLine($"=> Building function {Settings.InfoColor}{function.Name}{Settings.ResetColor} [{targetFramework}, {buildConfiguration}{readyToRunText}]");
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
             var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
 
@@ -638,12 +630,10 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // local functions
             string ColorizeOutput(string line)
-                => !Settings.UseAnsiConsole
-                    ? line
-                    : line.Contains(": error ", StringComparison.Ordinal)
-                    ? $"{AnsiTerminal.BrightRed}{line}{AnsiTerminal.Reset}"
+                => line.Contains(": error ", StringComparison.Ordinal)
+                    ? $"{Settings.ErrorColor}{line}{Settings.ResetColor}"
                     : line.Contains(": warning ", StringComparison.Ordinal)
-                    ? $"{AnsiTerminal.BrightYellow}{line}{AnsiTerminal.Reset}"
+                    ? $"{Settings.WarningColor}{line}{Settings.ResetColor}"
                     : line;
         }
 
@@ -735,11 +725,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(noCompile) {
                 return;
             }
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Building function {AnsiTerminal.Yellow}{function.Name}{AnsiTerminal.Reset} [{function.Function.Runtime}]");
-            } else {
-                Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
-            }
+            Console.WriteLine($"=> Building function {Settings.InfoColor}{function.Name}{Settings.ResetColor} [{function.Function.Runtime}]");
             var buildFolder = Path.GetDirectoryName(function.Project);
             var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
             var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
