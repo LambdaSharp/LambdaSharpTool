@@ -118,11 +118,7 @@ namespace LambdaSharp.Tool.Cli {
                 return;
             }
             Console.WriteLine();
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {settings.TierName}");
-            }
+            Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
             var parameters = new Dictionary<string, string> {
                 ["LambdaSharpCoreServices"] = coreServicesParameter,
 
@@ -232,11 +228,7 @@ namespace LambdaSharp.Tool.Cli {
             var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(module.StackName);
             var changeSetName = $"{module.ModuleDeploymentName}-{now:yyyy-MM-dd-hh-mm-ss}";
             Console.WriteLine();
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{module.StackName}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"=> Stack update initiated for {module.StackName}");
-            }
+            Console.WriteLine($"=> Stack update initiated for {Settings.InfoColor}{module.StackName}{Settings.ResetColor}");
             var response = await settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
                 Capabilities = module.Stack.Capabilities,
                 ChangeSetName = changeSetName,

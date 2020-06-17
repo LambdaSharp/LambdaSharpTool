@@ -214,11 +214,7 @@ namespace LambdaSharp.Tool.Cli {
                         }
                         await NewBucket(settings, bucketName);
                         Console.WriteLine();
-                        if(Settings.UseAnsiConsole) {
-                            Console.WriteLine($"=> S3 Bucket ARN: {AnsiTerminal.Green}arn:aws:s3:::{bucketName}{AnsiTerminal.Reset}");
-                        } else {
-                            Console.WriteLine($"=> S3 Bucket ARN: arn:aws:s3:::{bucketName}");
-                        }
+                        Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
                     });
                 });
 

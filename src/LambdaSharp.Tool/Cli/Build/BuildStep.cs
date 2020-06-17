@@ -73,11 +73,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(moduleVersion != null) {
                 module.Version = moduleVersion;
             }
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"Compiling: {AnsiTerminal.Yellow}{module.FullName}{AnsiTerminal.Reset} (v{module.Version})");
-            } else {
-                Console.WriteLine($"Compiling: {module.FullName} (v{module.Version})");
-            }
+            Console.WriteLine($"Compiling: {Settings.InfoColor}{module.FullName}{Settings.ResetColor} (v{module.Version})");
 
             // augment module definitions
             new ModelModuleInitializer(Settings, SourceFilename).Initialize(module);

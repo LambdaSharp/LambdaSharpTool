@@ -96,13 +96,18 @@ namespace LambdaSharp.Tool {
         public static bool AllowCaching = false;
         public static TimeSpan MaxCacheAge = TimeSpan.FromDays(1);
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
-        private static string PromptColor = AnsiTerminal.Cyan;
-        private static string LabelColor = AnsiTerminal.BrightCyan;
+        private static VersionInfo _toolVersion;
+        private static string PromptColor => UseAnsiConsole ? AnsiTerminal.Cyan : "";
+        private static string LabelColor => UseAnsiConsole ? AnsiTerminal.BrightCyan : "";
         public static string ResetColor => UseAnsiConsole ? AnsiTerminal.Reset : "";
         public static string OutputColor => UseAnsiConsole ? AnsiTerminal.Green : "";
         public static string InfoColor => UseAnsiConsole ? AnsiTerminal.Yellow : "";
         public static string AlertColor => UseAnsiConsole ? (AnsiTerminal.Black + AnsiTerminal.BackgroundRed) : "";
-        private static VersionInfo _toolVersion;
+        public static string WarningColor => UseAnsiConsole ? AnsiTerminal.BrightRed : "";
+        public static string ErrorColor => UseAnsiConsole ? AnsiTerminal.BrightYellow : "";
+        public static string HighContrastColor => UseAnsiConsole ? AnsiTerminal.BrightWhite : "";
+        public static string LowContrastColor => UseAnsiConsole ? AnsiTerminal.BrightBlack : "";
+        public static string DebugColor => UseAnsiConsole ? AnsiTerminal.BrightBlue : "";
 
         private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
 
@@ -187,19 +192,19 @@ namespace LambdaSharp.Tool {
             var toolException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolOutOfDateException>().FirstOrDefault();
             if(toolException != null) {
                 Console.WriteLine();
-                WriteAnsiLine($"IMPORTANT: run 'dotnet tool update LambdaSharp.Tool --global --version {toolException.Version}' to update the '{Lash}' command", AnsiTerminal.BrightWhite);
+                Console.WriteLine($"{HighContrastColor}IMPORTANT: run 'dotnet tool update LambdaSharp.Tool --global --version {toolException.Version}' to update the '{Lash}' command{ResetColor}");
                 return;
             }
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
             if(setupException != null) {
                 Console.WriteLine();
-                WriteAnsiLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.TierName}'", AnsiTerminal.BrightWhite);
+                Console.WriteLine($"{HighContrastColor}IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.TierName}'{ResetColor}");
                 return;
             }
             var tierException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierOutOfDateException>().FirstOrDefault();
             if(tierException != null) {
                 Console.WriteLine();
-                WriteAnsiLine($"IMPORTANT: run '{Lash} init' to upgrade the LambdaSharp deployment tier '{tierException.TierName}'", AnsiTerminal.BrightWhite);
+                Console.WriteLine($"{HighContrastColor}IMPORTANT: run '{Lash} init' to upgrade the LambdaSharp deployment tier '{tierException.TierName}'{ResetColor}");
             }
         }
 
@@ -226,27 +231,11 @@ namespace LambdaSharp.Tool {
 
         public static void LogInfoPerformance(string message, TimeSpan duration, bool? cached = null) {
             if(VerboseLevel >= Tool.VerboseLevel.Performance) {
-                Settings.WriteAnsiLine($"TIMING: {message} [duration={duration.TotalSeconds:N2}s{(cached.HasValue ? $", cached={cached.Value.ToString().ToLowerInvariant()}" : "")}]", AnsiTerminal.BrightBlue);
-            }
-        }
-
-        public static void WriteAnsiLine(string text, string ansiColor) {
-            if(UseAnsiConsole) {
-                Console.WriteLine($"{ansiColor}{text}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine(text);
+                Console.WriteLine($"{DebugColor}TIMING: {message} [duration={duration.TotalSeconds:N2}s{(cached.HasValue ? $", cached={cached.Value.ToString().ToLowerInvariant()}" : "")}]{ResetColor}");
             }
         }
 
         public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
-
-        private static void WriteAnsi(string text, string ansiColor) {
-            if(UseAnsiConsole) {
-                Console.Write($"{ansiColor}{text}{AnsiTerminal.Reset}");
-            } else {
-                Console.Write(text);
-            }
-        }
 
         //--- Properties ---
         /// <summary>
@@ -321,12 +310,12 @@ namespace LambdaSharp.Tool {
                 prompt += $"[{defaultValue}] ";
             }
         again:
-            WriteAnsi(prompt, PromptColor);
+            Console.Write($"{PromptColor}{prompt}{ResetColor}");
             SetCursorVisible(true);
             var result = Console.ReadLine();
             SetCursorVisible(false);
             if((pattern != null) && !Regex.IsMatch(result, pattern)) {
-                WriteAnsiLine(constraintDescription ?? $"Value must match regular expression pattern: {pattern}", PromptColor);
+                Console.WriteLine($"{PromptColor}{constraintDescription ?? $"Value must match regular expression pattern: {pattern}"}{ResetColor}");
                 goto again;
             }
             return string.IsNullOrEmpty(result)
@@ -341,17 +330,17 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public void PromptLabel(string message) => WriteAnsiLine($"*** {message} ***", LabelColor);
+        public void PromptLabel(string message) => Console.WriteLine($"{LabelColor}*** {message} ***{ResetColor}");
 
         public string PromptChoice(string message, IList<string> choices) {
             if(PromptsAsErrors) {
                 LogError($"prompt was attempted for \"{message}\"");
                 return choices.FirstOrDefault();
             }
-            WriteAnsiLine($"{message}:", PromptColor);
+            Console.WriteLine($"{PromptColor}{message}:{ResetColor}");
             var choiceCount = choices.Count;
             for(var i = 0; i < choiceCount; ++i) {
-                WriteAnsiLine($"{i + 1}. {choices[i]}", PromptColor);
+                Console.WriteLine($"{PromptColor}{i + 1}. {choices[i]}{ResetColor}");
             }
             while(true) {
                 var enteredValue = PromptString($"Enter a choice", pattern: null, constraintDescription: null, defaultValue: null);
@@ -361,11 +350,8 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public bool PromptYesNo(string message, bool defaultAnswer) {
-            return Settings.UseAnsiConsole
-                ? Prompt.GetYesNo($"{PromptColor}|=> {message}{AnsiTerminal.Reset}", defaultAnswer)
-                : Prompt.GetYesNo($"|=> {message}", defaultAnswer);
-        }
+        public bool PromptYesNo(string message, bool defaultAnswer)
+            => Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
 
         public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
     }

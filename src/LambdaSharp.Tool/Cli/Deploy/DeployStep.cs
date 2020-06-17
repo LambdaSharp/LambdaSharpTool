@@ -96,7 +96,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 if(!forceDeploy && !parameters.Any()) {
                     var existingChecksum = existing?.Outputs.FirstOrDefault(output => output.OutputKey == "ModuleChecksum");
                     if(existingChecksum?.OutputValue == manifest.TemplateChecksum) {
-                        Settings.WriteAnsiLine("=> No changes found to deploy", AnsiTerminal.BrightBlack);
+                        Console.WriteLine($"{Settings.LowContrastColor}=> No changes found to deploy{Settings.ResetColor}");
                         return true;
                     }
                 }
