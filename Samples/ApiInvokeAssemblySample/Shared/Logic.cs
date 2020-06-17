@@ -17,45 +17,47 @@
  */
 
 using System;
+using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using LambdaSharp;
 using LambdaSharp.ApiGateway;
 using LambdaSharp.Logger;
-using Newtonsoft.Json;
 
 namespace ApiInvokeSample.Shared {
 
     public class CaptureEventRequest {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string EventType { get; set; }
 
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string Data { get; set; }
     }
 
     public class ComputeRequest {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public double LeftOperand { get; set; }
 
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public double RightOperand { get; set; }
     }
 
     public class ComputeQuery {
 
         //--- Properties ---
-        [JsonProperty("op", Required = Required.Always)]
+        [JsonPropertyName("op")]
+        [DataMember(IsRequired = true)]
         public string Operator { get; set; }
     }
 
     public class ComputeResponse {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public double Value { get; set; }
     }
 
@@ -78,8 +80,8 @@ namespace ApiInvokeSample.Shared {
         }
 
         public ComputeResponse Compute(ComputeRequest computation, [FromUri] ComputeQuery query) {
-            _logger.LogInfo($"request: {JsonConvert.SerializeObject(computation)}");
-            _logger.LogInfo($"query: {JsonConvert.SerializeObject(query)}");
+            _logger.LogInfo($"request: {SerializeJson(computation)}");
+            _logger.LogInfo($"query: {SerializeJson(query)}");
             switch(query.Operator) {
             case "add":
                 return new ComputeResponse {
@@ -103,5 +105,10 @@ namespace ApiInvokeSample.Shared {
                 };
             }
         }
+
+        private string SerializeJson<T>(T value)
+            => JsonSerializer.Serialize(value, new JsonSerializerOptions {
+                IgnoreNullValues = true
+            });
     }
 }

@@ -37,8 +37,8 @@ namespace Sample.Debug.MyFunction {
             LogDebug("this will only show if DEBUG_LOGGING_ENABLED environment variable is set");
 
             // to avoid unnecessary overhead, check if debug logging is enabled before constructing debug output
-            if(Provider.DebugLoggingEnabled) {
-                LogDebug("more complex statements should be guarded using the Provider.DebugLoggingEnabled property");
+            if(DebugLoggingEnabled) {
+                LogDebug("more complex statements should be guarded using the DebugLoggingEnabled property");
             }
             return new FunctionResponse();
         }
