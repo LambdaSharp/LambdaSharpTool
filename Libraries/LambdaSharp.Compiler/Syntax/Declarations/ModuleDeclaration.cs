@@ -64,9 +64,9 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             ModuleName = Adopt(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
             _version = Adopt(Fn.Literal("1.0-DEV"));
             _pragmas = Adopt(new ListExpression());
-            _secrets = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _using = SetParent(new SyntaxNodeCollection<UsingModuleDeclaration>());
-            _items = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
+            _secrets = Adopt(new SyntaxNodeCollection<LiteralExpression>());
+            _using = Adopt(new SyntaxNodeCollection<UsingModuleDeclaration>());
+            _items = Adopt(new SyntaxNodeCollection<AItemDeclaration>());
         }
 
         //--- Properties ---
@@ -92,19 +92,19 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Secrets {
             get => _secrets;
-            set => _secrets = SetParent(value ?? throw new ArgumentNullException());
+            set => _secrets = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
         public SyntaxNodeCollection<UsingModuleDeclaration> Using {
             get => _using;
-            set => _using = SetParent(value ?? throw new ArgumentNullException());
+            set => _using = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxRequired]
         public SyntaxNodeCollection<AItemDeclaration> Items {
             get => _items;
-            set => _items = SetParent(value ?? throw new ArgumentNullException());
+            set => _items = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]

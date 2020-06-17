@@ -25,9 +25,9 @@ using LambdaSharp.CloudFormation.Template;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.SyntaxProcessors;
+using LambdaSharp.Compiler.Model;
 
 namespace LambdaSharp.Compiler {
 
@@ -94,10 +94,8 @@ namespace LambdaSharp.Compiler {
             // validate AST integrity
             new SyntaxTreeIntegrityProcessor(this).Process(moduleDeclaration);
 
-            // find module dependencies
-            var dependencies = new ExternalDependenciesProcessor(this).FindDependencies(moduleDeclaration);
-
-            // TODO: download external dependencies
+            // resolve all external module dependencies
+            await new ExternalDependenciesProcessor(this).ProcessAsync(moduleDeclaration);
 
             // load CloudFormation specification
             CloudFormationSpec = await Provider.LoadCloudFormationSpecificationAsync(
@@ -122,6 +120,8 @@ namespace LambdaSharp.Compiler {
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
+
+            // TODO: after this point, declarations exist outside of ModuleDeclaration that need to be processed
 
             // evaluate expressions
             new ConstantExpressionProcessor(this).Process(moduleDeclaration);
@@ -223,5 +223,8 @@ namespace LambdaSharp.Compiler {
         ILogger ILambdaSharpParserDependencyProvider.Logger => Logger;
 
         string ILambdaSharpParserDependencyProvider.ReadFile(string filePath) => Provider.ReadFile(filePath);
+
+        Task<ModuleManifest> ISyntaxProcessorDependencyProvider.ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo)
+            => throw new NotImplementedException();
     }
 }

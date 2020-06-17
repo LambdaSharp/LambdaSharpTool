@@ -30,14 +30,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public GroupDeclaration(LiteralExpression itemName) : base(itemName)
-            => _items = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
+            => _items = Adopt(new SyntaxNodeCollection<AItemDeclaration>());
 
         //--- Properties ---
 
         [SyntaxRequired]
         public SyntaxNodeCollection<AItemDeclaration> Items {
             get => _items ?? throw new InvalidOperationException();
-            set => _items = SetParent(value ?? throw new ArgumentNullException());
+            set => _items = Adopt(value ?? throw new ArgumentNullException());
         }
     }
 }

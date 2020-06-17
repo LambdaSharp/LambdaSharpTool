@@ -16,12 +16,14 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+using System;
+using System.Threading.Tasks;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
+    using ErrorFunc = Func<string, Error>;
 
     internal sealed class ExternalDependenciesProcessor : ASyntaxProcessor {
 
@@ -29,21 +31,26 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         #region Errors/Warnings
         private static readonly Error ModuleAttributeInvalidModuleInfo = new Error(0, "'Module' attribute must be a module reference");
+        private static readonly ErrorFunc ModuleNotFound = parameter => new Error(0, $"could not resolve module {parameter}");
         #endregion
 
         //--- Constructors ---
         public ExternalDependenciesProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public IEnumerable<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)> FindDependencies(ModuleDeclaration moduleDeclaration) {
-            var result = new List<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)>();
-            moduleDeclaration.Inspect(node => {
+        public async Task ProcessAsync(ModuleDeclaration moduleDeclaration) {
+
+            // TODO: we should be a bit smarter to reduce the number of calls to ResolveModuleInfoAsync()
+
+            // discover all dependencies
+            await moduleDeclaration.InspectAsync(async node => {
                 switch(node) {
                 case ModuleDeclaration moduleDeclaration:
 
-                    // module have an implicit dependency on LambdaSharp.Core@lambdasharp unless explicitly disabled
-                    if(moduleDeclaration.HasModuleRegistration) {
-                        result.Add((node, ModuleManifestDependencyType.Shared, "LambdaSharp.Core@lambdasharp"));
+                    // modules have an implicit dependency on LambdaSharp.Core@lambdasharp unless explicitly disabled
+                    var lambdaSharpModule = new ModuleInfo("LambdaSharp", "Core", version: null, "lambdasharp");
+                    if(moduleDeclaration.HasModuleRegistration && !await ValidateModuleReferenceAsync(ModuleManifestDependencyType.Shared, lambdaSharpModule)) {
+                        Logger.Log(ModuleNotFound(lambdaSharpModule.ToString()), moduleDeclaration);
                     }
                     break;
                 case UsingModuleDeclaration usingModuleDeclaration:
@@ -51,15 +58,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     // check if module reference is valid
                     if(!ModuleInfo.TryParse(usingModuleDeclaration.ModuleName.Value, out var usingModuleInfo)) {
                         Logger.Log(ModuleAttributeInvalidModuleInfo, usingModuleDeclaration.ModuleName);
-                    } else {
-
-                        // default to deployment bucket as origin when missing
-                        if(usingModuleInfo.Origin == null) {
-                            usingModuleInfo = usingModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                        }
-
-                        // add module reference as a shared dependency
-                        result.Add((usingModuleDeclaration, ModuleManifestDependencyType.Shared, usingModuleInfo.ToString()));
+                    } else if(!await ValidateModuleReferenceAsync(ModuleManifestDependencyType.Shared, usingModuleInfo)) {
+                        Logger.Log(ModuleNotFound(usingModuleInfo.ToString()), usingModuleDeclaration.ModuleName);
                     }
                     break;
                 case NestedModuleDeclaration nestedModuleDeclaration:
@@ -67,15 +67,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     // check if module reference is valid
                     if(!ModuleInfo.TryParse(nestedModuleDeclaration.Module?.Value, out var nestedModuleInfo)) {
                         Logger.Log(ModuleAttributeInvalidModuleInfo, (ISyntaxNode?)nestedModuleDeclaration.Module ?? nestedModuleDeclaration);
-                    } else {
-
-                        // default to deployment bucket as origin when missing
-                        if(nestedModuleInfo.Origin == null) {
-                            nestedModuleInfo = nestedModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                        }
-
-                        // add module reference as a nested dependency
-                        result.Add((node, ModuleManifestDependencyType.Nested, nestedModuleInfo.ToString()));
+                    } else if(!await ValidateModuleReferenceAsync(ModuleManifestDependencyType.Nested, nestedModuleInfo)) {
+                        Logger.Log(ModuleNotFound(nestedModuleInfo.ToString()), (ASyntaxNode?)nestedModuleDeclaration.Module ?? nestedModuleDeclaration);
                     }
                     break;
                 case ImportDeclaration importDeclaration:
@@ -84,20 +77,28 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     // check if module reference is valid
                     if(!ModuleInfo.TryParse(importModuleName, out var importModuleInfo)) {
                         Logger.Log(ModuleAttributeInvalidModuleInfo, (ISyntaxNode?)importDeclaration.Module ?? importDeclaration);
-                    } else {
-
-                        // default to deployment bucket as origin when missing
-                        if(importModuleInfo.Origin == null) {
-                            importModuleInfo = importModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                        }
-
-                        // add module reference as a shared dependency
-                        result.Add((node, ModuleManifestDependencyType.Shared, importModuleInfo.ToString()));
+                    } else if(!await ValidateModuleReferenceAsync(ModuleManifestDependencyType.Shared, importModuleInfo)) {
+                        Logger.Log(ModuleNotFound(importModuleInfo.ToString()), (ASyntaxNode?)importDeclaration.Module ?? importDeclaration);
                     }
                     break;
                 }
             });
-            return result;
+
+            // local functions
+            async Task<bool> ValidateModuleReferenceAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo) {
+
+                // default to deployment bucket as origin when missing
+                if(moduleInfo.Origin == null) {
+                    moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
+                }
+
+                // default to the lowest possible version number
+                if(moduleInfo.Version == null) {
+                    moduleInfo = moduleInfo.WithVersion(VersionInfo.Parse("0.0.0"));
+                }
+                var manifest = await Provider.ResolveModuleInfoAsync(dependencyType, moduleInfo);
+                return manifest != null;
+            }
         }
     }
 }

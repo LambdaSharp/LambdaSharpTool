@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Threading.Tasks;
 
 namespace LambdaSharp.Compiler.Syntax {
 
@@ -28,6 +29,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Methods ---
         void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector);
+        Task InspectAsync(Func<ASyntaxNode, Task>? entryInspector, Func<ASyntaxNode, Task>? exitInspector);
         ISyntaxNode Substitute(Func<ISyntaxNode, ISyntaxNode> inspector);
     }
 }

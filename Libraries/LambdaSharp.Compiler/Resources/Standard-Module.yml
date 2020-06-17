@@ -168,6 +168,24 @@ Items:
         If: UseCoreServices
         Value: !Ref LambdaSharp::LoggingStreamRole
 
+      - Function: DecryptSecretFunction
+        Pragmas:
+          - no-function-registration
+          - no-dead-letter-queue
+          - no-wildcard-scoped-variables
+          - discard-if-not-used
+        Description: Module secret decryption function
+        Environment:
+          MODULE_ROLE_SECRETS_POLICY: !If [ Module::Role::SecretsPolicy::Condition, !Ref Module::Role::SecretsPolicy, !Ref AWS::NoValue ]
+        Timeout: 30
+        Memory: 128
+        Runtime: nodejs12.x
+        Handler: index.handler
+        Language: javascript
+        Properties:
+          Code:
+            ZipFile: !Include DecryptSecretFunction.js
+
   ###
   # Deployment Variables
   ###
@@ -190,23 +208,6 @@ Items:
   ###
   # Resources
   ###
-  - Function: DecryptSecretFunction
-    Pragmas:
-      - no-function-registration
-      - no-dead-letter-queue
-      - no-wildcard-scoped-variables
-      - discard-if-not-used
-    Description: Module secret decryption function
-    Environment:
-      MODULE_ROLE_SECRETS_POLICY: !If [ Module::Role::SecretsPolicy::Condition, !Ref Module::Role::SecretsPolicy, !Ref AWS::NoValue ]
-    Timeout: 30
-    Memory: 128
-    Runtime: nodejs12.x
-    Handler: index.handler
-    Language: javascript
-    Properties:
-      Code:
-        ZipFile: !Include DecryptSecretFunction.js
 
   - Resource: Registration
     Type: LambdaSharp::Registration::Module

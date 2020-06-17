@@ -33,7 +33,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public NestedModuleDeclaration(LiteralExpression itemName) : base(itemName) {
-            _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _dependsOn = Adopt(new SyntaxNodeCollection<LiteralExpression>());
             _pragmas = Adopt(new ListExpression());
         }
 
@@ -48,7 +48,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> DependsOn {
             get => _dependsOn;
-            set => _dependsOn = SetParent(value);
+            set => _dependsOn = Adopt(value);
         }
 
         [SyntaxOptional]

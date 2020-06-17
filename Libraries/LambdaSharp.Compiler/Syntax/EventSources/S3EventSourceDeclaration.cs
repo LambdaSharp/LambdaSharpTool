@@ -37,7 +37,7 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression>? Events {
             get => _events;
-            set => _events = SetParent(value);
+            set => _events = Adopt(value);
         }
 
         [SyntaxOptional]

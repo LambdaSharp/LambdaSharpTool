@@ -33,7 +33,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public ImportDeclaration(LiteralExpression itemName) : base(itemName) {
-            _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _scope = Adopt(new SyntaxNodeCollection<LiteralExpression>());
             DiscardIfNotReachable = true;
         }
 
@@ -48,16 +48,17 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value ?? throw new ArgumentNullException());
+            set => _scope = Adopt(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression>? Allow {
             get => _allow;
-            set => _allow = SetParent(value);
+            set => _allow = Adopt(value);
         }
 
         [SyntaxRequired]
+        // TODO: rename to 'From'?
         public LiteralExpression? Module {
             get => _module;
             set => _module = Adopt(value);
