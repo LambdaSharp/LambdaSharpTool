@@ -95,8 +95,8 @@ namespace LambdaSharp.Tool {
         public static bool AllowCaching = false;
         public static TimeSpan MaxCacheAge = TimeSpan.FromDays(1);
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
-        private static string PromptColor = UseAnsiConsole ? AnsiTerminal.Cyan : "";
-        private static string LabelColor = UseAnsiConsole ? AnsiTerminal.BrightCyan : "";
+        private static string PromptColor => UseAnsiConsole ? AnsiTerminal.Cyan : "";
+        private static string LabelColor => UseAnsiConsole ? AnsiTerminal.BrightCyan : "";
         public static string ResetColor => UseAnsiConsole ? AnsiTerminal.Reset : "";
         public static string OutputColor => UseAnsiConsole ? AnsiTerminal.Green : "";
         public static string InfoColor => UseAnsiConsole ? AnsiTerminal.Yellow : "";
