@@ -294,10 +294,13 @@ namespace LambdaSharp.ApiGateway.Internal {
                     try {
                         var state = new InvocationTargetState();
                         var result = method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
+                        var body = (result != null)
+                            ? _serializer.Serialize<object>(result)
+                            : null;
                         return (result != null)
                             ? new APIGatewayProxyResponse {
                                 StatusCode = 200,
-                                Body = _serializer.Serialize<object>(result),
+                                Body = body,
                                 Headers = new Dictionary<string, string> {
                                     ["ContentType"] = "application/json"
                                 }
