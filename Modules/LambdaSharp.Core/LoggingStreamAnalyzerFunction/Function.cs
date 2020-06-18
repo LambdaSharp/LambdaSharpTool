@@ -30,8 +30,8 @@ using Amazon.DynamoDBv2;
 using Amazon.Lambda.KinesisFirehoseEvents;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
-using LambdaSharp.ErrorReports;
 using LambdaSharp.Records;
+using LambdaSharp.Records.ErrorReports;
 using LambdaSharp.Records.Events;
 using LambdaSharp.Records.Metrics;
 
