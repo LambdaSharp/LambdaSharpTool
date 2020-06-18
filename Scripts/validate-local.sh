@@ -10,6 +10,9 @@ cd $LAMBDASHARP
 
 # Setup and validate λ# CLI
 Scripts/install-cli.sh
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 
 echo "*******************************************"
 echo "*** Update CloudFormation Specification ***"
@@ -26,10 +29,9 @@ if [ $UNCOMMITTED -ne "0" ]; then
     exit 1
 fi
 
-
-echo "***********************************"
-echo "*** Run Module Generation Tests ***"
-echo "***********************************"
+echo "*****************"
+echo "*** Run Tests ***"
+echo "*****************"
 
 git update-index -q --refresh
 if ! git diff-index --quiet HEAD -- Tests/; then
@@ -39,32 +41,15 @@ if ! git diff-index --quiet HEAD -- Tests/; then
 fi
 
 Scripts/run-tests.sh
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 
 git update-index -q --refresh
 if ! git diff-index --quiet HEAD -- Tests/; then
     git diff-index --name-only HEAD -- Tests/
     echo "ERROR: found changes in Tests/ folder AFTER running tests"
     exit 1
-fi
-
-
-echo "**********************"
-echo "*** Run Unit Tests ***"
-echo "***********************"
-
-dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp"
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Tool"
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet test "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
-if [ $? -ne 0 ]; then
-    exit $?
 fi
 
 echo "************************"
