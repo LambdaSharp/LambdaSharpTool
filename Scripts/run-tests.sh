@@ -4,9 +4,38 @@ if [ -z "$LAMBDASHARP" ]; then
     exit 1
 fi
 
+
 if [ -z "$1" ]; then
 
-    # run everything
+    # run CLI unit tests
+    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.CloudFormation"
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
+    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Compiler"
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
+    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Tool"
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
+    # run SDK unit tests
+    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp"
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
+    # run Module unit tests
+    dotnet test "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
+    # run lash once with force compile to make sure we're testing the latest code
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
         --verbose:exceptions \
         --tier Test \
@@ -16,12 +45,14 @@ if [ -z "$1" ]; then
         --tier-version $LAMBDASHARP_VERSION_PREFIX \
         --cli-version $LAMBDASHARP_VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name
-
     if [ $? -ne 0 ]; then
         exit $?
     fi
 
+    # delete old test output
     rm $LAMBDASHARP/Tests/Modules/Results/*.json > /dev/null 2>&1
+
+    # run everything
     dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp3.1/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
         --tier Test \
@@ -116,7 +147,10 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Demos/DemoS3BucketSubscription/DemoS3Bucket \
         $LAMBDASHARP/Demos/DemoS3BucketSubscription/DemoS3Subscriber \
         $LAMBDASHARP/Demos/SlackTodo \
-        $LAMBDASHARP/Demos/TwitterNotifier \
+        $LAMBDASHARP/Demos/TwitterNotifier
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
 
 else
     testfile=$(basename $1 .yml)

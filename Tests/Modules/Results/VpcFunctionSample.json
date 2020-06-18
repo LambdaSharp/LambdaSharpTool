@@ -3,10 +3,10 @@
   "Description": "A sample module defining a Lambda function in VPC (v1.0-DEV)",
   "Parameters": {
     "SecurityGroupIds": {
-      "Type": "String"
+      "Type": "CommaDelimitedList"
     },
     "SubnetIds": {
-      "Type": "String"
+      "Type": "CommaDelimitedList"
     },
     "Secrets": {
       "Type": "String",
@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9874DD6AE2427AC31FABCAA674BA8F6D"
+      "Default": "1FEAEDCE80ED71359D8407B59EF95436"
     }
   },
   "Resources": {
@@ -584,7 +584,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.2"
+      "Value": "0.8.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -823,7 +823,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.VpcFunction:1.0-DEV",
       "Description": "A sample module defining a Lambda function in VPC",
-      "TemplateChecksum": "9874DD6AE2427AC31FABCAA674BA8F6D",
+      "TemplateChecksum": "1FEAEDCE80ED71359D8407B59EF95436",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
@@ -832,11 +832,11 @@
           "Parameters": [
             {
               "Name": "SecurityGroupIds",
-              "Type": "CommaDelimitedString"
+              "Type": "CommaDelimitedList"
             },
             {
               "Name": "SubnetIds",
-              "Type": "CommaDelimitedString"
+              "Type": "CommaDelimitedList"
             }
           ]
         },
