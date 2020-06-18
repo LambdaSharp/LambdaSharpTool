@@ -145,6 +145,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Fixes
 
+* CLI
+  * Added a check for asynchronous API Gateway method invocations to report when they are used with HTTP GET/OPTIONS.
+
 * Modules
   * Fixed an issue in _LambdaSharp.Core_ that caused function registrations not to be updated.
   * Fixed an issue in _LambdaSharp.Core_ that caused near out-of-memory Lambda usage reports to trigger an an out-of-memory error notification instead of a warning.

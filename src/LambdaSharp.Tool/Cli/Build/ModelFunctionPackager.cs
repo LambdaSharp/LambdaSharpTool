@@ -902,7 +902,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 .ToList();
 
             // check if lambdasharp is installed or if we need to run it using dotnet
-            var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
             var success = RunLashTool(arguments, Settings.VerboseLevel >= VerboseLevel.Detailed);
             if(!success) {
                 return false;
@@ -972,6 +971,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 mapping.RestApiSource.QueryStringParameters[uriParameter.Key] = uriParameter.Value;
                             }
                         }
+                    }
+
+                    // ensure GET is not mapped to an asynchronous method
+                    if((mapping.RestApiSource.HttpMethod == "GET") || (mapping.RestApiSource.HttpMethod == "OPTIONS")) {
+
                     }
                 }
                 if(mapping.WebSocketSource != null) {
