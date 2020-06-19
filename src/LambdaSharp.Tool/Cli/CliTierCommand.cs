@@ -48,7 +48,7 @@ namespace LambdaSharp.Tool.Cli {
                     var initSettingsCallback = CreateSettingsInitializer(subCmd);
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                    ExecuteCommandActions(subCmd);
+                        ExecuteCommandActions(subCmd);
                         var settings = await initSettingsCallback();
                         if(settings == null) {
                             return;

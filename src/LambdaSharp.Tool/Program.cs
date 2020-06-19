@@ -82,8 +82,9 @@ namespace LambdaSharp.Tool {
             var stopwatch = Stopwatch.StartNew();
             using(Settings.AnsiTerminal = new AnsiTerminal()) {
                 try {
+                    int exitCode = 0;
                     try {
-                        app.Execute(args);
+                        exitCode = app.Execute(args);
                     } catch(CommandParsingException e) {
                         LogError(e.Message);
                     } catch(Exception e) {
@@ -103,7 +104,7 @@ namespace LambdaSharp.Tool {
                         }
                         Settings.ShowErrors();
                     }
-                    return 0;
+                    return exitCode;
                 } finally {
                     if(!ShowHelp && !Quiet) {
                         Console.WriteLine();

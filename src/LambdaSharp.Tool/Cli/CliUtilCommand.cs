@@ -196,6 +196,47 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
+                // check tier version
+                cmd.Command("check-tier-version", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Check Tier Version";
+                    var minVersionOption = subCmd.Option("--min-version", "(optional) Minimum expected version", CommandOptionType.SingleValue);
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    AddStandardCommandOptions(subCmd);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return -1;
+                        }
+
+                        // fetch tier information
+                        if(!await PopulateDeploymentTierSettingsAsync(settings, optional: true)) {
+                            return -1;
+                        }
+
+                        // validate options
+                        if(minVersionOption.Value() == null) {
+                            Console.WriteLine($"Tier Version: {settings.TierVersion}");
+                            return 0;
+                        } else {
+                            if(!VersionInfo.TryParse(minVersionOption.Value(), out var minVersion)) {
+                                LogError("invalid value for --min-version option");
+                                return -1;
+                            }
+
+                            // compare version numbers
+                            var exitCode = settings.TierVersion.IsGreaterOrEqualThanVersion(minVersion) ? 0 : 1;
+                            if(!Program.Quiet) {
+                                Console.WriteLine($"Tier Version: {settings.TierVersion} [ExitCode: {exitCode}]");
+                            }
+                            return exitCode;
+                        }
+                    });
+                });
+
                 // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
                     Program.ShowHelp = true;
