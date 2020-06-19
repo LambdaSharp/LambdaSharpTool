@@ -227,10 +227,42 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                             // apply function schema to generate REST API and WebSocket models
                             try {
-                                success = ApplyInvocationSchemas(function, mappings, schemaFile, silent: true);
+                                if(!ApplyInvocationSchemas(function, mappings, schemaFile, silent: true)) {
+                                    success = false;
+
+                                    // reset the mappings as the call to ApplyInvocationSchemas() may have modified them
+                                    mappings = ExtractMappings(function);
+                                }
                             } catch(Exception e) {
                                 LogError("unable to read create-invoke-methods-schema output", e);
                                 return;
+                            }
+
+                            // check if the mappings have changed by comparing the new data-structure to the one inside the zip file
+                            if(success) {
+                                var newMappingsJson = JObject.FromObject(new ApiGatewayInvocationMappings {
+                                    Mappings = mappings
+                                }).ToString(Formatting.None);
+                                using(var zipArchive = ZipFile.Open(functionPackage, ZipArchiveMode.Read)) {
+                                    var entry = zipArchive.Entries.FirstOrDefault(entry => entry.FullName == API_MAPPINGS);
+                                    if(entry != null) {
+                                        using(var stream = entry.Open())
+                                        using(var reader = new StreamReader(stream)) {
+                                            if(newMappingsJson != reader.ReadToEnd()) {
+
+                                                // module mappings have change
+                                                success = false;
+                                                LogInfoVerbose($"... mappings change changed");
+                                            }
+                                        }
+                                    } else {
+
+                                        // we now have mappings and we didn't use to
+                                        success = false;
+                                        LogInfoVerbose($"... mappings change changed");
+                                    }
+                                }
+
                             }
                         }
 
@@ -870,6 +902,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         return null;
                     }
                     mapping.Method = $"{mappingAssemblyName ?? lambdaFunctionAssemblyName}::{mappingClassName ?? lambdaFunctionClassName}::{mappingMethodName}";
+
                 }
             }
             return mappings;
