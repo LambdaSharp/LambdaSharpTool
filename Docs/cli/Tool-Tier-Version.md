@@ -1,11 +1,11 @@
 ---
-title: LambdaSharp CLI Util Command - Check Deployment Tier Version
+title: LambdaSharp CLI Tier Command - Check Deployment Tier Version
 description: List Lambda functions by CloudFormation stack with their runtime and last used date
 keywords: cli, lambda, cloudformation, logs
 ---
-# Check the Version of the Deployment Tier
+# Show or Check Deployment Tier Version
 
-The `util check-tier-version` command is used to show the version of the deployment tier.
+The `tier version` command is used to show the version of the deployment tier.
 
 The `--min-version` option is used to compare the specified version against the deployment tier version. If the value of the deployment tier version is equal or greater, the process exits with code 0. Otherwise, it exits with code 1. This result can be used to check if `lash init` needs to be run to upgrade a deployment tier.
 
@@ -62,7 +62,7 @@ The `--min-version` option is used to compare the specified version against the 
 ### Show Deployment Tier Version
 
 ```bash
-lash util check-tier-version
+lash tier version
 ```
 
 Output:
@@ -77,7 +77,7 @@ Done (finished: 6/18/2020 9:28:34 PM; duration: 00:00:00.9270535)
 
 __Using PowerShell/Bash:__
 ```bash
-lash util check-tier-version --min-version 0.8.0.5
+lash tier version --min-version 0.8.0.5
 ```
 
 Output:
@@ -92,7 +92,7 @@ Done (finished: 6/18/2020 9:29:21 PM; duration: 00:00:00.9652105)
 
 __Using PowerShell/Bash:__
 ```bash
-lash util check-tier-version --min-version 0.8.0.5 --quiet
+lash tier version --min-version 0.8.0.5 --quiet
 echo $?
 ```
 
