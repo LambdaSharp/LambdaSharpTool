@@ -147,6 +147,8 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Added a check for asynchronous API Gateway method invocations to report when they are used with HTTP GET/OPTIONS.
+  * Fixed an issue where a function was not recompiled when only its API mappings were modified, which led the function to have an out-of-date mappings file.
+  * Fixed an issue where an invalid function schema was saved after the build.
 
 * Modules
   * Fixed an issue in _LambdaSharp.Core_ that caused function registrations not to be updated.
