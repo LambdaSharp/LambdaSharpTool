@@ -334,12 +334,10 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             // send error report if usage is near or exceeding limits
             report.Message = null;
             report.RequestId = requestId;
-            if(usage.UsedMemoryPercent >= 1.0f) {
 
-                // report out-of-memory error
-                report.Level = "ERROR";
-                report.Message = $"Lambda ran out of memory (Max: {owner.FunctionMaxMemory} MB)";
-                report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda ran out of memory");
+            if(usage.UsedMemoryPercent > 1.0f) {
+
+                // nothing to do since out-of-memory exceptions are reported separately
             } else if(usage.UsedDurationPercent >= 1.0F) {
 
                 // nothing to do since timeouts are reported separately

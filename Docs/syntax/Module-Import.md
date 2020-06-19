@@ -100,16 +100,16 @@ For example, the decrypted value of a variable called <code>Password</code> with
 
 ## Examples
 
-### Import a module
+### Import a public module value
 
 ```yaml
 - Import: ImportedMessageTitle
-  Module: My.OtherModule::MessageTitle
+  Module: My.OtherModule
   Description: Imported title for messages
   Type: String
 ```
 
-### Import a module output and associate IAM permissions
+### Import a public module value with a custom name and associate IAM permissions
 
 ```yaml
 - Import: ImportedTopic

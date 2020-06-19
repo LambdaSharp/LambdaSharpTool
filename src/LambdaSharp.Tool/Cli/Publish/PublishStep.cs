@@ -154,13 +154,9 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 };
                 await _transferUtility.UploadAsync(request);
             } else {
-                Settings.WriteAnsiLine("=> No changes found to upload", AnsiTerminal.BrightBlack);
+                Console.WriteLine($"{Settings.LowContrastColor}=> No changes found to upload{Settings.ResetColor}");
             }
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Published: {AnsiTerminal.Green}{manifest.ModuleInfo}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"=> Published: {manifest.ModuleInfo}");
-            }
+            Console.WriteLine($"=> Published: {Settings.OutputColor}{manifest.ModuleInfo}{Settings.ResetColor}");
             return manifest.ModuleInfo;
         }
 

@@ -53,6 +53,12 @@ The `tier coreservices` command is used to show and updates the LambdaSharp Core
 (optional) Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--quiet</code></dt>
+<dd>
+
+(optional) Don't show banner or execution time
+</dd>
+
 </dl>
 
 ## Examples

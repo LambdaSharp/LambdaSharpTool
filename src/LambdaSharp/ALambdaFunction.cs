@@ -918,7 +918,7 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="metrics">Enumeration of metrics, including their name, value, and unit.</param>
         protected void LogMetric(IEnumerable<LambdaMetric> metrics)
-            => LogMetric(metrics, new string[0], new Dictionary<string, string>());
+            => LogMetric(metrics, Array.Empty<string>(), new Dictionary<string, string>());
 
         /// <summary>
         /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.

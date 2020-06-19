@@ -60,18 +60,18 @@ namespace LambdaSharp.Tool.Model {
             _name = module.Name;
             Version = module.Version;
             _description = module.Description;
-            _pragmas = new List<object>(module.Pragmas ?? new object[0]);
-            _secrets = new List<object>(module.Secrets ?? new object[0]);
-            _items = new List<AModuleItem>(module.Items ?? new AModuleItem[0]);
+            _pragmas = new List<object>(module.Pragmas ?? Array.Empty<object>());
+            _secrets = new List<object>(module.Secrets ?? Array.Empty<object>());
+            _items = new List<AModuleItem>(module.Items ?? Array.Empty<AModuleItem>());
             _itemsByFullName = _items.ToDictionary(item => item.FullName);
-            _artifacts = new List<string>(module.Artifacts ?? new string[0]);
+            _artifacts = new List<string>(module.Artifacts ?? Array.Empty<string>());
             _dependencies = (module.Dependencies != null)
                 ? new Dictionary<string, ModuleBuilderDependency>(module.Dependencies)
                 : new Dictionary<string, ModuleBuilderDependency>();
             _customResourceTypes = (module.CustomResourceTypes != null)
                 ? new List<ModuleManifestResourceType>(module.CustomResourceTypes)
                 : new List<ModuleManifestResourceType>();
-            _macroNames = new List<string>(module.MacroNames ?? new string[0]);
+            _macroNames = new List<string>(module.MacroNames ?? Array.Empty<string>());
             _resourceTypeNameMappings = module.ResourceTypeNameMappings ?? new Dictionary<string, string>();
 
             // extract existing resource statements when they exist
@@ -927,9 +927,9 @@ namespace LambdaSharp.Tool.Model {
                 project: project,
                 language: language,
                 environment: environment ?? new Dictionary<string, object>(),
-                sources: sources ?? new AFunctionSource[0],
+                sources: sources ?? Array.Empty<AFunctionSource>(),
                 condition: null,
-                pragmas: pragmas ?? new object[0],
+                pragmas: pragmas ?? Array.Empty<object>(),
                 function: resource
             );
             AddItem(function);
@@ -1049,13 +1049,13 @@ namespace LambdaSharp.Tool.Model {
                 parent: parent,
                 name: name,
                 description: description,
-                scope: new string[0],
+                scope: Array.Empty<string>(),
                 project: "",
                 language: "javascript",
                 environment: environment ?? new Dictionary<string, object>(),
-                sources: sources ?? new AFunctionSource[0],
+                sources: sources ?? Array.Empty<AFunctionSource>(),
                 condition: condition,
-                pragmas: pragmas ?? new object[0],
+                pragmas: pragmas ?? Array.Empty<object>(),
                 function: resource
             );
             AddItem(function);

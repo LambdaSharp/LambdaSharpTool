@@ -48,7 +48,7 @@ namespace LambdaSharp.Tool.Cli {
                     var initSettingsCallback = CreateSettingsInitializer(subCmd);
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                    ExecuteCommandActions(subCmd);
+                        ExecuteCommandActions(subCmd);
                         var settings = await initSettingsCallback();
                         if(settings == null) {
                             return;
@@ -64,6 +64,47 @@ namespace LambdaSharp.Tool.Cli {
                             enabled = false;
                         }
                         await UpdateCoreServicesAsync(settings, enabled, showModules: true);
+                    });
+                });
+
+                // check tier version
+                cmd.Command("version", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Check Tier Version";
+                    var minVersionOption = subCmd.Option("--min-version", "(optional) Minimum expected version", CommandOptionType.SingleValue);
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    AddStandardCommandOptions(subCmd);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return -1;
+                        }
+
+                        // fetch tier information
+                        if(!await PopulateDeploymentTierSettingsAsync(settings, optional: true)) {
+                            return -1;
+                        }
+
+                        // validate options
+                        if(minVersionOption.Value() == null) {
+                            Console.WriteLine($"Tier Version: {settings.TierVersion}");
+                            return 0;
+                        } else {
+                            if(!VersionInfo.TryParse(minVersionOption.Value(), out var minVersion)) {
+                                LogError("invalid value for --min-version option");
+                                return -1;
+                            }
+
+                            // compare version numbers
+                            var exitCode = settings.TierVersion.IsGreaterOrEqualThanVersion(minVersion) ? 0 : 1;
+                            if(!Program.Quiet) {
+                                Console.WriteLine($"Tier Version: {settings.TierVersion} [ExitCode: {exitCode}]");
+                            }
+                            return exitCode;
+                        }
                     });
                 });
 
@@ -118,11 +159,7 @@ namespace LambdaSharp.Tool.Cli {
                 return;
             }
             Console.WriteLine();
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {settings.TierName}");
-            }
+            Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
             var parameters = new Dictionary<string, string> {
                 ["LambdaSharpCoreServices"] = coreServicesParameter,
 
@@ -232,11 +269,7 @@ namespace LambdaSharp.Tool.Cli {
             var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(module.StackName);
             var changeSetName = $"{module.ModuleDeploymentName}-{now:yyyy-MM-dd-hh-mm-ss}";
             Console.WriteLine();
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{module.StackName}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"=> Stack update initiated for {module.StackName}");
-            }
+            Console.WriteLine($"=> Stack update initiated for {Settings.InfoColor}{module.StackName}{Settings.ResetColor}");
             var response = await settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
                 Capabilities = module.Stack.Capabilities,
                 ChangeSetName = changeSetName,

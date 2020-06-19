@@ -582,7 +582,7 @@ namespace LambdaSharp.Tool.Cli {
                         : method.ReturnType;
                     var responseSchemaAndContentType = await AddSchema(method.Name, "as return value", responseType);
                     entryPoint = new InvocationTargetDefinition {
-                        Assembly = assembly.FullName,
+                        Assembly = assemblyName,
                         Type = type.FullName,
                         Method = methodName,
                         OperationName = operationName,

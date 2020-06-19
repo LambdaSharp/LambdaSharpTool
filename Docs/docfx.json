@@ -6,7 +6,7 @@
           "files": [
             "LambdaSharp/LambdaSharp.csproj"
           ],
-          "cwd": ".."
+          "cwd": "../src"
         }
       ],
       "dest": "sdk",
@@ -73,7 +73,7 @@
         ]
       }
     ],
-    "dest": "../../../Docs-LambdaSharpTool/",
+    "dest": "../../Docs-LambdaSharpTool/",
     "globalMetadataFiles": [],
     "globalMetadata": {
       "_appFaviconPath": "favicon.ico",

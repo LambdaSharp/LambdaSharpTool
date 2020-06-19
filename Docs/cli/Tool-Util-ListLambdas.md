@@ -29,6 +29,12 @@ The `util list-lambdas` command is used to list all Lambda functions grouped by 
 (optional) Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--quiet</code></dt>
+<dd>
+
+(optional) Don't show banner or execution time
+</dd>
+
 </dl>
 
 ## Examples

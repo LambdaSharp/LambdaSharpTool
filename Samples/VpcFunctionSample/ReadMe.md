@@ -16,10 +16,10 @@ Description: A sample module using function in VPC
 Items:
 
   - Parameter: SecurityGroupIds
-    Type: CommaDelimitedString
+    Type: CommaDelimitedList
 
   - Parameter: SubnetIds
-    Type: CommaDelimitedString
+    Type: CommaDelimitedList
 
   - Function: MyFunction
     Memory: 128

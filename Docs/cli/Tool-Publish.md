@@ -1,18 +1,20 @@
 ---
-title: LambdaSharp CLI - Build Command
-description: Build a LambdaSharp module and generate its artifacts
-keywords: cli, build, deployment tier, module, artifact
+title: LambdaSharp CLI - Publish Command
+description: Publish a LambdaSharp module to a deployment tier
+keywords: cli, build, publish, deployment, tier, module
 ---
-# Build Module
+# Publish Module
 
-The `build` command compiles the module in preparation for publishing. If the module contains functions, the dependencies are resolved, the function project is built, and a Lambda-ready package is created. If the module contains file packages, the files are compressed into a zip archive.
+The `publish` command is used to upload the compiled module and its artifacts to the deployment bucket.
 
 ## Arguments
 
-The `build` command takes an optional path. The path can either refer to a module definition or a folder containing a `Module.yml` file.
+The `publish` command takes an optional path. The path can either refer to a manifest file, a module definition, or a folder containing a `Module.yml` file.
+
+If the path does not refer to a manifest file, the `publish` command invokes the `build` command to compile the module and its artifacts.
 
 ```bash
-lash build
+lash new function MyNewFunction
 ```
 
 ## Options
@@ -22,16 +24,10 @@ lash build
 <dt><code>--no-assembly-validation</code></dt>
 <dd>
 
-(optional) Disable validating LambdaSharp assemblies
+(optional) Disable validating LambdaSharp assembly references in function project files
 </dd>
 
-<dt><code>--no-dependency-validation</code></dt>
-<dd>
-
-(optional) Disable validating LambdaSharp module dependencies
-</dd>
-
-<dt><code>--configuration|-c &lt;CONFIGURATION&gt;</code></dt>
+<dt><code>-c|--configuration &lt;CONFIGURATION&gt;</code></dt>
 <dd>
 
 (optional) Build configuration for function projects (default: "Release")
@@ -65,6 +61,12 @@ lash build
 <dd>
 
 (optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)
+</dd>
+
+<dt><code>--module-origin &lt;ORIGIN&gt;</code></dt>
+<dd>
+
+(optional) Set alternative module origin when publishing
 </dd>
 
 <dt><code>--module-version &lt;VERSION&gt;</code></dt>
@@ -121,46 +123,51 @@ lash build
 (optional) Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--quiet</code></dt>
+<dd>
+
+(optional) Don't show banner or execution time
+</dd>
+
 </dl>
 
 ## Examples
 
-### Build module in current folder
+### Build and publish module in current folder
 
 __Using PowerShell/Bash:__
 ```bash
-lash build
+lash publish
 ```
 
 Output:
 ```
-LambdaSharp CLI (v0.5) - Build LambdaSharp module
+LambdaSharp CLI (v0.7.0) - Publish LambdaSharp module
 
 Reading module: Module.yml
 Compiling: Demo.SlackTodo (v1.0-DEV)
-=> Building function RecordMessage [netcoreapp3.1, Release]
 => Building function SlackCommand [netcoreapp3.1, Release]
-=> Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
+=> Module compilation done: bin\cloudformation.json
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
 
-Done (finished: 1/17/2019 3:57:27 PM; duration: 00:00:21.2642565)
+Done (finished: 9/5/2019 1:07:28 PM; duration: 00:00:11.1692368)
 ```
 
-### Build module in a sub-folder
+### Publish manifest
 
 __Using PowerShell/Bash:__
 ```bash
-lash build Demo
+lash publish bin/cloudformation.json
 ```
 
 Output:
 ```
-LambdaSharp CLI (v0.5) - Build LambdaSharp module
+LambdaSharp CLI (v0.7.0) - Publish LambdaSharp module
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
 
-Reading module: Module.yml
-Compiling: Demo.SlackTodo (v1.0-DEV)
-=> Building function RecordMessage [netcoreapp3.1, Release]
-=> Building function SlackCommand [netcoreapp3.1, Release]
-=> Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
-
-Done (finished: 1/17/2019 3:57:27 PM; duration: 00:00:21.2642565)
+Done (finished: 9/5/2019 1:07:28 PM; duration: 00:00:11.1692368)
 ```

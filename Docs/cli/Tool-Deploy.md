@@ -183,6 +183,12 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 (optional) Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--quiet</code></dt>
+<dd>
+
+(optional) Don't show banner or execution time
+</dd>
+
 </dl>
 
 ## Examples
