@@ -149,6 +149,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added a check for asynchronous API Gateway method invocations to report when they are used with HTTP GET/OPTIONS.
   * Added `lash tier version` command to show or check the deployment tier version against a minimum expected version.
 
+* SDK
+  * Added publishing of debugging symbols information for _LambdaSharp_ nuget package.
+
 #### Fixes
 
 * CLI
