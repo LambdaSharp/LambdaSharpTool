@@ -1,4 +1,4 @@
-﻿![λ#](src/DocFx/images/LambdaSharpLogo.png)
+﻿![λ#](Docs/images/LambdaSharpLogo.png)
 
 # LambdaSharp - Serverless .NET on AWS
 
@@ -12,7 +12,7 @@ The objective of LambdaSharp is to accelerate the development pace of serverless
 
 If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](https://lambdasharp.net). Thanks!
 
-![λ# CLI](src/DocFx/images/LashAnsiColor-WIP.gif)
+![λ# CLI](Docs/images/LashAnsiColor-WIP.gif)
 
 ## Install LambdaSharp CLI
 

@@ -729,6 +729,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var defaultResponseContentType = "application/json";
                     var defaultResponsePayload = "";
 
+                    // ensure GET/OPTIONS is not mapped to an asynchronous method
+                    if((route.Source.HttpMethod == "GET") || (route.Source.HttpMethod == "OPTIONS")) {
+                        LogError($"{route.Source.HttpMethod}:/{string.Join("/", route.Source.Path)} cannot be mapped to an asynchronous invocation method");
+                    }
+
                     // void responses are mapped to asynchronous lambda requests with an empty response
                     if(integration.Type != "AWS") {
                         integration.Type = "AWS";

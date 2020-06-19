@@ -227,10 +227,42 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                             // apply function schema to generate REST API and WebSocket models
                             try {
-                                success = ApplyInvocationSchemas(function, mappings, schemaFile);
+                                if(!ApplyInvocationSchemas(function, mappings, schemaFile, silent: true)) {
+                                    success = false;
+
+                                    // reset the mappings as the call to ApplyInvocationSchemas() may have modified them
+                                    mappings = ExtractMappings(function);
+                                }
                             } catch(Exception e) {
                                 LogError("unable to read create-invoke-methods-schema output", e);
                                 return;
+                            }
+
+                            // check if the mappings have changed by comparing the new data-structure to the one inside the zip file
+                            if(success) {
+                                var newMappingsJson = JObject.FromObject(new ApiGatewayInvocationMappings {
+                                    Mappings = mappings
+                                }).ToString(Formatting.None);
+                                using(var zipArchive = ZipFile.Open(functionPackage, ZipArchiveMode.Read)) {
+                                    var entry = zipArchive.Entries.FirstOrDefault(entry => entry.FullName == API_MAPPINGS);
+                                    if(entry != null) {
+                                        using(var stream = entry.Open())
+                                        using(var reader = new StreamReader(stream)) {
+                                            if(newMappingsJson != reader.ReadToEnd()) {
+
+                                                // module mappings have change
+                                                success = false;
+                                                LogInfoVerbose($"... mappings change changed");
+                                            }
+                                        }
+                                    } else {
+
+                                        // we now have mappings and we didn't use to
+                                        success = false;
+                                        LogInfoVerbose($"... mappings change changed");
+                                    }
+                                }
+
                             }
                         }
 
@@ -858,6 +890,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         return null;
                     }
                     mapping.Method = $"{mappingAssemblyName ?? lambdaFunctionAssemblyName}::{mappingClassName ?? lambdaFunctionClassName}::{mappingMethodName}";
+
                 }
             }
             return mappings;
@@ -890,7 +923,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 .ToList();
 
             // check if lambdasharp is installed or if we need to run it using dotnet
-            var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
             var success = RunLashTool(arguments, Settings.VerboseLevel >= VerboseLevel.Detailed);
             if(!success) {
                 return false;
@@ -907,20 +939,27 @@ namespace LambdaSharp.Tool.Cli.Build {
         private bool ApplyInvocationSchemas(
             FunctionItem function,
             IEnumerable<ApiGatewayInvocationMapping> mappings,
-            string schemaFile
+            string schemaFile,
+            bool silent = false
         ) {
             _existingPackages.Remove(schemaFile);
             var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile))
                 .ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
+
+            // process schema contents
             var success = true;
             foreach(var mapping in mappings) {
                 if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
-                    LogError($"failed to resolve method '{mapping.Method}'");
+                    if(!silent) {
+                        LogError($"failed to resolve method '{mapping.Method}'");
+                    }
                     success = false;
                     continue;
                 }
                 if(invocationTarget.Error != null) {
-                    LogError(invocationTarget.Error);
+                    if(!silent) {
+                        LogError(invocationTarget.Error);
+                    }
                     success = false;
                     continue;
                 }
@@ -944,7 +983,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         .ToArray()
                     ) {
                         if(!uriParameters.Remove(pathParameter)) {
-                            LogError($"path parameter '{pathParameter}' is missing in method declaration '{invocationTarget.Type}::{invocationTarget.Method}'");
+                            if(!silent) {
+                                LogError($"path parameter '{pathParameter}' is missing in method declaration '{invocationTarget.Type}::{invocationTarget.Method}'");
+                            }
+                            success = false;
                         }
                     }
 
@@ -980,11 +1022,17 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                             // API Gateway V2 cannot be configured to enforce required parameters; so all parameters must be optional
                             foreach(var requiredParameter in uriParameters.Where(uriParameter => uriParameter.Value)) {
-                                LogError($"uri parameter '{requiredParameter.Key}' for '{mapping.WebSocketSource.RouteKey}' route must be optional");
+                                if(!silent) {
+                                    LogError($"uri parameter '{requiredParameter.Key}' for '{mapping.WebSocketSource.RouteKey}' route must be optional");
+                                }
+                                success = false;
                             }
                         } else {
                             foreach(var uriParameter in uriParameters) {
-                                LogError($"'{mapping.WebSocketSource.RouteKey}' route cannot have uri parameter '{uriParameter.Key}'");
+                                if(!silent) {
+                                    LogError($"'{mapping.WebSocketSource.RouteKey}' route cannot have uri parameter '{uriParameter.Key}'");
+                                }
+                                success = false;
                             }
                         }
                     }

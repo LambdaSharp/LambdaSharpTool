@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.0.3) - TBD
+# LambdaSharp "Hicetas" Release (v0.8.0.3) - 2020-06-19
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,27 +141,45 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.0.3) - TBD
+### (v0.8.0.3) - 2020-06-19
+
+#### Features
+
+* CLI
+  * Added a check for asynchronous API Gateway method invocations to report when they are used with HTTP GET/OPTIONS.
+  * Added `lash tier version` command to show or check the deployment tier version against a minimum expected version.
+  * Updated embedded CloudFormation spec to 15.2.0.
+
+* SDK
+  * Added publishing of debugging symbols information for _LambdaSharp_ nuget package.
+
+#### Fixes
+
+* CLI
+  * Fixed an issue where a function was not recompiled when only its API mappings were modified, which led the function to have an out-of-date mappings file.
+  * Fixed an issue where an invalid function schema was saved after the build.
+
+* Modules
+  * Fixed an issue in _LambdaSharp.Core_ that caused function registrations not to be updated.
+  * Fixed an issue in _LambdaSharp.Core_ that caused near out-of-memory Lambda usage reports to trigger an an out-of-memory error notification instead of a warning.
 
 * Samples
   * Fixed _VpcFunctionSample_ to use `CommaDelimitedList` instead of `CommaDelimitedString`. [Issue #147](https://github.com/LambdaSharp/LambdaSharpTool/issues/147)
-* Misc
-  * Moved documentation from `src/DocFx` to `Docs`
 
 ### (v0.8.0.2) - 2020-06-02
 
 #### Features
 
-* LambdaSharp CLI
+* CLI
   * Added `--skip-apigateway-check` to `lash init` to bypass API Gateway role creation/update operation during deployment tier initialization.
 
-* LambdaSharp SDK
+* SDK
   * Added the virtual `DebugLoggingEnabled` property to `ALambdaFunction` as the preferred way to check if debug logging is enabled.
 
-* LambdaSharp Syntax
+* Syntax
   * Added pragma for overriding `Module::Role.PermissionsBoundary` (contributed by @yurigorokhov).
 
-* LambdaSharp Modules
+* Modules
   * Added `Encoding` property for `LambdaSharp::S3::IO` to enable compression encoding for content before it is deployed to an S3 bucket.
   * Added `Content-MD5` checksum header for S3 uploads performed by `LambdaSharp::S3::Unzip` to ensure end-to-end data integrity.
 
@@ -170,15 +188,15 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Fixes
 
-* LambdaSharp CLI
+* CLI
     * Added support to all commands for `--no-ansi`, `--quiet`, and `--verbose` options.
 
-* LambdaSharp Modules
+* Modules
   * Removed unnecessary S3 access policy from _LambdaSharp.Core_ that granted read access to `serverlessrepo.amazonaws.com` for deployment buckets.
 
 ### (v0.8.0.1) - 2020-05-18
 
 #### Fixes
 
-* LambdaSharp CLI
+* CLI
     * Added fixes from v0.7.0.17 release.

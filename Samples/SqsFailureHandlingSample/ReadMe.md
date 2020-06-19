@@ -1,4 +1,4 @@
-![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
+![λ#](../../Docs/images/LambdaSharpLogo.png)
 
 # LambdaSharp SQS Queue Failure Handling Sample
 
