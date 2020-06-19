@@ -1,4 +1,4 @@
-![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
+![λ#](../../Docs/images/LambdaSharpLogo.png)
 
 # Twitter Notifier
 _Version_: 1.0-DEV
