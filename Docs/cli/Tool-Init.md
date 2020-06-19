@@ -121,6 +121,12 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 (optional) Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--quiet</code></dt>
+<dd>
+
+(optional) Don't show banner or execution time
+</dd>
+
 <dt><code>--prompts-as-errors</code></dt>
 <dd>
 

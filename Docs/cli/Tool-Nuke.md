@@ -55,6 +55,12 @@ The user will have to confirm the operation twice, including confirming the depl
 (optional) Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--quiet</code></dt>
+<dd>
+
+(optional) Don't show banner or execution time
+</dd>
+
 </dl>
 
 
