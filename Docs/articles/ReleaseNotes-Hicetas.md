@@ -148,6 +148,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * CLI
   * Added a check for asynchronous API Gateway method invocations to report when they are used with HTTP GET/OPTIONS.
   * Added `lash tier version` command to show or check the deployment tier version against a minimum expected version.
+  * Updated embedded CloudFormation spec to 15.2.0.
 
 * SDK
   * Added publishing of debugging symbols information for _LambdaSharp_ nuget package.
@@ -164,9 +165,6 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * Samples
   * Fixed _VpcFunctionSample_ to use `CommaDelimitedList` instead of `CommaDelimitedString`. [Issue #147](https://github.com/LambdaSharp/LambdaSharpTool/issues/147)
-
-#### Misc
-  * Moved documentation from `src/DocFx` to `Docs`
 
 ### (v0.8.0.2) - 2020-06-02
 
