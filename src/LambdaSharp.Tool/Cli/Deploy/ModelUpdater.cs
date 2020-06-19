@@ -125,11 +125,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             var capabilities = validation.Capabilities.Any()
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
                 : "";
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Stack {updateOrCreate} initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset} {capabilities}");
-            } else {
-                Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
-            }
+            Console.WriteLine($"=> Stack {updateOrCreate} initiated for {Settings.InfoColor}{stackName}{Settings.ResetColor} {capabilities}");
             CreateChangeSetResponse response;
             try {
                 response = await Settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
@@ -290,15 +286,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             if(outputs.Any()) {
                 Console.WriteLine("Stack output values:");
                 foreach(var output in outputs.OrderBy(output => output.OutputKey)) {
-                    var line = Settings.UseAnsiConsole
-                        ? $"=> {AnsiTerminal.Green}{output.OutputKey}"
-                        : $"=> {output.OutputKey}";
+                    var line = $"=> {Settings.OutputColor}{output.OutputKey}";
                     if(!string.IsNullOrEmpty(output.Description)) {
                         line += $": {output.Description}";
                     }
-                    line += Settings.UseAnsiConsole
-                        ? $" = {AnsiTerminal.Yellow}{output.OutputValue}{AnsiTerminal.Reset}"
-                        : $" = {output.OutputValue}";
+                    line += $" = {Settings.InfoColor}{output.OutputValue}{Settings.ResetColor}";
                     Console.WriteLine(line);
                 }
             }

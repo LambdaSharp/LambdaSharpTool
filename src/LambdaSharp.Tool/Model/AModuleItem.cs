@@ -53,7 +53,7 @@ namespace LambdaSharp.Tool.Model {
             ResourceName = "@" + LogicalId;
             Reference = reference;
             Type = type ?? throw new ArgumentNullException(nameof(type));
-            Scope = scope ?? new string[0];
+            Scope = scope ?? Array.Empty<string>();
         }
 
         //--- Properties ---
@@ -154,9 +154,9 @@ namespace LambdaSharp.Tool.Model {
             string condition,
             IList<object> pragmas
         ) : base(parent, name, description, type, scope, reference) {
-            DependsOn = dependsOn ?? new string[0];
+            DependsOn = dependsOn ?? Array.Empty<string>();
             Condition = condition;
-            Pragmas = pragmas ?? new object[0];
+            Pragmas = pragmas ?? Array.Empty<object>();
         }
 
         //--- Properties ---
@@ -242,7 +242,7 @@ namespace LambdaSharp.Tool.Model {
             Project = project;
             Language = language;
             Environment = environment;
-            Sources = sources ?? new AFunctionSource[0];
+            Sources = sources ?? Array.Empty<AFunctionSource>();
             Function = function ?? throw new ArgumentNullException(nameof(function));
             ExportReference = FnGetAtt(FullName, "Arn");
         }

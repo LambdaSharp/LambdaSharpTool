@@ -37,6 +37,9 @@
     - name: Show/Update λ# Core Services Configuration
       href: Tool-Tier-CoreServices.md
 
+    - name: Show/Check Deployment Tier Version
+      href: Tool-Tier-Version.md
+
 - name: Util
   items:
 

@@ -73,11 +73,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // gather module details
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Inspecting deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"=> Inspecting deployment tier {settings.TierName}");
-            }
+            Console.WriteLine($"=> Inspecting deployment tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
             var tierManager = new TierManager(settings);
 
             // continue until all stacks are deleted or too many attempts occurred
@@ -101,11 +97,7 @@ namespace LambdaSharp.Tool.Cli {
                 // list what is about to be deleted
                 Console.WriteLine();
                 foreach(var module in moduleDetails.OrderBy(module => module.ModuleDeploymentName)) {
-                    if(Settings.UseAnsiConsole) {
-                        Console.WriteLine($"  {AnsiTerminal.Yellow}{module.ModuleDeploymentName}{AnsiTerminal.Reset}");
-                    } else {
-                        Console.WriteLine($"  {module.ModuleDeploymentName}");
-                    }
+                    Console.WriteLine($"  {Settings.InfoColor}{module.ModuleDeploymentName}{Settings.ResetColor}");
                 }
 
                 // confirm deployment tier name
@@ -163,11 +155,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // show progress
-                    if(Settings.UseAnsiConsole) {
-                        Console.WriteLine($"=> Deleting {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
-                    } else {
-                        Console.WriteLine($"=> Deleting {stackName}");
-                    }
+                    Console.WriteLine($"=> Deleting {Settings.InfoColor}{stackName}{Settings.ResetColor}");
                     if(!dryRun) {
 
                         // check if this is the LambdaSharp.Core stack
@@ -237,11 +225,7 @@ namespace LambdaSharp.Tool.Cli {
             } else {
                 bucketName = bucketArnOrName;
             }
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Emptying {bucketDescription} {AnsiTerminal.Yellow}{bucketName}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"=> Emptying {bucketDescription} {bucketName}");
-            }
+            Console.WriteLine($"=> Emptying {bucketDescription} {Settings.InfoColor}{bucketName}{Settings.ResetColor}");
 
             // enumerate all S3 objects
             var request = new ListObjectsV2Request {

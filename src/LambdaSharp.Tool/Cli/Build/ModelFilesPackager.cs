@@ -217,12 +217,10 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // local functions
             string ColorizeOutput(string line)
-                => !Settings.UseAnsiConsole
-                    ? line
-                    : line.Contains(": error ", StringComparison.Ordinal)
-                    ? $"{AnsiTerminal.BrightRed}{line}{AnsiTerminal.Reset}"
+                => line.Contains(": error ", StringComparison.Ordinal)
+                    ? $"{Settings.ErrorColor}{line}{Settings.ResetColor}"
                     : line.Contains(": warning ", StringComparison.Ordinal)
-                    ? $"{AnsiTerminal.BrightYellow}{line}{AnsiTerminal.Reset}"
+                    ? $"{Settings.WarningColor}{line}{Settings.ResetColor}"
                     : line;
         }
     }

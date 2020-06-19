@@ -210,6 +210,9 @@ namespace LambdaSharp.Tool.Cli {
                         // it's a pre-release, which always needs to be updated
                         || settings.ToolVersion.IsPreRelease
 
+                        // we're running in contributor mode, which means new binaries may be built
+                        || (lambdaSharpPath != null)
+
                         // deployment tier is running core services state is different from requested state
                         || (settings.CoreServices != coreServices)
                         || await IsNewerCoreModuleVersionAvailable();
@@ -340,7 +343,7 @@ namespace LambdaSharp.Tool.Cli {
             if(coreServices == CoreServices.Disabled) {
                 if(!updated) {
                     Console.WriteLine();
-                    Console.WriteLine("No update required");
+                    Console.WriteLine("Core Services disabled. No update required");
                 }
                 return true;
             }
@@ -481,11 +484,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // create/update cloudformation stack
                 if(createNewTier) {
-                    if(Settings.UseAnsiConsole) {
-                        Console.WriteLine($"=> Stack creation initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
-                    } else {
-                        Console.WriteLine($"=> Stack creation initiated for {stackName}");
-                    }
+                    Console.WriteLine($"=> Stack creation initiated for {Settings.InfoColor}{stackName}{Settings.ResetColor}");
                     var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                         StackName = stackName,
                         Capabilities = new List<string> { },
@@ -504,11 +503,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
                 } else {
                     Console.WriteLine();
-                    if(Settings.UseAnsiConsole) {
-                        Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
-                    } else {
-                        Console.WriteLine($"=> Stack update initiated for {stackName}");
-                    }
+                    Console.WriteLine($"=> Stack update initiated for {Settings.InfoColor}{stackName}{Settings.ResetColor}");
                     try {
                         var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
                         var response = await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {

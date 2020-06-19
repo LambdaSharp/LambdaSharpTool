@@ -3,6 +3,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>LambdaSharp.Slack</RootNamespace>
     <NoWarn>CS1998</NoWarn>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
     <PackageId>LambdaSharp.Slack</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
@@ -16,9 +18,13 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
+    <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>AWS;Lambda;LambdaSharp;Serverless;Slack</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp\LambdaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 </Project>

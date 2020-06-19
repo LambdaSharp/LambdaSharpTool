@@ -53,6 +53,12 @@ Specify encryption key ID or alias to use (default: use default deployment tier 
 (optional) Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--quiet</code></dt>
+<dd>
+
+(optional) Don't show banner or execution time
+</dd>
+
 </dl>
 
 ## Examples
