@@ -245,6 +245,7 @@ namespace LambdaSharp.Tool {
         public string AwsAccountId { get; set; }
         public string AwsUserArn { get; set; }
         public string DeploymentBucketName { get; set; }
+        public string LoggingBucketName { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }

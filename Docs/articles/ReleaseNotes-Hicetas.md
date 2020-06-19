@@ -143,6 +143,10 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.0.4) - TBD
 
+### Features
+
+* CLI
+  * Enhanced `lash info` command to show the name of the logging S3 bucket for the deployment tier.
 
 ### (v0.8.0.3) - 2020-06-19
 
