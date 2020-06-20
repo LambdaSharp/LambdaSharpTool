@@ -92,7 +92,23 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
         }
 
         //--- Methods ---
+        [Fact]
+        public void StartRequestLogEntry() {
+            _logic.ProgressLogEntryAsync(_owner, "START RequestId: 0b4609c1-b2f5-4a3f-8fe9-b8bb5e32b589 Version: $LATEST\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            NoErrorsReportedAssert();
+        }
 
+        [Fact]
+        public void EndRequestLogEntry() {
+            _logic.ProgressLogEntryAsync(_owner, "END RequestId: 0b4609c1-b2f5-4a3f-8fe9-b8bb5e32b589\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            NoErrorsReportedAssert();
+        }
+
+        [Fact]
+        public void MetricsLogEntry() {
+            _logic.ProgressLogEntryAsync(_owner, "{\"_aws\":{\"Timestamp\":1592272360267,\"CloudWatchMetrics\":[{\"Namespace\":\"Module:Demo.TwitterNotifier\",\"Dimensions\":[[\"Stack\"],[\"Stack\",\"Function\"]],\"Metrics\":[{\"Name\":\"MessageSuccess.Count\",\"Unit\":\"Count\"},{\"Name\":\"MessageSuccess.Latency\",\"Unit\":\"Milliseconds\"},{\"Name\":\"MessageSuccess.Lifespan\",\"Unit\":\"Seconds\"}]}]},\"Source\":\"LambdaMetrics\",\"Version\":\"2020-04-16\",\"MessageSuccess.Count\":1.0,\"MessageSuccess.Latency\":3539.9942,\"MessageSuccess.Lifespan\":6.6436802,\"Stack\":\"SteveBv7-Demo-TwitterNotifier\",\"Function\":\"NotifyFunction\",\"GitSha\":\"629552b9cd388811b96e7427d16f80ecec735f8d\",\"GitBranch\":\"WIP-v0.7\"}\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            NoErrorsReportedAssert();
+        }
 
         #region --- Application Error ---
         [Fact]
