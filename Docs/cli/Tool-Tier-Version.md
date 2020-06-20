@@ -1,7 +1,7 @@
 ---
 title: LambdaSharp CLI Tier Command - Check Deployment Tier Version
-description: List Lambda functions by CloudFormation stack with their runtime and last used date
-keywords: cli, lambda, cloudformation, logs
+description: Check the version of the LambdaSharp deployment tier
+keywords: cli, lambda, cloudformation, version, tier
 ---
 # Show or Check Deployment Tier Version
 
