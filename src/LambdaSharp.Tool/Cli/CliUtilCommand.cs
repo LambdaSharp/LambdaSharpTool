@@ -37,6 +37,8 @@ using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
+using Amazon.S3;
+using Amazon.S3.Model;
 using JsonDiffPatch;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
@@ -54,6 +56,18 @@ namespace LambdaSharp.Tool.Cli {
 
             //--- Constructors ---
             public ProcessTargetInvocationException(string message) : base(message) { }
+        }
+
+        private class KinesisFailedLogRecord {
+
+            //--- Properties ---
+            public int attemptsMade { get; set; }
+            public long arrivalTimestamp { get; set; }
+            public string errorCode { get; set; }
+            public string errorMessage { get; set; }
+            public long attemptEndingTimestamp { get; set; }
+            public string rawData { get; set; }
+            public string lambdaArn { get; set; }
         }
 
         //--- Class Fields ---
@@ -193,6 +207,25 @@ namespace LambdaSharp.Tool.Cli {
                             entryPointOption.Value(),
                             outputFileOption.Value()
                         );
+                    });
+                });
+
+                cmd.Command("show-kinesis-failed-logs", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Show Failed Kinesis Firehose Logging Entries";
+                    var keyPrefixOption = subCmd.Option("--key-prefix|-k <PREFIX>", "(optional) S3 key prefix where the failed logging records are stored (default: logging-failed/processing-failed/)", CommandOptionType.SingleValue);
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    AddStandardCommandOptions(subCmd);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return;
+                        }
+                        var keyPrefix = keyPrefixOption.HasValue() ? keyPrefixOption.Value() : "logging-failed/processing-failed/";
+                        await ShowFailedKinesisProcessingLogs(settings, keyPrefix);
                     });
                 });
 
@@ -955,6 +988,68 @@ namespace LambdaSharp.Tool.Cli {
                 output?.WriteLine("=> Entry-point class and method are valid");
             } catch(ProcessTargetInvocationException e) {
                 LogError(e.Message);
+            }
+        }
+
+        private async Task ShowFailedKinesisProcessingLogs(Settings settings, string keyPrefix) {
+
+            // populate information about the deployment tier
+            await PopulateDeploymentTierSettingsAsync(settings);
+            if(settings.LoggingBucketName == null) {
+                LogError("Deployment tier does not a have logging bucket");
+                return;
+            }
+
+            // list all objects under the specified key
+            var request = new ListObjectsV2Request {
+                BucketName = settings.LoggingBucketName,
+                Prefix = keyPrefix,
+                MaxKeys = 100
+            };
+            do {
+                var response = await settings.S3Client.ListObjectsV2Async(request);
+                foreach(var s3Object in response.S3Objects) {
+                    Console.WriteLine($"{Settings.OutputColor}Key:{Settings.ResetColor}: {s3Object.Key}");
+                    var record = await GetS3ObjectContentsAsync(s3Object.Key);
+                    Console.WriteLine($"{Settings.InfoColor}ArrivalTime:{Settings.ResetColor} {DateTimeOffset.FromUnixTimeMilliseconds(record.arrivalTimestamp)}");
+                    Console.WriteLine($"{Settings.InfoColor}AttemptEndingTimestamp:{Settings.ResetColor} {DateTimeOffset.FromUnixTimeMilliseconds(record.attemptEndingTimestamp)}");
+                    Console.WriteLine($"{Settings.InfoColor}AttemptsMade:{Settings.ResetColor} {record.attemptsMade}");
+                    Console.WriteLine($"{Settings.InfoColor}ErrorCode:{Settings.ResetColor} {record.errorCode}");
+                    Console.WriteLine($"{Settings.InfoColor}ErrorMessage:{Settings.ResetColor} {record.errorMessage}");
+                    Console.WriteLine($"{Settings.InfoColor}Lambda ARN:{Settings.ResetColor} {record.lambdaArn}");
+
+                    var entries = await DecodeBase64GzipDataAsync(record.rawData);
+                    Console.WriteLine($"{Settings.InfoColor}Entries:{Settings.ResetColor} {JObject.Parse(entries).ToString(Formatting.Indented)}");
+                    Console.WriteLine();
+                }
+                request.ContinuationToken = response.NextContinuationToken;
+            } while(request.ContinuationToken != null);
+
+            // local functions
+            async Task<KinesisFailedLogRecord> GetS3ObjectContentsAsync(string key) {
+                try {
+                    var response = await settings.S3Client.GetObjectAsync(new GetObjectRequest {
+                        BucketName = settings.LoggingBucketName,
+                        Key = key
+                    });
+                    using(var decompressionStream = new GZipStream(response.ResponseStream, CompressionMode.Decompress))
+                    using(var destinationStream = new MemoryStream()) {
+                        await decompressionStream.CopyToAsync(destinationStream);
+                        var json = Encoding.UTF8.GetString(destinationStream.ToArray());
+                        return JsonConvert.DeserializeObject<KinesisFailedLogRecord>(json);
+                    }
+                } catch(AmazonS3Exception) {
+                    return null;
+                }
+            }
+
+            async Task<string> DecodeBase64GzipDataAsync(string data) {
+                using(var sourceStream = new MemoryStream(Convert.FromBase64String(data)))
+                using(var decompressionStream = new GZipStream(sourceStream, CompressionMode.Decompress))
+                using(var destinationStram = new MemoryStream()) {
+                    await decompressionStream.CopyToAsync(destinationStram);
+                    return Encoding.UTF8.GetString(destinationStram.ToArray());
+                }
             }
         }
     }

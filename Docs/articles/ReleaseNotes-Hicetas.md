@@ -147,6 +147,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Enhanced `lash info` command to show the name of the logging S3 bucket for the deployment tier.
+  * Added `lash util show-kinesis-failed-logs` command to list CloudWatch log entries that failed to be processed by _LambdaSharp.Core_.
 
 ### (v0.8.0.3) - 2020-06-19
 

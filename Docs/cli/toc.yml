@@ -54,3 +54,6 @@
 
     - name: List Lambdas
       href: Tool-Util-ListLambdas.md
+
+    - name: Show Failed Kinesis Log Entries
+      href: Tool-Util-KinesisFailedLogs.md
