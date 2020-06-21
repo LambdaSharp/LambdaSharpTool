@@ -56,5 +56,14 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
             property = null;
             return false;
         }
+
+        public bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute) {
+            if(_resourceType.Attributes.TryGetValue(attributeName, out var type)) {
+                attribute = new CloudFormationResourceAttribute(attributeName, this, type, _specification);
+                return true;
+            }
+            attribute = null;
+            return false;
+        }
     }
 }

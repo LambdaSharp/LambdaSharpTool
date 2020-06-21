@@ -16,17 +16,19 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System;
 
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    public interface IResourceType {
+    internal class AnyResourceAttribute : IResourceAttribute {
+
+        //--- Constructors ---
+        public AnyResourceAttribute(string attributeName) => Name = attributeName ?? throw new ArgumentNullException(nameof(attributeName));
 
         //--- Properties ---
-        string Name { get; }
-        bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property);
-        bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute);
-        IEnumerable<IResourceProperty> RequiredProperties { get; }
+        public string Name { get; }
+        public ResourceCollectionType CollectionType => ResourceCollectionType.NoCollection;
+        public ResourceItemType ItemType => ResourceItemType.Any;
+        public IResourceType ComplexType => AnyResourceType.Instance;
     }
 }

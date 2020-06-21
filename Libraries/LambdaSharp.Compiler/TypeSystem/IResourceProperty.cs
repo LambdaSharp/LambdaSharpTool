@@ -18,31 +18,13 @@
 
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    public enum ResourcePropertyCollectionType {
-        NoCollection,
-        List,
-        Map
-    }
-
-    public enum ResourcePropertyItemType {
-        ComplexType,
-        String,
-        Long,
-        Integer,
-        Double,
-        Boolean,
-        Timestamp,
-        Json,
-        Any
-    }
-
     public interface IResourceProperty {
 
         //--- Properties ---
         string Name { get; }
         bool Required { get; }
-        ResourcePropertyCollectionType CollectionType { get; }
-        ResourcePropertyItemType ItemType { get; }
+        ResourceCollectionType CollectionType { get; }
+        ResourceItemType ItemType { get; }
         IResourceType ComplexType { get; }
     }
 }
