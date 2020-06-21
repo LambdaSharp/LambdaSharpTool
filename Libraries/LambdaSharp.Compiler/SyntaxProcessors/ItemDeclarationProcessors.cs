@@ -68,7 +68,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     // logical ID is ambiguous
                     Logger.Log(Error.AmbiguousLogicalId(declaration.FullName));
                 } else {
-                    Provider.DeclareItem(declaration);
+                    Provider.DeclareItem(declaration.Parent, declaration);
                 }
             }
         }

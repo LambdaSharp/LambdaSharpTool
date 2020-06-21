@@ -30,6 +30,7 @@ using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit.Abstractions;
 using LambdaSharp.Compiler.Model;
+using LambdaSharp.Compiler.Syntax;
 
 namespace Tests.LambdaSharp.Compiler {
 
@@ -219,8 +220,16 @@ namespace Tests.LambdaSharp.Compiler {
         Task<string> ISyntaxProcessorDependencyProvider.ConvertKmsAliasToArn(string alias)
             => throw new NotImplementedException();
 
-        void ISyntaxProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
-            => Declarations.Add(declaration.FullName, declaration);
+        void ISyntaxProcessorDependencyProvider.DeclareItem(ASyntaxNode? parent, AItemDeclaration itemDeclaration) {
+            if(itemDeclaration == null) {
+                throw new ArgumentNullException(nameof(itemDeclaration));
+            }
+            if(parent == null) {
+                throw new ArgumentNullException(nameof(parent));
+            }
+            parent.Adopt(itemDeclaration);
+            Declarations.Add(itemDeclaration.FullName, itemDeclaration);
+        }
 
         bool ISyntaxProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => Declarations.TryGetValue(fullname, out itemDeclaration);

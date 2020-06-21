@@ -27,7 +27,7 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class ReferencialIntegrityValidator : ASyntaxProcessor {
+    internal sealed class ReferentialIntegrityValidator : ASyntaxProcessor {
 
         //--- Class Fields ---
         #region Errors/Warnings
@@ -44,7 +44,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         #endregion
 
         //--- Constructors ---
-        public ReferencialIntegrityValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
+        public ReferentialIntegrityValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {

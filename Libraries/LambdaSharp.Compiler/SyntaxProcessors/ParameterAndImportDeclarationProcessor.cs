@@ -79,6 +79,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         private static readonly Error AllowAttributeRequiresCloudFormationType = new Error(0, "'Allow' attribute can only be used with a CloudFormation type");
         private static readonly Error ParameterAttributeImportExpectedLiteral = new Error(0, "'Import' attribute can only be used with a value parameter type");
         private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
+        private static readonly Error DefaultAttributeAttributeRequiresConditionalResourceParameter = new Error(0, "'DefaultAttribute' attribute can only be used with a conditional resource parameter");
         #endregion
 
         private static readonly HashSet<string> _cloudFormationParameterTypes = new HashSet<string> {
@@ -282,7 +283,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 }
             }
 
-            // only CloudFormation resource types can have 'Properties' or 'Allow' attributes
+            // only CloudFormation resource types can have 'Properties', 'DefaultAttribute' or 'Allow' attributes
             if(IsCloudFormationParameterType(node.Type.Value)) {
 
                 // ensure CloudFormation resource type parameter options are not used
@@ -292,11 +293,50 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 if(node.Allow != null) {
                     Logger.Log(AllowAttributeRequiresCloudFormationType, node.Allow);
                 }
-            } else if(Provider.TryGetResourceType(node.Type.Value, out var _)) {
+                if(node.DefaultAttribute != null) {
+                    Logger.Log(DefaultAttributeAttributeRequiresConditionalResourceParameter, node.DefaultAttribute);
+                }
+            } else if(Provider.TryGetResourceType(node.Type.Value, out var resourceType)) {
 
-                // only value parameters can have 'Import' attribute
-                if(node.Import != null) {
-                    Logger.Log(ParameterAttributeImportExpectedLiteral, node.Import);
+                // check if parameters is a conditional resource
+                if(node.Properties != null) {
+
+                    // set default attribute to 'Arn' if none is provided and the resource type has an 'Arn' attribute
+                    if(
+                        (node.DefaultAttribute == null)
+                        && resourceType.TryGetAttribute("Arn", out var _)
+                    ) {
+                        node.DefaultAttribute = Fn.Literal("Arn");
+                    }
+
+                    // declare condition for conditional resource
+                    var conditionDeclaration = new ConditionDeclaration(Fn.Literal("IsBlank")) {
+                        Value = Fn.Equals(Fn.FinalRef(node.FullName), Fn.Literal(""))
+                    };
+                    Provider.DeclareItem(node, conditionDeclaration);
+
+                    // declare conditional resource
+                    var resourceDeclaration = new ResourceDeclaration(Fn.Literal("Resource")) {
+                        Type = node.Type,
+                        Properties = node.Properties,
+                        If = Fn.Condition(conditionDeclaration.FullName),
+                        Pragmas = node.Pragmas,
+                        DefaultAttribute = node.DefaultAttribute
+                    };
+                    Provider.DeclareItem(node, resourceDeclaration);
+
+                    // register input parameter reference
+                    node.SetCreateExportExpression(() => Fn.If(
+                        Fn.Condition(conditionDeclaration.FullName),
+                        (node.DefaultAttribute != null)
+                            ? (AExpression)Fn.GetAtt(resourceDeclaration.FullName, node.DefaultAttribute.Value)
+                            : Fn.FinalRef(node.FullName),
+                        Fn.FinalRef(node.FullName)
+                    ));
+                } else {
+                    if(node.DefaultAttribute != null) {
+                        Logger.Log(DefaultAttributeAttributeRequiresConditionalResourceParameter, node.DefaultAttribute);
+                    }
                 }
             } else {
                 Logger.Log(UnknownType(node.Type.Value), node.Type);

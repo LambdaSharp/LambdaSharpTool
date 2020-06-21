@@ -128,15 +128,34 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         private AExpression EvaluateExpression(ReferenceFunctionExpression expression) {
 
-            // check if referenced item is a variable with a fixed value
-            if(
-                Provider.TryGetItem(expression.ReferenceName.Value, out var itemDeclaration)
-                && (itemDeclaration is VariableDeclaration variableDeclaration)
-                && (variableDeclaration.Value is AValueExpression)
-            ) {
-                return variableDeclaration.Value;
+            // check if the reference is final and needs no further resolution
+            if(expression.Final) {
+                return expression;
             }
-           return expression;
+
+            // check if the reference can be resolved
+            if(!Provider.TryGetItem(expression.ReferenceName.Value, out var itemDeclaration)) {
+                return expression;
+            }
+            switch(itemDeclaration) {
+            case VariableDeclaration variableDeclaration:
+
+                // TODO: all variables must be substituted into place; not just those with constant values
+
+                // check if referenced item is a variable with a value expression
+                if(variableDeclaration.Value is AValueExpression) {
+                    return variableDeclaration.Value;
+                }
+                break;
+            case ParameterDeclaration parameterDeclaration:
+
+                // check if parameter is a conditional resource
+                if(parameterDeclaration.Properties != null) {
+                    return parameterDeclaration.CreateExportExpression() ?? expression;
+                }
+                break;
+            }
+            return expression;
         }
 
         private AExpression EvaluateExpression(IfFunctionExpression expression) {

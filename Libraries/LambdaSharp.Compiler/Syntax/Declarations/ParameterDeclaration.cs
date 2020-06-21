@@ -46,8 +46,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private SyntaxNodeCollection<LiteralExpression>? _allow;
         private ObjectExpression? _properties;
         private ObjectExpression? _encryptionContext;
+        private LiteralExpression? _defaultAttribute;
         private ListExpression _pragmas;
-        private LiteralExpression? _import;
 
         //--- Constructors ---
         public ParameterDeclaration(LiteralExpression itemName) : base(itemName) {
@@ -155,15 +155,15 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         [SyntaxOptional]
+        public LiteralExpression? DefaultAttribute {
+            get => _defaultAttribute;
+            set => _defaultAttribute = Adopt(value);
+        }
+
+        [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
             set => _pragmas = Adopt(value);
-        }
-
-        [SyntaxHidden]
-        public LiteralExpression? Import {
-            get => _import;
-            set => _import = Adopt(value);
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));

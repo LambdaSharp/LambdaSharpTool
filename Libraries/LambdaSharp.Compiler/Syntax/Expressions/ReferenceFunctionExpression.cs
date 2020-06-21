@@ -52,10 +52,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             }
         }
 
+        public bool Final { get; set; }
+
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new ReferenceFunctionExpression {
             ReferenceName = ReferenceName.Clone(),
-            ReferencedDeclaration = ReferencedDeclaration
+            ReferencedDeclaration = ReferencedDeclaration,
+            Final = Final
         };
     }
 }

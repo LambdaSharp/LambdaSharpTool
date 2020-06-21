@@ -28,6 +28,7 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.SyntaxProcessors;
 using LambdaSharp.Compiler.Model;
+using LambdaSharp.Compiler.Syntax;
 
 namespace LambdaSharp.Compiler {
 
@@ -124,8 +125,9 @@ namespace LambdaSharp.Compiler {
             // TODO: after this point, declarations exist outside of ModuleDeclaration that need to be processed
 
             // evaluate expressions
+            // TODO: evaluate !IsDefined expressions
+            new ReferentialIntegrityValidator(this).Validate(moduleDeclaration);
             new ConstantExpressionProcessor(this).Process(moduleDeclaration);
-            new ReferencialIntegrityValidator(this).Validate(moduleDeclaration);
             new ExpressionTypeProcessor(this).Process(moduleDeclaration);
 
             // ensure that constructed resources have required and necessary properties
@@ -213,8 +215,16 @@ namespace LambdaSharp.Compiler {
             throw new NotImplementedException();
         }
 
-        void ISyntaxProcessorDependencyProvider.DeclareItem(AItemDeclaration declaration)
-            => _declarations.Add(declaration.FullName, declaration);
+        void ISyntaxProcessorDependencyProvider.DeclareItem(ASyntaxNode? parent, AItemDeclaration itemDeclaration) {
+            if(itemDeclaration == null) {
+                throw new ArgumentNullException(nameof(itemDeclaration));
+            }
+            if(parent == null) {
+                throw new ArgumentNullException(nameof(parent));
+            }
+            parent.Adopt(itemDeclaration);
+            _declarations.Add(itemDeclaration.FullName, itemDeclaration);
+        }
 
         bool ISyntaxProcessorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
             => _declarations.TryGetValue(fullname, out itemDeclaration);

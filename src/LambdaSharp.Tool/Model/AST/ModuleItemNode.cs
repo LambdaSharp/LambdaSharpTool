@@ -150,6 +150,7 @@ namespace LambdaSharp.Tool.Model.AST {
          * Properties: map
          * EncryptionContext: map
          * Pragmas: list<any>
+         * DefaultAttribute: string
          */
         public string Parameter { get; set; }
         public string Section { get; set; }
@@ -170,6 +171,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public object Properties { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<object> Pragmas { get; set; }
+        public string DefaultAttribute { get; set; }
 
         /*
          * Import: string
@@ -225,7 +227,6 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Resource { get; set; }
         public object If { get; set; }
         public object DependsOn { get; set; }
-        public string DefaultAttribute { get; set; }
 
         /*
          * Nested: string

@@ -72,6 +72,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private readonly List<MissingDependencyRecord> _missingDependencies = new List<MissingDependencyRecord>();
         private string? _fullName;
         private string? _logicalId;
+        private Func<AExpression>? _createExportExpression;
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
@@ -213,6 +214,9 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             }
             _dependencies.Clear();
         }
+
+        public AExpression? CreateExportExpression() => _createExportExpression?.Invoke();
+        public void SetCreateExportExpression(Func<AExpression> callback) => _createExportExpression = callback;
 
         protected override void ParentChanged() {
             base.ParentChanged();

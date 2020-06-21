@@ -36,6 +36,12 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             SourceLocation = referenceName.SourceLocation
         };
 
+        public static ReferenceFunctionExpression FinalRef(string referenceName, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ReferenceFunctionExpression {
+            ReferenceName = Literal(referenceName),
+            SourceLocation = new SourceLocation(filePath, lineNumber),
+            Final = true
+        };
+
         public static GetAttFunctionExpression GetAtt(string referenceName, string attributeName, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new GetAttFunctionExpression {
             ReferenceName = Literal(referenceName, new SourceLocation(filePath, lineNumber)),
             AttributeName = Literal(attributeName, new SourceLocation(filePath, lineNumber))
