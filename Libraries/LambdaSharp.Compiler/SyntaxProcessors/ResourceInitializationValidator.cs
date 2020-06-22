@@ -85,7 +85,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                     // check if property represents a collection of items or a single item
                     switch(propertyType.CollectionType) {
-                    case ResourcePropertyCollectionType.NoCollection:
+                    case ResourceCollectionType.NoCollection:
 
                         // check the property expression type is a compatible list
                         switch(currentProperty.Value) {
@@ -104,7 +104,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                             break;
                         }
                         break;
-                    case ResourcePropertyCollectionType.List:
+                    case ResourceCollectionType.List:
 
                         // check the property expression type is a compatible list
                         switch(currentProperty.Value) {
@@ -125,7 +125,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                             break;
                         }
                         break;
-                    case ResourcePropertyCollectionType.Map:
+                    case ResourceCollectionType.Map:
 
                         // check the property expression type is a compatible map
                         switch(currentProperty.Value) {
@@ -157,11 +157,11 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             // local function
             void Validate(IResourceProperty propertyType, AExpression expression, Error error) {
                 switch(propertyType.ItemType) {
-                case ResourcePropertyItemType.Any:
+                case ResourceItemType.Any:
 
                     // anything is valid; nothing to do
                     break;
-                case ResourcePropertyItemType.ComplexType:
+                case ResourceItemType.ComplexType:
 
                     // validate experssion is an object matching the complex type
                     if(expression is ObjectExpression objectExpression) {
@@ -170,16 +170,16 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         Logger.Log(error, expression);
                     }
                     break;
-                case ResourcePropertyItemType.Boolean:
-                case ResourcePropertyItemType.Double:
-                case ResourcePropertyItemType.Integer:
-                case ResourcePropertyItemType.Long:
-                case ResourcePropertyItemType.String:
-                case ResourcePropertyItemType.Timestamp:
+                case ResourceItemType.Boolean:
+                case ResourceItemType.Double:
+                case ResourceItemType.Integer:
+                case ResourceItemType.Long:
+                case ResourceItemType.String:
+                case ResourceItemType.Timestamp:
 
                     // TODO: validate against primitive type
                     break;
-                case ResourcePropertyItemType.Json:
+                case ResourceItemType.Json:
 
                     // TODO: validate against JSON type
                     break;

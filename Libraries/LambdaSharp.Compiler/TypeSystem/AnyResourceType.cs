@@ -39,5 +39,10 @@ namespace LambdaSharp.Compiler.TypeSystem {
             property = new AnyResourceProperty(propertyName);
             return true;
         }
+
+        public bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute) {
+            attribute = new AnyResourceAttribute(attributeName);
+            return true;
+        }
     }
 }

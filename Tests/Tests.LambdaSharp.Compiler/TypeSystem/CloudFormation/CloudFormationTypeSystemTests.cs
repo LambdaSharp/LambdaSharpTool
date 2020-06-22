@@ -78,8 +78,8 @@ namespace Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation {
             ShouldNotBeNull(property);
             property.Name.Should().Be("DisplayName");
             property.Required.Should().Be(false);
-            property.CollectionType.Should().Be(ResourcePropertyCollectionType.NoCollection);
-            property.ItemType.Should().Be(ResourcePropertyItemType.String);
+            property.CollectionType.Should().Be(ResourceCollectionType.NoCollection);
+            property.ItemType.Should().Be(ResourceItemType.String);
         }
 
         [Fact]
@@ -97,8 +97,8 @@ namespace Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation {
             ShouldNotBeNull(property);
             property.Name.Should().Be("Subscription");
             property.Required.Should().Be(false);
-            property.CollectionType.Should().Be(ResourcePropertyCollectionType.List);
-            property.ItemType.Should().Be(ResourcePropertyItemType.ComplexType);
+            property.CollectionType.Should().Be(ResourceCollectionType.List);
+            property.ItemType.Should().Be(ResourceItemType.ComplexType);
             var subscriptionType = property.ComplexType;
             ShouldNotBeNull(subscriptionType);
             subscriptionType.RequiredProperties.Count().Should().Be(2);
@@ -118,8 +118,8 @@ namespace Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation {
             success.Should().Be(true);
             ShouldNotBeNull(property);
             property.Required.Should().Be(false);
-            property.CollectionType.Should().Be(ResourcePropertyCollectionType.NoCollection);
-            property.ItemType.Should().Be(ResourcePropertyItemType.Any);
+            property.CollectionType.Should().Be(ResourceCollectionType.NoCollection);
+            property.ItemType.Should().Be(ResourceItemType.Any);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -22,66 +22,31 @@ using LambdaSharp.CloudFormation.Specification;
 
 namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
 
-    // NOTE (2020-06-11, bjorg): list of all possible types
-
-    // Primitive Types
-    //  - String
-    //  - Long
-    //  - Integer
-    //  - Double
-    //  - Boolean
-    //  - Timestamp
-    //  - Json
-
-    // Collection Types
-    //  - List<String>
-    //  - List<Long>
-    //  - List<Integer>
-    //  - List<Double>
-    //  - List<Boolean>
-    //  - List<Timestamp>
-    //  - Map<String>
-    //  - Map<Long>
-    //  - Map<Integer>
-    //  - Map<Double>
-    //  - Map<Boolean>
-    //  - Map<Timestamp>
-
-    // Complex Types
-    //  - T
-    //  - List<T>
-    //  - Map<T>
-
-    internal class CloudFormationResourceProperty : IResourceProperty {
-
-        // TODO: leverage UpdateType (from CloudFormation spec): _propertyType.UpdateType;
-        // TODO: leverage ValueType (from Extended CloudFormation spec): _propertyType.Value.ValueType
+    internal class CloudFormationResourceAttribute : IResourceAttribute {
 
         //--- Fields ---
         private readonly CloudFormationResourceType _resourceType;
-        private readonly ResourcePropertyType _propertyType;
+        private readonly ResourceAttributeType _attributeType;
         private readonly ExtendedCloudFormationSpecification _specification;
         private readonly Lazy<IResourceType> _complexType;
 
         //--- Constructors ---
-        public CloudFormationResourceProperty(string propertyName, CloudFormationResourceType resourceType, ResourcePropertyType propertyType, ExtendedCloudFormationSpecification specification) {
+        public CloudFormationResourceAttribute(string propertyName, CloudFormationResourceType resourceType, ResourceAttributeType attributeType, ExtendedCloudFormationSpecification specification) {
             Name = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
             _resourceType = resourceType ?? throw new ArgumentNullException(nameof(resourceType));
-            _propertyType = propertyType ?? throw new ArgumentNullException(nameof(propertyType));
+            _attributeType = attributeType ?? throw new ArgumentNullException(nameof(attributeType));
             _specification = specification ?? throw new ArgumentNullException(nameof(specification));
             _complexType = new Lazy<IResourceType>(GetComplexType);
         }
 
         //--- Properties ---
         public string Name { get; }
-        public bool Required => _propertyType.Required;
-        public bool DuplicatesAllowed => _propertyType.DuplicatesAllowed;
 
         public ResourceCollectionType CollectionType {
             get {
-                if(_propertyType.Type == "List") {
+                if(_attributeType.Type == "List") {
                     return ResourceCollectionType.List;
-                } else if(_propertyType.Type == "Map") {
+                } else if(_attributeType.Type == "Map") {
                     return ResourceCollectionType.Map;
                 }
                 return ResourceCollectionType.NoCollection;
@@ -91,8 +56,8 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
         public ResourceItemType ItemType {
             get {
                 if(CollectionType == ResourceCollectionType.NoCollection) {
-                    switch(_propertyType.PrimitiveType) {
-                    case null when (_propertyType.Type != null):
+                    switch(_attributeType.PrimitiveType) {
+                    case null when (_attributeType.Type != null):
                         return ResourceItemType.ComplexType;
                     case "String":
                         return ResourceItemType.String;
@@ -109,11 +74,11 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
                     case "Json":
                         return ResourceItemType.Json;
                     default:
-                        throw new ShouldNeverHappenException($"unexpected primitive type: {_propertyType.PrimitiveType ?? "<null>"} in {Name}");
+                        throw new ShouldNeverHappenException($"unexpected primitive type: {_attributeType.PrimitiveType ?? "<null>"} in {Name}");
                     }
                 } else {
-                    switch(_propertyType.PrimitiveItemType) {
-                    case null when (_propertyType.ItemType != null):
+                    switch(_attributeType.PrimitiveItemType) {
+                    case null when (_attributeType.ItemType != null):
                         return ResourceItemType.ComplexType;
                     case "String":
                         return ResourceItemType.String;
@@ -130,7 +95,7 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
                     case "Json":
                         return ResourceItemType.Json;
                     default:
-                        throw new ShouldNeverHappenException($"unexpected primitive item type: {_propertyType.PrimitiveItemType ?? "<null>"} in {Name}");
+                        throw new ShouldNeverHappenException($"unexpected primitive item type: {_attributeType.PrimitiveItemType ?? "<null>"} in {Name}");
                     }
                 }
             }
@@ -140,12 +105,12 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
 
         private IResourceType GetComplexType() {
             if(ItemType != ResourceItemType.ComplexType) {
-                throw new InvalidOperationException("property uses a primitive type");
+                throw new InvalidOperationException("attribute uses a primitive type");
             }
             if(CollectionType == ResourceCollectionType.NoCollection) {
-                return GetResourceType(_propertyType.Type ?? throw new ShouldNeverHappenException("'Type' is null"));
+                return GetResourceType(_attributeType.Type ?? throw new ShouldNeverHappenException("'Type' is null"));
             } else {
-                return GetResourceType(_propertyType.ItemType ?? throw new ShouldNeverHappenException("'ItemType' is null"));
+                return GetResourceType(_attributeType.ItemType ?? throw new ShouldNeverHappenException("'ItemType' is null"));
             }
             throw new ShouldNeverHappenException();
 
