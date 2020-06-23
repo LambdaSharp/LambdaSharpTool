@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
+    using static ModelFunctions;
 
     public class ModelStackGenerator : AModelProcessor {
 
@@ -234,13 +235,31 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // local functions
             void AddExport(AModuleItem exportItem) {
-                _stack.Add(exportItem.LogicalId, new Humidifier.Output {
-                    Description = exportItem.Description,
-                    Value = exportItem.GetExportReference(),
-                    Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
-                    }
-                });
+                var value = exportItem.GetExportReference();
+
+                // check if this is a conditional public value
+                if(
+                    TryGetFnIf(value, out var condition, out var ifTrue, out var ifFalse)
+                    && TryGetFnRef(ifFalse, out var key)
+                    && (key == "AWS::NoValue")
+                ) {
+                    _stack.Add(exportItem.LogicalId, new Humidifier.Output {
+                        Description = exportItem.Description,
+                        Condition = condition,
+                        Value = ifTrue,
+                        Export = new Dictionary<string, dynamic> {
+                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
+                        }
+                    });
+                } else {
+                    _stack.Add(exportItem.LogicalId, new Humidifier.Output {
+                        Description = exportItem.Description,
+                        Value = value,
+                        Export = new Dictionary<string, dynamic> {
+                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
+                        }
+                    });
+                }
             }
         }
 
