@@ -80,6 +80,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // read WebSocket configuration
             _builder.TryGetOverride("Module::RestApi.EndpointConfiguration", out var endpointConfiguration);
             _builder.TryGetOverride("Module::RestApi.Policy", out var policy);
+            _builder.TryGetOverride("Module::RestApi::StageName", out var stageName);
 
             // create a REST API
             var restApi = _builder.AddResource(
@@ -98,6 +99,18 @@ namespace LambdaSharp.Tool.Cli.Build {
                 dependsOn: null,
                 condition: null,
                 pragmas: null
+            );
+
+            // create variable to hold stage name
+            _builder.AddVariable(
+                parent: restApi,
+                name: "StageName",
+                description: "Module REST API Stage Name",
+                type: "String",
+                scope: null,
+                value: stageName ?? "LATEST",
+                allow: null,
+                encryptionContext: null
             );
 
             // recursively create resources as needed
@@ -242,12 +255,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 condition: null
             );
 
-            // read WebSocket configuration
-            if(!_builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression)) {
-                routeSelectionExpression = "$request.body.action";
-            }
-
             // create a WebSocket API
+            _builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression);
             var webSocket = _builder.AddResource(
                 parent: moduleItem,
                 name: "WebSocket",
@@ -257,12 +266,25 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["Name"] = FnSub("${AWS::StackName} Module WebSocket"),
                     ["ProtocolType"] = "WEBSOCKET",
                     ["Description"] = FnSub("${Module::FullName} WebSocket (v${Module::Version})"),
-                    ["RouteSelectionExpression"] = routeSelectionExpression
+                    ["RouteSelectionExpression"] = routeSelectionExpression ?? "$request.body.action"
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
                 pragmas: null
+            );
+
+            // create variable to hold stage name
+            _builder.TryGetOverride("Module::WebSocket::StageName", out var stageName);
+            _builder.AddVariable(
+                parent: webSocket,
+                name: "StageName",
+                description: "Module WebSocket Stage Name",
+                type: "String",
+                scope: null,
+                value: stageName ?? "LATEST",
+                allow: null,
+                encryptionContext: null
             );
 
             // create resources as needed
