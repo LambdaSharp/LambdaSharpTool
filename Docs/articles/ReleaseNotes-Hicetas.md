@@ -146,11 +146,12 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 ### Features
 
 * CLI
-  * Enhanced `lash info` command to show the name of the logging S3 bucket for the deployment tier.
-  * Added `lash util show-kinesis-failed-logs` command to list CloudWatch log entries that failed to be processed by _LambdaSharp.Core_.
+  * Enhanced `info` command to show the name of the logging S3 bucket for the deployment tier.
+  * Added `util show-kinesis-failed-logs` command to list CloudWatch log entries that failed to be processed by _LambdaSharp.Core_.
   * Added check for `!If [ condition, ifTrue, ifFalse ]` on publicly scoped variables to make CloudFormation output conditional on `condition`.
   * Enhanced CloudFormation parameter prompts by showing min/max value and min/max length constraints.
   * Enhanced CloudFormation resource creation/update tracking to show how long the operation took.
+  * Added `tier list` command to list all available deployment tiers.
 
 * Syntax
   * Added pragmas for overriding `Module::RestApi::StageName` and `Module::WebSocket::StageName`.

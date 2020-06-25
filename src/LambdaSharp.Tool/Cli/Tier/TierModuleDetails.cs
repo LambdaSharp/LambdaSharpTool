@@ -34,6 +34,7 @@ namespace LambdaSharp.Tool.Cli.Tier {
         public string CoreServices { get; set; }
         public bool IsRoot { get; set; }
         public bool HasDefaultSecretKeyParameter { get; set; }
-        public string DeploymentBucketArn { get; set ;}
+        public string DeploymentBucketArn { get; set; }
+        public string DeploymentTierName { get; set; }
     }
 }
