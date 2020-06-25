@@ -80,7 +80,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             // read WebSocket configuration
             _builder.TryGetOverride("Module::RestApi.EndpointConfiguration", out var endpointConfiguration);
             _builder.TryGetOverride("Module::RestApi.Policy", out var policy);
-            _builder.TryGetOverride("Module::RestApi::StageName", out var stageName);
 
             // create a REST API
             var restApi = _builder.AddResource(
@@ -102,6 +101,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // create variable to hold stage name
+            _builder.TryGetOverride("Module::RestApi::StageName", out var stageName);
             _builder.AddVariable(
                 parent: restApi,
                 name: "StageName",
@@ -140,7 +140,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: "Module REST API URL",
                 type: "String",
                 scope: null,
-                value: FnSub($"https://${{{restDomainName.FullName}}}/LATEST"),
+                value: FnSub($"https://${{{restDomainName.FullName}}}/${{Module::RestApi::StageName}}"),
                 allow: null,
                 encryptionContext: null
             );
@@ -177,7 +177,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: null,
                 scope: null,
                 resource: new Humidifier.Logs.LogGroup {
-                    LogGroupName = FnSub($"API-Gateway-Execution-Logs_${{{restApi.FullName}}}/LATEST"),
+                    LogGroupName = FnSub($"API-Gateway-Execution-Logs_${{{restApi.FullName}}}/${{Module::RestApi::StageName}}"),
                     RetentionInDays = FnRef("Module::LogRetentionInDays")
                 },
                 resourceExportAttribute: null,
@@ -221,8 +221,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 scope: null,
                 resource: new Humidifier.ApiGateway.Stage {
                     RestApiId = FnRef("Module::RestApi"),
+                    Description =  FnSub("Module REST API ${Module::RestApi::StageName} Stage"),
                     DeploymentId = FnRef(deployment.FullName),
-                    StageName = "LATEST",
+                    StageName = FnRef("Module::RestApi::StageName"),
                     MethodSettings = new[] {
                         new Humidifier.ApiGateway.StageTypes.MethodSetting {
                             DataTraceEnabled = true,
@@ -248,7 +249,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddGrant(
                 name: "WebSocketConnections",
                 awsType: null,
-                reference: FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/LATEST/POST/@connections/*"),
+                reference: FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/POST/@connections/*"),
                 allow: new[] {
                     "execute-api:ManageConnections"
                 },
@@ -499,7 +500,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 Action = "lambda:InvokeFunction",
                                 FunctionName = FnRef(webSocketRoute.Function.FullName),
                                 Principal = "apigateway.amazonaws.com",
-                                SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/LATEST/*")
+                                SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/*")
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -534,7 +535,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: "Module WebSocket URL",
                 type: "String",
                 scope: new List<string> { "all" },
-                value: FnSub($"wss://${{{webSocketDomainName.FullName}}}/LATEST"),
+                value: FnSub($"wss://${{{webSocketDomainName.FullName}}}/${{Module::WebSocket::StageName}}"),
                 allow: null,
                 encryptionContext: null
             );
@@ -593,8 +594,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.WebSocketLogging.json")), Formatting.None)
                     },
                     ["ApiId"] = FnRef("Module::WebSocket"),
-                    ["StageName"] = "LATEST",
-                    ["Description"] = "Module WebSocket LATEST Stage",
+                    ["StageName"] = FnRef("Module::WebSocket::StageName"),
+                    ["Description"] = FnSub("Module WebSocket ${Module::WebSocket::StageName} Stage"),
                     ["DeploymentId"] = FnRef(deployment.FullName)
                 },
                 resourceExportAttribute: null,
@@ -834,7 +835,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Action = "lambda:InvokeFunction",
                             FunctionName = FnRef(route.Function.FullName),
                             Principal = "apigateway.amazonaws.com",
-                            SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::RestApi}/LATEST/*")
+                            SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::RestApi}/${Module::RestApi::StageName}/*")
                         },
                         resourceExportAttribute: null,
                         dependsOn: null,
