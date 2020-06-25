@@ -98,7 +98,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Import = input.Import,
                             AllowedValues = input.Parameter.AllowedValues,
                             AllowedPattern = input.Parameter.AllowedPattern,
-                            ConstraintDescription = input.Parameter.ConstraintDescription
+                            ConstraintDescription = input.Parameter.ConstraintDescription,
+                            MinValue = input.Parameter.MinValue,
+                            MaxValue = input.Parameter.MaxValue,
+                            MinLength = input.Parameter.MinLength,
+                            MaxLength = input.Parameter.MaxLength
                         }).ToList()
                     }).ToList(),
                 Artifacts = module.Artifacts.ToList(),
