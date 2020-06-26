@@ -26,7 +26,7 @@ using Demo.WebSocketsChat.Common;
 
 namespace WebSocketsSample.ConnectionFunction {
 
-    public class Function : ALambdaApiGatewayFunction {
+    public sealed class Function : ALambdaApiGatewayFunction {
 
         //--- Fields ---
         private ConnectionsTable _connections;

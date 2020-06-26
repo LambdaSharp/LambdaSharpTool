@@ -26,7 +26,7 @@ using LambdaSharp.Finalizer;
 
 namespace FinalizerSample.Finalizer {
 
-    public class Function : ALambdaFinalizerFunction {
+    public sealed class Function : ALambdaFinalizerFunction {
 
         //--- Fields ---
         private IAmazonS3 _s3Client;

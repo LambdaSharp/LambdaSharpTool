@@ -32,7 +32,7 @@ Items:
 The macro invocation can be handled by the `ALambdaFunction<T>` base class.
 
 ```csharp
-public class Function : ALambdaFunction<MacroRequest, MacroResponse> {
+public sealed class Function : ALambdaFunction<MacroRequest, MacroResponse> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

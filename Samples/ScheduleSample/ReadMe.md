@@ -35,7 +35,7 @@ Items:
 The schedule event can be parsed into a `LambdaScheduleEvent` message instance by using the `ALambdaFunction<T>` base class.
 
 ```csharp
-public class Function : ALambdaScheduleFunction {
+public sealed class Function : ALambdaScheduleFunction {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

@@ -32,7 +32,7 @@ Items:
 Alexa Skill requests can be parsed using the [Alexa.NET](https://github.com/timheuer/alexa-skills-dotnet) library by Tim Heuer and by deriving the function from the `ALambdaFunction<T>` base class.
 
 ```csharp
-public class Function : ALambdaFunction<SkillRequest, SkillResponse> {
+public sealed class Function : ALambdaFunction<SkillRequest, SkillResponse> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

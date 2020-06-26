@@ -26,7 +26,7 @@ namespace BadModule.FailConstructor {
 
     public class FunctionResponse { }
 
-    public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Constructors ---
         public Function() {

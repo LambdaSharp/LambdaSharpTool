@@ -12,7 +12,7 @@ namespace %%ROOTNAMESPACE%% {
         // TO-DO: add message properties
     }
 
-    public class Function : ALambdaQueueFunction<Message> {
+    public sealed class Function : ALambdaQueueFunction<Message> {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {

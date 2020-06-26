@@ -34,7 +34,7 @@ Items:
 The S3 event can be parsed into a `S3Event` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.S3Events` nuget package.
 
 ```csharp
-public class Function : ALambdaFinalizerFunction {
+public sealed class Function : ALambdaFinalizerFunction {
 
     //--- Fields ---
     private IAmazonS3 _s3Client;
