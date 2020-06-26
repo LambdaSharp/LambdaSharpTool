@@ -104,6 +104,7 @@ namespace LambdaSharp.Twitter.QueryFunction {
 
             // check if any tweets were found
             LogInfo($"found {tweets.Count():N0} tweets");
+
             if(tweets.Any()) {
                 var languages = string.Join(",", _twitterLanguageFilter.OrderBy(language => language));
 
@@ -114,15 +115,11 @@ namespace LambdaSharp.Twitter.QueryFunction {
                     .Select(tweet => JObject.Parse(tweet.ToJson()))
                     .Select(json => new {
                         Json = json,
-                        IsoLanguage = (string?)json["metadata"]?["iso_language_code"]
+                        IsoLanguage = (string?)json["metadata"]?["iso_language_code"] ?? ""
                     })
 
                     // only keep tweets that match the ISO language filter if one is set
                     .Where(item => {
-                        if(item.IsoLanguage == null) {
-                            LogInfo($"missing tweet language");
-                            return false;
-                        }
                         if(_twitterLanguageFilter.Any() && !_twitterLanguageFilter.Contains(item.IsoLanguage)) {
                             LogInfo($"tweet language '{item.IsoLanguage}' did not match '{languages}'");
                             return false;
