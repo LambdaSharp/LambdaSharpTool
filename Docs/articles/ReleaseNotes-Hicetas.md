@@ -156,6 +156,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * Syntax
   * Added pragmas for overriding `Module::RestApi::StageName` and `Module::WebSocket::StageName`.
 
+* Modules
+  * Migrated `LambdaSharp.Twitter.Query` function implementation to be null-aware.
+
 ### (v0.8.0.3) - 2020-06-19
 
 #### Features

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,17 +36,24 @@ using Tweetinvi.Parameters;
 namespace LambdaSharp.Twitter.QueryFunction {
     using TwitterSearch = Tweetinvi.Search;
 
-    public class Function : ALambdaScheduleFunction {
+    public sealed class Function : ALambdaScheduleFunction {
 
         //--- Fields ---
-        private string _twitterSearchQuery;
-        private HashSet<string> _twitterLanguageFilter;
-        private string _twitterSentimentFilter;
-        private IAmazonDynamoDB _dynamoClient;
-        private Table _table;
-        private IAmazonComprehend _comprehendClient;
-        private IAmazonSimpleNotificationService _snsClient;
-        private string _notificationTopic;
+        private string? _twitterSearchQuery;
+        private HashSet<string> _twitterLanguageFilter = new HashSet<string>();
+        private string? _twitterSentimentFilter;
+        private Table? _table;
+        private IAmazonComprehend? _comprehendClient;
+        private IAmazonSimpleNotificationService? _snsClient;
+        private string? _notificationTopic;
+
+        //--- Properties ---
+        private string TwitterSearchQuery => _twitterSearchQuery ?? throw new InvalidOperationException();
+        private string TwitterSentimentFilter => _twitterSentimentFilter ?? throw new InvalidOperationException();
+        private Table Table => _table ?? throw new InvalidOperationException();
+        private IAmazonComprehend ComprehendClient => _comprehendClient ?? throw new InvalidOperationException();
+        private IAmazonSimpleNotificationService SnsClient => _snsClient ?? throw new InvalidOperationException();
+        private string NotificationTopic => _notificationTopic ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -64,8 +72,8 @@ namespace LambdaSharp.Twitter.QueryFunction {
             _comprehendClient = new AmazonComprehendClient();
 
             // initialize DynamoDB table
-            _dynamoClient = new AmazonDynamoDBClient();
-            _table = Table.LoadTable(_dynamoClient, config.ReadDynamoDBTableName("Table"));
+            var dynamoClient = new AmazonDynamoDBClient();
+            _table = Table.LoadTable(dynamoClient, config.ReadDynamoDBTableName("Table"));
 
             // initialize SNS client
             _snsClient = new AmazonSimpleNotificationServiceClient();
@@ -76,7 +84,7 @@ namespace LambdaSharp.Twitter.QueryFunction {
             var lastId = 0L;
 
             // read last_id from table
-            var document = await _table.GetItemAsync("last");
+            var document = await Table.GetItemAsync("last");
             if(
                 (document != null)
                 && document.TryGetValue("Query", out var queryEntry)
@@ -106,11 +114,15 @@ namespace LambdaSharp.Twitter.QueryFunction {
                     .Select(tweet => JObject.Parse(tweet.ToJson()))
                     .Select(json => new {
                         Json = json,
-                        IsoLanguage = (string)json["metadata"]["iso_language_code"]
+                        IsoLanguage = (string?)json["metadata"]?["iso_language_code"]
                     })
 
                     // only keep tweets that match the ISO language filter if one is set
                     .Where(item => {
+                        if(item.IsoLanguage == null) {
+                            LogInfo($"missing tweet language");
+                            return false;
+                        }
                         if(_twitterLanguageFilter.Any() && !_twitterLanguageFilter.Contains(item.IsoLanguage)) {
                             LogInfo($"tweet language '{item.IsoLanguage}' did not match '{languages}'");
                             return false;
@@ -133,9 +145,9 @@ namespace LambdaSharp.Twitter.QueryFunction {
 
                             // batch analyze tweets
                             var batch = remaining.Take(25).ToArray();
-                            var response = await _comprehendClient.BatchDetectSentimentAsync(new BatchDetectSentimentRequest {
+                            var response = await ComprehendClient.BatchDetectSentimentAsync(new BatchDetectSentimentRequest {
                                 LanguageCode = group.Key,
-                                TextList = batch.Select(item => (string)item["full_text"]).ToList()
+                                TextList = batch.Select(item => (string?)item["full_text"]).ToList()
                             });
 
                             // set result for successfully analyzed tweets
@@ -162,8 +174,9 @@ namespace LambdaSharp.Twitter.QueryFunction {
                         case "ALL":
                             return true;
                         default:
-                            if(((string)jsonTweet["aws_sentiment"]) != _twitterSentimentFilter) {
-                                LogInfo($"tweet sentiment '{jsonTweet["aws_sentiment"]}' did not match '{_twitterSentimentFilter}'");
+                            var awsSentiment = (string?)jsonTweet["aws_sentiment"];
+                            if(awsSentiment != _twitterSentimentFilter) {
+                                LogInfo($"tweet sentiment '{awsSentiment}' did not match '{_twitterSentimentFilter}'");
                                 return false;
                             }
                             return true;
@@ -171,15 +184,15 @@ namespace LambdaSharp.Twitter.QueryFunction {
                     })
                     .Select((jsonTweet, index) => {
                         LogInfo($"sending tweet #{index + 1}: {jsonTweet["full_text"]}\n{jsonTweet}");
-                        return _snsClient.PublishAsync(new PublishRequest {
-                            TopicArn = _notificationTopic,
+                        return SnsClient.PublishAsync(new PublishRequest {
+                            TopicArn = NotificationTopic,
                             Message = jsonTweet.ToString(Formatting.None)
                         });
                     })
                     .ToList();
 
                 // store updated last_id
-                await _table.PutItemAsync(new Document {
+                await Table.PutItemAsync(new Document {
                     ["Id"] = "last",
                     ["LastId"] = tweets.Max(tweet => tweet.Id),
                     ["Query"] = _twitterSearchQuery
