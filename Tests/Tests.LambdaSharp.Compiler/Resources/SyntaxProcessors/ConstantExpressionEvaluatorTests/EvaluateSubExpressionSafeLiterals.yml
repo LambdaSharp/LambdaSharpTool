@@ -1,7 +1,7 @@
 Module: My.Module
 Items:
 
-  - Variable: MyJoinExpression
+  - Variable: MySubExpression
     Value: !Sub "${VariableA} ${VariableB}!"
 
   - Variable: VariableA

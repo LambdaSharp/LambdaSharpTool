@@ -42,7 +42,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process(module);
+            new ConstantExpressionProcessor(this).Process();
 
             // assert
             ExpectedMessages("WARNING: !If expression is always True in Module.yml: line 5, column 12");
@@ -58,7 +58,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process(module);
+            new ConstantExpressionProcessor(this).Process();
 
             // assert
             ExpectedMessages("WARNING: !If expression is always False in Module.yml: line 5, column 12");
@@ -74,7 +74,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process(module);
+            new ConstantExpressionProcessor(this).Process();
 
             // assert
             ExpectedMessages();
@@ -90,7 +90,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process(module);
+            new ConstantExpressionProcessor(this).Process();
 
             // assert
             ExpectedMessages();
@@ -106,7 +106,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process(module);
+            new ConstantExpressionProcessor(this).Process();
 
             // assert
             ExpectedMessages();
@@ -116,19 +116,86 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
         }
 
         [Fact]
-        public void EvaluateSubExpression() {
+        public void EvaluateSubExpressionSafeLiterals() {
 
             // arrange
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process(module);
+            new ConstantExpressionProcessor(this).Process();
 
             // assert
             ExpectedMessages();
             module.Items[0].Should().BeOfType<VariableDeclaration>()
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("Hello world!");
+        }
+
+        [Fact]
+        public void EvaluateSubExpressionEscapedExpression() {
+
+            // arrange
+            var module = LoadTestModule();
+
+            // act
+            new ConstantExpressionProcessor(this).Process();
+
+            // assert
+            ExpectedMessages();
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("${Text}");
+        }
+
+        [Fact]
+        public void EvaluateSubExpressionUnsafeParameters() {
+
+            // arrange
+            var module = LoadTestModule();
+
+            // act
+            new ConstantExpressionProcessor(this).Process();
+
+            // assert
+            ExpectedMessages();
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("${Hello} ${World}!");
+        }
+
+        [Fact]
+        public void EvaluateSubExpressionMixed() {
+
+            // arrange
+            var module = LoadTestModule();
+
+            // act
+            new ConstantExpressionProcessor(this).Process();
+
+            // assert
+            ExpectedMessages();
+            var subFunction = module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<SubFunctionExpression>().Which;
+            subFunction.FormatString.Value.Should().Be("Hello ${MyParameter}! ${!Keep}");
+            subFunction.Parameters.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void EvaluateSubExpressionWarnUnusedParameter() {
+
+            // arrange
+            var module = LoadTestModule();
+
+            // act
+            new ConstantExpressionProcessor(this).Process();
+
+            // assert
+            ExpectedMessages(
+                "WARNING: parameter 'VariableC' in never used in !Sub format string in Module.yml: line 9, column 9"
+            );
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<SubFunctionExpression>()
+                .Which.FormatString.Value.Should().Be("Hello world!");
         }
 
         protected override ModuleDeclaration LoadTestModule([CallerMemberName] string testName = "") {

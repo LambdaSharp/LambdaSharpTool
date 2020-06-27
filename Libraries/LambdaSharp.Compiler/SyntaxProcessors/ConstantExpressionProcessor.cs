@@ -29,32 +29,52 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
     internal sealed class ConstantExpressionProcessor : ASyntaxProcessor {
 
         //--- Class Fields ---
-        private static readonly Regex SubFormatStringRegex = new Regex(@"\$\{(?!\!)[^\}]+\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex SubFormatStringParameterRegex = new Regex(@"\$\{(?!\!)[^\}]+\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex SubFormatStringEscapeRegex = new Regex(@"\$\{\![^\}]*\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         #region Errors/Warnings
         private static readonly Warning IfExpressionAlwaysTrue = new Warning(0, "!If expression is always True");
         private static readonly Warning IfExpressionAlwaysFalse = new Warning(0, "!If expression is always False");
+        private static readonly Func<string, Warning> SubFormatParameterIsNotUsed = parameter => new Warning(0, $"parameter '{parameter}' in never used in !Sub format string");
+        private static readonly Func<string, Error> SubFunctionParametersCannotUseAttributeNotation = parameter => new Error(0, $"cannot use attribute notation on local parameter '{parameter}'");
         #endregion
 
         //--- Constructors ---
         public ConstantExpressionProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void Process() {
             var substitutions = new Dictionary<ISyntaxNode, ISyntaxNode>();
             while(true) {
                 substitutions.Clear();
 
                 // find expressions that can be substituted
-                moduleDeclaration.InspectType<AExpression>(node => Evaluate(node, substitutions));
+                InspectType<AExpression>(node => Evaluate(node, substitutions));
 
                 // stop when no more substitutions can be found
                 if(!substitutions.Any()) {
                     break;
                 }
 
-                // apply substitions to tree
-                moduleDeclaration.Substitute(node => {
+                // apply substitions
+                Substitute(node => {
+                    if(substitutions.TryGetValue(node, out var newNode)) {
+                        return newNode;
+                    }
+                    return node;
+                });
+            }
+
+            // inline !Ref/!GetAtt into !Sub expression
+            substitutions.Clear();
+            InspectType<SubFunctionExpression>(node => {
+                var newExpression = InlineSubFunctionParameters(node);
+                if(!object.ReferenceEquals(node, newExpression)) {
+                        substitutions[node] = newExpression;
+                }
+            });
+            if(substitutions.Any()) {
+                Substitute(node => {
                     if(substitutions.TryGetValue(node, out var newNode)) {
                         return newNode;
                     }
@@ -296,56 +316,96 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         private AExpression EvaluateExpression(SubFunctionExpression expression) {
 
+            // TODO: normalization must happend BEFORE we do the referential integrity check
+
             // check if we need to normalize the format string
             var newSubExpression = NormalizeSubFunctionExpression(expression);
             if(!object.ReferenceEquals(newSubExpression, expression)) {
                 return newSubExpression;
             }
 
-            // check if parameters can inlined into the format string
-            if(expression.Parameters.Any()) {
-
-                // if all parameters are literal values, generate final string
-                if(expression.Parameters.All(kv => kv.Value is LiteralExpression)) {
-
-                    // substitute each parameter into the format string
-                    var result = expression.FormatString.Value;
-                    foreach(var kv in expression.Parameters) {
-                        result = result.Replace($"${{{kv.Key.Value}}}", ((LiteralExpression)kv.Value).Value);
-                    }
-                    return Fn.Literal(result, expression.FormatString.SourceLocation);
-                } else {
-
-                    // only inline values that cannot be mistaken for an embedded parameter
-                    var safeValues = expression.Parameters
-                        .Where(kv => (kv.Value is LiteralExpression valueLiteral) && !valueLiteral.Value.Contains("${", StringComparison.Ordinal))
-                        .ToList();
-                    if(safeValues.Any()) {
-
-                        // substitute each parameter into the format string
-                        var result = expression.FormatString.Value;
-                        foreach(var kv in safeValues) {
-                            result = result.Replace($"${{{kv.Key.Value}}}", ((LiteralExpression)kv.Value).Value);
-                        }
-
-                        // keep parameters that were not substituted
-                        var inlinedKeys = new HashSet<string>(safeValues.Select(kv => kv.Key.Value));
-                        var newParameters = new ObjectExpression(expression.Parameters.Where(kv => !inlinedKeys.Contains(kv.Key.Value))) {
-                            SourceLocation = expression.Parameters.SourceLocation
-                        };
-                        return new SubFunctionExpression {
-                            FormatString = Fn.Literal(result, expression.FormatString.SourceLocation),
-                            Parameters = newParameters,
-                            SourceLocation = expression.SourceLocation
-                        };
-                    }
-                }
-            } else if(!SubFormatStringRegex.IsMatch(expression.FormatString.Value)) {
-
-                // no matches means there is nothing to substitute
-                return Fn.Literal(expression.FormatString.Value, expression.FormatString.SourceLocation);
+            // check if every parameter is used in the !Sub format string
+            var parameterKeys = new HashSet<string>(expression.Parameters.Select(kv => kv.Key.Value));
+            var parameterReferences = SubFormatStringParameterRegex.Matches(expression.FormatString.Value).Select(match => {
+                var matchText = match.ToString();
+                return matchText.Substring(2, matchText.Length - 3).Trim();
+            }).ToList();
+            foreach(var parameterReference in parameterReferences) {
+                parameterKeys.Remove(parameterReference);
             }
-            return expression;
+            foreach(var leftOverParameterKey in parameterKeys) {
+                Logger.Log(SubFormatParameterIsNotUsed(leftOverParameterKey), expression.Parameters.First(kv => kv.Key.Value == leftOverParameterKey).Key);
+            }
+
+            // inline parameters with literal values
+            var inlinedParameterKeys = new HashSet<string>();
+            var newSubFormatString = SubFormatStringParameterRegex.Replace(expression.FormatString.Value, match => {
+
+                // check if match is a local parameter reference
+                var matchText = match.ToString();
+                var matchReference = matchText.Substring(2, matchText.Length - 3).Trim();
+                var matchParameter = expression.Parameters.FirstOrDefault(parameter => parameter.Key.Value == matchReference);
+
+                // check if parmaeter is a literal value
+                if(matchParameter?.Value is LiteralExpression matchParameterLiteralExpression) {
+                    inlinedParameterKeys.Add(matchParameter.Key.Value);
+
+                    // make literal value safe for inlining
+                    var literalValue = SubFormatStringParameterRegex.Replace(matchParameterLiteralExpression.Value, literalMatch => {
+                        var literalMatchText = literalMatch.ToString();
+                        var literalMatchInnerText = literalMatchText.Substring(2, literalMatchText.Length - 3);
+
+                        // NOTE (2020-06-27, bjorg): !Sub replaces "${!Text}" with "${Text}"
+                        return "${!" + literalMatchInnerText + "}";
+                    });
+                    return literalValue;
+                }
+
+                // keep original
+                return matchText;
+            });
+
+            // check if any parameters were inlined
+            var newParameters = expression.Parameters;
+            if(inlinedParameterKeys.Any()) {
+
+                // keep only parameters that were not inlined
+                newParameters = new ObjectExpression {
+                    SourceLocation = expression.Parameters.SourceLocation
+                };
+                foreach(var parameter in expression.Parameters.Where(parameter => !inlinedParameterKeys.Contains(parameter.Key.Value))) {
+                    newParameters[parameter.Key] = parameter.Value;
+                }
+            }
+
+            // check if all parameters were inlined
+            if(!newParameters.Any()) {
+
+                // unescape "${!Text}" to "${Text}
+                newSubFormatString = SubFormatStringEscapeRegex.Replace(newSubFormatString, escapedMatch => {
+                    var escapedMatchText = escapedMatch.ToString();
+                    var escapedMatchReference = escapedMatchText.Substring(3, escapedMatchText.Length - 4);
+                    return "${" + escapedMatchReference + "}";
+                });
+
+                // return string literal as final outcome
+                return Fn.Literal(newSubFormatString, expression.FormatString.SourceLocation);
+            }
+
+            // check if nothing has changed
+            if(
+                object.ReferenceEquals(newParameters, expression.Parameters)
+                && (newSubFormatString == expression.FormatString.Value)
+            ) {
+                return expression;
+            }
+
+            // create a new !Sub expression
+            return new SubFunctionExpression {
+                FormatString = Fn.Literal(newSubFormatString, expression.FormatString.SourceLocation),
+                Parameters = newParameters,
+                SourceLocation = expression.SourceLocation
+            };
 
             // local functions
             AExpression NormalizeSubFunctionExpression(SubFunctionExpression expression) {
@@ -359,7 +419,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                 // replace as many ${VAR} occurrences as possible in the format string
                 var newParameters = new List<ObjectExpression.KeyValuePair>();
-                var replaceFormatString =  EvaluateSubFormatString(
+                var replaceFormatString = EvaluateSubFormatString(
                     expression.FormatString.Value,
                     expression.Parameters,
                     expression.SourceLocation,
@@ -414,7 +474,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             }
 
             string EvaluateSubFormatString(string subFormatString, ObjectExpression parameters, SourceLocation sourceLocation, Func<string, string?, int, int, int, int, string> replace) {
-                return SubFormatStringRegex.Replace(subFormatString, match => {
+                return SubFormatStringParameterRegex.Replace(subFormatString, match => {
 
                     // parse matched expression into Reference.Attribute
                     var matchText = match.ToString();
@@ -430,7 +490,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         if(attribute != null) {
 
                             // local references cannot have an attribute suffix
-                            Logger.Log(Error.SubFunctionParametersCannotUseAttributeNotation(reference), sourceLocation);
+                            Logger.Log(SubFunctionParametersCannotUseAttributeNotation(reference), sourceLocation);
                         }
 
                         // keep matched expression as-is
@@ -447,6 +507,67 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     return replace(reference, attribute, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) ?? matchText;
                 });
             }
+        }
+
+        private AExpression InlineSubFunctionParameters(SubFunctionExpression expression) {
+
+            // inline !Ref/!GetAtt expressions
+            var inlinedParameterKeys = new HashSet<string>();
+            var newSubFormatString = SubFormatStringParameterRegex.Replace(expression.FormatString.Value, match => {
+
+                // check if match is a local parameter reference
+                var matchText = match.ToString();
+                var matchReference = matchText.Substring(2, matchText.Length - 3).Trim();
+                var matchParameter = expression.Parameters.FirstOrDefault(parameter => parameter.Key.Value == matchReference);
+
+                // check if parmaeter is a !Ref/!GetAtt expression
+                switch(matchParameter?.Value) {
+                case ReferenceFunctionExpression referenceFunctionExpression:
+                    inlinedParameterKeys.Add(matchParameter.Key.Value);
+
+                    // convert to !Ref inline notation
+                    return "${" + referenceFunctionExpression.ReferenceName.Value + "}";
+                case GetAttFunctionExpression getAttFunctionExpression:
+                    if(getAttFunctionExpression.AttributeName is LiteralExpression attributeLiteralExpression) {
+                        inlinedParameterKeys.Add(matchParameter.Key.Value);
+
+                        // convert to !GetAtt inline notation
+                        return "${" + getAttFunctionExpression.ReferenceName.Value + "." + attributeLiteralExpression.Value + "}";
+                    }
+                    break;
+                }
+
+                // keep original
+                return matchText;
+            });
+
+            // check if any parameters were inlined
+            var newParameters = expression.Parameters;
+            if(inlinedParameterKeys.Any()) {
+
+                // keep only parameters that were not inlined
+                newParameters = new ObjectExpression {
+                    SourceLocation = expression.Parameters.SourceLocation
+                };
+                foreach(var parameter in expression.Parameters.Where(parameter => !inlinedParameterKeys.Contains(parameter.Key.Value))) {
+                    newParameters[parameter.Key] = parameter.Value;
+                }
+            }
+
+            // check if nothing has changed
+            if(
+                object.ReferenceEquals(newParameters, expression.Parameters)
+                && (newSubFormatString == expression.FormatString.Value)
+            ) {
+                return expression;
+            }
+
+            // create a new !Sub expression
+            return new SubFunctionExpression {
+                FormatString = Fn.Literal(newSubFormatString, expression.FormatString.SourceLocation),
+                Parameters = newParameters,
+                SourceLocation = expression.SourceLocation
+            };
         }
 
         private LiteralExpression BooleanLiteral(AExpression expression, bool value, bool fromExistsExpression = false)

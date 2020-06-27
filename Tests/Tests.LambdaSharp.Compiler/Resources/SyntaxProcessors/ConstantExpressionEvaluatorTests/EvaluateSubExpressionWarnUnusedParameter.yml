@@ -1,0 +1,9 @@
+Module: My.Module
+Items:
+
+  - Variable: MySubExpression
+    Value: !Sub
+      - "${VariableA} ${VariableB}!"
+      - VariableA: "Hello"
+        VariableB: "world"
+        VariableC: "not used"

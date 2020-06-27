@@ -131,9 +131,9 @@ namespace LambdaSharp.Compiler {
             new IsDefinedProcessor(this).Process();
 
             // evaluate expressions
-            // TODO: evaluate !IsDefined expressions
+            // TODO: normalize expressions (i.e. extract embedded !Ref/!GetAtt expressions from !Sub)
             new ReferentialIntegrityValidator(this).Validate(moduleDeclaration);
-            new ConstantExpressionProcessor(this).Process(moduleDeclaration);
+            new ConstantExpressionProcessor(this).Process();
             new ExpressionTypeProcessor(this).Process(moduleDeclaration);
 
             // ensure that constructed resources have required and necessary properties

@@ -1,0 +1,10 @@
+Module: My.Module
+Items:
+
+  - Variable: MySubExpression
+    Value: !Sub
+      - "${VariableA} ${MyParameter}! ${!Keep}"
+      - VariableA: "Hello"
+
+  - Parameter: MyParameter
+    Type: String

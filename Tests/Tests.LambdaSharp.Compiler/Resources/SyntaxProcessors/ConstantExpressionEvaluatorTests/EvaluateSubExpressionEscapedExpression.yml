@@ -1,0 +1,5 @@
+Module: My.Module
+Items:
+
+  - Variable: MySubExpression
+    Value: !Sub "${!Text}"
