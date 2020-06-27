@@ -28,6 +28,9 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
+    // TODO: add test to verify normalization
+    //  !Sub "${A.B}" --> !Sub [ "${P0}", { P0: !GetAtt A.B } ]
+
     public class ExpressionEvaluatorTests : _SyntaxProcessor {
 
         //--- Constructors ---
@@ -42,10 +45,13 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
-            ExpectedMessages("WARNING: !If expression is always True in Module.yml: line 5, column 12");
+            ExpectedMessages(
+                "WARNING: !If expression is always True in Module.yml: line 5, column 12"
+            );
             module.Items[0].Should().BeOfType<VariableDeclaration>()
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("It's true!");
@@ -58,10 +64,13 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
-            ExpectedMessages("WARNING: !If expression is always False in Module.yml: line 5, column 12");
+            ExpectedMessages(
+                "WARNING: !If expression is always False in Module.yml: line 5, column 12"
+            );
             module.Items[0].Should().BeOfType<VariableDeclaration>()
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("It's false!");
@@ -74,6 +83,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
@@ -90,6 +100,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
@@ -106,6 +117,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
@@ -122,6 +134,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
@@ -138,6 +151,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
@@ -154,6 +168,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
@@ -170,6 +185,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert
@@ -187,6 +203,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
+            new ExpressionEvaluator(this).Normalize();
             new ExpressionEvaluator(this).Evaluate();
 
             // assert

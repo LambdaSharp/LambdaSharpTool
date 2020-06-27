@@ -43,6 +43,28 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public ExpressionEvaluator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
+        public void Normalize() {
+            var substitutions = new Dictionary<ISyntaxNode, ISyntaxNode>();
+
+            // normalize !Sub expressions by extracting embedded !Ref/!GetAtt expressions
+            InspectType<SubFunctionExpression>(node => {
+
+                // normalize the format string
+                var newExpression = NormalizeSubFunctionExpression(node);
+                if(!object.ReferenceEquals(node, newExpression)) {
+                    substitutions[node] = newExpression;
+                }
+            });
+            if(substitutions.Any()) {
+                Substitute(node => {
+                    if(substitutions.TryGetValue(node, out var newNode)) {
+                        return newNode;
+                    }
+                    return node;
+                });
+            }
+        }
+
         public void Evaluate() {
             var substitutions = new Dictionary<ISyntaxNode, ISyntaxNode>();
             while(true) {
@@ -316,14 +338,6 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         private AExpression EvaluateExpression(SubFunctionExpression expression) {
 
-            // TODO: normalization must happend BEFORE we do the referential integrity check
-
-            // check if we need to normalize the format string
-            var newSubExpression = NormalizeSubFunctionExpression(expression);
-            if(!object.ReferenceEquals(newSubExpression, expression)) {
-                return newSubExpression;
-            }
-
             // check if every parameter is used in the !Sub format string
             var parameterKeys = new HashSet<string>(expression.Parameters.Select(kv => kv.Key.Value));
             var parameterReferences = SubFormatStringParameterRegex.Matches(expression.FormatString.Value).Select(match => {
@@ -406,107 +420,6 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 Parameters = newParameters,
                 SourceLocation = expression.SourceLocation
             };
-
-            // local functions
-            AExpression NormalizeSubFunctionExpression(SubFunctionExpression expression) {
-
-                // NOTE (2019-12-07, bjorg): convert all nested !Ref and !GetAtt expressions into
-                //  explit expressions using local !Sub parameters; this allows us track these
-                //  references as dependencies, as well as allowing us later to analyze
-                //  and resolve these references without having to parse the !Sub format string anymore;
-                //  during the optimization phase, the !Ref and !GetAtt expressions are inlined again
-                //  where possible.
-
-                // replace as many ${VAR} occurrences as possible in the format string
-                var newParameters = new List<ObjectExpression.KeyValuePair>();
-                var replaceFormatString = EvaluateSubFormatString(
-                    expression.FormatString.Value,
-                    expression.Parameters,
-                    expression.SourceLocation,
-                    (reference, attribute, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) => {
-
-                        // compute source location based on line/column offsets
-                        var sourceLocation = new SourceLocation(
-                            expression.FormatString.SourceLocation.FilePath,
-                            expression.FormatString.SourceLocation.LineNumberStart + startLineOffset,
-                            expression.FormatString.SourceLocation.LineNumberStart + endLineOffset,
-                            expression.FormatString.SourceLocation.ColumnNumberStart + startColumnOffset,
-                            expression.FormatString.SourceLocation.ColumnNumberStart + endColumnOffset
-                        );
-
-                        // check if embedded expression is a !Ref or !GetAtt expression
-                        AExpression argExpression;
-                        if(attribute == null) {
-
-                            // create explicit !Ref expression
-                            argExpression = new ReferenceFunctionExpression {
-                                SourceLocation = sourceLocation,
-                                ReferenceName = Fn.Literal(reference)
-                            };
-                        } else {
-
-                            // create explicit !GetAtt expression
-                            argExpression = new GetAttFunctionExpression {
-                                SourceLocation = sourceLocation,
-                                ReferenceName = Fn.Literal(reference),
-                                AttributeName = Fn.Literal(attribute)
-                            };
-                        }
-
-                        // move the resolved expression into !Sub parameters
-                        var argName = $"P{expression.Parameters.Count + newParameters.Count}";
-                        newParameters.Add(new ObjectExpression.KeyValuePair(Fn.Literal(argName), argExpression));
-
-                        // substitute found value as new argument
-                        return "${" + argName + "}";
-                    }
-                );
-                if(newParameters.Any()) {
-                    return new SubFunctionExpression {
-                        FormatString = Fn.Literal(replaceFormatString, expression.FormatString.SourceLocation),
-                        Parameters = new ObjectExpression(expression.Parameters.Union(newParameters)) {
-                            SourceLocation = expression.Parameters.SourceLocation
-                        },
-                        SourceLocation = expression.SourceLocation
-                    };
-                }
-                return expression;
-            }
-
-            string EvaluateSubFormatString(string subFormatString, ObjectExpression parameters, SourceLocation sourceLocation, Func<string, string?, int, int, int, int, string> replace) {
-                return SubFormatStringParameterRegex.Replace(subFormatString, match => {
-
-                    // parse matched expression into Reference.Attribute
-                    var matchText = match.ToString();
-                    var namePair = matchText
-                        .Substring(2, matchText.Length - 3)
-                        .Trim()
-                        .Split('.', 2);
-                    var reference = namePair[0].Trim();
-                    var attribute = (namePair.Length == 2) ? namePair[1].Trim() : null;
-
-                    // check if reference is to a local !Sub parameter
-                    if(parameters.ContainsKey(reference)) {
-                        if(attribute != null) {
-
-                            // local references cannot have an attribute suffix
-                            Logger.Log(SubFunctionParametersCannotUseAttributeNotation(reference), sourceLocation);
-                        }
-
-                        // keep matched expression as-is
-                        return matchText;
-                    }
-
-                    // compute matched expression position
-                    var startLineOffset = subFormatString.Take(match.Index).Count(c => c == '\n');
-                    var endLineOffset = subFormatString.Take(match.Index + matchText.Length).Count(c => c == '\n');
-                    var startColumnOffset = subFormatString.Take(match.Index).Reverse().TakeWhile(c => c != '\n').Count();
-                    var endColumnOffset = subFormatString.Take(match.Index + matchText.Length).Reverse().TakeWhile(c => c != '\n').Count();
-
-                    // invoke callback
-                    return replace(reference, attribute, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) ?? matchText;
-                });
-            }
         }
 
         private AExpression InlineSubFunctionParameters(SubFunctionExpression expression) {
@@ -568,6 +481,106 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 Parameters = newParameters,
                 SourceLocation = expression.SourceLocation
             };
+        }
+
+        private AExpression NormalizeSubFunctionExpression(SubFunctionExpression expression) {
+
+            // NOTE (2019-12-07, bjorg): convert all nested !Ref and !GetAtt expressions into
+            //  explit expressions using local !Sub parameters; this allows us track these
+            //  references as dependencies, as well as allowing us later to analyze
+            //  and resolve these references without having to parse the !Sub format string anymore;
+            //  during the optimization phase, the !Ref and !GetAtt expressions are inlined again
+            //  where possible.
+
+            // replace as many ${VAR} occurrences as possible in the format string
+            var newParameters = new List<ObjectExpression.KeyValuePair>();
+            var replaceFormatString = EvaluateSubFormatString(
+                expression.FormatString.Value,
+                expression.Parameters,
+                expression.SourceLocation,
+                (reference, attribute, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) => {
+
+                    // compute source location based on line/column offsets
+                    var sourceLocation = new SourceLocation(
+                        expression.FormatString.SourceLocation.FilePath,
+                        expression.FormatString.SourceLocation.LineNumberStart + startLineOffset,
+                        expression.FormatString.SourceLocation.LineNumberStart + endLineOffset,
+                        expression.FormatString.SourceLocation.ColumnNumberStart + startColumnOffset,
+                        expression.FormatString.SourceLocation.ColumnNumberStart + endColumnOffset
+                    );
+
+                    // check if embedded expression is a !Ref or !GetAtt expression
+                    AExpression argExpression;
+                    if(attribute == null) {
+
+                        // create explicit !Ref expression
+                        argExpression = new ReferenceFunctionExpression {
+                            SourceLocation = sourceLocation,
+                            ReferenceName = Fn.Literal(reference)
+                        };
+                    } else {
+
+                        // create explicit !GetAtt expression
+                        argExpression = new GetAttFunctionExpression {
+                            SourceLocation = sourceLocation,
+                            ReferenceName = Fn.Literal(reference),
+                            AttributeName = Fn.Literal(attribute)
+                        };
+                    }
+
+                    // move the resolved expression into !Sub parameters
+                    var argName = $"P{expression.Parameters.Count + newParameters.Count}";
+                    newParameters.Add(new ObjectExpression.KeyValuePair(Fn.Literal(argName), argExpression));
+
+                    // substitute found value as new argument
+                    return "${" + argName + "}";
+                }
+            );
+            if(newParameters.Any()) {
+                return new SubFunctionExpression {
+                    FormatString = Fn.Literal(replaceFormatString, expression.FormatString.SourceLocation),
+                    Parameters = new ObjectExpression(expression.Parameters.Union(newParameters)) {
+                        SourceLocation = expression.Parameters.SourceLocation
+                    },
+                    SourceLocation = expression.SourceLocation
+                };
+            }
+            return expression;
+        }
+
+        private string EvaluateSubFormatString(string subFormatString, ObjectExpression parameters, SourceLocation sourceLocation, Func<string, string?, int, int, int, int, string> replace) {
+            return SubFormatStringParameterRegex.Replace(subFormatString, match => {
+
+                // parse matched expression into Reference.Attribute
+                var matchText = match.ToString();
+                var namePair = matchText
+                    .Substring(2, matchText.Length - 3)
+                    .Trim()
+                    .Split('.', 2);
+                var reference = namePair[0].Trim();
+                var attribute = (namePair.Length == 2) ? namePair[1].Trim() : null;
+
+                // check if reference is to a local !Sub parameter
+                if(parameters.ContainsKey(reference)) {
+                    if(attribute != null) {
+
+                        // local references cannot have an attribute suffix
+                        Logger.Log(SubFunctionParametersCannotUseAttributeNotation(reference), sourceLocation);
+                    }
+
+                    // keep matched expression as-is
+                    return matchText;
+                }
+
+                // compute matched expression position
+                var startLineOffset = subFormatString.Take(match.Index).Count(c => c == '\n');
+                var endLineOffset = subFormatString.Take(match.Index + matchText.Length).Count(c => c == '\n');
+                var startColumnOffset = subFormatString.Take(match.Index).Reverse().TakeWhile(c => c != '\n').Count();
+                var endColumnOffset = subFormatString.Take(match.Index + matchText.Length).Reverse().TakeWhile(c => c != '\n').Count();
+
+                // invoke callback
+                return replace(reference, attribute, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) ?? matchText;
+            });
         }
 
         private LiteralExpression BooleanLiteral(AExpression expression, bool value, bool fromExistsExpression = false)

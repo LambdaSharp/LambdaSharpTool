@@ -131,9 +131,8 @@ namespace LambdaSharp.Compiler {
             new IsDefinedProcessor(this).Process();
 
             // evaluate expressions
-            // TODO: normalize expressions (i.e. extract embedded !Ref/!GetAtt expressions from !Sub)
+            new ExpressionEvaluator(this).Normalize();
             new ReferentialIntegrityValidator(this).Validate(moduleDeclaration);
-            new ExpressionEvaluator(this).Evaluate();
             new ExpressionTypeProcessor(this).Process(moduleDeclaration);
 
             // ensure that constructed resources have required and necessary properties
@@ -150,6 +149,11 @@ namespace LambdaSharp.Compiler {
 
             // TODO: remove any unused resources that can be garbage collected
 
+            // optimize expressions
+            // TODO: inject compilation constants (module name, version, etc.)
+            new ExpressionEvaluator(this).Evaluate();
+
+            // TODO: generate cloudformation template
             throw new NotImplementedException();
         }
 
