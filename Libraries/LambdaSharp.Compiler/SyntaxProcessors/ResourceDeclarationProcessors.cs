@@ -82,25 +82,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         node.Properties = new ObjectExpression();
                     }
 
-                    // set default attribute to 'Arn' if none is provided and the resource type has an 'Arn' attribute
-                    if(
-                        (node.DefaultAttribute == null)
-                        && Provider.TryGetResourceType(node.Type.Value, out var resourceType)
-                        && resourceType.TryGetAttribute("Arn", out var _)
-                    ) {
-                        node.DefaultAttribute = Fn.Literal("Arn");
-                    }
-
-                    // set export reference
-                    if(node.DefaultAttribute == null) {
-                        node.SetCreateExportExpression(() => Fn.FinalRef(node.FullName));
-                    } else {
-                        node.SetCreateExportExpression(() => Fn.GetAtt(node.FullName, node.DefaultAttribute.Value));
-                    }
-
                     // NOTE (2020-06-12, bjorg): resource initialization is checked by ResourceInitializationValidator
-
-                    // nothing further to do
                 } else {
 
                     // CloudFormation resource must have a type

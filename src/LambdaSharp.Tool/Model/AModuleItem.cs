@@ -19,10 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using LambdaSharp.Tool.Internal;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Model {
     using static ModelFunctions;

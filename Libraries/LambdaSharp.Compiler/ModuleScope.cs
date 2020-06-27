@@ -29,6 +29,7 @@ using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.SyntaxProcessors;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler {
 
@@ -71,6 +72,8 @@ namespace LambdaSharp.Compiler {
 
         //--- Fields ---
         private Dictionary<string, AItemDeclaration> _declarations = new Dictionary<string, AItemDeclaration>();
+        private Dictionary<string, AExpression> _referenceExpressions = new Dictionary<string, AExpression>();
+        private Dictionary<string, AExpression> _valueExpressions = new Dictionary<string, AExpression>();
 
         //--- Constructors ---
         public ModuleScope(IModuleScopeDependencyProvider provider)
@@ -114,15 +117,18 @@ namespace LambdaSharp.Compiler {
             new PackageDeclarationProcessor(this).Process(moduleDeclaration);
             new MappingDeclarationProcessor(this).Process(moduleDeclaration);
             new FunctionDeclarationProcessor(this).Process(moduleDeclaration);
+            new VariableDeclarationProcessor(this).Process(moduleDeclaration);
             // TODO: NestedModuleDeclaration
             // TODO: ResourceTypeDeclaration
-            // TODO: VariableDeclaration (maybe?)
             new SecretTypeDeclarationProcessor(this).Process(moduleDeclaration);
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
 
-            // TODO: after this point, declarations exist outside of ModuleDeclaration that need to be processed
+            // TODO: validate expression nesting
+
+            // all declarations have been made; !IsDefined can now be evaluated
+            new IsDefinedProcessor(this).Process();
 
             // evaluate expressions
             // TODO: evaluate !IsDefined expressions
@@ -231,10 +237,23 @@ namespace LambdaSharp.Compiler {
 
         //--- ILambdaSharpParserDependencyProvider Members ---
         ILogger ILambdaSharpParserDependencyProvider.Logger => Logger;
-
         string ILambdaSharpParserDependencyProvider.ReadFile(string filePath) => Provider.ReadFile(filePath);
 
         Task<ModuleManifest> ISyntaxProcessorDependencyProvider.ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo)
             => throw new NotImplementedException();
+
+        void ISyntaxProcessorDependencyProvider.DeclareReferenceExpression(string fullname, AExpression expression) {
+            throw new NotImplementedException();
+        }
+
+        void ISyntaxProcessorDependencyProvider.DeclareValueExpression(string fullname, AExpression expression) {
+            throw new NotImplementedException();
+        }
+
+        bool ISyntaxProcessorDependencyProvider.TryGetReferenceExpression(string fullname, [NotNullWhen(true)] out AExpression? expression)
+            => _referenceExpressions.TryGetValue(fullname, out expression);
+
+        bool ISyntaxProcessorDependencyProvider.TryGetValueExpression(string fullname, [NotNullWhen(true)] out AExpression? expression)
+            => _valueExpressions.TryGetValue(fullname, out expression);
     }
 }

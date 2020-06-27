@@ -49,16 +49,18 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     .OrderBy(fullName => fullName.Value)
                 );
 
-                // NOTE: for conditional resources, we need to take a dependency via an expression; however
-                //  this approach doesn't work for custom resources because they don't support !Ref
+                // NOTE: for conditional resources, we need to take a dependency via an expression
                 finalizerInvocationResourceDeclaration.Properties["DependsOn"] = new ListExpression(
                     allResourceDeclaration
                         .Where(declaration => declaration.Condition != null)
-                        .Select(declaration => Fn.If(
-                            declaration.Condition ?? throw new ShouldNeverHappenException(),
-                            declaration.ResourceReference,
-                            Fn.Ref("AWS::NoValue"))
-                        )
+                        .Select(declaration => {
+                            Provider.TryGetValueExpression(declaration.FullName, out var valueExpression);
+                            return Fn.If(
+                                declaration.Condition ?? throw new ShouldNeverHappenException(),
+                                valueExpression ?? Fn.Ref(declaration.FullName),
+                                Fn.Ref("AWS::NoValue")
+                            );
+                        })
                 ) {
                     SourceLocation = finalizerInvocationResourceDeclaration.SourceLocation
                 };

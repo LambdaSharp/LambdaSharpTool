@@ -70,7 +70,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             SourceLocation = sourceLocation
         };
 
-        public static SelectFunctionExpression Select(string index, AExpression values, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new SelectFunctionExpression {
+        public static SelectFunctionExpression Select(int index, AExpression values, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new SelectFunctionExpression {
             Index = Literal(index),
             Values = values ?? throw new ArgumentNullException(nameof(values)),
             SourceLocation = new SourceLocation(filePath, lineNumber)

@@ -109,7 +109,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             // local functions
             void Substitute(AExpression newExpression) {
                 if(!object.ReferenceEquals(expression, newExpression)) {
-                    substitutions[expression] = newExpression;
+                        substitutions[expression] = newExpression;
                 }
             }
         }
@@ -133,27 +133,11 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 return expression;
             }
 
-            // check if the reference can be resolved
-            if(!Provider.TryGetItem(expression.ReferenceName.Value, out var itemDeclaration)) {
-                return expression;
-            }
-            switch(itemDeclaration) {
-            case VariableDeclaration variableDeclaration:
+            // check if an alternative expression is defined for the reference
+            if(Provider.TryGetReferenceExpression(expression.ReferenceName.Value, out var referenceExpression)) {
 
-                // TODO: all variables must be substituted into place; not just those with constant values
-
-                // check if referenced item is a variable with a value expression
-                if(variableDeclaration.Value is AValueExpression) {
-                    return variableDeclaration.Value;
-                }
-                break;
-            case ParameterDeclaration parameterDeclaration:
-
-                // check if parameter is a conditional resource
-                if(parameterDeclaration.Properties != null) {
-                    return parameterDeclaration.CreateExportExpression() ?? expression;
-                }
-                break;
+                // TODO: make sure we're not doing an infinite substitution!
+                return referenceExpression;
             }
             return expression;
         }

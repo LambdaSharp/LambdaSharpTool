@@ -325,8 +325,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     };
                     Provider.DeclareItem(node, resourceDeclaration);
 
-                    // register input parameter reference
-                    node.SetCreateExportExpression(() => Fn.If(
+                    // declare expression to use for parameter references
+                    Provider.DeclareReferenceExpression(node.FullName, Fn.If(
                         Fn.Condition(conditionDeclaration.FullName),
                         (node.DefaultAttribute != null)
                             ? (AExpression)Fn.GetAtt(resourceDeclaration.FullName, node.DefaultAttribute.Value)
@@ -360,6 +360,38 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             ) {
                 Logger.Log(UnknownType(node.Type.Value), node.Type);
             }
+
+            // create parameter declaration
+            node.GetModuleAndExportName(out var moduleReference, out var exportName);
+            var importParameterName = ToIdentifier(moduleReference) + ToIdentifier(exportName);
+            var parameterDeclaration = new ParameterDeclaration(Fn.Literal(importParameterName)) {
+                Type = node.Type,
+                Description = Fn.Literal($"Cross-module reference for {moduleReference}::{exportName}"),
+                AllowedPattern = Fn.Literal("^.+$"),
+                ConstraintDescription = Fn.Literal("must either be a cross-module reference or a non-empty value"),
+                Default = Fn.Literal($"${moduleReference.Replace(".", "-")}::{exportName}"),
+                Section = Fn.Literal($"{moduleReference} Imports"),
+                Label = Fn.Literal(exportName)
+            };
+            Provider.DeclareItem(node.ParentModuleDeclaration, parameterDeclaration);
+
+            // create import condition
+            var conditionDeclaration = new ConditionDeclaration(Fn.Literal("IsImported")) {
+                Value = Fn.And(
+                    Fn.Not(Fn.Equals(Fn.Ref(importParameterName), Fn.Literal(""))),
+                    Fn.Equals(Fn.Select(0, Fn.Split("$", Fn.Ref(importParameterName))), Fn.Literal(""))
+                )
+            };
+            Provider.DeclareItem(parameterDeclaration, conditionDeclaration);
+
+            // declare expression to use for import references
+            Provider.DeclareReferenceExpression(node.FullName, Fn.If(
+                Fn.Condition(conditionDeclaration.FullName),
+                Fn.ImportValue(Fn.Sub("${DeploymentPrefix}${Import}", new ObjectExpression {
+                    ["Import"] = Fn.Select(1, Fn.Split("$", Fn.Ref(node.FullName)))
+                })),
+                Fn.Ref(node.FullName)
+            ));
         }
     }
 }

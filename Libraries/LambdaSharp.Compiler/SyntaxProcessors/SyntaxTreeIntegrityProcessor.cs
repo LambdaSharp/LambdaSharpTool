@@ -39,7 +39,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     throw new Exception("found cycle");
                 }
 
-                // every node must have a parent, exception the starting module
+                // every node must have a parent, except the starting module
                 if(!object.ReferenceEquals(node, moduleDeclaration) && (node.Parent == null)) {
 
                     // TODO: better exception

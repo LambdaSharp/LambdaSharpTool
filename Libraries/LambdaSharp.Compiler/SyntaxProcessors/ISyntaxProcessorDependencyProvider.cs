@@ -20,7 +20,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using LambdaSharp.Compiler.Model;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.TypeSystem;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
@@ -34,8 +36,12 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         //--- Methods ---
         bool TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType);
         Task<string> ConvertKmsAliasToArn(string alias);
-        void DeclareItem(AItemDeclaration itemDeclaration);
+        void DeclareItem(ASyntaxNode? parent, AItemDeclaration itemDeclaration);
+        void DeclareReferenceExpression(string fullname, AExpression expression);
+        void DeclareValueExpression(string fullname, AExpression expression);
         bool TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration);
+        bool TryGetReferenceExpression(string fullname, [NotNullWhen(true)] out AExpression? expression);
+        bool TryGetValueExpression(string fullname, [NotNullWhen(true)] out AExpression? expression);
         Task<ModuleManifest> ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo);
     }
 }

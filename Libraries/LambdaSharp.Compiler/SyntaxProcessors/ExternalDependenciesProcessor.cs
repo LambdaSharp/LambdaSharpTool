@@ -42,6 +42,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
             // TODO: we should be a bit smarter to reduce the number of calls to ResolveModuleInfoAsync()
 
+            // TODO: lambda event sources can require additional dependencies (e.g. s3 event source)
+
             // discover all dependencies
             await moduleDeclaration.InspectAsync(async node => {
                 switch(node) {

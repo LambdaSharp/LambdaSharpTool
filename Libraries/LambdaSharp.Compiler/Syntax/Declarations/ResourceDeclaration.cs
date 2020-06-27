@@ -116,6 +116,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         bool IResourceDeclaration.HasPropertiesValidation => !HasPragma("no-type-validation");
         ObjectExpression IResourceDeclaration.Properties => Properties;
         AExpression? IResourceDeclaration.Condition => If;
-        AExpression IResourceDeclaration.ResourceReference => Fn.Ref(FullName);
     }
 }
