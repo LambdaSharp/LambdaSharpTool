@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -28,10 +28,10 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
-    public class ConstantExpressionEvaluatorTests : _SyntaxProcessor {
+    public class ExpressionEvaluatorTests : _SyntaxProcessor {
 
         //--- Constructors ---
-        public ConstantExpressionEvaluatorTests(ITestOutputHelper output) : base(output) { }
+        public ExpressionEvaluatorTests(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
 
@@ -42,7 +42,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages("WARNING: !If expression is always True in Module.yml: line 5, column 12");
@@ -58,7 +58,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages("WARNING: !If expression is always False in Module.yml: line 5, column 12");
@@ -74,7 +74,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages();
@@ -90,7 +90,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages();
@@ -106,7 +106,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages();
@@ -122,7 +122,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages();
@@ -138,7 +138,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages();
@@ -154,7 +154,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages();
@@ -170,7 +170,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages();
@@ -187,7 +187,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
 
             // assert
             ExpectedMessages(

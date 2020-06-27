@@ -133,7 +133,7 @@ namespace LambdaSharp.Compiler {
             // evaluate expressions
             // TODO: normalize expressions (i.e. extract embedded !Ref/!GetAtt expressions from !Sub)
             new ReferentialIntegrityValidator(this).Validate(moduleDeclaration);
-            new ConstantExpressionProcessor(this).Process();
+            new ExpressionEvaluator(this).Evaluate();
             new ExpressionTypeProcessor(this).Process(moduleDeclaration);
 
             // ensure that constructed resources have required and necessary properties
