@@ -18,6 +18,7 @@
 
 #nullable disable
 
+using System.Runtime.CompilerServices;
 using FluentAssertions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
@@ -128,6 +129,12 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             module.Items[0].Should().BeOfType<VariableDeclaration>()
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("Hello world!");
+        }
+
+        protected override ModuleDeclaration LoadTestModule([CallerMemberName] string testName = "") {
+            var result = base.LoadTestModule(testName);
+            new VariableDeclarationProcessor(this).Process(result);
+            return result;
         }
     }
 }

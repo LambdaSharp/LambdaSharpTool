@@ -31,6 +31,7 @@ using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit.Abstractions;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace Tests.LambdaSharp.Compiler {
 
@@ -169,6 +170,8 @@ namespace Tests.LambdaSharp.Compiler {
         protected readonly ParserDependencyProvider Provider;
         protected readonly List<string> Messages = new List<string>();
         protected readonly Dictionary<string, AItemDeclaration> Declarations = new Dictionary<string, AItemDeclaration>();
+        protected readonly Dictionary<string, AExpression> ReferenceExpressions = new Dictionary<string, AExpression>();
+        protected readonly Dictionary<string, AExpression> ValueExpressions = new Dictionary<string, AExpression>();
 
         //--- Constructors ---
         public _Init(ITestOutputHelper output) {
@@ -236,5 +239,17 @@ namespace Tests.LambdaSharp.Compiler {
 
         Task<ModuleManifest> ISyntaxProcessorDependencyProvider.ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo)
             => throw new NotImplementedException();
+
+        void ISyntaxProcessorDependencyProvider.DeclareReferenceExpression(string fullname, AExpression expression)
+            => ReferenceExpressions[fullname] = expression;
+
+        void ISyntaxProcessorDependencyProvider.DeclareValueExpression(string fullname, AExpression expression)
+            => ValueExpressions[fullname] = expression;
+
+        bool ISyntaxProcessorDependencyProvider.TryGetReferenceExpression(string fullname, [NotNullWhen(true)] out AExpression? expression)
+            => ReferenceExpressions.TryGetValue(fullname, out expression);
+
+        bool ISyntaxProcessorDependencyProvider.TryGetValueExpression(string fullname, [NotNullWhen(true)] out AExpression? expression)
+            => ValueExpressions.TryGetValue(fullname, out expression);
     }
 }

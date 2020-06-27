@@ -242,13 +242,11 @@ namespace LambdaSharp.Compiler {
         Task<ModuleManifest> ISyntaxProcessorDependencyProvider.ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo)
             => throw new NotImplementedException();
 
-        void ISyntaxProcessorDependencyProvider.DeclareReferenceExpression(string fullname, AExpression expression) {
-            throw new NotImplementedException();
-        }
+        void ISyntaxProcessorDependencyProvider.DeclareReferenceExpression(string fullname, AExpression expression)
+            => _referenceExpressions[fullname] = expression;
 
-        void ISyntaxProcessorDependencyProvider.DeclareValueExpression(string fullname, AExpression expression) {
-            throw new NotImplementedException();
-        }
+        void ISyntaxProcessorDependencyProvider.DeclareValueExpression(string fullname, AExpression expression)
+            => _valueExpressions[fullname] = expression;
 
         bool ISyntaxProcessorDependencyProvider.TryGetReferenceExpression(string fullname, [NotNullWhen(true)] out AExpression? expression)
             => _referenceExpressions.TryGetValue(fullname, out expression);

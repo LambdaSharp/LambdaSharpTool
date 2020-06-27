@@ -29,7 +29,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
         protected _SyntaxProcessor(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
-        protected ModuleDeclaration LoadTestModule([CallerMemberName] string testName = "") {
+        protected virtual ModuleDeclaration LoadTestModule([CallerMemberName] string testName = "") {
 
             // parse test source
             var result = NewParser($"@SyntaxProcessors/{GetType().Name}/{testName}.yml").ParseModule();
