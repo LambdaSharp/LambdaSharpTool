@@ -27,14 +27,14 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public ExpressionTypeProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void Process() {
 
             // TODO: validate types in references
             // TODO: validate expression nesting (e.g. !And must contain condition expressions, etc.)
             // TODO: ensure that !GetAtt referenced attributes exist
             // TODO: annotate expression types
 
-            moduleDeclaration.Inspect(node => {
+            Inspect(node => {
                 switch(node) {
                 case ResourceTypeDeclaration resourceTypeDeclaration:
 

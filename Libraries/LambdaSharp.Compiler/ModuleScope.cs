@@ -121,6 +121,7 @@ namespace LambdaSharp.Compiler {
             // TODO: NestedModuleDeclaration
             // TODO: ResourceTypeDeclaration
             new SecretTypeDeclarationProcessor(this).Process(moduleDeclaration);
+            // TODO: Finalizer declaration
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
@@ -132,17 +133,17 @@ namespace LambdaSharp.Compiler {
 
             // evaluate expressions
             new ExpressionEvaluator(this).Normalize();
-            new ReferentialIntegrityValidator(this).Validate(moduleDeclaration);
-            new ExpressionTypeProcessor(this).Process(moduleDeclaration);
+            new ReferentialIntegrityValidator(this).Validate();
+            new ExpressionTypeProcessor(this).Process();
 
             // ensure that constructed resources have required and necessary properties
-            new ResourceInitializationValidator(this).Validate(moduleDeclaration);
+            new ResourceInitializationValidator(this).Validate();
 
             // TODO: needs access to IAM permissions
-            new AllowProcessor(this).Validate(moduleDeclaration);
+            new AllowProcessor(this).Validate();
 
             // find all resource dependencies for the 'Finalizer' invocation
-            new FinalizerDependenciesProcessor(this).Process(moduleDeclaration);
+            new FinalizerDependenciesProcessor(this).Process();
 
             // resolve secrets
             await new EmbeddedSecretsProcessor(this).ProcessAsync(moduleDeclaration);

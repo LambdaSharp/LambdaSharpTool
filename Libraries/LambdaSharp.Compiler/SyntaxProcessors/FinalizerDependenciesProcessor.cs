@@ -29,7 +29,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public FinalizerDependenciesProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void Process() {
             if(
                 Provider.TryGetItem("Finalizer::Invocation", out var finalizerInvocationDeclaration)
                 && (finalizerInvocationDeclaration is ResourceDeclaration finalizerInvocationResourceDeclaration)

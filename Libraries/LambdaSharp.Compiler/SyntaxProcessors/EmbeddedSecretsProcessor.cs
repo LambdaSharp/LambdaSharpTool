@@ -42,12 +42,10 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         //--- Methods ---
         public async Task ProcessAsync(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.Inspect(node => {
+            await moduleDeclaration.InspectAsync(async node => {
                 switch(node) {
                 case ModuleDeclaration innerModuleDeclaration:
-
-                    // TODO: add support for async inspectors
-                    ValidateSecretsAsync(moduleDeclaration).Wait();
+                    await ValidateSecretsAsync(moduleDeclaration);
                     break;
                 }
             });

@@ -47,10 +47,10 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public ReferentialIntegrityValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
+        public void Validate() {
 
             // convert literal expression into a !Ref expression for 'Macro' and 'ResourceType' handlers
-            moduleDeclaration.Inspect(node => {
+            Inspect(node => {
                 switch(node) {
                 case MacroDeclaration macroDeclaration:
                     if(macroDeclaration.Handler is LiteralExpression macroHandlerLiteralExpression  ) {
@@ -70,7 +70,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             });
 
             // track 'Scope' references
-            moduleDeclaration.InspectType<IScopedDeclaration>(node => {
+            InspectType<IScopedDeclaration>(node => {
                 if(!(node is AItemDeclaration itemDeclaration)) {
                     throw new ShouldNeverHappenException($"unexpected type {node.GetType().FullName}");
                 }
@@ -80,7 +80,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             });
 
             // check for referential integrity
-            moduleDeclaration.Inspect(node => {
+            Inspect(node => {
                 switch(node) {
                 case GetAttFunctionExpression getAttFunctionExpression:
                     ValidateGetAttFunctionExpression(getAttFunctionExpression);

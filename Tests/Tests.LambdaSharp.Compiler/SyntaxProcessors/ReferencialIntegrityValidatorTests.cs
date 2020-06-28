@@ -36,7 +36,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ReferentialIntegrityValidator(this).Validate(module);
+            new ReferentialIntegrityValidator(this).Validate();
 
             // assert
             ExpectedMessages(
@@ -52,7 +52,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ReferentialIntegrityValidator(this).Validate(module);
+            new ReferentialIntegrityValidator(this).Validate();
 
             // assert
             ExpectedMessages(
@@ -68,7 +68,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ReferentialIntegrityValidator(this).Validate(module);
+            new ReferentialIntegrityValidator(this).Validate();
 
             // assert
             ExpectedMessages("ERROR: circular dependency VariableA -> VariableA in Module.yml: line 4, column 5");
@@ -81,7 +81,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ReferentialIntegrityValidator(this).Validate(module);
+            new ReferentialIntegrityValidator(this).Validate();
 
             // assert
             ExpectedMessages("ERROR: circular dependency ResourceA -> ResourceB -> ResourceA in Module.yml: line 4, column 5");
@@ -94,7 +94,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ReferentialIntegrityValidator(this).Validate(module);
+            new ReferentialIntegrityValidator(this).Validate();
 
             // assert
             ExpectedMessages();

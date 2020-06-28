@@ -43,8 +43,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public ResourceInitializationValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectType<IResourceDeclaration>(node => {
+        public void Validate() {
+            InspectType<IResourceDeclaration>(node => {
 
                 // skip resources that are not being initialied
                 if(!node.HasInitialization) {
