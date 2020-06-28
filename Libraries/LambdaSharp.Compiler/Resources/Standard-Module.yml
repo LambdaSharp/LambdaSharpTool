@@ -141,8 +141,7 @@ Items:
               Version: "2012-10-17"
               Statement: [ ]
 
-      # TODO: allow overriding this value
-      # TODO: (for example)
+      # TODO: allow overriding this value; for example:
       #   Globals:
       #     Variables:
       #       "Module::LogRetentionInDays": 45

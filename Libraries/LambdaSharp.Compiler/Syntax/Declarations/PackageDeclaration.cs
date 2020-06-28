@@ -42,7 +42,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _scope = Adopt(value ?? throw new ArgumentNullException());
         }
 
-        // TODO: shouldn't this be List<LiteralExpression>?
         [SyntaxRequired]
         public LiteralExpression? Files {
             get => _files;

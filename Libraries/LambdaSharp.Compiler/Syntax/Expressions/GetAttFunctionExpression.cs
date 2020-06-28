@@ -47,6 +47,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             set => _attributeName = Adopt(value ?? throw new ArgumentNullException());
         }
 
+        // TODO: remove ReferencedDeclaration property
         public AItemDeclaration? ReferencedDeclaration {
             get => _referencedDeclaration;
             set {

@@ -61,6 +61,8 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                             !(conditionIsDefinedExpression.Parent is IfFunctionExpression conditionIsDefinedExpressionParent)
                             || !object.ReferenceEquals(conditionIsDefinedExpression, conditionIsDefinedExpressionParent.Condition)
                         ) {
+
+                            // TODO: add test for this
                             Logger.Log(MustBeUsedInIfExpressionCondition, conditionIsDefinedExpression);
                         }
                         break;
