@@ -43,7 +43,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             get => _items[index];
             set {
                 if(!object.ReferenceEquals(_items[index], value)) {
-                    UnsetParent(_items[index]);
+                    Orphan(_items[index]);
                     _items[index]  = Adopt(value ?? throw new ArgumentNullException(nameof(value)));
                 }
             }

@@ -31,32 +31,32 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Class Methods ---
         [return: NotNullIfNotNull("node")]
-        public static ASyntaxNode? SetParent(ASyntaxNode? node, ASyntaxNode? parent) {
-            if(node != null) {
+        public static ASyntaxNode? SetParent(ASyntaxNode? child, ASyntaxNode? parent) {
+            if(child != null) {
 
                 // declaration nodes must have another declaration node as their parent
-                if((parent != null) && (node is ADeclaration) && !(parent is ADeclaration)) {
+                if((parent != null) && (child is ADeclaration) && !(parent is ADeclaration)) {
                     throw new ApplicationException("declarations must have another declaration as parent");
                 }
 
                 // check if parent is changing
-                if(!object.ReferenceEquals(node.Parent, parent)) {
+                if(!object.ReferenceEquals(child.Parent, parent)) {
 
                     // check if node needs to be cloned
-                    if((parent != null) && (node is AExpression expression) && (node.Parent != null)) {
-                        node = expression.Clone();
+                    if((parent != null) && (child is AExpression expression) && (child.Parent != null)) {
+                        child = expression.Clone();
                     }
 
                     // update parent and invalidate any related information
-                    node.Parent = parent;
-                    node.ParentChanged();
+                    child.Parent = parent;
+                    child.ParentChanged();
                 }
             }
-            return node;
+            return child;
         }
 
         [return: NotNullIfNotNull("node")]
-        public static ASyntaxNode? UnsetParent(ASyntaxNode? node) => SetParent(node, null);
+        public static ASyntaxNode? Orphan(ASyntaxNode? node) => SetParent(node, null);
 
         //--- Fields ---
         private SourceLocation? _sourceLocation;

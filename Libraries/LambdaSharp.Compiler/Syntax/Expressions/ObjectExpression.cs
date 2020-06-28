@@ -81,7 +81,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
                 if(index < _pairs.Count) {
                     var pair = _pairs[index];
                     if(!object.ReferenceEquals(pair.Value, value)) {
-                        UnsetParent(pair.Value);
+                        Orphan(pair.Value);
                         pair.SetValue(Adopt(value));
                     }
                 } else {
