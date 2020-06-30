@@ -441,7 +441,7 @@ namespace LambdaSharp.Compiler.Parser {
                             value = integerLiteral;
                             type = LiteralType.Integer;
                         } else if(TryParseYamlFloat(scalar.Value, out var floatLiteral)) {
-                            value = floatLiteral.ToString();
+                            value = floatLiteral.ToString(null, CultureInfo.InvariantCulture.NumberFormat);
                             type = LiteralType.Float;
                         } else if(DateTimeOffset.TryParseExact(scalar.Value, "yyyy-MM-dd", formatProvider: null, DateTimeStyles.AssumeUniversal, out var dateTimeLiteral)) {
 

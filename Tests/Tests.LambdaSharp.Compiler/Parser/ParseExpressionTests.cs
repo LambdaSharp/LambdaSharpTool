@@ -181,7 +181,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
         public void ParseLiteralSexagesimalFloatExpression() => ParseLiteralTest("190:20:30.15", "685230.15", LiteralType.Float);
 
         [Fact]
-        public void ParseLiteralNegativeInfiityFloatExpression() => ParseLiteralTest("-.inf", "-∞", LiteralType.Float);
+        public void ParseLiteralNegativeInfiityFloatExpression() => ParseLiteralTest("-.inf", "-Infinity", LiteralType.Float);
 
         [Fact]
         public void ParseLiteralNotANumberFloatExpression() => ParseLiteralTest(".NaN", "NaN", LiteralType.Float);
