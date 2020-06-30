@@ -1,0 +1,37 @@
+name: LambdaSharp CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - v*
+      - WIP-v*
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.301
+
+      - name: Test LambdaSharp.CloudFormation
+        run: dotnet test --verbosity normal Tests/Tests.LambdaSharp.CloudFormation
+
+      - name: Test LambdaSharp.Compiler
+        run: dotnet test --verbosity normal Tests/Tests.LambdaSharp.Compiler
+
+      - name: Test LambdaSharp.Tool
+        run: dotnet test --verbosity normal Tests/Tests.LambdaSharp.Tool
+
+      - name: Test LambdaSharp
+        run: dotnet test --verbosity normal Tests/Tests.LambdaSharp
+
+      - name: Test LambdaSharp.Core
+        run: dotnet test --verbosity normal Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests
