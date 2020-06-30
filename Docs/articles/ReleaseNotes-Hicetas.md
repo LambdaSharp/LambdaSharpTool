@@ -143,7 +143,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.0.4) - TBD
 
-### Features
+#### Features
 
 * CLI
   * Enhanced `info` command to show the name of the logging S3 bucket for the deployment tier.
@@ -153,12 +153,18 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Enhanced CloudFormation resource creation/update tracking to show how long the operation took.
   * Added `tier list` command to list all available deployment tiers.
   * Added confirmation prompt when detecting potential replacement/deletion of resources during `lash deploy` instead of erroring.
+  * Added `util show-parameters` command to show the processed parameters YAML file.
 
 * Syntax
   * Added pragmas for overriding `Module::RestApi::StageName` and `Module::WebSocket::StageName`.
 
 * Modules
   * Migrated `LambdaSharp.Twitter.Query` function implementation to be null-aware.
+
+#### Fixes
+
+* CLI
+  * Fixed an issue when processing parameter files where the encryption key in `!GetParam` required the `"alias/"` prefix.
 
 ### (v0.8.0.3) - 2020-06-19
 

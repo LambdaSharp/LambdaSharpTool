@@ -210,6 +210,7 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
+                // show failed Kinesis logs
                 cmd.Command("show-kinesis-failed-logs", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Show Failed Kinesis Firehose Logging Entries";
@@ -226,6 +227,38 @@ namespace LambdaSharp.Tool.Cli {
                         }
                         var keyPrefix = keyPrefixOption.HasValue() ? keyPrefixOption.Value() : "logging-failed/processing-failed/";
                         await ShowFailedKinesisProcessingLogs(settings, keyPrefix);
+                    });
+                });
+
+                // process parameters file and show result
+                cmd.Command("show-parameters", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Show Processed YAML Parameters File";
+
+                    // command options
+                    var filePathArgument = subCmd.Argument("<FILEPATH>", "Path for YAML parameters file");
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    AddStandardCommandOptions(subCmd);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+                        if(string.IsNullOrEmpty(filePathArgument.Value)) {
+                            Program.ShowHelp = true;
+                            Console.WriteLine(subCmd.GetHelpText());
+                            return;
+                        }
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return;
+                        }
+                        var parameters = new ParameterFileReader(settings, filePathArgument.Value).ReadInputParametersFiles();
+                        if(parameters?.Any() ?? false) {
+                            Console.WriteLine();
+                            foreach(var kv in parameters.OrderBy(kv => kv.Key)) {
+                                Console.WriteLine($"{kv.Key}: {Settings.OutputColor}{kv.Value}{Settings.ResetColor}");
+                            }
+                        }
                     });
                 });
 
