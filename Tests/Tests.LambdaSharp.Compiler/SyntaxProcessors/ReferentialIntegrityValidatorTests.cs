@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -22,10 +22,10 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
-    public class ReferencialIntegrityValidatorTests : _SyntaxProcessor {
+    public class ReferentialIntegrityValidatorTests : _SyntaxProcessor {
 
         //--- Constructors ---
-        public ReferencialIntegrityValidatorTests(ITestOutputHelper output) : base(output) { }
+        public ReferentialIntegrityValidatorTests(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
 
