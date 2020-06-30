@@ -147,10 +147,11 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Enhanced `info` command to show the name of the logging S3 bucket for the deployment tier.
-  * Added `util show-kinesis-failed-logs` command to list CloudWatch log entries that failed to be processed by _LambdaSharp.Core_.
-  * Added check for `!If [ condition, ifTrue, ifFalse ]` on publicly scoped variables to make CloudFormation output conditional on `condition`.
   * Enhanced CloudFormation parameter prompts by showing min/max value and min/max length constraints.
   * Enhanced CloudFormation resource creation/update tracking to show how long the operation took.
+  * Enhanced `lash nuke` to delete retained S3 buckets from _LambdaSharp.Core_.
+  * Added `util show-kinesis-failed-logs` command to list CloudWatch log entries that failed to be processed by _LambdaSharp.Core_.
+  * Added check for `!If [ condition, ifTrue, ifFalse ]` on publicly scoped variables to make CloudFormation output conditional on `condition`.
   * Added `tier list` command to list all available deployment tiers.
   * Added confirmation prompt when detecting potential replacement/deletion of resources during `lash deploy` instead of erroring.
   * Added `util show-parameters` command to show the processed parameters YAML file.
@@ -161,7 +162,8 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added support for `DeletionPolicy` attribute on resource and parameter declarations.
 
 * Modules
-  * Migrated `LambdaSharp.Twitter.Query` function implementation to be null-aware.
+  * Migrated _LambdaSharp.Twitter.Query_ function implementation to null-aware C#.
+  * Added `DeletionPolicy: Retain` to the _LambdaSharp.Core_ S3 logging bucket.
 
 #### Fixes
 
