@@ -239,6 +239,11 @@ namespace LambdaSharp.Tool.Cli {
                         // check if retrieved parameter needs to be encrypted
                         if(parameterStoreDeserializer.Encryption.TryGetValue(parameter.Name, out var encryptionKey) && (encryptionKey != null)) {
 
+                            // automatically prefix with "alias/" if the key is not an arn and doesn't have the "alias/" prefix
+                            if(!encryptionKey.StartsWith("arn:") && !encryptionKey.StartsWith("alias/", StringComparison.Ordinal)) {
+                                encryptionKey = "alias/" + encryptionKey;
+                            }
+
                             // re-encrypt value using the tier's default secret key
                             var encryptedResult = Settings.KmsClient.EncryptAsync(new EncryptRequest {
                                 KeyId = encryptionKey,
