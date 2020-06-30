@@ -42,8 +42,6 @@ namespace LambdaSharp.Tool.Model {
                 ? name
                 : parent.FullName + "::" + name;
             Description = description;
-
-            // TODO (2018-11-29, bjorg): logical ID should be computed by module builder to disambiguate hierarchical names when name collisions occur
             LogicalId = (parent == null)
                 ? name
                 : parent.LogicalId + name;
