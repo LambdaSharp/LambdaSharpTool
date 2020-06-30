@@ -187,19 +187,19 @@ namespace Tests.LambdaSharp.Compiler.Parser {
         public void ParseLiteralNotANumberFloatExpression() => ParseLiteralTest(".NaN", "NaN", LiteralType.Float);
 
         [Fact]
-        public void ParseLiteralCanonicalTimestampExpression() => ParseLiteralTest("2001-12-15T02:59:43.1Z", "12/15/2001 2:59:43 AM +00:00", LiteralType.Timestamp);
+        public void ParseLiteralCanonicalTimestampExpression() => ParseLiteralTest("2001-12-15T02:59:43.1Z", "12/15/2001 02:59:43 +00:00", LiteralType.Timestamp);
 
         [Fact]
-        public void ParseLiteralIso8601TimestampExpression() => ParseLiteralTest("2001-12-14t21:59:43.10-05:00", "12/15/2001 2:59:43 AM +00:00", LiteralType.Timestamp);
+        public void ParseLiteralIso8601TimestampExpression() => ParseLiteralTest("2001-12-14t21:59:43.10-05:00", "12/15/2001 02:59:43 +00:00", LiteralType.Timestamp);
 
         [Fact]
-        public void ParseLiteralSpaceSeparaterTimestampExpression() => ParseLiteralTest("2001-12-14 21:59:43.10 -5", "12/15/2001 2:59:43 AM +00:00", LiteralType.Timestamp);
+        public void ParseLiteralSpaceSeparaterTimestampExpression() => ParseLiteralTest("2001-12-14 21:59:43.10 -5", "12/15/2001 02:59:43 +00:00", LiteralType.Timestamp);
 
         [Fact]
-        public void ParseLiteralNoTimeZoneTimestampExpression() => ParseLiteralTest("2001-12-15 2:59:43.10", "12/15/2001 2:59:43 AM +00:00", LiteralType.Timestamp);
+        public void ParseLiteralNoTimeZoneTimestampExpression() => ParseLiteralTest("2001-12-15 2:59:43.10", "12/15/2001 02:59:43 +00:00", LiteralType.Timestamp);
 
         [Fact]
-        public void ParseLiteralDateTimestampExpression() => ParseLiteralTest("2002-12-14", "12/14/2002 12:00:00 AM +00:00", LiteralType.Timestamp);
+        public void ParseLiteralDateTimestampExpression() => ParseLiteralTest("2002-12-14", "12/14/2002 00:00:00 +00:00", LiteralType.Timestamp);
 
         private void ParseLiteralTest(string input, string output, LiteralType type) {
 

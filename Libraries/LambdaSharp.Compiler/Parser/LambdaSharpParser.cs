@@ -447,7 +447,7 @@ namespace LambdaSharp.Compiler.Parser {
 
                             // NOTE (2019-12-12, bjorg): timestamp literal: https://yaml.org/type/timestamp.html
                             //  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] # (year-month-date)
-                            value = dateTimeLiteral.ToString();
+                            value = dateTimeLiteral.ToString(null, CultureInfo.InvariantCulture.DateTimeFormat);
                             type = LiteralType.Timestamp;
                         } else if(DateTimeOffset.TryParse(scalar.Value, formatProvider: null, DateTimeStyles.AssumeUniversal, out dateTimeLiteral)) {
 
@@ -460,7 +460,7 @@ namespace LambdaSharp.Compiler.Parser {
                             //   :[0-9][0-9] # (second)
                             //   (\.[0-9]*)? # (fraction)
                             //   (([ \t]*)Z|[-+][0-9][0-9]?(:[0-9][0-9])?)? # (time zone)
-                            value = dateTimeLiteral.ToUniversalTime().ToString();
+                            value = dateTimeLiteral.ToUniversalTime().ToString(null, CultureInfo.InvariantCulture.DateTimeFormat);
                             type = LiteralType.Timestamp;
                         } else {
 
