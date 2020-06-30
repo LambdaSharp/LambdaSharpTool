@@ -97,7 +97,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
 
             // create variable to hold stage name
@@ -166,7 +167,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         resourceExportAttribute: null,
                         dependsOn: null,
                         condition: null,
-                        pragmas: null
+                        pragmas: null,
+                        deletionPolicy: null
                     ).DiscardIfNotReachable = true;
             }
 
@@ -183,7 +185,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
 
             // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
@@ -200,7 +203,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: apiDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             var deployment = _builder.AddVariable(
                 parent: restApi,
@@ -238,7 +242,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: new[] { restLogGroup.FullName },
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
         }
 
@@ -272,7 +277,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
 
             // create variable to hold stage name
@@ -310,7 +316,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     resourceExportAttribute: null,
                     dependsOn: null,
                     condition: function.Condition,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 );
                 webSocketResources.Add(integration.FullName, integrationResource);
 
@@ -340,7 +347,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         resourceExportAttribute: null,
                         dependsOn: new List<string>(),
                         condition: webSocketRoute.Function.Condition,
-                        pragmas: null
+                        pragmas: null,
+                        deletionPolicy: null
                     );
                     webSocketResources.Add(route.FullName, routeResource);
 
@@ -382,7 +390,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resourceExportAttribute: null,
                                 dependsOn: null,
                                 condition: function.Condition,
-                                pragmas: null
+                                pragmas: null,
+                                deletionPolicy: null
                             );
                             webSocketResources.Add(model.FullName, webSocketRoute.Source.RequestSchema);
                             route.DependsOn.Add(model.FullName);
@@ -420,7 +429,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resourceExportAttribute: null,
                                 dependsOn: null,
                                 condition: webSocketRoute.Function.Condition,
-                                pragmas: null
+                                pragmas: null,
+                                deletionPolicy: null
                             );
                             webSocketResources.Add(routeResponse.FullName, routeResponseResource);
 
@@ -452,7 +462,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resourceExportAttribute: null,
                                 dependsOn: null,
                                 condition: function.Condition,
-                                pragmas: null
+                                pragmas: null,
+                                deletionPolicy: null
                             );
                             webSocketResources.Add(model.FullName, webSocketRoute.Source.ResponseSchema);
 
@@ -475,7 +486,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resourceExportAttribute: null,
                                 dependsOn: new[] { model.FullName },
                                 condition: webSocketRoute.Function.Condition,
-                                pragmas: null
+                                pragmas: null,
+                                deletionPolicy: null
                             );
                             webSocketResources.Add(routeResponse.FullName, routeResponseResource);
 
@@ -505,7 +517,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: webSocketRoute.Function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     }
                 }
@@ -554,7 +567,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: webSocketResources.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             var deployment = _builder.AddVariable(
                 parent: webSocket,
@@ -579,7 +593,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
 
             // WebSocket stage depends on deployment
@@ -601,7 +616,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: new[] { webSocketLogGroup.FullName },
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
         }
 
@@ -633,7 +649,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     resourceExportAttribute: null,
                     dependsOn: null,
                     condition: route.Function.Condition,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 );
                 apiDeclarations.Add(method.FullName, apiMethodResource);
                 integration.PassthroughBehavior = "WHEN_NO_TEMPLATES";
@@ -690,7 +707,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         resourceExportAttribute: null,
                         dependsOn: null,
                         condition: route.Function.Condition,
-                        pragmas: null
+                        pragmas: null,
+                        deletionPolicy: null
                     );
                     apiDeclarations.Add(model.FullName, route.Source.RequestSchema);
 
@@ -802,7 +820,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         resourceExportAttribute: null,
                         dependsOn: null,
                         condition: route.Function.Condition,
-                        pragmas: null
+                        pragmas: null,
+                        deletionPolicy: null
                     );
                     apiDeclarations.Add(model.FullName, route.Source.ResponseSchema);
 
@@ -840,7 +859,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         resourceExportAttribute: null,
                         dependsOn: null,
                         condition: route.Function.Condition,
-                        pragmas: null
+                        pragmas: null,
+                        deletionPolicy: null
                     );
                 }
             }
@@ -869,7 +889,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // TODO (2018-12-28, bjorg): handle conditional function
                     condition: null,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 );
                 apiDeclarations.Add(resource.FullName, apiResourceResource);
                 AddRestApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiDeclarations);
@@ -977,7 +998,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                         _builder.AddResource(
                             parent: function,
@@ -993,7 +1015,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     });
                     break;
@@ -1036,7 +1059,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                         _builder.AddResource(
                             parent: function,
@@ -1052,7 +1076,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     }
                     break;
@@ -1077,7 +1102,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                         _builder.AddResource(
                             parent: function,
@@ -1098,7 +1124,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             dependsOn: new[] { permission.FullName },
                             arnAttribute: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
 
                         // local function
@@ -1132,7 +1159,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     });
                     break;
@@ -1178,7 +1206,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     }
                     break;
@@ -1199,7 +1228,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     }, item => FnGetAtt(item.FullName, "StreamArn"));
                     break;
@@ -1220,7 +1250,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     });
                     break;
@@ -1255,7 +1286,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                         _builder.AddResource(
                             parent: function,
@@ -1271,7 +1303,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             resourceExportAttribute: null,
                             dependsOn: null,
                             condition: function.Condition,
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
                     }
                     break;

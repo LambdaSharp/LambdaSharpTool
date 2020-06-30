@@ -19,10 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using LambdaSharp.Tool.Internal;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Model {
     using static ModelFunctions;
@@ -198,15 +195,18 @@ namespace LambdaSharp.Tool.Model {
             string resourceExportAttribute,
             IList<string> dependsOn,
             string condition,
-            IList<object> pragmas
+            IList<object> pragmas,
+            string deletionPolicy
         ) : base(parent, name, description, (resource is Humidifier.CustomResource customResource) ? customResource.OriginalTypeName : resource.AWSTypeName, scope, reference: null, dependsOn, condition, pragmas) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             ResourceExportAttribute = resourceExportAttribute;
+            DeletionPolicy = deletionPolicy;
         }
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
         public string ResourceExportAttribute { get; set; }
+        public string DeletionPolicy { get; set; }
 
         //--- Methods ---
         public override void Visit(ModuleVisitorDelegate visitor) {

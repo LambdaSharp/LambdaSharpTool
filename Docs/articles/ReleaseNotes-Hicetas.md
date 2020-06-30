@@ -158,6 +158,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * Syntax
   * Added pragmas for overriding `Module::RestApi::StageName` and `Module::WebSocket::StageName`.
+  * Added support for `DeletionPolicy` attribute on resource and parameter declarations.
 
 * Modules
   * Migrated `LambdaSharp.Twitter.Query` function implementation to be null-aware.

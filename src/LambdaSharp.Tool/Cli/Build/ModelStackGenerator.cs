@@ -183,11 +183,15 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
                 break;
             case ResourceItem resourceItem:
+                var deletionPolicy = (resourceItem.DeletionPolicy != null)
+                    ? (DeletionPolicy?)Enum.Parse<DeletionPolicy>(resourceItem.DeletionPolicy, ignoreCase: true)
+                    : null;
                 _stack.Add(
                     resourceItem.LogicalId,
                     resourceItem.Resource,
                     resourceItem.Condition,
-                    dependsOn: resourceItem.DependsOn.ToArray()
+                    dependsOn: resourceItem.DependsOn.ToArray(),
+                    deletionPolicy: deletionPolicy
                 );
                 if(item.IsPublic) {
                     AddExport(item);
