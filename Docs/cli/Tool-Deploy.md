@@ -344,10 +344,13 @@ The name of an environment variable.
 
 The `!GetParam` function reads a value from the [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html) and optionally encrypts it using a KMS key.
 
-
 ##### Syntax
 ```yaml
 !GetParam parameter-store-path
+```
+-OR-
+```yaml
+!GetParam [ parameter-store-path ]
 ```
 -OR-
 ```yaml
@@ -377,4 +380,40 @@ The <a href="https://docs.aws.amazon.com/kms/latest/developerguide/overview.html
 ApiKey: !GetConfig [ '../global.json', Services.SomeApi.ApiKey ]
 ReplyEmail: !GetParam /Company/EmailAddress
 Language: !GetEnv LANG
+```
+
+#### !Sub
+
+The `!Sub` function substitutes variables in the format string with values from the arguments map or environment variables.
+
+##### Syntax
+```yaml
+!Sub format-string
+```
+-OR-
+```yaml
+!Sub [ format-string, arguments ]
+```
+
+##### Parameters
+<dl>
+
+<dt><code>format-string</code></dt>
+<dd>
+A string with variables that <code>!Sub</code> substitutes. Write variables as <code>${MyVariable}</code>. Variable values can come from the arguments map or from environment variables. The arguments map can be omitted if only environment variables are referenced.
+</dd>
+
+<dt><code>arguments</code></dt>
+<dd>
+A map of key-value pairs. The value of a key can be a function.
+</dd>
+
+</dl>
+
+#### Examples
+
+```yaml
+BucketArn: !Sub
+  - "arn:aws:s3:::${Name}"
+  - Name: !GetParam [ !Sub "/${STAGE}/bucket-name" ]
 ```

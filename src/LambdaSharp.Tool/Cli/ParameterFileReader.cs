@@ -54,6 +54,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             //--- Properties ---
+            public bool FindDependencies { get; set; }
             private LogErrorDelegate LogError { get; }
 
             //--- Methods ---
@@ -66,6 +67,8 @@ namespace LambdaSharp.Tool.Cli {
                         return GetEnv(node, reader, expectedType, nestedObjectDeserializer, out value);
                     case "!GetParam":
                         return GetParam(node, reader, expectedType, nestedObjectDeserializer, out value);
+                    case "!Sub":
+                        return Sub(node, reader, expectedType, nestedObjectDeserializer, out value);
                     }
                 }
                 value = null;
@@ -162,30 +165,133 @@ namespace LambdaSharp.Tool.Cli {
                     if(
                         nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
                         && (tagValue is IList list)
-                        && (list.Count == 2)
-                        && (list[0] is string parameterKey)
-                        && (list[1] is string encryptionKey)
                     ) {
-                        if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+                        if(list.Count == 1) {
+                            if(list[0] is string parameterKey) {
+                                if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
 
-                            // substitute expression with parameter value
-                            value = parameterValue;
-                        } else {
+                                    // substitute expression with parameter value
+                                    value = parameterValue;
+                                } else {
 
-                            // record missing parameter key
-                            Dictionary[parameterKey] = null;
-                            Encryption[parameterKey] = encryptionKey;
-                            value = null;
+                                    // record missing parameter key
+                                    Dictionary[parameterKey] = null;
+                                    value = null;
+                                }
+                                return true;
+                            } else {
+                                LogError("invalid expression for !GetParam [ parameterKey ]", null);
+                            }
+                        } else if(list.Count == 2) {
+                            if(
+                                (list[0] is string parameterKey)
+                                && (list[1] is string encryptionKey)
+                            ) {
+                                if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+
+                                    // substitute expression with parameter value
+                                    value = parameterValue;
+                                } else {
+
+                                    // record missing parameter key
+                                    Dictionary[parameterKey] = null;
+                                    Encryption[parameterKey] = encryptionKey;
+                                    value = null;
+                                }
+                                return true;
+                            } else {
+                                LogError("invalid expression for !GetParam [ parameterKey, encryptionKey ]", null);
+                            }
                         }
-                        return true;
                     } else {
-                        LogError("invalid expression for !GetParam [ parameterKey, encryptionKey ]", null);
+                        LogError("!GetParam must be followed by either a list or a string", null);
                     }
                 } else {
                     LogError("invalid expression for !GetParam", null);
                 }
                 value = null;
                 return false;
+            }
+
+            private bool Sub(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is Scalar scalar) {
+
+                    // NOTE: !Sub formatString
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new ScalarNodeDeserializer();
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is string formatString)
+                    ) {
+                        return ApplySubExpression(formatString, new Dictionary<string, string>(), out value);
+                    }
+                } else if(node is SequenceStart sequenceStart) {
+
+                    // NOTE: !Sub [ formatString, arguments ]
+
+                    // deserialize parameter list
+                    INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is IList list)
+                        && (list.Count == 2)
+                        && (list[0] is string formatString)
+                        && (list[1] is IDictionary arguments)
+                    ) {
+                        return ApplySubExpression(formatString, arguments, out value);
+                    } else {
+                        LogError("invalid expression for !Sub [ formatString, arguments ]", null);
+                    }
+                } else {
+                    LogError("invalid expression for !Sub", null);
+                }
+                value = null;
+                return false;
+            }
+
+            // local functions
+            bool ApplySubExpression(string formatString, IDictionary arguments, out object result) {
+                result = ModelFunctions.ReplaceSubPattern(formatString, (key, suffix) => {
+                    if(suffix != null) {
+                        if(!FindDependencies) {
+                            LogError($"suffixed !Sub arguments are not supported '{key}{suffix}'", null);
+                        }
+                        return "<INVALID>";
+                    }
+
+                    // check if key is a local argument
+                    var value = arguments[key];
+                    if(value is string text) {
+
+                        // return value of argument
+                        return text;
+                    } else if(!arguments.Contains(key)) {
+
+                        // argument was not supplied, read key from environment variables instead
+                        var environmentValue = Environment.GetEnvironmentVariable(key);
+                        if(environmentValue != null) {
+                            return environmentValue;
+                        }
+                        if(!FindDependencies) {
+                            LogError($"missing !Sub argument '{key}'", null);
+                        }
+                        return "<MISSING>";
+                    } else if(value == null) {
+                        if(!FindDependencies) {
+                            LogError($"missing !Sub argument '{key}'", null);
+                        }
+                        return "<MISSING>";
+                    } else {
+
+                        // keep the expression as is during find-dependencies phase
+                        if(!FindDependencies) {
+                            LogError($"!Sub argument '{key}' must be a string", null);
+                        }
+                        return "<INVALID>";
+                    }
+                });
+                return true;
             }
         }
 
@@ -221,7 +327,7 @@ namespace LambdaSharp.Tool.Cli {
             // initialize YAML parser
             var sourceRelativePath = new FileInfo(SourceFilename).Directory.FullName;
             var parameterStoreDeserializer = new ParameterStoreFunctionNodeDeserializer(sourceRelativePath, LogError);
-            var inputs = ParseYamlFile(source);
+            var inputs = ParseYamlFile(source, findDependencies: true);
 
             // check if any parameter store references were found
             if(parameterStoreDeserializer.Dictionary.Any()) {
@@ -270,7 +376,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // reparse document after parameter references were resolved
-                inputs = ParseYamlFile(source);
+                inputs = ParseYamlFile(source, findDependencies: false);
             }
 
             // resolve 'alias/' key names to key ARNs
@@ -328,15 +434,18 @@ namespace LambdaSharp.Tool.Cli {
             return result;
 
             // local functions
-            Dictionary<string, object> ParseYamlFile(string text)
-                => new DeserializerBuilder()
+            Dictionary<string, object> ParseYamlFile(string text, bool findDependencies) {
+                parameterStoreDeserializer.FindDependencies = findDependencies;
+                return new DeserializerBuilder()
                     .WithNamingConvention(new PascalCaseNamingConvention())
                     .WithNodeDeserializer(parameterStoreDeserializer)
                     .WithTagMapping("!GetConfig", typeof(CloudFormationListFunction))
                     .WithTagMapping("!GetEnv", typeof(CloudFormationListFunction))
                     .WithTagMapping("!GetParam", typeof(CloudFormationListFunction))
+                    .WithTagMapping("!Sub", typeof(CloudFormationListFunction))
                     .Build()
                     .Deserialize<Dictionary<string, object>>(text);
+            }
         }
     }
 }

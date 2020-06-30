@@ -154,6 +154,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added `tier list` command to list all available deployment tiers.
   * Added confirmation prompt when detecting potential replacement/deletion of resources during `lash deploy` instead of erroring.
   * Added `util show-parameters` command to show the processed parameters YAML file.
+  * Added support for `!Sub` function in parameter files.
 
 * Syntax
   * Added pragmas for overriding `Module::RestApi::StageName` and `Module::WebSocket::StageName`.
