@@ -101,8 +101,8 @@ namespace LambdaSharp.Tool {
         public static string OutputColor => UseAnsiConsole ? AnsiTerminal.Green : "";
         public static string InfoColor => UseAnsiConsole ? AnsiTerminal.Yellow : "";
         public static string AlertColor => UseAnsiConsole ? (AnsiTerminal.Black + AnsiTerminal.BackgroundRed) : "";
-        public static string WarningColor => UseAnsiConsole ? AnsiTerminal.BrightRed : "";
-        public static string ErrorColor => UseAnsiConsole ? AnsiTerminal.BrightYellow : "";
+        public static string WarningColor => UseAnsiConsole ? AnsiTerminal.BrightYellow : "";
+        public static string ErrorColor => UseAnsiConsole ? AnsiTerminal.BrightRed : "";
         public static string HighContrastColor => UseAnsiConsole ? AnsiTerminal.BrightWhite : "";
         public static string LowContrastColor => UseAnsiConsole ? AnsiTerminal.BrightBlack : "";
         public static string DebugColor => UseAnsiConsole ? AnsiTerminal.BrightBlue : "";
@@ -343,8 +343,13 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public bool PromptYesNo(string message, bool defaultAnswer)
-            => Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
+        public bool PromptYesNo(string message, bool defaultAnswer) {
+            if(PromptsAsErrors) {
+                LogError($"prompt was attempted for \"{message}\"");
+                return defaultAnswer;
+            }
+            return Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
+        }
 
         public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
     }
