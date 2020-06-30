@@ -30,7 +30,7 @@ namespace LambdaSharp.Records.ErrorReports {
             => _provider = provider ?? throw new ArgumentNullException(nameof(provider));
 
         //--- Methods ---
-        public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object[] args) {
+        public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object?[] args) {
             var message = ILambdaErrorReportGenerator.FormatMessage(format, args) ?? exception?.Message;
             if(message != null) {
                 _provider.Log($"*** {level.ToString().ToUpperInvariant()}: {message}\n{PrintException()}");

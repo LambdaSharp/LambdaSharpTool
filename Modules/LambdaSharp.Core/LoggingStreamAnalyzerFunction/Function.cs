@@ -582,7 +582,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
             // publish metrics to the event bus
             SendEventRecord(owner, new LambdaEventRecord {
-                Time = DateTimeOffset.FromUnixTimeMilliseconds(record.Aws.Timestamp).ToRfc3339Timestamp(),
+                Time = (record.Aws != null)
+                    ? DateTimeOffset.FromUnixTimeMilliseconds(record.Aws.Timestamp).ToRfc3339Timestamp()
+                    : DateTimeOffset.UtcNow.ToRfc3339Timestamp(),
                 Source = "LambdaSharp",
                 DetailType = "LambdaMetrics",
                 Detail = LambdaSerializer.Serialize(record)

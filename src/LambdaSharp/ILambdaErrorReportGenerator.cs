@@ -76,6 +76,6 @@ namespace LambdaSharp {
         /// <param name="format">An optional message.</param>
         /// <param name="args">Optional arguments for the error message.</param>
         /// <returns>A new <see cref="LambdaErrorReport"/> instance.</returns>
-        LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object[] args);
+        LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object?[] args);
     }
 }

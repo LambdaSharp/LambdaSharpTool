@@ -114,17 +114,17 @@ namespace LambdaSharp.Records.ErrorReports {
         /// <see cref="LambdaErrorReport"/> instance from the provided parameters.
         /// </summary>
         /// <remarks>
-        /// See <cref name="FormatMessage(string,object[])"/> for details on how the <paramref name="args"/> parameter
+        /// See <cref name="FormatMessage(string,object[])"/> for details on how the <paramref name="arguments"/> parameter
         /// impacts the processing of the <paramref name="format"/> parameter.
         /// </remarks>
         /// <param name="requestId">The AWS request ID.</param>
         /// <param name="level">The severity level of the error report.</param>
         /// <param name="exception">An optional exception instance.</param>
         /// <param name="format">An optional message.</param>
-        /// <param name="args">Optional arguments for the error message.</param>
+        /// <param name="arguments">Optional arguments for the error message.</param>
         /// <returns>A new <see cref="LambdaErrorReport"/> instance.</returns>
-        public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object[] args) {
-            var message = ILambdaErrorReportGenerator.FormatMessage(format, args) ?? exception?.Message;
+        public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object?[] arguments) {
+            var message = ILambdaErrorReportGenerator.FormatMessage(format, arguments) ?? exception?.Message;
             if(message == null) {
                 return null;
             }
