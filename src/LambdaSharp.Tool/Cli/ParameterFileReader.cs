@@ -60,114 +60,126 @@ namespace LambdaSharp.Tool.Cli {
             public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
                 if(reader.Current is NodeEvent node) {
                     switch(node.Tag) {
-                    case "!GetConfig": {
-                            if(node is SequenceStart sequenceStart) {
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
-                                if(
-                                    nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
-                                    && (value is IList list)
-                                    && (list.Count == 2)
-                                    && (list[0] is string sourceFile)
-                                    && (list[1] is string key)
-                                ) {
-                                    if(!_configFiles.TryGetValue(sourceFile, out var configFile)) {
-                                        try {
-                                            configFile = JObject.Parse(File.ReadAllText(Path.Combine(_workingDirectory, sourceFile)));
-                                            _configFiles[sourceFile] = configFile;
-                                        } catch(FileNotFoundException) {
-                                            LogError($"unable to load json config file '{configFile}'", null);
-                                            value = null;
-                                            return true;
-                                        }
-                                    }
-                                    try {
-                                        value = configFile.SelectToken(key)?.Value<string>();
-                                    } catch(Exception e) {
-                                        LogError($"!GetConfig has invalid JSON-path expression: '{key}'", e);
-                                        value = null;
-                                        return true;
-                                    }
-                                    if(value == null) {
-                                        LogError($"!GetConfig unable to find '{key}' in file '{sourceFile}'", null);
-                                        return true;
-                                    }
-                                    return true;
-                                } else {
-                                    LogError("invalid expression for !GetConfig", null);
-                                }
-                            }
-                        }
-                        break;
-                    case "!GetEnv": {
-                            if(node is Scalar scalar) {
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new ScalarNodeDeserializer();
-                                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string key)) {
-                                    value = Environment.GetEnvironmentVariable(key);
-                                    return true;
-                                }
-                            } else {
-                                LogError("invalid expression for !GetEnv", null);
-                            }
-                        }
-                        break;
-                    case "!GetParam": {
-                            if(node is Scalar scalar) {
-
-                                // NOTE: !GetParam parameterKey
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new ScalarNodeDeserializer();
-                                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string parameterKey)) {
-                                    if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
-
-                                        // substitute expression with parameter value
-                                        value = parameterValue;
-                                    } else {
-
-                                        // record missing parameter key
-                                        Dictionary[parameterKey] = null;
-                                        value = null;
-                                    }
-                                    return true;
-                                }
-                            } else if(node is SequenceStart sequenceStart) {
-
-                                // NOTE: !GetParam [ parameterKey, encryptionKey ]
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
-                                if(
-                                    nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
-                                    && (value is IList list)
-                                    && (list.Count == 2)
-                                    && (list[0] is string parameterKey)
-                                    && (list[1] is string encryptionKey)
-                                ) {
-                                    if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
-
-                                        // substitute expression with parameter value
-                                        value = parameterValue;
-                                    } else {
-
-                                        // record missing parameter key
-                                        Dictionary[parameterKey] = null;
-                                        Encryption[parameterKey] = encryptionKey;
-                                        value = null;
-                                    }
-                                    return true;
-                                } else {
-                                    LogError("invalid expression for !GetParam [ parameterKey, encryptionKey ]", null);
-                                }
-                            } else {
-                                LogError("invalid expression for !GetParam", null);
-                            }
-                        }
-                        break;
+                    case "!GetConfig":
+                        return GetConfig(node, reader, expectedType, nestedObjectDeserializer, out value);
+                    case "!GetEnv":
+                        return GetEnv(node, reader, expectedType, nestedObjectDeserializer, out value);
+                    case "!GetParam":
+                        return GetParam(node, reader, expectedType, nestedObjectDeserializer, out value);
                     }
+                }
+                value = null;
+                return false;
+            }
+
+            private bool GetConfig(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is SequenceStart sequenceStart) {
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
+                        && (value is IList list)
+                        && (list.Count == 2)
+                        && (list[0] is string sourceFile)
+                        && (list[1] is string key)
+                    ) {
+                        if(!_configFiles.TryGetValue(sourceFile, out var configFile)) {
+                            try {
+                                configFile = JObject.Parse(File.ReadAllText(Path.Combine(_workingDirectory, sourceFile)));
+                                _configFiles[sourceFile] = configFile;
+                            } catch(FileNotFoundException) {
+                                LogError($"unable to load json config file '{configFile}'", null);
+                                value = null;
+                                return true;
+                            }
+                        }
+                        try {
+                            value = configFile.SelectToken(key)?.Value<string>();
+                        } catch(Exception e) {
+                            LogError($"!GetConfig has invalid JSON-path expression: '{key}'", e);
+                            value = null;
+                            return true;
+                        }
+                        if(value == null) {
+                            LogError($"!GetConfig unable to find '{key}' in file '{sourceFile}'", null);
+                            return true;
+                        }
+                        return true;
+                    } else {
+                        LogError("invalid expression for !GetConfig", null);
+                    }
+                }
+                value = null;
+                return false;
+            }
+
+            private bool GetEnv(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is Scalar scalar) {
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new ScalarNodeDeserializer();
+                    if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string key)) {
+                        value = Environment.GetEnvironmentVariable(key);
+                        return true;
+                    }
+                } else {
+                    LogError("invalid expression for !GetEnv", null);
+                }
+                value = null;
+                return false;
+            }
+
+            private bool GetParam(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is Scalar scalar) {
+
+                    // NOTE: !GetParam parameterKey
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new ScalarNodeDeserializer();
+                    if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string parameterKey)) {
+                        if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+
+                            // substitute expression with parameter value
+                            value = parameterValue;
+                        } else {
+
+                            // record missing parameter key
+                            Dictionary[parameterKey] = null;
+                            value = null;
+                        }
+                        return true;
+                    }
+                } else if(node is SequenceStart sequenceStart) {
+
+                    // NOTE: !GetParam [ parameterKey, encryptionKey ]
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
+                        && (value is IList list)
+                        && (list.Count == 2)
+                        && (list[0] is string parameterKey)
+                        && (list[1] is string encryptionKey)
+                    ) {
+                        if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+
+                            // substitute expression with parameter value
+                            value = parameterValue;
+                        } else {
+
+                            // record missing parameter key
+                            Dictionary[parameterKey] = null;
+                            Encryption[parameterKey] = encryptionKey;
+                            value = null;
+                        }
+                        return true;
+                    } else {
+                        LogError("invalid expression for !GetParam [ parameterKey, encryptionKey ]", null);
+                    }
+                } else {
+                    LogError("invalid expression for !GetParam", null);
                 }
                 value = null;
                 return false;
