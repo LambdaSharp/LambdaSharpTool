@@ -8,29 +8,29 @@ fi
 if [ -z "$1" ]; then
 
     # run CLI unit tests
-    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.CloudFormation"
+    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp.CloudFormation"
     if [ $? -ne 0 ]; then
         exit $?
     fi
 
-    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Compiler"
+    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp.Compiler"
     if [ $? -ne 0 ]; then
         exit $?
     fi
 
-    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Tool"
+    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp.Tool"
     if [ $? -ne 0 ]; then
         exit $?
     fi
 
     # run SDK unit tests
-    dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp"
+    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp"
     if [ $? -ne 0 ]; then
         exit $?
     fi
 
     # run Module unit tests
-    dotnet test "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
+    dotnet test --configuration Release "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
     if [ $? -ne 0 ]; then
         exit $?
     fi
