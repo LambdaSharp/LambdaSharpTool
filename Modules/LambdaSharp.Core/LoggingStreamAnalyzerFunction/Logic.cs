@@ -346,7 +346,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                 // report near out-of-memory/timeout warning
                 report.Level = "WARNING";
-                report.Message = $"Lambda nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})";
+                report.Message = FormattableString.Invariant($"Lambda nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})");
                 report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda nearing execution limits");
             }
             if(report.Message != null) {
