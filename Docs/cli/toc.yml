@@ -40,6 +40,9 @@
     - name: Show/Check Deployment Tier Version
       href: Tool-Tier-Version.md
 
+    - name: List Deployment Tiers
+      href: Tool-Tier-List.md
+
 - name: Util
   items:
 

@@ -664,7 +664,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             }
 
-            // TODO: should we also check for function.Function.Properties["VpcConfig"]?
+            // TODO (2020-06-30, bjorg): should we also check for function.Function.Properties["VpcConfig"]?
 
             // permissions needed for lambda functions to exist in a VPC
             if(functions.Any(function => function.Function.VpcConfig != null)) {

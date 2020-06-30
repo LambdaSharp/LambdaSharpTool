@@ -165,6 +165,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Migrated _LambdaSharp.Twitter.Query_ function implementation to null-aware C#.
   * Added `DeletionPolicy: Retain` to the _LambdaSharp.Core_ S3 logging bucket.
 
+* Misc.
+  * Migrated all Lambda function implementations to sealed classes since they are never inherited from.
+
 #### Fixes
 
 * CLI
