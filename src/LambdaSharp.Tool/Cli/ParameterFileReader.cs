@@ -137,7 +137,10 @@ namespace LambdaSharp.Tool.Cli {
 
                     // deserialize single parameter
                     INodeDeserializer nested = new ScalarNodeDeserializer();
-                    if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string parameterKey)) {
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is string parameterKey)
+                    ) {
                         if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
 
                             // substitute expression with parameter value
@@ -154,11 +157,11 @@ namespace LambdaSharp.Tool.Cli {
 
                     // NOTE: !GetParam [ parameterKey, encryptionKey ]
 
-                    // deserialize single parameter
+                    // deserialize parameter list
                     INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
                     if(
-                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
-                        && (value is IList list)
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is IList list)
                         && (list.Count == 2)
                         && (list[0] is string parameterKey)
                         && (list[1] is string encryptionKey)
