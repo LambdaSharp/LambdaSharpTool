@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
 
@@ -23,15 +23,25 @@ jobs:
 
       - name: Test LambdaSharp.CloudFormation
         run: dotnet test --verbosity normal Tests/Tests.LambdaSharp.CloudFormation
+        env:
+          LAMBDASHARP: $HOME
 
       - name: Test LambdaSharp.Compiler
         run: dotnet test --verbosity normal Tests/Tests.LambdaSharp.Compiler
+        env:
+          LAMBDASHARP: $HOME
 
       - name: Test LambdaSharp.Tool
         run: dotnet test --verbosity normal Tests/Tests.LambdaSharp.Tool
+        env:
+          LAMBDASHARP: $HOME
 
       - name: Test LambdaSharp
         run: dotnet test --verbosity normal Tests/Tests.LambdaSharp
+        env:
+          LAMBDASHARP: $HOME
 
       - name: Test LambdaSharp.Core
         run: dotnet test --verbosity normal Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests
+        env:
+          LAMBDASHARP: $HOME
