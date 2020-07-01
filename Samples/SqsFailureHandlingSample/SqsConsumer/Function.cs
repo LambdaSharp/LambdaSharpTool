@@ -24,7 +24,7 @@ using LambdaSharp.SimpleQueueService;
 
 namespace SqsSample.Consumer {
 
-    public class Function : ALambdaQueueFunction<int> {
+    public sealed class Function : ALambdaQueueFunction<int> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

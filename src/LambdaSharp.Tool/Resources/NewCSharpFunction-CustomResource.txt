@@ -19,7 +19,7 @@ namespace %%ROOTNAMESPACE%% {
         // TO-DO: add response resource attributes
     }
 
-    public class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
+    public sealed class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {

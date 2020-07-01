@@ -22,7 +22,7 @@ using LambdaSharp;
 
 namespace KinesisSample.MyFunction {
 
-    public class Function : ALambdaFunction<KinesisEvent, string> {
+    public sealed class Function : ALambdaFunction<KinesisEvent, string> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

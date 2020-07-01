@@ -32,6 +32,7 @@ Allow: AllowDefinition
 DefaultAttribute: String
 Properties:
   ResourceProperties
+DeletionPolicy: String
 EncryptionContext:
   Key-Value Mapping
 ```
@@ -94,6 +95,16 @@ The <code>Default</code> attribute specifies a value to use when no value is pro
 <dd>
 
 The <code>DefaultAttribute</code> attribute specifies the resource attribute to use when exporting the resource from the module or to a Lambda function. By default, the LambdaSharp CLI automatically selects the <code>Arn</code> attribute when available. Otherwise, it uses the return value of a <code>!Ref</code> expressions. This behavior can be overwritten by specifying a <code>DefaultAttribute</code> attribute.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>DeletionPolicy</code></dt>
+<dd>
+
+The <code>DeletionPolicy</code> attribute specifies what to do with the resource when the stack is deleted. The value must be one of: <code>Retain</code> or <code>Snapshot</code>. The <code>DeletionPolicy</code> attribute can only be used on conjunction with the <code>Properties</code> section.
 
 <i>Required</i>: No
 
@@ -202,6 +213,8 @@ The <code>Pragmas</code> section specifies directives that change the default co
 
 <dt><code>Properties</code></dt>
 <dd>
+
+The <code>Properties</code> section indicates the parameter represents a resource that can be specified at stack creation/update time. When omitted, the parameter is treated as a new resource that is instantiated.
 
 The <code>Properties</code> section specifies additional options that can be specified for a managed resource. This section is copied verbatim into the CloudFormation template and can use <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference.html">CloudFormation intrinsic functions</a> (e.g. <code>!Ref</code>, <code>!Join</code>, <code>!Sub</code>, etc.) for referencing other resources.
 

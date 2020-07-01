@@ -139,5 +139,9 @@ namespace LambdaSharp.Tool.Model {
         public List<string> AllowedValues { get; set; }
         public string AllowedPattern { get; set; }
         public string ConstraintDescription { get; set; }
+        public int? MinValue { get; set; }
+        public int? MaxValue { get; set; }
+        public int? MinLength { get; set; }
+        public int? MaxLength { get; set; }
     }
 }

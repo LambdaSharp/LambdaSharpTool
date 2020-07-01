@@ -5,7 +5,7 @@ using LambdaSharp.Finalizer;
 
 namespace %%ROOTNAMESPACE%% {
 
-    public class Function : ALambdaFinalizerFunction {
+    public sealed class Function : ALambdaFinalizerFunction {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {

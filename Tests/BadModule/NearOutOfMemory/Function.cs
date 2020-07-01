@@ -25,7 +25,7 @@ namespace BadModule.NearOutOfMemory {
 
     public class FunctionResponse { }
 
-    public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

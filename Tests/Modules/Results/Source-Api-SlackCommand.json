@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9414CAAC20319FC6123E5235070A4A94"
+      "Default": "D8536904334E4C438033C854271B1F7F"
     }
   },
   "Resources": {
@@ -669,6 +669,7 @@
         "DeploymentId": {
           "Ref": "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1"
         },
+        "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
           {
             "DataTraceEnabled": true,
@@ -705,7 +706,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.2"
+      "Value": "0.8.0.4"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -946,7 +947,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "9414CAAC20319FC6123E5235070A4A94",
+      "TemplateChecksum": "D8536904334E4C438033C854271B1F7F",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

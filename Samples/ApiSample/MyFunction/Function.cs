@@ -24,7 +24,7 @@ using LambdaSharp.ApiGateway;
 
 namespace ApiSample.MyFunction {
 
-    public class Function : ALambdaApiGatewayFunction {
+    public sealed class Function : ALambdaApiGatewayFunction {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

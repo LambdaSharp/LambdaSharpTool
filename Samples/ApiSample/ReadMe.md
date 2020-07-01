@@ -29,7 +29,7 @@ Items:
 An API Gateway request can be handled using the `ALambdaApiGatewayFunction` base class.
 
 ```csharp
-public class Function : ALambdaApiGatewayFunction {
+public sealed class Function : ALambdaApiGatewayFunction {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

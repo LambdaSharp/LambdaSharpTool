@@ -35,7 +35,7 @@ Items:
 CloudWatch Event messages can parsed into a `CloudWatchEvent<T>` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.CloudWatchEvents` nuget package.
 
 ```csharp
-public class Function : ALambdaFunction<CloudWatchEvent<EventDetails>, FunctionResponse> {
+public sealed class Function : ALambdaFunction<CloudWatchEvent<EventDetails>, FunctionResponse> {
 
     //--- Methods ---
     public override async Task InitializeAsync(LambdaConfig config) { }

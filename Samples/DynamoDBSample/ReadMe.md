@@ -45,7 +45,7 @@ Items:
 DynamoDB stream events can be parsed into a `DynamoDBEvent` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.DynamoDBEvents` nuget package.
 
 ```csharp
-public class Function : ALambdaFunction<DynamoDBEvent, string> {
+public sealed class Function : ALambdaFunction<DynamoDBEvent, string> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

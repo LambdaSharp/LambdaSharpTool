@@ -36,7 +36,7 @@ namespace CustomResourceSample.ResourceHandler {
         // TO-DO: add returned custom resource attributes
     }
 
-    public class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
+    public sealed class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

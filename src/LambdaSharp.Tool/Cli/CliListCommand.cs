@@ -41,12 +41,12 @@ namespace LambdaSharp.Tool.Cli {
                     if(settings == null) {
                         return;
                     }
-                    await List(settings);
+                    await ListAsync(settings);
                 });
             });
         }
 
-        public async Task List(Settings settings) {
+        public async Task ListAsync(Settings settings) {
             if(!await PopulateDeploymentTierSettingsAsync(settings, requireBucketName: false, requireCoreServices: false, requireVersionCheck: false)) {
                 return;
             }
@@ -56,13 +56,21 @@ namespace LambdaSharp.Tool.Cli {
             var moduleDetails = await tierManager.GetModuleDetailsAsync();
 
             // sort and format output
-            tierManager.ShowModuleDetails(
-                moduleDetails.OrderBy(module => module.DeploymentDate),
-                (ColumnTitle: "NAME", GetColumnValue: module => module.ModuleDeploymentName),
-                (ColumnTitle: "MODULE", GetColumnValue: module => module.ModuleReference),
-                (ColumnTitle: "STATUS", GetColumnValue: module => module.StackStatus),
-                (ColumnTitle: "DATE", GetColumnValue: module => module.DeploymentDate.ToString("yyyy-MM-dd HH:mm:ss"))
-            );
+            if(moduleDetails.Any()) {
+                Console.WriteLine();
+                Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier {Settings.InfoColor}{tierManager.TierName}{Settings.ResetColor}");
+                Console.WriteLine();
+                tierManager.ShowModuleDetails(
+                    moduleDetails.OrderBy(module => module.DeploymentDate),
+                    (ColumnTitle: "NAME", GetColumnValue: module => module.ModuleDeploymentName),
+                    (ColumnTitle: "MODULE", GetColumnValue: module => module.ModuleReference),
+                    (ColumnTitle: "STATUS", GetColumnValue: module => module.StackStatus),
+                    (ColumnTitle: "DATE", GetColumnValue: module => module.DeploymentDate.ToString("yyyy-MM-dd HH:mm:ss"))
+                );
+            } else {
+                Console.WriteLine();
+                Console.WriteLine($"Found no modules for deployment tier {Settings.InfoColor}{tierManager.TierName}{Settings.ResetColor}");
+            }
         }
     }
 }

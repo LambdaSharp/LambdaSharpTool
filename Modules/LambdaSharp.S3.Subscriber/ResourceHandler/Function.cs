@@ -55,7 +55,7 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
         public string Result { get; set; }
     }
 
-    public class Function : ALambdaCustomResourceFunction<S3SubscriptionProperties, S3SubscriptionAttributes> {
+    public sealed class Function : ALambdaCustomResourceFunction<S3SubscriptionProperties, S3SubscriptionAttributes> {
 
         //--- Fields ---
         private IAmazonS3 _s3Client;

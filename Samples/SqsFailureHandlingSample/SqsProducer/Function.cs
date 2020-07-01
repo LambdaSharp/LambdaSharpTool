@@ -23,7 +23,7 @@ using LambdaSharp;
 
 namespace SqsSample.Producer {
 
-    public class Function : ALambdaFunction<int, string> {
+    public sealed class Function : ALambdaFunction<int, string> {
 
         //--- Fields ---
         private string _sqsQueueUrl;

@@ -261,6 +261,23 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Properties != null) {
                         Validate(node.Type != null, "'Type' attribute is required");
+                        if((node.DeletionPolicy != null)) {
+                            if(Enum.TryParse<Humidifier.DeletionPolicy>(node.DeletionPolicy, ignoreCase: true, out _)) {
+
+                                // TODO (2020-06-30, bjorg): 'Snapshot' is only valid for:
+                                //  * AWS::EC2::Volume
+                                //  * AWS::ElastiCache::CacheCluster
+                                //  * AWS::ElastiCache::ReplicationGroup
+                                //  * AWS::Neptune::DBCluster
+                                //  * AWS::RDS::DBCluster
+                                //  * AWS::RDS::DBInstance
+                                //  * AWS::Redshift::Cluster
+                            } else {
+                                LogError("invalid value for  'DeletionPolicy' attribute");
+                            }
+                        }
+                    } else {
+                        Validate(node.DeletionPolicy == null, "'DeletionPolicy' attribute cannot be used with instantiated resources");
                     }
                     Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                     Validate(parent == null, "'Parameter' cannot be nested");
@@ -286,7 +303,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         properties: ParseToDictionary("Properties", node.Properties),
                         arnAttribute: node.DefaultAttribute,
                         encryptionContext: node.EncryptionContext,
-                        pragmas: node.Pragmas
+                        pragmas: node.Pragmas,
+                        deletionPolicy: node.DeletionPolicy
                     );
                 });
                 break;
@@ -359,6 +377,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Validate((node.Allow == null) || (node.Type == null) || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                         Validate(node.If == null, "'If' attribute cannot be used with a referenced resource");
                         Validate(node.Properties == null, "'Properties' section cannot be used with a referenced resource");
+                        Validate(node.DeletionPolicy == null, "'DeletionPolicy' attribute cannot be used with a referenced resource");
                         if(node.Value is IList<object> values) {
                             foreach(var arn in values) {
                                 ValidateARN(arn);
@@ -383,6 +402,21 @@ namespace LambdaSharp.Tool.Cli.Build {
                         // validation
                         Validate(node.Type != null, "missing 'Type' attribute");
                         Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
+                        if((node.DeletionPolicy != null)) {
+                            if(Enum.TryParse<Humidifier.DeletionPolicy>(node.DeletionPolicy, ignoreCase: true, out _)) {
+
+                                // TODO (2020-06-30, bjorg): 'Snapshot' is only valid for:
+                                //  * AWS::EC2::Volume
+                                //  * AWS::ElastiCache::CacheCluster
+                                //  * AWS::ElastiCache::ReplicationGroup
+                                //  * AWS::Neptune::DBCluster
+                                //  * AWS::RDS::DBCluster
+                                //  * AWS::RDS::DBInstance
+                                //  * AWS::Redshift::Cluster
+                            } else {
+                                LogError("invalid value for  'DeletionPolicy' attribute");
+                            }
+                        }
 
                         // create resource item
                         _builder.AddResource(
@@ -396,7 +430,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             dependsOn: ConvertToStringList(node.DependsOn),
                             arnAttribute: node.DefaultAttribute,
                             condition: node.If,
-                            pragmas: node.Pragmas
+                            pragmas: node.Pragmas,
+                            deletionPolicy: node.DeletionPolicy
                         );
                     }
                 });

@@ -35,7 +35,7 @@ namespace LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("tier", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Update settings module in LambdaSharp tier";
+                cmd.Description = "Tier utility commands";
 
                 // function sub-command
                 cmd.Command("coreservices", subCmd => {
@@ -104,6 +104,44 @@ namespace LambdaSharp.Tool.Cli {
                                 Console.WriteLine($"Tier Version: {settings.TierVersion} [ExitCode: {exitCode}]");
                             }
                             return exitCode;
+                        }
+                    });
+                });
+
+                // check tier version
+                cmd.Command("list", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "List all available deployment tiers";
+
+                    // command options
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    AddStandardCommandOptions(subCmd);
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return;
+                        }
+
+                        // gather module details
+                        var tierManager = new TierManager(settings);
+                        var tierDetails = await tierManager.GetDeploymentTierDetailsAsync();
+                        if(tierDetails.Any()) {
+                            Console.WriteLine();
+                            Console.WriteLine($"Found {tierDetails.Count():N0} deployment tiers");
+                            Console.WriteLine();
+                            tierManager.ShowModuleDetails(
+                                tierDetails.OrderBy(module => module.DeploymentTierName),
+                                (ColumnTitle: "TIER", GetColumnValue: module => module.DeploymentTierName),
+                                (ColumnTitle: "VERSION", GetColumnValue: module => ModuleInfo.TryParse(module.ModuleReference, out var moduleInfo)
+                                    ? moduleInfo.Version.ToString()
+                                    : module.ModuleReference),
+                                (ColumnTitle: "STATUS", GetColumnValue: module => module.StackStatus),
+                                (ColumnTitle: "CORE-SERVICES", GetColumnValue: module => module.CoreServices?.ToUpperInvariant() ?? "N/A")
+                            );
+                        } else {
+                            Console.WriteLine();
+                            Console.WriteLine($"Found no deployment tiers");
                         }
                     });
                 });
@@ -217,13 +255,21 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         private void ShowModuleDetails(TierManager tierManager, IEnumerable<TierModuleDetails> moduleDetails) {
-            tierManager.ShowModuleDetails(
-                moduleDetails.OrderBy(module => module.ModuleDeploymentName),
-                (ColumnTitle: "NAME", GetColumnValue: module => module.ModuleDeploymentName),
-                (ColumnTitle: "MODULE", GetColumnValue: module => module.ModuleReference),
-                (ColumnTitle: "STATUS", GetColumnValue: module => module.StackStatus),
-                (ColumnTitle: "CORE-SERVICES", GetColumnValue: module => module.CoreServices?.ToUpperInvariant() ?? "N/A")
-            );
+            if(moduleDetails.Any()) {
+                Console.WriteLine();
+                Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier {Settings.InfoColor}{tierManager.TierName}{Settings.ResetColor}");
+                Console.WriteLine();
+                tierManager.ShowModuleDetails(
+                    moduleDetails.OrderBy(module => module.ModuleDeploymentName),
+                    (ColumnTitle: "NAME", GetColumnValue: module => module.ModuleDeploymentName),
+                    (ColumnTitle: "MODULE", GetColumnValue: module => module.ModuleReference),
+                    (ColumnTitle: "STATUS", GetColumnValue: module => module.StackStatus),
+                    (ColumnTitle: "CORE-SERVICES", GetColumnValue: module => module.CoreServices?.ToUpperInvariant() ?? "N/A")
+                );
+            } else {
+                Console.WriteLine();
+                Console.WriteLine($"Found no modules for deployment tier {Settings.InfoColor}{tierManager.TierName}{Settings.ResetColor}");
+            }
         }
 
         private async Task UpdateStackParameters(Settings settings, TierModuleDetails module, Dictionary<string, string> parameters) {

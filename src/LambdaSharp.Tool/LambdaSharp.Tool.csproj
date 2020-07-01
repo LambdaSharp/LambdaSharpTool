@@ -26,7 +26,6 @@
     <ToolCommandName>lash</ToolCommandName>
     <PackAsTool>True</PackAsTool>
     <OutputType>Exe</OutputType>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />

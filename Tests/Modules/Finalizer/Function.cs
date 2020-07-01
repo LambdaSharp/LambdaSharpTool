@@ -22,7 +22,7 @@ using LambdaSharp.Finalizer;
 
 namespace LambdaSharpTestModule.Finalizer {
 
-    public class Function : ALambdaFinalizerFunction {
+    public sealed class Function : ALambdaFinalizerFunction {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

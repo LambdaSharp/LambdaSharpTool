@@ -1,11 +1,11 @@
 ---
-title: LambdaSharp CLI - List Command
-description: List deployed LambdaSharp modules in a deployment tier
-keywords: cli, list, module, deployment, tier
+title: LambdaSharp CLI Util Command - Show Processed YAML Parameters File
+description: Process a YAML parameters file and show all computed key-value pairs
+keywords: cli, lambda, cloudformation, config
 ---
-# List Deployed Modules
+# Show processed YAML parameters file
 
-The `list` command lists all deployed modules on a deployment tier.
+The `util show-parameters` command is used to process a YAML parameters file and show the produced outcome. This command is useful in testing the correctness of the parameters file.
 
 ## Options
 
@@ -51,22 +51,20 @@ The `list` command lists all deployed modules on a deployment tier.
 
 ## Examples
 
-### List all deployed modules
+### Process a YAML parameters file and show the outcome
 
 __Using PowerShell/Bash:__
 ```bash
-lash list --tier Sandbox
+lash util show-lambdas myVpcParameters.yml
 ```
 
 Output:
 ```
-LambdaSharp CLI (v0.6) - List deployed LambdaSharp modules
+LambdaSharp CLI (v0.8.0.4) - Show Processed YAML Parameters File
 
-Found 2 modules for deployment tier 'Default'
+VpcId: vpc-12345678
+VpcLambdaSubnets: subnet-12345678,subnet-23456789
+VpcSecurityGroup: sg-12345678
 
-NAME                 MODULE                   STATUS             DATE
-LambdaSharp-Core     LambdaSharp.Core:0.6     UPDATE_COMPLETE    2019-04-05 10:36:49
-LambdaSharp-S3-IO    LambdaSharp.S3.IO:0.6    UPDATE_COMPLETE    2019-04-05 10:37:19
-
-Done (finished: 4/5/2019 3:36:10 PM; duration: 00:00:01.4137682)
+Done (finished: 6/29/2020 9:59:27 PM; duration: 00:00:01.0395664)
 ```

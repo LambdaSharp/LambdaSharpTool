@@ -73,13 +73,8 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddForceBuildOption(CommandLineApplication cmd)
             => cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
 
-        public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
-            if(!File.Exists(filename)) {
-                LogError("cannot find parameters file");
-                return null;
-            }
-            return new ParameterFileReader(settings, filename).ReadInputParametersFiles();
-        }
+        public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename)
+            => new ParameterFileReader(settings, filename).ReadInputParametersFiles();
 
         //--- Methods ---
         public void Register(CommandLineApplication app) {

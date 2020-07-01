@@ -70,7 +70,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         public string? Record { get; set; }
     }
 
-    public class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse>, ILogicDependencyProvider {
+    public sealed class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse>, ILogicDependencyProvider {
 
         //--- Constants ---
         private const string LOG_GROUP_PREFIX = "/aws/lambda/";

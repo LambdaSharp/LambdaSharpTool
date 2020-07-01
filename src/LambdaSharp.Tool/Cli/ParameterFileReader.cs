@@ -54,123 +54,244 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             //--- Properties ---
+            public bool FindDependencies { get; set; }
             private LogErrorDelegate LogError { get; }
 
             //--- Methods ---
             public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
                 if(reader.Current is NodeEvent node) {
                     switch(node.Tag) {
-                    case "!GetConfig": {
-                            if(node is SequenceStart sequenceStart) {
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
-                                if(
-                                    nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
-                                    && (value is IList list)
-                                    && (list.Count == 2)
-                                    && (list[0] is string sourceFile)
-                                    && (list[1] is string key)
-                                ) {
-                                    if(!_configFiles.TryGetValue(sourceFile, out var configFile)) {
-                                        try {
-                                            configFile = JObject.Parse(File.ReadAllText(Path.Combine(_workingDirectory, sourceFile)));
-                                            _configFiles[sourceFile] = configFile;
-                                        } catch(FileNotFoundException) {
-                                            LogError($"unable to load json config file '{configFile}'", null);
-                                            value = null;
-                                            return true;
-                                        }
-                                    }
-                                    try {
-                                        value = configFile.SelectToken(key)?.Value<string>();
-                                    } catch(Exception e) {
-                                        LogError($"!GetConfig has invalid JSON-path expression: '{key}'", e);
-                                        value = null;
-                                        return true;
-                                    }
-                                    if(value == null) {
-                                        LogError($"!GetConfig unable to find '{key}' in file '{sourceFile}'", null);
-                                        return true;
-                                    }
-                                    return true;
-                                } else {
-                                    LogError("invalid expression for !GetConfig", null);
-                                }
-                            }
-                        }
-                        break;
-                    case "!GetEnv": {
-                            if(node is Scalar scalar) {
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new ScalarNodeDeserializer();
-                                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string key)) {
-                                    value = Environment.GetEnvironmentVariable(key);
-                                    return true;
-                                }
-                            } else {
-                                LogError("invalid expression for !GetEnv", null);
-                            }
-                        }
-                        break;
-                    case "!GetParam": {
-                            if(node is Scalar scalar) {
-
-                                // NOTE: !GetParam parameterKey
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new ScalarNodeDeserializer();
-                                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string parameterKey)) {
-                                    if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
-
-                                        // substitute expression with parameter value
-                                        value = parameterValue;
-                                    } else {
-
-                                        // record missing parameter key
-                                        Dictionary[parameterKey] = null;
-                                        value = null;
-                                    }
-                                    return true;
-                                }
-                            } else if(node is SequenceStart sequenceStart) {
-
-                                // NOTE: !GetParam [ parameterKey, encryptionKey ]
-
-                                // deserialize single parameter
-                                INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
-                                if(
-                                    nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
-                                    && (value is IList list)
-                                    && (list.Count == 2)
-                                    && (list[0] is string parameterKey)
-                                    && (list[1] is string encryptionKey)
-                                ) {
-                                    if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
-
-                                        // substitute expression with parameter value
-                                        value = parameterValue;
-                                    } else {
-
-                                        // record missing parameter key
-                                        Dictionary[parameterKey] = null;
-                                        Encryption[parameterKey] = encryptionKey;
-                                        value = null;
-                                    }
-                                    return true;
-                                } else {
-                                    LogError("invalid expression for !GetParam [ parameterKey, encryptionKey ]", null);
-                                }
-                            } else {
-                                LogError("invalid expression for !GetParam", null);
-                            }
-                        }
-                        break;
+                    case "!GetConfig":
+                        return GetConfig(node, reader, expectedType, nestedObjectDeserializer, out value);
+                    case "!GetEnv":
+                        return GetEnv(node, reader, expectedType, nestedObjectDeserializer, out value);
+                    case "!GetParam":
+                        return GetParam(node, reader, expectedType, nestedObjectDeserializer, out value);
+                    case "!Sub":
+                        return Sub(node, reader, expectedType, nestedObjectDeserializer, out value);
                     }
                 }
                 value = null;
                 return false;
+            }
+
+            private bool GetConfig(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is SequenceStart sequenceStart) {
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
+                        && (value is IList list)
+                        && (list.Count == 2)
+                        && (list[0] is string sourceFile)
+                        && (list[1] is string key)
+                    ) {
+                        if(!_configFiles.TryGetValue(sourceFile, out var configFile)) {
+                            try {
+                                configFile = JObject.Parse(File.ReadAllText(Path.Combine(_workingDirectory, sourceFile)));
+                                _configFiles[sourceFile] = configFile;
+                            } catch(FileNotFoundException) {
+                                LogError($"unable to load json config file '{configFile}'", null);
+                                value = null;
+                                return true;
+                            }
+                        }
+                        try {
+                            value = configFile.SelectToken(key)?.Value<string>();
+                        } catch(Exception e) {
+                            LogError($"!GetConfig has invalid JSON-path expression: '{key}'", e);
+                            value = null;
+                            return true;
+                        }
+                        if(value == null) {
+                            LogError($"!GetConfig unable to find '{key}' in file '{sourceFile}'", null);
+                            return true;
+                        }
+                        return true;
+                    } else {
+                        LogError("invalid expression for !GetConfig", null);
+                    }
+                }
+                value = null;
+                return false;
+            }
+
+            private bool GetEnv(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is Scalar scalar) {
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new ScalarNodeDeserializer();
+                    if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string key)) {
+                        value = Environment.GetEnvironmentVariable(key);
+                        return true;
+                    }
+                } else {
+                    LogError("invalid expression for !GetEnv", null);
+                }
+                value = null;
+                return false;
+            }
+
+            private bool GetParam(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is Scalar scalar) {
+
+                    // NOTE: !GetParam parameterKey
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new ScalarNodeDeserializer();
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is string parameterKey)
+                    ) {
+                        if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+
+                            // substitute expression with parameter value
+                            value = parameterValue;
+                        } else {
+
+                            // record missing parameter key
+                            Dictionary[parameterKey] = null;
+                            value = null;
+                        }
+                        return true;
+                    }
+                } else if(node is SequenceStart sequenceStart) {
+
+                    // NOTE: !GetParam [ parameterKey, encryptionKey ]
+
+                    // deserialize parameter list
+                    INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is IList list)
+                    ) {
+                        if(list.Count == 1) {
+                            if(list[0] is string parameterKey) {
+                                if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+
+                                    // substitute expression with parameter value
+                                    value = parameterValue;
+                                } else {
+
+                                    // record missing parameter key
+                                    Dictionary[parameterKey] = null;
+                                    value = null;
+                                }
+                                return true;
+                            } else {
+                                LogError("invalid expression for !GetParam [ parameterKey ]", null);
+                            }
+                        } else if(list.Count == 2) {
+                            if(
+                                (list[0] is string parameterKey)
+                                && (list[1] is string encryptionKey)
+                            ) {
+                                if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+
+                                    // substitute expression with parameter value
+                                    value = parameterValue;
+                                } else {
+
+                                    // record missing parameter key
+                                    Dictionary[parameterKey] = null;
+                                    Encryption[parameterKey] = encryptionKey;
+                                    value = null;
+                                }
+                                return true;
+                            } else {
+                                LogError("invalid expression for !GetParam [ parameterKey, encryptionKey ]", null);
+                            }
+                        }
+                    } else {
+                        LogError("!GetParam must be followed by either a list or a string", null);
+                    }
+                } else {
+                    LogError("invalid expression for !GetParam", null);
+                }
+                value = null;
+                return false;
+            }
+
+            private bool Sub(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is Scalar scalar) {
+
+                    // NOTE: !Sub formatString
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new ScalarNodeDeserializer();
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is string formatString)
+                    ) {
+                        return ApplySubExpression(formatString, new Dictionary<string, string>(), out value);
+                    }
+                } else if(node is SequenceStart sequenceStart) {
+
+                    // NOTE: !Sub [ formatString, arguments ]
+
+                    // deserialize parameter list
+                    INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                    if(
+                        nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out var tagValue)
+                        && (tagValue is IList list)
+                        && (list.Count == 2)
+                        && (list[0] is string formatString)
+                        && (list[1] is IDictionary arguments)
+                    ) {
+                        return ApplySubExpression(formatString, arguments, out value);
+                    } else {
+                        LogError("invalid expression for !Sub [ formatString, arguments ]", null);
+                    }
+                } else {
+                    LogError("invalid expression for !Sub", null);
+                }
+                value = null;
+                return false;
+            }
+
+            // local functions
+            bool ApplySubExpression(string formatString, IDictionary arguments, out object result) {
+                result = ModelFunctions.ReplaceSubPattern(formatString, (key, suffix) => {
+                    if(suffix != null) {
+                        if(!FindDependencies) {
+                            LogError($"suffixed !Sub arguments are not supported '{key}{suffix}'", null);
+                        }
+                        return "<INVALID>";
+                    }
+
+                    // check if key is a local argument
+                    var value = arguments[key];
+                    if(value is string text) {
+
+                        // return value of argument
+                        return text;
+                    } else if(!arguments.Contains(key)) {
+
+                        // argument was not supplied, read key from environment variables instead
+                        var environmentValue = Environment.GetEnvironmentVariable(key);
+                        if(environmentValue != null) {
+                            return environmentValue;
+                        }
+                        if(!FindDependencies) {
+                            LogError($"missing !Sub argument '{key}'", null);
+                        }
+                        return "<MISSING>";
+                    } else if(value == null) {
+                        if(!FindDependencies) {
+                            LogError($"missing !Sub argument '{key}'", null);
+                        }
+                        return "<MISSING>";
+                    } else {
+
+                        // keep the expression as is during find-dependencies phase
+                        if(!FindDependencies) {
+                            LogError($"!Sub argument '{key}' must be a string", null);
+                        }
+                        return "<INVALID>";
+                    }
+                });
+                return true;
             }
         }
 
@@ -206,7 +327,7 @@ namespace LambdaSharp.Tool.Cli {
             // initialize YAML parser
             var sourceRelativePath = new FileInfo(SourceFilename).Directory.FullName;
             var parameterStoreDeserializer = new ParameterStoreFunctionNodeDeserializer(sourceRelativePath, LogError);
-            var inputs = ParseYamlFile(source);
+            var inputs = ParseYamlFile(source, findDependencies: true);
 
             // check if any parameter store references were found
             if(parameterStoreDeserializer.Dictionary.Any()) {
@@ -226,6 +347,11 @@ namespace LambdaSharp.Tool.Cli {
 
                         // check if retrieved parameter needs to be encrypted
                         if(parameterStoreDeserializer.Encryption.TryGetValue(parameter.Name, out var encryptionKey) && (encryptionKey != null)) {
+
+                            // automatically prefix with "alias/" if the key is not an arn and doesn't have the "alias/" prefix
+                            if(!encryptionKey.StartsWith("arn:") && !encryptionKey.StartsWith("alias/", StringComparison.Ordinal)) {
+                                encryptionKey = "alias/" + encryptionKey;
+                            }
 
                             // re-encrypt value using the tier's default secret key
                             var encryptedResult = Settings.KmsClient.EncryptAsync(new EncryptRequest {
@@ -250,7 +376,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // reparse document after parameter references were resolved
-                inputs = ParseYamlFile(source);
+                inputs = ParseYamlFile(source, findDependencies: false);
             }
 
             // resolve 'alias/' key names to key ARNs
@@ -308,15 +434,18 @@ namespace LambdaSharp.Tool.Cli {
             return result;
 
             // local functions
-            Dictionary<string, object> ParseYamlFile(string text)
-                => new DeserializerBuilder()
+            Dictionary<string, object> ParseYamlFile(string text, bool findDependencies) {
+                parameterStoreDeserializer.FindDependencies = findDependencies;
+                return new DeserializerBuilder()
                     .WithNamingConvention(new PascalCaseNamingConvention())
                     .WithNodeDeserializer(parameterStoreDeserializer)
                     .WithTagMapping("!GetConfig", typeof(CloudFormationListFunction))
                     .WithTagMapping("!GetEnv", typeof(CloudFormationListFunction))
                     .WithTagMapping("!GetParam", typeof(CloudFormationListFunction))
+                    .WithTagMapping("!Sub", typeof(CloudFormationListFunction))
                     .Build()
                     .Deserialize<Dictionary<string, object>>(text);
+            }
         }
     }
 }

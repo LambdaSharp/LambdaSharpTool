@@ -42,7 +42,7 @@ Items:
 SQS events are parsed into individual, deserialized messages by the `ALambdaQueueFunction<T>` base class.
 
 ```csharp
-public class Function : ALambdaQueueFunction<MyMessage> {
+public sealed class Function : ALambdaQueueFunction<MyMessage> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

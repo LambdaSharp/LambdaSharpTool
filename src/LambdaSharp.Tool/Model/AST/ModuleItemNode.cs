@@ -33,6 +33,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "ConstraintDescription",
                 "Default",
                 "DefaultAttribute",
+                "DeletionPolicy",
                 "Description",
                 "EncryptionContext",
                 "Label",
@@ -95,6 +96,7 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Resource"] = new[] {
                 "Allow",
                 "DefaultAttribute",
+                "DeletionPolicy",
                 "DependsOn",
                 "Description",
                 "If",
@@ -150,6 +152,7 @@ namespace LambdaSharp.Tool.Model.AST {
          * Properties: map
          * EncryptionContext: map
          * Pragmas: list<any>
+         * DeletionPolicy: string
          */
         public string Parameter { get; set; }
         public string Section { get; set; }
@@ -170,6 +173,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public object Properties { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<object> Pragmas { get; set; }
+        public string DeletionPolicy { get; set; }
 
         /*
          * Import: string
@@ -221,6 +225,7 @@ namespace LambdaSharp.Tool.Model.AST {
          * Properties: map
          * DefaultAttribute: string
          * Pragmas: list<any>
+         * DeletionPolicy: string
          */
         public string Resource { get; set; }
         public object If { get; set; }

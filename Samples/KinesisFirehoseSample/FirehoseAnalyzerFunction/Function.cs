@@ -27,7 +27,7 @@ using LambdaSharp;
 
 namespace Sample.KinesisFirehose.FirehoseAnalyzerFunction {
 
-    public class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse> {
+    public sealed class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse> {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }
