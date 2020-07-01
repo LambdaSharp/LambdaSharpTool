@@ -147,6 +147,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Fixed an output alignment issue with retained resources that show the `DELETE_SKIPPED` state.
+  * Fixed an issue where the timing of resource creation/update operations was miscalculated.
 
 * SDK
   * Fixed an issue where the `DEBUG_LOGGING_ENABLED` value was case-sensitive, instead of case-insensitive.
