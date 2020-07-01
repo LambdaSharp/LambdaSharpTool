@@ -173,6 +173,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * CLI
   * Fixed an issue when processing parameter files where the encryption key in `!GetParam` required the `"alias/"` prefix.
 
+* Modules
+  * Increased memory limit for _LambdaSharp.S3.Subscriber_ resource handler to 256MB.
+
 ### (v0.8.0.3) - 2020-06-19
 
 #### Features
