@@ -251,9 +251,9 @@ namespace LambdaSharp.Tool.Internal {
                                 var time = evt.Timestamp - firstTimestamp;
                                 var totalMinutes = (int)time.TotalMinutes;
                                 if(totalMinutes > 0) {
-                                    Console.Write($" {Settings.InfoColor}({totalMinutes}m {time.TotalSeconds - totalMinutes:0.##}s){Settings.ResetColor}");
+                                    Console.Write($" {Settings.InfoColor}({totalMinutes}m {time.TotalSeconds - (60 * totalMinutes):0.##}s){Settings.ResetColor}");
                                 } else {
-                                    Console.Write($" {Settings.InfoColor}({time.TotalSeconds - totalMinutes:0.##}s){Settings.ResetColor}");
+                                    Console.Write($" {Settings.InfoColor}({time.TotalSeconds - (60 * totalMinutes):0.##}s){Settings.ResetColor}");
                                 }
                             }
                         } else {
