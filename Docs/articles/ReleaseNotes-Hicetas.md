@@ -143,11 +143,17 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.0.5) - 2020-07-02
 
+#### Features
+
+* CLI
+  * Enhanced validation in `new` command for function and resource names.
+
 #### Fixes
 
 * CLI
   * Fixed an output alignment issue with retained resources that show the `DELETE_SKIPPED` state.
   * Fixed an issue where the timing of resource creation/update operations was miscalculated.
+  * Fixed an issue where invalid resource names were not properly reported.
 
 * SDK
   * Fixed an issue where the `DEBUG_LOGGING_ENABLED` value was case-sensitive, instead of case-insensitive.
@@ -160,7 +166,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Enhanced `info` command to show the name of the logging S3 bucket for the deployment tier.
   * Enhanced CloudFormation parameter prompts by showing min/max value and min/max length constraints.
   * Enhanced CloudFormation resource creation/update tracking to show how long the operation took.
-  * Enhanced `lash nuke` to delete retained S3 buckets from _LambdaSharp.Core_.
+  * Enhanced `nuke` command to delete retained S3 buckets from _LambdaSharp.Core_.
   * Added `util show-kinesis-failed-logs` command to list CloudWatch log entries that failed to be processed by _LambdaSharp.Core_.
   * Added check for `!If [ condition, ifTrue, ifFalse ]` on publicly scoped variables to make CloudFormation output conditional on `condition`.
   * Added `tier list` command to list all available deployment tiers.
