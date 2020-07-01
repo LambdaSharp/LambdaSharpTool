@@ -99,6 +99,6 @@ Items:
   - Function: QueryFunction
     Description: This function runs on a scheduled interval to find the latest matching tweets
     Memory: 256
-    Timeout: 30
+    Timeout: 60
     Sources:
       - Schedule: !Sub "rate(${TwitterQueryInterval} minutes)"

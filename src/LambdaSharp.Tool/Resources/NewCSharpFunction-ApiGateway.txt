@@ -19,7 +19,7 @@ namespace %%ROOTNAMESPACE%% {
         // TO-DO: add endpoint response properties
     }
 
-    public class Function : ALambdaApiGatewayFunction {
+    public sealed class Function : ALambdaApiGatewayFunction {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {

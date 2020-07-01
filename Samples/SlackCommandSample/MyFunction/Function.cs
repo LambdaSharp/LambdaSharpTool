@@ -23,7 +23,7 @@ using LambdaSharp.Slack;
 
 namespace SlackCommandSample.MyFunction {
 
-    public class Function : ALambdaSlackCommandFunction {
+    public sealed class Function : ALambdaSlackCommandFunction {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

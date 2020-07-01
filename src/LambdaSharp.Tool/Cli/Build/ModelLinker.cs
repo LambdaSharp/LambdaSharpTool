@@ -377,7 +377,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return true;
                 }
 
-                // TODO (2019-01-06): must know what types of references are legal (Parameters only -or- Resources and Paramaters)
+                // TODO (2019-01-06, bjorg): must know what types of references are legal (Parameters only -or- Resources and Paramaters)
 
                 // check if the requested key can be resolved using a free item
                 if(_freeItems.TryGetValue(key, out var freeItem)) {

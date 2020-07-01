@@ -60,7 +60,7 @@ The producer generates numbers from 0 to N, where N is a number that you pass to
 #### Producer code
 
 ```csharp
-public class Function : ALambdaFunction<int, string> {
+public sealed class Function : ALambdaFunction<int, string> {
 
     //--- Fields ---
     private string _sqsQueueUrl;
@@ -89,7 +89,7 @@ The consumer extends from the LambdaSharp `ALambdaSqsFunction` class
 #### Consumer Code
 
 ```csharp
-public class Function : ALambdaQueueFunction<int> {
+public sealed class Function : ALambdaQueueFunction<int> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

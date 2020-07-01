@@ -21,6 +21,7 @@ Pragmas:
   - PragmaDefinition
 Properties:
   ResourceProperties
+DeletionPolicy: String
 Value: Expression
 DependsOn:
   - String
@@ -46,6 +47,16 @@ The <code>Allow</code> attribute can be either a comma-separated, single string 
 The <code>DefaultAttribute</code> attribute specifies the resource attribute to use when exporting the resource from the module or to a Lambda function. By default, the LambdaSharp CLI automatically selects the <code>Arn</code> attribute when available. Otherwise, it uses the return value of a <code>!Ref</code> expressions. This behavior can be overwritten by specifying a <code>DefaultAttribute</code> attribute.
 
 <i>Required</i>: No. Not valid when the resource is explicitly referenced by the <code>Value</code> attribute.
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>DeletionPolicy</code></dt>
+<dd>
+
+The <code>DeletionPolicy</code> attribute specifies what to do with the resource when the stack is deleted. The value must be one of: <code>Retain</code> or <code>Snapshot</code>.
+
+<i>Required</i>: No
 
 <i>Type</i>: String
 </dd>

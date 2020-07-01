@@ -22,7 +22,7 @@ using LambdaSharp.Schedule;
 
 namespace ScheduleSample.MyFunction {
 
-    public class Function : ALambdaScheduleFunction {
+    public sealed class Function : ALambdaScheduleFunction {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

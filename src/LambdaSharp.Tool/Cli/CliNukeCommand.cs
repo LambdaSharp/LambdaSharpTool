@@ -140,6 +140,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // iteratively delete the stacks
+            var bucketsToDelete = new List<string>();
             for(var i = 0; moduleDetails.Any() && (i < MAX_ITERATIONS); ++i) {
                 foreach(var module in new List<TierModuleDetails>(moduleDetails)) {
                     var stackName = module.StackName;
@@ -166,12 +167,14 @@ namespace LambdaSharp.Tool.Cli {
                             var deploymentBucketName = resources.FirstOrDefault(resource => resource.LogicalResourceId == "DeploymentBucketResource")?.PhysicalResourceId;
                             if(deploymentBucketName != null) {
                                 await DeleteBucketContentsAsync(settings, "deployment bucket", deploymentBucketName);
+                                bucketsToDelete.Add(deploymentBucketName);
                             }
 
                             // check if this stack created its own logging bucket
                             var loggingBucketName = resources.FirstOrDefault(resource => resource.LogicalResourceId == "LoggingBucketResource")?.PhysicalResourceId;
                             if(loggingBucketName != null) {
                                 await DeleteBucketContentsAsync(settings, "logging bucket", loggingBucketName);
+                                bucketsToDelete.Add(loggingBucketName);
                             }
                         }
 
@@ -211,6 +214,18 @@ namespace LambdaSharp.Tool.Cli {
 
                     // remove this stack from the list of stacks to delete
                     moduleDetails.RemoveAll(moduleDetail => moduleDetail.StackName == stackName);
+                }
+            }
+
+            // delete any left over buckets, such as the logging bucket which has 'Retain' as deletion policy
+            foreach(var bucketName in bucketsToDelete) {
+                if(await settings.S3Client.DoesS3BucketExistAsync(bucketName)) {
+                    try {
+                        Console.WriteLine($"=> Deleting S3 Bucket {Settings.InfoColor}{bucketName}{Settings.ResetColor}");
+                        await settings.S3Client.DeleteBucketAsync(bucketName);
+                    } catch {
+                        LogWarn($"unable to delete S3 bucket: {bucketName}");
+                    }
                 }
             }
         }

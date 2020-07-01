@@ -42,7 +42,7 @@ API Gateway requests with method invocations are handled by the `ALambdaApiGatew
 ### ConnectionFunction
 
 ```csharp
-public class Function : ALambdaApiGatewayFunction {
+public sealed class Function : ALambdaApiGatewayFunction {
 
     //--- Methods ---
     public override async Task InitializeAsync(LambdaConfig config) { ... }
@@ -56,7 +56,7 @@ public class Function : ALambdaApiGatewayFunction {
 ### MessageFunction
 
 ```csharp
-public class Function : ALambdaApiGatewayFunction {
+public sealed class Function : ALambdaApiGatewayFunction {
 
     //--- Methods ---
     public override async Task InitializeAsync(LambdaConfig config) { ... }

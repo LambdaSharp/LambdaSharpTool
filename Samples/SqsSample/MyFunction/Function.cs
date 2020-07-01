@@ -28,7 +28,7 @@ namespace SqsSample.MyFunction {
         public string Text { get; set; }
     }
 
-    public class Function : ALambdaQueueFunction<MyMessage> {
+    public sealed class Function : ALambdaQueueFunction<MyMessage> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

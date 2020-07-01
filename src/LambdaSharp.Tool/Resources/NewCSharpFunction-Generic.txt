@@ -18,7 +18,7 @@ namespace %%ROOTNAMESPACE%% {
         // TO-DO: add response fields
     }
 
-    public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {

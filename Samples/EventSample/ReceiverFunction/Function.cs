@@ -40,7 +40,7 @@ namespace Sample.Event.ReceiverFunction {
 
     public class FunctionResponse { }
 
-    public class Function : ALambdaFunction<CloudWatchEvent, FunctionResponse> {
+    public sealed class Function : ALambdaFunction<CloudWatchEvent, FunctionResponse> {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }

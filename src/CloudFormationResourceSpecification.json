@@ -1392,6 +1392,10 @@
         "RetryPolicy": {
           "Required": false,
           "Type": "GrpcRetryPolicy"
+        },
+        "Timeout": {
+          "Required": false,
+          "Type": "GrpcTimeout"
         }
       }
     },
@@ -1461,6 +1465,18 @@
         }
       }
     },
+    "AWS::AppMesh::Route.GrpcTimeout": {
+      "Properties": {
+        "Idle": {
+          "Required": false,
+          "Type": "Duration"
+        },
+        "PerRequest": {
+          "Required": false,
+          "Type": "Duration"
+        }
+      }
+    },
     "AWS::AppMesh::Route.HeaderMatchMethod": {
       "Properties": {
         "Exact": {
@@ -1520,6 +1536,10 @@
         "RetryPolicy": {
           "Required": false,
           "Type": "HttpRetryPolicy"
+        },
+        "Timeout": {
+          "Required": false,
+          "Type": "HttpTimeout"
         }
       }
     },
@@ -1569,6 +1589,18 @@
         }
       }
     },
+    "AWS::AppMesh::Route.HttpTimeout": {
+      "Properties": {
+        "Idle": {
+          "Required": false,
+          "Type": "Duration"
+        },
+        "PerRequest": {
+          "Required": false,
+          "Type": "Duration"
+        }
+      }
+    },
     "AWS::AppMesh::Route.MatchRange": {
       "Properties": {
         "End": {
@@ -1610,6 +1642,10 @@
         "Action": {
           "Required": true,
           "Type": "TcpRouteAction"
+        },
+        "Timeout": {
+          "Required": false,
+          "Type": "TcpTimeout"
         }
       }
     },
@@ -1619,6 +1655,14 @@
           "ItemType": "WeightedTarget",
           "Required": true,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::AppMesh::Route.TcpTimeout": {
+      "Properties": {
+        "Idle": {
+          "Required": false,
+          "Type": "Duration"
         }
       }
     },
@@ -1720,11 +1764,35 @@
         }
       }
     },
+    "AWS::AppMesh::VirtualNode.Duration": {
+      "Properties": {
+        "Unit": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Value": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        }
+      }
+    },
     "AWS::AppMesh::VirtualNode.FileAccessLog": {
       "Properties": {
         "Path": {
           "PrimitiveType": "String",
           "Required": true
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.GrpcTimeout": {
+      "Properties": {
+        "Idle": {
+          "Required": false,
+          "Type": "Duration"
+        },
+        "PerRequest": {
+          "Required": false,
+          "Type": "Duration"
         }
       }
     },
@@ -1760,6 +1828,18 @@
         }
       }
     },
+    "AWS::AppMesh::VirtualNode.HttpTimeout": {
+      "Properties": {
+        "Idle": {
+          "Required": false,
+          "Type": "Duration"
+        },
+        "PerRequest": {
+          "Required": false,
+          "Type": "Duration"
+        }
+      }
+    },
     "AWS::AppMesh::VirtualNode.Listener": {
       "Properties": {
         "HealthCheck": {
@@ -1770,9 +1850,33 @@
           "Required": true,
           "Type": "PortMapping"
         },
+        "Timeout": {
+          "Required": false,
+          "Type": "ListenerTimeout"
+        },
         "TLS": {
           "Required": false,
           "Type": "ListenerTls"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.ListenerTimeout": {
+      "Properties": {
+        "GRPC": {
+          "Required": false,
+          "Type": "GrpcTimeout"
+        },
+        "HTTP": {
+          "Required": false,
+          "Type": "HttpTimeout"
+        },
+        "HTTP2": {
+          "Required": false,
+          "Type": "HttpTimeout"
+        },
+        "TCP": {
+          "Required": false,
+          "Type": "TcpTimeout"
         }
       }
     },
@@ -1849,6 +1953,14 @@
         "DNS": {
           "Required": false,
           "Type": "DnsServiceDiscovery"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.TcpTimeout": {
+      "Properties": {
+        "Idle": {
+          "Required": false,
+          "Type": "Duration"
         }
       }
     },
@@ -8304,6 +8416,58 @@
         },
         "RegistryId": {
           "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ECS::CapacityProvider.AutoScalingGroupProvider": {
+      "Properties": {
+        "AutoScalingGroupArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ManagedScaling": {
+          "Required": false,
+          "Type": "ManagedScaling"
+        },
+        "ManagedTerminationProtection": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ECS::CapacityProvider.ManagedScaling": {
+      "Properties": {
+        "MaximumScalingStepSize": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "MinimumScalingStepSize": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Status": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "TargetCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ECS::Cluster.CapacityProviderStrategyItem": {
+      "Properties": {
+        "Base": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "CapacityProvider": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Weight": {
+          "PrimitiveType": "Integer",
           "Required": false
         }
       }
@@ -22732,7 +22896,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "15.2.0",
+  "ResourceSpecificationVersion": "16.0.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -24383,6 +24547,35 @@
           "ItemType": "Tags",
           "Required": false,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::AppConfig::HostedConfigurationVersion": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appconfig-hostedconfigurationversion.html",
+      "Properties": {
+        "ApplicationId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ConfigurationProfileId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Content": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ContentType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "LatestVersionNumber": {
+          "PrimitiveType": "Double",
+          "Required": false
         }
       }
     },
@@ -28890,6 +29083,11 @@
       }
     },
     "AWS::EC2::FlowLog": {
+      "Attributes": {
+        "Id": {
+          "PrimitiveType": "String"
+        }
+      },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-flowlog.html",
       "Properties": {
         "DeliverLogsPermissionArn": {
@@ -30380,6 +30578,24 @@
         }
       }
     },
+    "AWS::ECS::CapacityProvider": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-capacityprovider.html",
+      "Properties": {
+        "AutoScalingGroupProvider": {
+          "Required": true,
+          "Type": "AutoScalingGroupProvider"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::ECS::Cluster": {
       "Attributes": {
         "Arn": {
@@ -30388,12 +30604,22 @@
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-cluster.html",
       "Properties": {
+        "CapacityProviders": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
         "ClusterName": {
           "PrimitiveType": "String",
           "Required": false
         },
         "ClusterSettings": {
           "ItemType": "ClusterSettings",
+          "Required": false,
+          "Type": "List"
+        },
+        "DefaultCapacityProviderStrategy": {
+          "ItemType": "CapacityProviderStrategyItem",
           "Required": false,
           "Type": "List"
         },
@@ -39773,6 +39999,11 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -39813,6 +40044,11 @@
           "PrimitiveType": "String",
           "Required": true
         },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
         "Vpc": {
           "PrimitiveType": "String",
           "Required": true
@@ -39837,6 +40073,11 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -39877,6 +40118,11 @@
         "NamespaceId": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -40239,6 +40485,10 @@
         "Schedule": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "ScheduleOffset": {
+          "PrimitiveType": "Integer",
+          "Required": false
         },
         "ScheduleTimezone": {
           "PrimitiveType": "String",

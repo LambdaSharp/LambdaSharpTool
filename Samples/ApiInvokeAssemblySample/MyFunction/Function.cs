@@ -23,7 +23,7 @@ using LambdaSharp.ApiGateway;
 
 namespace ApiInvokeSample.MyFunction {
 
-    public class Function : ALambdaApiGatewayFunction, ILogicDependencyProvider {
+    public sealed class Function : ALambdaApiGatewayFunction, ILogicDependencyProvider {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }

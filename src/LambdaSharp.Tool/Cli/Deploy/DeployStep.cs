@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
@@ -265,7 +266,33 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                             }
                             enteredValue = Settings.PromptChoice(message, parameter.AllowedValues);
                         } else {
-                            var message = $"{parameter.Name} [{parameter.Type}]";
+                            var constraints = new StringBuilder();
+                            if((parameter.MinValue != null) || (parameter.MaxValue != null)) {
+
+                                // append value constraints
+                                constraints.Append(" (");
+                                if((parameter.MinValue != null) && (parameter.MaxValue != null)) {
+                                    constraints.Append($"Range: {parameter.MinValue.Value}..{parameter.MaxValue.Value}");
+                                } else if(parameter.MinValue != null) {
+                                    constraints.Append($"Mininum: {parameter.MinValue.Value}");
+                                } else if(parameter.MaxValue != null) {
+                                    constraints.Append($"Maximum: {parameter.MaxValue.Value}");
+                                }
+                                constraints.Append(")");
+                            } else if((parameter.MinLength != null) || (parameter.MaxLength != null)) {
+
+                                // append length constraints
+                                constraints.Append(" (");
+                                if((parameter.MinLength != null) || (parameter.MaxLength != null)) {
+                                    constraints.Append($"Length: {parameter.MinValue.Value}..{parameter.MaxValue.Value}");
+                                } else if(parameter.MinLength != null) {
+                                    constraints.Append($"Mininum Length: {parameter.MinLength.Value}");
+                                } else if(parameter.MaxLength != null) {
+                                    constraints.Append($"Maximum Length: {parameter.MaxLength.Value}");
+                                }
+                                constraints.Append(")");
+                            }
+                            var message = $"{parameter.Name} [{parameter.Type}]{constraints}";
                             if(parameter.Label != null) {
                                 message += $": {parameter.Label}";
                             }

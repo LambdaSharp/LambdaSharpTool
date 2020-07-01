@@ -1,15 +1,21 @@
 ---
-title: LambdaSharp CLI - List Command
-description: List deployed LambdaSharp modules in a deployment tier
-keywords: cli, list, module, deployment, tier
+title: LambdaSharp Util Tier Command - Show Kinesis Failed Logs
+description: Show the CloudWatch Log entries that were ingested by Kinesis Firehose, but failed to be processed by LambdaSharp.Core
+keywords: cli, kinesis, firehose, logs
 ---
-# List Deployed Modules
+# Show Failed Kinesis Firehose CloudWatch Log Entries
 
-The `list` command lists all deployed modules on a deployment tier.
+The `util show-kinesis-failed-logs` fetches the failed Kinesis Firehose records from the S3 logging bucket. For each record, the source key is shown, as well as the record properties, and the decoded CloudWatch Log entries that are part of the record.
 
 ## Options
 
 <dl>
+
+<dt><code>--key-prefix|-k &lt;PREFIX&gt;</code></dt>
+<dd>
+
+(optional) S3 key prefix where the failed logging records are stored (default: logging-failed/processing-failed/)
+</dd>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>
@@ -48,25 +54,3 @@ The `list` command lists all deployed modules on a deployment tier.
 </dd>
 
 </dl>
-
-## Examples
-
-### List all deployed modules
-
-__Using PowerShell/Bash:__
-```bash
-lash list --tier Sandbox
-```
-
-Output:
-```
-LambdaSharp CLI (v0.6) - List deployed LambdaSharp modules
-
-Found 2 modules for deployment tier 'Default'
-
-NAME                 MODULE                   STATUS             DATE
-LambdaSharp-Core     LambdaSharp.Core:0.6     UPDATE_COMPLETE    2019-04-05 10:36:49
-LambdaSharp-S3-IO    LambdaSharp.S3.IO:0.6    UPDATE_COMPLETE    2019-04-05 10:37:19
-
-Done (finished: 4/5/2019 3:36:10 PM; duration: 00:00:01.4137682)
-```

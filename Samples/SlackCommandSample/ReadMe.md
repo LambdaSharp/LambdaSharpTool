@@ -33,7 +33,7 @@ Items:
 The following AWS Lambda function derives from the `ALambdaSlackCommandFunction` base class. The base class deserializes the request into a `SlackRequest` instance. In addition, standard output is captured by the base class and sent in response to the request. In case of an exception, the stack trace is sent back as an ephemeral response, which is only visible to the invoker of the Slack command.
 
 ```csharp
-public class Function : ALambdaSlackCommandFunction {
+public sealed class Function : ALambdaSlackCommandFunction {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

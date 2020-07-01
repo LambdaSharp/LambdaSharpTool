@@ -52,6 +52,7 @@ namespace LambdaSharp.Tool.Cli {
 
         //--- Properties ---
         public string DeploymentBucketName { get; set; }
+        public string LoggingBucketName { get; set; }
         public VersionInfo TierVersion { get; set; }
         public CoreServices CoreServices { get; set; }
     }
@@ -303,6 +304,7 @@ namespace LambdaSharp.Tool.Cli {
 
                         // initialize settings
                         settings.DeploymentBucketName = cachedInfo.DeploymentBucketName;
+                        settings.LoggingBucketName = cachedInfo.LoggingBucketName;
                         settings.TierVersion = cachedInfo.TierVersion;
                         settings.CoreServices = cachedInfo.CoreServices;
                         cached = true;
@@ -330,19 +332,32 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // read deployment S3 bucket name
-                    var tierModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
-                    if((tierModuleBucketArnParts == null) && requireBucketName) {
+                    var tierModuleDeploymentBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
+                    if((tierModuleDeploymentBucketArnParts == null) && requireBucketName) {
                         if(!optional && result) {
                             LogError("could not find 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
                         }
                         result = false;
                     }
-                    if(tierModuleBucketArnParts != null) {
-                        if((tierModuleBucketArnParts.Length != 6) || (tierModuleBucketArnParts[0] != "arn") || (tierModuleBucketArnParts[1] != "aws") || (tierModuleBucketArnParts[2] != "s3")) {
+                    if(tierModuleDeploymentBucketArnParts != null) {
+                        if((tierModuleDeploymentBucketArnParts.Length != 6) || (tierModuleDeploymentBucketArnParts[0] != "arn") || (tierModuleDeploymentBucketArnParts[1] != "aws") || (tierModuleDeploymentBucketArnParts[2] != "s3")) {
                             LogError("invalid value 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
                             result = false;
+                            tierModuleDeploymentBucketArnParts = null;
                         }
                     }
+                    var deploymentBucketName = tierModuleDeploymentBucketArnParts?[5];
+
+                    // rad logging S3 bucket name
+                    var tierModuleLoggingBucketArnParts = GetStackOutput("LoggingBucket")?.Split(':');
+                    if(tierModuleLoggingBucketArnParts != null) {
+                        if((tierModuleLoggingBucketArnParts.Length != 6) || (tierModuleLoggingBucketArnParts[0] != "arn") || (tierModuleLoggingBucketArnParts[1] != "aws") || (tierModuleLoggingBucketArnParts[2] != "s3")) {
+                            LogError("invalid value 'LoggingBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                            result = false;
+                            tierModuleLoggingBucketArnParts = null;
+                        }
+                    }
+                    var loggingBucketName = tierModuleLoggingBucketArnParts?[5];
 
                     // do some sanity checks
                     if(
@@ -382,7 +397,8 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // initialize settings
-                    settings.DeploymentBucketName = tierModuleBucketArnParts?[5];
+                    settings.DeploymentBucketName = deploymentBucketName;
+                    settings.LoggingBucketName = loggingBucketName;
                     settings.TierVersion = tierModuleInfo?.Version;
                     settings.CoreServices = coreServicesMode;
 

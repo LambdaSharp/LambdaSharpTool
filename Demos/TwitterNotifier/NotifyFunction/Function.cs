@@ -40,7 +40,7 @@ namespace Demo.TwitterNotifier.NotifyFunction {
         public string screen_name { get; set; }
     }
 
-    public class Function : ALambdaTopicFunction<Tweet> {
+    public sealed class Function : ALambdaTopicFunction<Tweet> {
 
         //--- Fields ---
         private string _twitterQuery;

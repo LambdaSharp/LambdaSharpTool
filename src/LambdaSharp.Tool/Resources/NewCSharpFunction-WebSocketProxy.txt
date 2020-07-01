@@ -7,7 +7,7 @@ using LambdaSharp.ApiGateway;
 
 namespace %%ROOTNAMESPACE%% {
 
-    public class Function : ALambdaApiGatewayFunction {
+    public sealed class Function : ALambdaApiGatewayFunction {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
