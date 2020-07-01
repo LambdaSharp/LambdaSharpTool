@@ -95,7 +95,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "52DB776DE1ADE62A7AB84A2541AE39E5"
+      "Default": "30411449FD626E231FD5BDEF1CE41B4E"
     }
   },
   "Resources": {
@@ -265,7 +265,8 @@
             }
           ]
         }
-      }
+      },
+      "DeletionPolicy": "Retain"
     },
     "LoggingStreamDeliveryRole": {
       "Type": "AWS::IAM::Role",
@@ -1097,7 +1098,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.2"
+      "Value": "0.8.0.4"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1311,7 +1312,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "52DB776DE1ADE62A7AB84A2541AE39E5",
+      "TemplateChecksum": "30411449FD626E231FD5BDEF1CE41B4E",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

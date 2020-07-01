@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B25B9B4AC1A7513CEDC8CAB4E1BFF074"
+      "Default": "39BF013D985C71FF31E20F7F7FB52BC4"
     }
   },
   "Resources": {
@@ -669,6 +669,7 @@
         "DeploymentId": {
           "Ref": "ModuleRestApiDeploymentA4B093EE5E3052637662448790B6AE5C"
         },
+        "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
           {
             "DataTraceEnabled": true,
@@ -705,7 +706,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.2"
+      "Value": "0.8.0.4"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -946,7 +947,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
-      "TemplateChecksum": "B25B9B4AC1A7513CEDC8CAB4E1BFF074",
+      "TemplateChecksum": "39BF013D985C71FF31E20F7F7FB52BC4",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
