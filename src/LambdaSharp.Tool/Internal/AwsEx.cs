@@ -66,6 +66,7 @@ namespace LambdaSharp.Tool.Internal {
             ["DELETE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["DELETE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["DELETE_COMPLETE"] = AnsiTerminal.Green,
+            ["DELETE_SKIPPED"] = AnsiTerminal.White,
 
             ["UPDATE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
@@ -251,9 +252,9 @@ namespace LambdaSharp.Tool.Internal {
                                 var time = evt.Timestamp - firstTimestamp;
                                 var totalMinutes = (int)time.TotalMinutes;
                                 if(totalMinutes > 0) {
-                                    Console.Write($" {Settings.InfoColor}({totalMinutes}m {time.TotalSeconds - totalMinutes:0.##}s){Settings.ResetColor}");
+                                    Console.Write($" {Settings.InfoColor}({totalMinutes}m {time.TotalSeconds - (60 * totalMinutes):0.##}s){Settings.ResetColor}");
                                 } else {
-                                    Console.Write($" {Settings.InfoColor}({time.TotalSeconds - totalMinutes:0.##}s){Settings.ResetColor}");
+                                    Console.Write($" {Settings.InfoColor}({time.TotalSeconds - (60 * totalMinutes):0.##}s){Settings.ResetColor}");
                                 }
                             }
                         } else {

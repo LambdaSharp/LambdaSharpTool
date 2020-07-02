@@ -29,7 +29,7 @@ namespace LambdaSharp.Tool {
     public abstract class AModelProcessor {
 
         //--- Constants ---
-        protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
+        protected const string CLOUDFORMATION_ID_PATTERN = "^[a-zA-Z][a-zA-Z0-9]*$";
 
         //--- Class Fields ---
         private static Stack<string> _locations = new Stack<string>();

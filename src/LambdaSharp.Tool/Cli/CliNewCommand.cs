@@ -30,6 +30,7 @@ using Amazon.S3.Model;
 using LambdaSharp.Tool.Internal;
 using System.Threading.Tasks;
 using Amazon;
+using System.Text.RegularExpressions;
 
 namespace LambdaSharp.Tool.Cli {
     using Tag = Amazon.CloudFormation.Model.Tag;
@@ -49,6 +50,12 @@ namespace LambdaSharp.Tool.Cli {
     }
 
     public class CliNewCommand : ACliCommand {
+
+        //--- Constants ---
+        private const string CLOUDFORMATION_ID_PATTERN = "^[a-zA-Z][a-zA-Z0-9]*$";
+
+        //--- Class Methods ---
+        private static bool IsValidResourceName(string name) => Regex.IsMatch(name, CLOUDFORMATION_ID_PATTERN);
 
         //--- Fields ---
         private IList<string> _functionTypes = typeof(FunctionType).GetEnumNames()
@@ -262,6 +269,12 @@ namespace LambdaSharp.Tool.Cli {
             FunctionType functionType
         ) {
 
+            // validate name
+            if(!IsValidResourceName(functionName)) {
+                LogError("function name is not valid");
+                return;
+            }
+
             // parse yaml module definition
             if(!File.Exists(moduleFile)) {
                 LogError($"could not find module '{moduleFile}'");
@@ -414,6 +427,12 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewResource(Settings settings, string moduleFile, string resourceName, string resourceTypeName) {
+
+            // validate name
+            if(!IsValidResourceName(resourceName)) {
+                LogError("resource name is not valid");
+                return;
+            }
 
             // determine if we have a precise resource type match
             var matches = ResourceMapping.CloudformationSpec.ResourceTypes
