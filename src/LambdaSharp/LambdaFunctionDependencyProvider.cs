@@ -90,9 +90,7 @@ namespace LambdaSharp {
 
                 // read environment variable to determine if request/response messages should be serialized to the log for debugging purposes
                 var value = System.Environment.GetEnvironmentVariable("DEBUG_LOGGING_ENABLED") ?? "false";
-                if(value.Equals("true", StringComparison.OrdinalIgnoreCase)) {
-                    _debugLoggingEnabled = true;
-                }
+                _debugLoggingEnabled = value.Equals("true", StringComparison.OrdinalIgnoreCase);
             }
         }
 
