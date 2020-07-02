@@ -173,7 +173,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 if(!allowDataLoss) {
                     var lossyChanges = DetectLossyChanges(changes);
                     if(lossyChanges.Any()) {
-                        LogError("one or more resources could be replaced or deleted; use --allow-data-loss to proceed");
                         Console.WriteLine();
                         Console.WriteLine($"{Settings.AlertColor}CAUTION:{Settings.ResetColor} detected potential replacement and data-loss in the following resources");
                         var maxResourceTypeWidth = lossyChanges.Select(change => change.ResourceChange.ResourceType.Length).Max();
@@ -188,10 +187,9 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                                 }
                                 Console.Write(AnsiTerminal.Reset);
                             } else {
-                                Console.WriteLine(
-                                    (lossy.ResourceChange.Replacement == Replacement.True)
-                                        ? "ALWAYS         "
-                                        : "CONDITIONAL    "
+                                Console.WriteLine((lossy.ResourceChange.Replacement == Replacement.True)
+                                    ? "ALWAYS         "
+                                    : "CONDITIONAL    "
                                 );
                             }
                             Console.Write(lossy.ResourceChange.ResourceType);
@@ -199,8 +197,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                             Console.Write(TranslateLogicalIdToFullName(lossy.ResourceChange.LogicalResourceId));
                             Console.WriteLine();
                         }
+                        if(!Settings.PromptYesNo("Proceed with potentially replacing/deleting resources?", false)) {
+                            return false;
+                        }
                         Console.WriteLine();
-                        return false;
                     }
                 }
 

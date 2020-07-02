@@ -25,7 +25,7 @@ using LambdaSharp.ApiGateway;
 
 namespace ApiInvokeSample.MyFunction {
 
-    public class Function : ALambdaApiGatewayFunction {
+    public sealed class Function : ALambdaApiGatewayFunction {
 
         //--- Fields ---
         private List<Item> _items = new List<Item>();

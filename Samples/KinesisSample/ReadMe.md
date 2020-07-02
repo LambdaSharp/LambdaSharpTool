@@ -36,7 +36,7 @@ Items:
 Kinesis stream events can be parsed into a `KinesisEvent` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.KinesisEvents` nuget package.
 
 ```csharp
-public class Function : ALambdaFunction<KinesisEvent, string> {
+public sealed class Function : ALambdaFunction<KinesisEvent, string> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

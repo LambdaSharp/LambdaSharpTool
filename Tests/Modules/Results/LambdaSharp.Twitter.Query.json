@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "12C38E716BD7E83EDE800DEF7ABDFBC1"
+      "Default": "B274FC883AC1A60DEE7DED53D62BE2C1"
     }
   },
   "Resources": {
@@ -301,7 +301,7 @@
           ]
         },
         "Runtime": "dotnetcore3.1",
-        "Timeout": "30",
+        "Timeout": "60",
         "TracingConfig": {
           "Mode": {
             "Fn::If": [
@@ -614,7 +614,7 @@
         "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "256",
-        "FunctionMaxDuration": "30"
+        "FunctionMaxDuration": "60"
       },
       "DependsOn": [
         "ModuleRegistration"
@@ -1038,7 +1038,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
       "Description": "Search Twitter at regular intervals and publish new found tweets",
-      "TemplateChecksum": "12C38E716BD7E83EDE800DEF7ABDFBC1",
+      "TemplateChecksum": "B274FC883AC1A60DEE7DED53D62BE2C1",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
@@ -1066,7 +1066,9 @@
               "Name": "TwitterQueryInterval",
               "Type": "Number",
               "Label": "Query internal in minutes (from 2 to 1440)",
-              "Default": "60"
+              "Default": "60",
+              "MinValue": 2,
+              "MaxValue": 1440
             },
             {
               "Name": "TwitterLanguageFilter",

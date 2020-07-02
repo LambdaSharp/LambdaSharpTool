@@ -33,7 +33,7 @@ In order for the LambdaSharp CLI to work properly the .NET Core project file mus
 ```csharp
 namespace GettingStarted.SlackCommand {
 
-    public class Function : ALambdaSlackCommandFunction {
+    public sealed class Function : ALambdaSlackCommandFunction {
 
         // ...implementation code...
     }

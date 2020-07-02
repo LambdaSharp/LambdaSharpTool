@@ -9,7 +9,7 @@ Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.
 The `ALambdaFunction` base class defines the `LogDebug(string format, params object[] arguments)` method, which only logs when `DebugLoggingEnabled` is `true`. For more complex logging, it is recommend to first check `DebugLoggingEnabled` before constructing an expensive log statement that will be discarded.
 
 ```csharp
-public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
     //--- Methods ---
     public override async Task InitializeAsync(LambdaConfig config) { }

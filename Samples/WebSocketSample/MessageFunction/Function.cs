@@ -51,7 +51,7 @@ namespace WebSocketsSample.MessageFunction {
         public string Text { get; set; }
     }
 
-    public class Function : ALambdaApiGatewayFunction {
+    public sealed class Function : ALambdaApiGatewayFunction {
 
         //--- Fields ---
         private IAmazonApiGatewayManagementApi _amaClient;

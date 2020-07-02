@@ -66,6 +66,7 @@ namespace LambdaSharp.Tool.Internal {
             ["DELETE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["DELETE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["DELETE_COMPLETE"] = AnsiTerminal.Green,
+            ["DELETE_SKIPPED"] = AnsiTerminal.White,
 
             ["UPDATE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
@@ -137,6 +138,7 @@ namespace LambdaSharp.Tool.Internal {
                 StackName = stackId ?? stackName
             };
             var eventList = new List<StackEvent>();
+            var resourceTimestamp = new Dictionary<string, DateTime>();
             var ansiLinesPrinted = 0;
 
             // iterate as long as the stack is being created/updated
@@ -240,9 +242,20 @@ namespace LambdaSharp.Tool.Internal {
                             // print resource name
                             Console.Write(TranslateLogicalIdToFullName(evt.LogicalResourceId));
 
-                            // print status reason
-                            if((logError == null) && (evt.ResourceStatusReason != null)) {
-                                Console.Write($" ({evt.ResourceStatusReason})");
+                            // check if resource completed update
+                            if(
+                                ((evt.ResourceStatus == "CREATE_COMPLETE") || (evt.ResourceStatus == "UPDATE_COMPLETE"))
+                                && resourceTimestamp.TryGetValue(evt.LogicalResourceId, out var firstTimestamp)
+                            ) {
+
+                                // show timing information
+                                var time = evt.Timestamp - firstTimestamp;
+                                var totalMinutes = (int)time.TotalMinutes;
+                                if(totalMinutes > 0) {
+                                    Console.Write($" {Settings.InfoColor}({totalMinutes}m {time.TotalSeconds - (60 * totalMinutes):0.##}s){Settings.ResetColor}");
+                                } else {
+                                    Console.Write($" {Settings.InfoColor}({time.TotalSeconds - (60 * totalMinutes):0.##}s){Settings.ResetColor}");
+                                }
                             }
                         } else {
                             Console.Write($"{resourceStatus}    {resourceType}    {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
@@ -259,6 +272,7 @@ namespace LambdaSharp.Tool.Internal {
                     var index = eventList.FindIndex(e => e.LogicalResourceId == evt.LogicalResourceId);
                     if(index < 0) {
                         eventList.Add(evt);
+                        resourceTimestamp[evt.LogicalResourceId] = evt.Timestamp;
                     } else {
                         eventList[index] = evt;
                     }

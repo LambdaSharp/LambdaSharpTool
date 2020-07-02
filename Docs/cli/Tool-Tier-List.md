@@ -1,11 +1,11 @@
 ---
-title: LambdaSharp CLI - List Command
-description: List deployed LambdaSharp modules in a deployment tier
-keywords: cli, list, module, deployment, tier
+title: LambdaSharp CLI Tier Command - List Deployment Tiers
+description: List all available deployment tiers
+keywords: cli, lambda, cloudformation, version, tier
 ---
-# List Deployed Modules
+# List Deployment Tiers
 
-The `list` command lists all deployed modules on a deployment tier.
+The `tier list` command lists all deployment tiers with their version and showing if _Core Services_ are enabled.
 
 ## Options
 
@@ -55,18 +55,19 @@ The `list` command lists all deployed modules on a deployment tier.
 
 __Using PowerShell/Bash:__
 ```bash
-lash list --tier Sandbox
+lash tier list --tier Sandbox
 ```
 
 Output:
 ```
-LambdaSharp CLI (v0.6) - List deployed LambdaSharp modules
+LambdaSharp CLI (v0.8.0.4) - List all available deployment tiers
 
-Found 2 modules for deployment tier 'Default'
+Found 8 deployment tiers
 
-NAME                 MODULE                   STATUS             DATE
-LambdaSharp-Core     LambdaSharp.Core:0.6     UPDATE_COMPLETE    2019-04-05 10:36:49
-LambdaSharp-S3-IO    LambdaSharp.S3.IO:0.6    UPDATE_COMPLETE    2019-04-05 10:37:19
+TIER             VERSION    STATUS             CORE-SERVICES
+Legacy           0.7.0      UPDATE_COMPLETE    ENABLED
+ProdOps          0.7.0.8    UPDATE_COMPLETE    ENABLED
+Sandbox          0.8.0.4    UPDATE_COMPLETE    ENABLED
 
-Done (finished: 4/5/2019 3:36:10 PM; duration: 00:00:01.4137682)
+Done (finished: 6/25/2020 1:09:28 PM; duration: 00:00:01.7056558)
 ```

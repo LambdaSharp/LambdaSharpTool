@@ -25,7 +25,7 @@ using LambdaSharp;
 
 namespace AlexaSample.MyFunction {
 
-    public class Function : ALambdaFunction<SkillRequest, SkillResponse> {
+    public sealed class Function : ALambdaFunction<SkillRequest, SkillResponse> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

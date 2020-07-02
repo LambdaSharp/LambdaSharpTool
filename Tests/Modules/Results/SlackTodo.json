@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B80B5654E53490AFC1BE7E3C56B7989E"
+      "Default": "A2C3A01AC801EEF9799BECB83E3FB88A"
     }
   },
   "Resources": {
@@ -747,6 +747,7 @@
         "DeploymentId": {
           "Ref": "ModuleRestApiDeployment429A5A7BE3B2A3C04BB31F7D99D3FE97"
         },
+        "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
           {
             "DataTraceEnabled": true,
@@ -1035,7 +1036,7 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "B80B5654E53490AFC1BE7E3C56B7989E",
+      "TemplateChecksum": "A2C3A01AC801EEF9799BECB83E3FB88A",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

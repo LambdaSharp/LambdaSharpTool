@@ -82,7 +82,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
         public string BucketName { get; set; }
     }
 
-    public class Function : ALambdaCustomResourceFunction<S3WriterResourceProperties, S3WriterResourceAttribute> {
+    public sealed class Function : ALambdaCustomResourceFunction<S3WriterResourceProperties, S3WriterResourceAttribute> {
 
         //--- Fields ---
         private string _manifestBucket;

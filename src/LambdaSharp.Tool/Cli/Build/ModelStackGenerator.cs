@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
+    using static ModelFunctions;
 
     public class ModelStackGenerator : AModelProcessor {
 
@@ -97,7 +98,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Import = input.Import,
                             AllowedValues = input.Parameter.AllowedValues,
                             AllowedPattern = input.Parameter.AllowedPattern,
-                            ConstraintDescription = input.Parameter.ConstraintDescription
+                            ConstraintDescription = input.Parameter.ConstraintDescription,
+                            MinValue = input.Parameter.MinValue,
+                            MaxValue = input.Parameter.MaxValue,
+                            MinLength = input.Parameter.MinLength,
+                            MaxLength = input.Parameter.MaxLength
                         }).ToList()
                     }).ToList(),
                 Artifacts = module.Artifacts.ToList(),
@@ -178,11 +183,15 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
                 break;
             case ResourceItem resourceItem:
+                var deletionPolicy = (resourceItem.DeletionPolicy != null)
+                    ? (DeletionPolicy?)Enum.Parse<DeletionPolicy>(resourceItem.DeletionPolicy, ignoreCase: true)
+                    : null;
                 _stack.Add(
                     resourceItem.LogicalId,
                     resourceItem.Resource,
                     resourceItem.Condition,
-                    dependsOn: resourceItem.DependsOn.ToArray()
+                    dependsOn: resourceItem.DependsOn.ToArray(),
+                    deletionPolicy: deletionPolicy
                 );
                 if(item.IsPublic) {
                     AddExport(item);
@@ -234,13 +243,31 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // local functions
             void AddExport(AModuleItem exportItem) {
-                _stack.Add(exportItem.LogicalId, new Humidifier.Output {
-                    Description = exportItem.Description,
-                    Value = exportItem.GetExportReference(),
-                    Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
-                    }
-                });
+                var value = exportItem.GetExportReference();
+
+                // check if this is a conditional public value
+                if(
+                    TryGetFnIf(value, out var condition, out var ifTrue, out var ifFalse)
+                    && TryGetFnRef(ifFalse, out var key)
+                    && (key == "AWS::NoValue")
+                ) {
+                    _stack.Add(exportItem.LogicalId, new Humidifier.Output {
+                        Description = exportItem.Description,
+                        Condition = condition,
+                        Value = ifTrue,
+                        Export = new Dictionary<string, dynamic> {
+                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
+                        }
+                    });
+                } else {
+                    _stack.Add(exportItem.LogicalId, new Humidifier.Output {
+                        Description = exportItem.Description,
+                        Value = value,
+                        Export = new Dictionary<string, dynamic> {
+                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
+                        }
+                    });
+                }
             }
         }
 

@@ -43,7 +43,7 @@ namespace MacroSample.MyFunction {
         public object Fragment;
     }
 
-    public class Function : ALambdaFunction<MacroRequest, MacroResponse> {
+    public sealed class Function : ALambdaFunction<MacroRequest, MacroResponse> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

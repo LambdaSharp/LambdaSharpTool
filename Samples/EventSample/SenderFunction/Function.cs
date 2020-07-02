@@ -25,7 +25,7 @@ namespace Sample.Event.MyFunction {
 
     public class FunctionResponse { }
 
-    public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }

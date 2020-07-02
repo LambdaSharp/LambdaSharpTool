@@ -211,7 +211,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             moduleRoleItem.DiscardIfNotReachable = true;
 
@@ -252,7 +253,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 properties: null,
                 arnAttribute: null,
                 encryptionContext: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             _builder.AddParameter(
                 name: "XRayTracing",
@@ -278,7 +280,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 properties: null,
                 arnAttribute: null,
                 encryptionContext: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             ).DiscardIfNotReachable = true;
             _builder.AddCondition(
                 parent: null,
@@ -318,7 +321,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     properties: null,
                     arnAttribute: null,
                     encryptionContext: null,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 ).DiscardIfNotReachable = true;
                 _builder.AddCondition(
                     parent: null,
@@ -491,7 +495,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 properties: null,
                 arnAttribute: null,
                 encryptionContext: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             _builder.AddParameter(
                 name: "DeploymentPrefix",
@@ -513,7 +518,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 properties: null,
                 arnAttribute: null,
                 encryptionContext: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             _builder.AddParameter(
                 name: "DeploymentPrefixLowercase",
@@ -535,7 +541,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 properties: null,
                 arnAttribute: null,
                 encryptionContext: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             _builder.AddParameter(
                 name: "DeploymentRoot",
@@ -557,7 +564,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 properties: null,
                 arnAttribute: null,
                 encryptionContext: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             _builder.AddParameter(
                 name: "DeploymentChecksum",
@@ -579,7 +587,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 properties: null,
                 arnAttribute: null,
                 encryptionContext: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
 
             // add conditional KMS permissions for secrets parameter
@@ -655,7 +664,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             }
 
-            // TODO: should we also check for function.Function.Properties["VpcConfig"]?
+            // TODO (2020-06-30, bjorg): should we also check for function.Function.Properties["VpcConfig"]?
 
             // permissions needed for lambda functions to exist in a VPC
             if(functions.Any(function => function.Function.VpcConfig != null)) {
@@ -691,7 +700,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     dependsOn: null,
                     arnAttribute: null,
                     condition: "UseCoreServices",
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 );
 
                 // handle function registrations
@@ -728,7 +738,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             condition: (function.Condition != null)
                                 ? FnAnd(FnCondition("UseCoreServices"), FnCondition(function.Condition))
                                 : "UseCoreServices",
-                            pragmas: null
+                            pragmas: null,
+                            deletionPolicy: null
                         );
 
                         // create function log-group subscription
@@ -752,7 +763,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 condition: (function.Condition != null)
                                     ? FnAnd(FnCondition("UseCoreServices"), FnCondition(function.Condition))
                                     : "UseCoreServices",
-                                pragmas: null
+                                pragmas: null,
+                                deletionPolicy: null
                             );
                         }
                     }

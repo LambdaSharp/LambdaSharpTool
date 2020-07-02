@@ -24,7 +24,7 @@ using LambdaSharp.Slack;
 
 namespace Demo.SlackTodo {
 
-    public class Function : ALambdaSlackCommandFunction {
+    public sealed class Function : ALambdaSlackCommandFunction {
 
         //-- Fields ---
         private TaskTable _table;

@@ -5,7 +5,7 @@ using LambdaSharp.Schedule;
 
 namespace %%ROOTNAMESPACE%% {
 
-    public class Function : ALambdaScheduleFunction {
+    public sealed class Function : ALambdaScheduleFunction {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {

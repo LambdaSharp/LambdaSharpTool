@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "17AC5E2179FF77FC0BBB387E6F2A2235"
+      "Default": "5E9F9ED4C6E9EA2A0862250B511CD64B"
     }
   },
   "Resources": {
@@ -213,7 +213,7 @@
           }
         },
         "Handler": "ResourceHandler::LambdaSharpS3Subscriber.ResourceHandler.Function::FunctionHandlerAsync",
-        "MemorySize": "128",
+        "MemorySize": "256",
         "ReservedConcurrentExecutions": "1",
         "Role": {
           "Fn::GetAtt": [
@@ -496,7 +496,7 @@
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "128",
+        "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "30"
       },
       "DependsOn": [
@@ -869,7 +869,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
       "Description": "LambdaSharp S3 Lambda Function Subscriber",
-      "TemplateChecksum": "17AC5E2179FF77FC0BBB387E6F2A2235",
+      "TemplateChecksum": "5E9F9ED4C6E9EA2A0862250B511CD64B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

@@ -133,6 +133,7 @@ Items:
             Transitions:
               - StorageClass: INTELLIGENT_TIERING
                 TransitionInDays: 1
+    DeletionPolicy: Retain
 
   - Parameter: LoggingBucketSuccessPrefix
     Section: LambdaSharp Tier Settings

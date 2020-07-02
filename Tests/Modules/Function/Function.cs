@@ -22,7 +22,7 @@ using LambdaSharp;
 
 namespace LambdaSharpTestModule.Function {
 
-    public class Function : ALambdaFunction {
+    public sealed class Function : ALambdaFunction {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

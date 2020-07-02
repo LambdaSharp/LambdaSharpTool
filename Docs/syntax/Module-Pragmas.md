@@ -21,10 +21,12 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`Module::LoggingStream`                     |Expression for determining the module logging stream.                               |`!Ref LambdaSharp::LoggingStream`      |
 |`Module::LoggingStreamRole`                 |Expression for determining the module logging stream role.                          |`!Ref LambdaSharp::LoggingStreamRole`  |
 |`Module::LogRetentionInDays`                |Expression for determining the number days CloudWatch Log streams are retained for. |`30`                                   |
+|`Module::RestApi::StageName`                |Expression for setting the REST API stage name.                                     |`LATEST`                               |
 |`Module::RestApi.EndpointConfiguration`     |Expression for setting the REST API endpoint.                                       |(none)                                 |
 |`Module::RestApi.Policy`                    |Expression for setting the REST API policy.                                         |(none)                                 |
-|`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                                     |`$request.body.action`                 |
 |`Module::Role.PermissionsBoundary`          |Expression for setting the PermissionsBoundary attribute on the function IAM role.  |(none)                                 |
+|`Module::WebSocket::StageName`              |Expression for setting the WebSocket stage name.                                    |`LATEST`                               |
+|`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                                     |`$request.body.action`                 |
 
 ### Examples
 

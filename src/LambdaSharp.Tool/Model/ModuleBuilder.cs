@@ -281,7 +281,8 @@ namespace LambdaSharp.Tool.Model {
             IDictionary<string, object> properties,
             string arnAttribute,
             IDictionary<string, string> encryptionContext,
-            IList<object> pragmas
+            IList<object> pragmas,
+            string deletionPolicy
         ) {
             // TODO (2019-10-04, bjorg): check if parameter already exists
 
@@ -323,7 +324,8 @@ namespace LambdaSharp.Tool.Model {
                     resourceExportAttribute: null,
                     dependsOn: null,
                     condition: null,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 );
                 decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
                 decoder.DiscardIfNotReachable = true;
@@ -354,7 +356,8 @@ namespace LambdaSharp.Tool.Model {
                     arnAttribute: arnAttribute,
                     dependsOn: null,
                     condition: condition.FullName,
-                    pragmas: pragmas
+                    pragmas: pragmas,
+                    deletionPolicy: deletionPolicy
                 );
 
                 // register input parameter reference
@@ -534,7 +537,8 @@ namespace LambdaSharp.Tool.Model {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             _macroNames.Add(macroName);
             return result;
@@ -583,7 +587,8 @@ namespace LambdaSharp.Tool.Model {
                     resourceExportAttribute: null,
                     dependsOn: null,
                     condition: null,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 );
                 decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
                 decoder.DiscardIfNotReachable = true;
@@ -605,7 +610,8 @@ namespace LambdaSharp.Tool.Model {
             string resourceExportAttribute,
             IList<string> dependsOn,
             object condition,
-            IList<object> pragmas
+            IList<object> pragmas,
+            string deletionPolicy
         ) {
 
             // set a default export attribute if none is provided
@@ -634,7 +640,8 @@ namespace LambdaSharp.Tool.Model {
                 resourceExportAttribute: resourceExportAttribute,
                 dependsOn: dependsOn,
                 condition: null,
-                pragmas: pragmas
+                pragmas: pragmas,
+                deletionPolicy: deletionPolicy
             );
             AddItem(result);
 
@@ -664,7 +671,8 @@ namespace LambdaSharp.Tool.Model {
             IList<string> dependsOn,
             string arnAttribute,
             object condition,
-            IList<object> pragmas
+            IList<object> pragmas,
+            string deletionPolicy
         ) {
 
             // create resource item
@@ -680,7 +688,8 @@ namespace LambdaSharp.Tool.Model {
                 resourceExportAttribute: arnAttribute,
                 dependsOn: dependsOn,
                 condition: condition,
-                pragmas: pragmas
+                pragmas: pragmas,
+                deletionPolicy: deletionPolicy
             );
 
             // validate resource properties
@@ -737,7 +746,8 @@ namespace LambdaSharp.Tool.Model {
                 resourceExportAttribute: null,
                 dependsOn: ConvertToStringList(dependsOn),
                 condition: null,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
             var dependency = AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).GetAwaiter().GetResult();
 
@@ -975,7 +985,8 @@ namespace LambdaSharp.Tool.Model {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: condition,
-                pragmas: null
+                pragmas: null,
+                deletionPolicy: null
             );
 
             // check if function is a finalizer
@@ -1005,7 +1016,8 @@ namespace LambdaSharp.Tool.Model {
                     resourceExportAttribute: null,
                     dependsOn: null,
                     condition: condition,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 );
             }
             return function;
@@ -1142,7 +1154,8 @@ namespace LambdaSharp.Tool.Model {
                     resourceExportAttribute: null,
                     dependsOn: null,
                     condition: condition,
-                    pragmas: null
+                    pragmas: null,
+                    deletionPolicy: null
                 ).DiscardIfNotReachable = true;
             } else {
 

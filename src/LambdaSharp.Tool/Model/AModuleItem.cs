@@ -42,8 +42,6 @@ namespace LambdaSharp.Tool.Model {
                 ? name
                 : parent.FullName + "::" + name;
             Description = description;
-
-            // TODO (2018-11-29, bjorg): logical ID should be computed by module builder to disambiguate hierarchical names when name collisions occur
             LogicalId = (parent == null)
                 ? name
                 : parent.LogicalId + name;
@@ -195,15 +193,18 @@ namespace LambdaSharp.Tool.Model {
             string resourceExportAttribute,
             IList<string> dependsOn,
             string condition,
-            IList<object> pragmas
+            IList<object> pragmas,
+            string deletionPolicy
         ) : base(parent, name, description, (resource is Humidifier.CustomResource customResource) ? customResource.OriginalTypeName : resource.AWSTypeName, scope, reference: null, dependsOn, condition, pragmas) {
             Resource = resource ?? throw new ArgumentNullException(nameof(resource));
             ResourceExportAttribute = resourceExportAttribute;
+            DeletionPolicy = deletionPolicy;
         }
 
         //--- Properties ---
         public Humidifier.Resource Resource { get; set; }
         public string ResourceExportAttribute { get; set; }
+        public string DeletionPolicy { get; set; }
 
         //--- Methods ---
         public override void Visit(ModuleVisitorDelegate visitor) {

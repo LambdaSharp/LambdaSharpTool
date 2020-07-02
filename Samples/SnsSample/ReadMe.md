@@ -42,7 +42,7 @@ public class MyMessage {
     public string Text { get; set; }
 }
 
-public class Function : ALambdaTopicFunction<MyMessage> {
+public sealed class Function : ALambdaTopicFunction<MyMessage> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

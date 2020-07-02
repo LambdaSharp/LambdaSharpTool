@@ -22,7 +22,7 @@ using LambdaSharp;
 
 namespace DemoS3Subscriber.Subscriber {
 
-    public class Function : ALambdaFunction<S3Event, string> {
+    public sealed class Function : ALambdaFunction<S3Event, string> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

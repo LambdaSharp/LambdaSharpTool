@@ -40,6 +40,9 @@
     - name: Show/Check Deployment Tier Version
       href: Tool-Tier-Version.md
 
+    - name: List Deployment Tiers
+      href: Tool-Tier-List.md
+
 - name: Util
   items:
 
@@ -54,3 +57,9 @@
 
     - name: List Lambdas
       href: Tool-Util-ListLambdas.md
+
+    - name: Show Failed Kinesis Log Entries
+      href: Tool-Util-KinesisFailedLogs.md
+
+    - name: Show Processed Parameters File
+      href: Tool-Util-ShowParameters.md

@@ -83,7 +83,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
         public RegistrarException(string format, params object[] args) : base(format, args) { }
     }
 
-    public class Function : ALambdaCustomResourceFunction<RegistrationResourceProperties, RegistrationResourceAttributes> {
+    public sealed class Function : ALambdaCustomResourceFunction<RegistrationResourceProperties, RegistrationResourceAttributes> {
 
         //--- Constants ---
         private const int PROJECT_HASH_LENGTH = 6;

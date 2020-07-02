@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "FBDD71127BE81BC72B8C3E15999340FA"
+      "Default": "912F6E3CBCD9390DAA0B3D3915B5051E"
     }
   },
   "Resources": {
@@ -718,6 +718,7 @@
         "DeploymentId": {
           "Ref": "ModuleRestApiDeploymentC96C506347CF556FAD9935D5B698EF1C"
         },
+        "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
           {
             "DataTraceEnabled": true,
@@ -995,7 +996,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGatewayInvoke:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "FBDD71127BE81BC72B8C3E15999340FA",
+      "TemplateChecksum": "912F6E3CBCD9390DAA0B3D3915B5051E",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

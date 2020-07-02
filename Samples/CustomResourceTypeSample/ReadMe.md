@@ -60,7 +60,7 @@ Items:
 The `ALambdaCustomResourceFunction` base class provides handling of the CloudFormation Custom Resource protocol and ensures that failures are properly communicated to CloudFormation. Failure to do so can lead to stalled deployments or rollback until they timeout, which can take over 30 minutes.
 
 ```csharp
-public class Function : ALambdaCustomResourceFunction<MyResourceProperties, MyResourceAttributes> {
+public sealed class Function : ALambdaCustomResourceFunction<MyResourceProperties, MyResourceAttributes> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)

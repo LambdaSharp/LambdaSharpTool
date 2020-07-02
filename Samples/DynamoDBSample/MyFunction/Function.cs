@@ -22,7 +22,7 @@ using LambdaSharp;
 
 namespace DynamoDBSample.MyFunction {
 
-    public class Function : ALambdaFunction<DynamoDBEvent, string> {
+    public sealed class Function : ALambdaFunction<DynamoDBEvent, string> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
