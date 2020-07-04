@@ -1,0 +1,91 @@
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2020
+# lambdasharp.net
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: Sample.WebSocketsJwt
+Items:
+
+  # Connection Table
+  - Resource: ConnectionsTable
+    Scope: all
+    Type: AWS::DynamoDB::Table
+    Allow: ReadWrite
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: ConnectionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ConnectionId
+          KeyType: HASH
+
+  - Function: ConnectionFunction
+    Memory: 256
+    Timeout: 30
+    Sources:
+
+      - WebSocket: $connect
+        Invoke: OpenConnectionAsync
+        AuthorizationType: CUSTOM
+        AuthorizerId: !Ref JwtAuthorizer
+
+      - WebSocket: $disconnect
+        Invoke: CloseConnectionAsync
+
+  - Function: MessageFunction
+    Memory: 256
+    Timeout: 30
+    Sources:
+
+      - WebSocket: send
+        Invoke: SendMessageAsync
+
+      - WebSocket: $default
+        Invoke: UnrecognizedRequest
+
+  - Variable: WebSocketUrl
+    Description: WebSocket URL
+    Scope: public
+    Value: !Ref Module::WebSocket::Url
+
+  # JWT Authorization
+  - Resource: JwtAuthorizer
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: JwtAuthorizer
+      ApiId: !Ref Module::WebSocket
+      AuthorizerType: REQUEST
+      AuthorizerUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JwtAuthorizerFunction.Arn}/invocations"
+      IdentitySource:
+        - $request.header.Authorization
+
+  - Resource: JwtAuthorizerPermission
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt JwtAuthorizerFunction.Arn
+      Principal: !Sub "apigateway.${AWS::URLSuffix}"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/$connect"
+
+  - Function: JwtAuthorizerFunction
+    Memory: 256
+    Timeout: 30
+    Environment:
+      Issuer: foobar
+      Audience: me
+    Properties:
+      Environment:
+        Variables:
+          DEBUG_LOGGING_ENABLED: true
