@@ -263,6 +263,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // create a WebSocket API
             _builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression);
+            _builder.TryGetOverride("Module::WebSocket.ApiKeySelectionExpression", out var apiKeySelectionExpression);
             var webSocket = _builder.AddResource(
                 parent: moduleItem,
                 name: "WebSocket",
@@ -272,7 +273,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["Name"] = FnSub("${AWS::StackName} Module WebSocket"),
                     ["ProtocolType"] = "WEBSOCKET",
                     ["Description"] = FnSub("${Module::FullName} WebSocket (v${Module::Version})"),
-                    ["RouteSelectionExpression"] = routeSelectionExpression ?? "$request.body.action"
+                    ["RouteSelectionExpression"] = routeSelectionExpression ?? "$request.body.action",
+                    ["ApiKeySelectionExpression"] = apiKeySelectionExpression
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
