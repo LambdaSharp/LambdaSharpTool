@@ -611,7 +611,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["ApiId"] = FnRef("Module::WebSocket"),
                     ["StageName"] = FnRef("Module::WebSocket::StageName"),
                     ["Description"] = FnSub("Module WebSocket ${Module::WebSocket::StageName} Stage"),
-                    ["DeploymentId"] = FnRef(deployment.FullName)
+                    ["DeploymentId"] = FnRef(deployment.FullName),
+                    ["RouteSettings"] = new Dictionary<string, dynamic> {
+                        ["DataTraceEnabled"] = true,
+                        ["DetailedMetricsEnabled"] = true,
+                        ["LoggingLevel"] = "INFO"
+                    }
                 },
                 resourceExportAttribute: null,
                 dependsOn: new[] { webSocketLogGroup.FullName },
