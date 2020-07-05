@@ -26,9 +26,11 @@ source: LambdaSharp
 detail-type: $EVENT_TYPE
 detail: JSON # event type specific
 resources:
-    - lambdasharp:stack:$STACK_ID
+    - lambdasharp:stack:$MODULE_ID
     - lambdasharp:module:$MODULE_FULL_NAME
     - lambdasharp:tier:$DEPLOYMENT_TIER
+    - lambdasharp:moduleinfo:$MODULE_INFO
+    - lambdasharp:origin:$MODULE_ORIGIN
 ```
 
 |Variable           |Description    |
@@ -36,4 +38,6 @@ resources:
 |`$DEPLOYMENT_TIER` |The name of the deployment tier. Empty value for the default deployment tier.
 |`$EVENT_TYPE`      |The event type emitted. One of `LambdaError`, `LambdaMetrics`, or `LambdaUsage`.
 |`$MODULE_FULL_NAME`|Full name of the originating module (e.g. `My.Module`).
-|`$STACK_ID`        |The ID of the CloudFormation stack that was created for the module deployment.
+|`$MODULE_ID`       |The name of the CloudFormation stack that was created for the module deployment.
+|`$MODULE_INFO`     |The full name, version, and origin of the originating module (e.g. `My.Module:1.5@my-origin`)
+|`$MODULE_ORIGIN`   |Origin of the originating module (e.g. `my-origin`).
