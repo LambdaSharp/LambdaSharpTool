@@ -26,6 +26,7 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`Module::RestApi.Policy`                    |Expression for setting the REST API policy.                                         |(none)                                 |
 |`Module::Role.PermissionsBoundary`          |Expression for setting the PermissionsBoundary attribute on the function IAM role.  |(none)                                 |
 |`Module::WebSocket::StageName`              |Expression for setting the WebSocket stage name.                                    |`LATEST`                               |
+|`Module::WebSocket.ApiKeySelectionExpression`|Expression for determining the WebSocket API key.                                  |(none)                                 |
 |`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                                     |`$request.body.action`                 |
 
 ### Examples
