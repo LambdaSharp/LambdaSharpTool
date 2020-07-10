@@ -530,6 +530,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             var resourcesSignature = string.Join("\n", webSocketResources
                 .OrderBy(kv => kv.Key)
                 .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
+
+                // include dependency on AWS::ApiGatewayV2::Authorizer if one exists
+                .Union(_builder.Items
+                    .OfType<ResourceItem>()
+                    .Where(item => item.Type == "AWS::ApiGatewayV2::Authorizer")
+                    .Select(item => $"{item.FullName}={JsonConvert.SerializeObject(item.Resource)}")
+                )
             );
             string methodsChecksum = resourcesSignature.ToMD5Hash();
 
