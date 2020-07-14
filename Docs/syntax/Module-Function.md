@@ -5,7 +5,7 @@ keywords: lambda, function, declaration, syntax, yaml, cloudformation
 ---
 # Function
 
-The `Function` definition specifies a Lambda function for deployment. Each definition is compiled and uploaded as part of the deployment process. The deployed Lambda function is prefixed with `${DeploymentPrefix}` to uniquely distinguish is from other functions.
+The `Function` definition specifies a Lambda function for deployment. Each definition is compiled and uploaded as part of the deployment process. The deployed Lambda function is prefixed with `${Deployment::TierPrefix}` to uniquely distinguish is from other functions.
 
 ## Syntax
 

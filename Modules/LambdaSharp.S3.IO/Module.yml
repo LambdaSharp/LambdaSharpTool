@@ -104,7 +104,7 @@ Items:
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Type: AWS::S3::Bucket
     Allow: ReadWrite
-    Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
+    Value: !Sub "arn:aws:s3:::${Deployment::TierPrefixLowercase}*"
 
   - Resource: SourceBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets

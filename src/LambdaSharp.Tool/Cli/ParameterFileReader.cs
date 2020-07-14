@@ -48,14 +48,16 @@ namespace LambdaSharp.Tool.Cli {
             private readonly string _workingDirectory;
 
             //--- Constructors ---
-            public ParameterStoreFunctionNodeDeserializer(string workingDirectory, LogErrorDelegate logError) {
+            public ParameterStoreFunctionNodeDeserializer(string workingDirectory, LogErrorDelegate logError, Settings settings) {
                 _workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
                 LogError = logError ?? throw new ArgumentNullException(nameof(logError));
+                Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             }
 
             //--- Properties ---
             public bool FindDependencies { get; set; }
             private LogErrorDelegate LogError { get; }
+            private Settings Settings { get; }
 
             //--- Methods ---
             public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
@@ -67,6 +69,8 @@ namespace LambdaSharp.Tool.Cli {
                         return GetEnv(node, reader, expectedType, nestedObjectDeserializer, out value);
                     case "!GetParam":
                         return GetParam(node, reader, expectedType, nestedObjectDeserializer, out value);
+                    case "!Ref":
+                        return Ref(node, reader, expectedType, nestedObjectDeserializer, out value);
                     case "!Sub":
                         return Sub(node, reader, expectedType, nestedObjectDeserializer, out value);
                     }
@@ -213,6 +217,28 @@ namespace LambdaSharp.Tool.Cli {
                 return false;
             }
 
+            private bool Ref(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+                if(node is Scalar scalar) {
+
+                    // deserialize single parameter
+                    INodeDeserializer nested = new ScalarNodeDeserializer();
+                    if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string key)) {
+                        value = GetBuiltinVariable(key);
+                        if(value == null) {
+                            value = "<MISSING>";
+                            if(!FindDependencies) {
+                                LogError($"missing !Ref variable '{key}'", null);
+                            }
+                        }
+                        return true;
+                    }
+                } else {
+                    LogError("invalid expression for !Ref", null);
+                }
+                value = null;
+                return false;
+            }
+
             private bool Sub(NodeEvent node, IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
                 if(node is Scalar scalar) {
 
@@ -268,8 +294,8 @@ namespace LambdaSharp.Tool.Cli {
                         return text;
                     } else if(!arguments.Contains(key)) {
 
-                        // argument was not supplied, read key from environment variables instead
-                        var environmentValue = Environment.GetEnvironmentVariable(key);
+                        // argument was not supplied, read key from builtin or environment variables instead
+                        var environmentValue = GetBuiltinVariable(key) ?? Environment.GetEnvironmentVariable(key);
                         if(environmentValue != null) {
                             return environmentValue;
                         }
@@ -293,6 +319,16 @@ namespace LambdaSharp.Tool.Cli {
                 });
                 return true;
             }
+
+            private string GetBuiltinVariable(string key)
+                => key switch {
+                    "Deployment::BucketName" => Settings.DeploymentBucketName,
+                    "Deployment::Tier" => Settings.Tier,
+                    "Deployment::TierLowercase" => Settings.Tier.ToLowerInvariant(),
+                    "Deployment::TierPrefix" => Settings.TierPrefix,
+                    "Deployment::TierPrefixLowercase" => Settings.TierPrefix.ToLowerInvariant(),
+                    _ => null
+                };
         }
 
         //--- Constructors ---
@@ -326,7 +362,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // initialize YAML parser
             var sourceRelativePath = new FileInfo(SourceFilename).Directory.FullName;
-            var parameterStoreDeserializer = new ParameterStoreFunctionNodeDeserializer(sourceRelativePath, LogError);
+            var parameterStoreDeserializer = new ParameterStoreFunctionNodeDeserializer(sourceRelativePath, LogError, Settings);
             var inputs = ParseYamlFile(source, findDependencies: true);
 
             // check if any parameter store references were found
@@ -442,6 +478,7 @@ namespace LambdaSharp.Tool.Cli {
                     .WithTagMapping("!GetConfig", typeof(CloudFormationListFunction))
                     .WithTagMapping("!GetEnv", typeof(CloudFormationListFunction))
                     .WithTagMapping("!GetParam", typeof(CloudFormationListFunction))
+                    .WithTagMapping("!Ref", typeof(CloudFormationListFunction))
                     .WithTagMapping("!Sub", typeof(CloudFormationListFunction))
                     .Build()
                     .Deserialize<Dictionary<string, object>>(text);

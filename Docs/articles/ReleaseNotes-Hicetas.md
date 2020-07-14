@@ -148,9 +148,12 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * CLI
   * Enabled detailed CloudWatch metrics for WebSocket deployments.
   * Added `lambdasharp:moduleinfo:$MODULE_INFO` and `lambdasharp:origin:$MODULE_ORIGIN` metadata to emitted CloudWatch events.
+  * Added support for `!Ref` function in parameter files to read built-in variables.
+  * Added `Deployment::BucketName`, `Deployment::Tier`, `Deployment::TierLowercase`, `Deployment::TierPrefix`, `Deployment::TierPrefixLowercase` as built-in variables for parameter files.
 
 * Syntax
   * Added pragma for overriding `Module::WebSocket.ApiKeySelectionExpression`.
+  * Added `Deployment::TierPrefix` and `Deployment::TierPrefixLowercase` as module variables.
 
 #### Fixes
 

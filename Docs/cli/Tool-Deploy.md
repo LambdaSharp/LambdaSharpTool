@@ -323,7 +323,7 @@ A JSON-path expression to locate to desired value in the JSON file. A good descr
 
 #### !GetEnv
 
-The `!GetEnv` function is similar, but reads a value from the system environment variables instead.
+The `!GetEnv` function reads a system environment variable.
 
 ##### Syntax
 ```yaml
@@ -381,6 +381,39 @@ ApiKey: !GetConfig [ '../global.json', Services.SomeApi.ApiKey ]
 ReplyEmail: !GetParam /Company/EmailAddress
 Language: !GetEnv LANG
 ```
+
+#### !Ref
+
+The `!Ref` function reads a built-in variable.
+
+##### Syntax
+```yaml
+!Ref builtin-variable
+```
+
+##### Parameters
+<dl>
+
+<dt><code>builtin-variable</code></dt>
+<dd>
+The name of a built-in variable.
+
+One of:
+<dl>
+<dt><code>Deployment::BucketName</code></dt>
+<dd>S3 Bucket name from which the module is being deployed from.</dd>
+<dt><code>Deployment::Tier</code></dt>
+<dd>Deployment tier name. Empty string for default deployment tier.</dd>
+<dt><code>Deployment::TierLowercase</code></dt>
+<dd>Deployment tier name in lowercase characters. Empty string for default deployment tier.</dd>
+<dt><code>Deployment::TierPrefix</code></dt>
+<dd>Deployment tier prefix used to isolate resources. Empty string for default deployment tier.</dd>
+<dt><code>Deployment::TierPrefixLowercase</code></dt>
+<dd>Deployment tier prefix in lowercase characters. Used by resources that require only lowercase characters (e.g. S3 buckets, domain names). Empty string for default deployment tier.</dd>
+</dl>
+</dd>
+
+</dl>
 
 #### !Sub
 
