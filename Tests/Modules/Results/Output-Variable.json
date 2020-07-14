@@ -40,7 +40,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3F0B18991DB3F18CEB86588BE86C09BA"
+      "Default": "0197A5D3093988B280ABD2FF18EEE9F1"
     }
   },
   "Resources": {
@@ -81,7 +81,7 @@
       "Description": "ManyValues description"
     },
     "OutputExpressionValue": {
-      "Value": "this is another value with extra stuff",
+      "Value": "this is a value with extra stuff",
       "Export": {
         "Name": {
           "Fn::Sub": "${AWS::StackName}::OutputExpressionValue"
@@ -203,7 +203,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "3F0B18991DB3F18CEB86588BE86C09BA",
+      "TemplateChecksum": "0197A5D3093988B280ABD2FF18EEE9F1",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

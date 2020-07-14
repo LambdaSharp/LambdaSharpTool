@@ -19,7 +19,7 @@ Items:
   # Exported Value
   - Variable: OutputExpressionValue
     Scope: public
-    Value: !Sub "${Value} with extra stuff"
+    Value: !Sub "${SimpleValue} with extra stuff"
 
   # Conditional Exported Value
   - Parameter: MyParameter
