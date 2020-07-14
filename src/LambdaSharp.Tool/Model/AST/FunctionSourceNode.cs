@@ -25,6 +25,7 @@ namespace LambdaSharp.Tool.Model.AST {
 
         //--- Class Fields ---
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
+            ["Alexa"] = Array.Empty<string>(),
             ["Api"] = new[] {
                 "Integration",
                 "OperationName",
@@ -34,8 +35,16 @@ namespace LambdaSharp.Tool.Model.AST {
                 "AuthorizerId",
                 "Invoke"
             },
-            ["Schedule"] = new[] {
-                "Name"
+            ["DynamoDB"] = new[] {
+                "BatchSize",
+                "StartingPosition"
+            },
+            ["EventBus"] = new[] {
+                "Pattern"
+            },
+            ["Kinesis"] = new[] {
+                "BatchSize",
+                "StartingPosition"
             },
 
             // TODO (2019-05-07, bjorg): should this be 'Bucket' instead?
@@ -44,23 +53,17 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Prefix",
                 "Suffix"
             },
-            ["SlackCommand"] = Array.Empty<string>(),
-            ["Topic"] = new[] {
-                "Filters"
+            ["Schedule"] = new[] {
+                "Name"
             },
+            ["SlackCommand"] = Array.Empty<string>(),
 
             // TODO (2019-05-07, bjorg): should this be 'Queue' instead?
             ["Sqs"] = new[] {
                 "BatchSize"
             },
-            ["Alexa"] = Array.Empty<string>(),
-            ["DynamoDB"] = new[] {
-                "BatchSize",
-                "StartingPosition"
-            },
-            ["Kinesis"] = new[] {
-                "BatchSize",
-                "StartingPosition"
+            ["Topic"] = new[] {
+                "Filters"
             },
             ["WebSocket"] = new[] {
                 "OperationName",
@@ -70,9 +73,6 @@ namespace LambdaSharp.Tool.Model.AST {
                 "AuthorizerId",
                 "Invoke"
             },
-            ["EventBus"] = new[] {
-                "Pattern"
-            }
         };
 
         //--- Properties ---
