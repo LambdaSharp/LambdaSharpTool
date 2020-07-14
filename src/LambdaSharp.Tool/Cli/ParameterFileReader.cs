@@ -374,10 +374,10 @@ namespace LambdaSharp.Tool.Cli {
                 foreach(var parameter in parameterStoreDeserializer.Dictionary.Where(kv => kv.Value == null)) {
                     LogError($"!GetParam unable to find '{parameter.Key}' in parameter store");
                 }
-
-                // reparse document after parameter references were resolved
-                inputs = ParseYamlFile(source, findDependencies: false);
             }
+
+            // reparse document after parameter references were resolved (this pass also logs previously suppressed errors)
+            inputs = ParseYamlFile(source, findDependencies: false);
 
             // resolve 'alias/' key names to key ARNs
             if(inputs.TryGetValue("Secrets", out var keys)) {
