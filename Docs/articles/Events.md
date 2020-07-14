@@ -19,7 +19,7 @@ The following operational events are emitted:
 
 ## Schema
 
-The LambdaSharp events follow the CloudWatch Events schema with some values consistently filled in so they can be used to subscribe to specific events reliably.
+The LambdaSharp events follow the CloudWatch Events schema with additional values filled in to allow subscribing by stack name, module full name, deployment tier, module specifier (`moduleinfo`), and module origin.
 
 ```yaml
 source: LambdaSharp

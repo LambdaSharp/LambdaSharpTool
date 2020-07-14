@@ -147,6 +147,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Enabled detailed CloudWatch metrics for WebSocket deployments.
+  * Added `lambdasharp:moduleinfo:$MODULE_INFO` and `lambdasharp:origin:$MODULE_ORIGIN` metadata to emitted CloudWatch events.
 
 * Syntax
   * Added pragma for overriding `Module::WebSocket.ApiKeySelectionExpression`.
