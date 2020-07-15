@@ -147,6 +147,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Fixes
 
+* CLI
+  * Fixed an issue in `util show-kinesis-failed-logs` where logs with multiple entries were not parsed properly.
+
 ### (v0.8.0.6) - 2020-07-14
 
 #### Features
