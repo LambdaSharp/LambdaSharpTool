@@ -27,16 +27,29 @@ if(DebugLoggingEnabled) {
 }
 ```
 
-## Enable Debug Logging
+## Enable Debug Logging in the AWS Console
 
-To enable debug logging, follow these steps:
+To enable debug logging temporarily, follow these steps:
 1. Go to the AWS Console
 1. Locate the Lambda function
 1. Click _Edit_ next to the environment variables section
 1. Change the value for `DEBUG_LOGGING_ENABLED` to `true`
 1. Click _Save_.
 
-This operation will restart the Lambda function with debug logging enabled.
+This operation will restart the Lambda function with debug logging enabled. Note when the Lambda function is redeployed, the environment variables will be reset.
+
+## Enable Debug Logging in the Module
+
+To enable debug logging permanently, edit the Lambda function declaration as follows:
+```yaml
+- Function: MyFunction
+  Memory: 256
+  Timeout: 30
+  Properties:
+    Environment:
+      Variables:
+        DEBUG_LOGGING_ENABLED: true
+```
 
 ## Request/Response Logging
 

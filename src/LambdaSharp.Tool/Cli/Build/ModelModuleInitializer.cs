@@ -157,11 +157,31 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
             _builder.AddVariable(
                 parent: deploymentItem,
+                name: "TierPrefix",
+                description: "Deployment tier prefix",
+                type: "String",
+                scope: null,
+                value: FnRef("DeploymentPrefix"),
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: deploymentItem,
                 name: "TierLowercase",
                 description: "Deployment tier name in lowercase characters",
                 type: "String",
                 scope: null,
                 value: FnSelect("0", FnSplit("-", FnRef("DeploymentPrefixLowercase"))),
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: deploymentItem,
+                name: "TierPrefixLowercase",
+                description: "Deployment tier prefix in lowercase characters",
+                type: "String",
+                scope: null,
+                value: FnRef("DeploymentPrefixLowercase"),
                 allow: null,
                 encryptionContext: null
             );

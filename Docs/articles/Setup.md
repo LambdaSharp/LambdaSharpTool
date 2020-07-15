@@ -138,6 +138,14 @@ During execution, the placeholders values are substituted with information from 
 
 The default pattern is `{ModuleFullName}` when no `RollbarProjectPattern` parameter is specified.
 
+## (Optional) Custom API Gateway Role
+
+During the initialization of a deployment tier, the CLI checks for the presence and capabilities of a default API Gateway role. This role is shared by all API Gateway instances in a region and determines if instances can write to CloudWatch logs and X-Ray traces. A new, empty role is created if needed. If one exists, the CLI checks if the role has the following managed policies and otherwise attaches them:
+* `AWSXrayWriteOnlyAccess`
+* `service-role/AmazonAPIGatewayPushToCloudWatchLogs`
+
+Alternatively, the API Gateway role can be created manually. This might be required if the account requires roles to have permission boundaries. As long as it has the expected managed policies, the CLI will not attempt to modify it. However, if the CLI cannot create or update the role, and one cannot be created manually, the `--skip-apigateway-check` option can be used with the `init` command to bypass the API Gateway role check. Without the managed policies, API Gateway instances may not be able to write to CloudWatch logs or X-Ray traces, but are otherwise not impacted in functionality.
+
 # For LambdaSharp Contributors: Installing LambdaSharp from GitHub
 
 LambdaSharp is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the LambdaSharp repository.

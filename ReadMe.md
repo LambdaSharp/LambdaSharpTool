@@ -1,16 +1,12 @@
-﻿![λ#](Docs/images/LambdaSharpLogo.png)
+﻿![λ#](Docs/images/LambdaSharpBadge.png)
 
 # LambdaSharp - Serverless .NET on AWS
 
 **[Read what's new in the v0.8.0 "Hicetas" release.](https://lambdasharp.net/articles/ReleaseNotes-Hicetas.html)**
 
-LambdaSharp is a command line tool and a framework for serverless application development. LambdaSharp uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
+LambdaSharp is a CLI and framework for serverless .NET Core application development on AWS. LambdaSharp uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
 The objective of LambdaSharp is to accelerate the development pace of serverless solutions while helping developers adhere consistently to best practices to create scalable, observable, and modular systems.
-
-## Give a Star! :star:
-
-If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](https://lambdasharp.net). Thanks!
 
 ![λ# CLI](Docs/images/LashAnsiColor-WIP.gif)
 
@@ -97,9 +93,9 @@ namespace MySampleModule.MyFunction {
 
 ### Samples
 
+1. [Create a Serverless Chat with Cognito, WebSocket, DynamoDB, and Lambda](https://github.com/LambdaSharp/Chat)
 1. [Create a Static Website with CloudFormation](https://github.com/LambdaSharp/StaticWebsite-Sample)
 1. [Create Animated GIFs from Videos with AWS Lambda](https://github.com/LambdaSharp/GifMaker-Sample)
-1. [Create a Web Chat with API Gateway WebSockets](https://github.com/LambdaSharp/WebSocketsChat-Sample)
 1. [Misc. LambdaSharp Samples](Samples/)
 
 ### References
