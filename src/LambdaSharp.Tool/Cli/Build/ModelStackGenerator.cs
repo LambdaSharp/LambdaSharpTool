@@ -245,6 +245,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             void AddExport(AModuleItem exportItem) {
                 var value = exportItem.GetExportReference();
 
+                // TODO (2020-07-14, bjorg): add support for negated condition (requires us to generate an intermediate condition)
+                //  !If [ Condition, !Ref AWS::NoValue, !Ref Value ]
+
                 // check if this is a conditional public value
                 if(
                     TryGetFnIf(value, out var condition, out var ifTrue, out var ifFalse)

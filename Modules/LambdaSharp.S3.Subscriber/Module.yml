@@ -50,7 +50,7 @@ Items:
     Allow:
       - "s3:GetBucketNotification"
       - "s3:PutBucketNotification"
-    Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
+    Value: !Sub "arn:aws:s3:::${Deployment::TierPrefixLowercase}*"
 
   - Resource: CustomResourceTopic
     Description: Custom resource topic for subscribing Lambda functions to S3 buckets

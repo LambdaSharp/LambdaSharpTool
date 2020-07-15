@@ -347,7 +347,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
                     var deploymentBucketName = tierModuleDeploymentBucketArnParts?[5];
 
-                    // rad logging S3 bucket name
+                    // read logging S3 bucket name
                     var tierModuleLoggingBucketArnParts = GetStackOutput("LoggingBucket")?.Split(':');
                     if(tierModuleLoggingBucketArnParts != null) {
                         if((tierModuleLoggingBucketArnParts.Length != 6) || (tierModuleLoggingBucketArnParts[0] != "arn") || (tierModuleLoggingBucketArnParts[1] != "aws") || (tierModuleLoggingBucketArnParts[2] != "s3")) {

@@ -87,6 +87,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Tests/Modules/Fn-Select.yml \
         $LAMBDASHARP/Tests/Modules/Fn-Split.yml \
         $LAMBDASHARP/Tests/Modules/Fn-Sub.yml \
+        $LAMBDASHARP/Tests/Modules/Global-Variables.yml \
         $LAMBDASHARP/Tests/Modules/Fn-Transform.yml \
         $LAMBDASHARP/Tests/Modules/Source-Topic.yml \
         $LAMBDASHARP/Tests/Modules/Source-Timer.yml \

@@ -252,6 +252,7 @@ namespace LambdaSharp.Tool.Cli {
                         if(settings == null) {
                             return;
                         }
+                        await PopulateDeploymentTierSettingsAsync(settings);
                         var parameters = new ParameterFileReader(settings, filePathArgument.Value).ReadInputParametersFiles();
                         if(parameters?.Any() ?? false) {
                             Console.WriteLine();
@@ -1043,23 +1044,28 @@ namespace LambdaSharp.Tool.Cli {
                 var response = await settings.S3Client.ListObjectsV2Async(request);
                 foreach(var s3Object in response.S3Objects) {
                     Console.WriteLine($"{Settings.OutputColor}Key:{Settings.ResetColor}: {s3Object.Key}");
-                    var record = await GetS3ObjectContentsAsync(s3Object.Key);
-                    Console.WriteLine($"{Settings.InfoColor}ArrivalTime:{Settings.ResetColor} {DateTimeOffset.FromUnixTimeMilliseconds(record.arrivalTimestamp)}");
-                    Console.WriteLine($"{Settings.InfoColor}AttemptEndingTimestamp:{Settings.ResetColor} {DateTimeOffset.FromUnixTimeMilliseconds(record.attemptEndingTimestamp)}");
-                    Console.WriteLine($"{Settings.InfoColor}AttemptsMade:{Settings.ResetColor} {record.attemptsMade}");
-                    Console.WriteLine($"{Settings.InfoColor}ErrorCode:{Settings.ResetColor} {record.errorCode}");
-                    Console.WriteLine($"{Settings.InfoColor}ErrorMessage:{Settings.ResetColor} {record.errorMessage}");
-                    Console.WriteLine($"{Settings.InfoColor}Lambda ARN:{Settings.ResetColor} {record.lambdaArn}");
-
-                    var entries = await DecodeBase64GzipDataAsync(record.rawData);
-                    Console.WriteLine($"{Settings.InfoColor}Entries:{Settings.ResetColor} {JObject.Parse(entries).ToString(Formatting.Indented)}");
+                    try {
+                        var records = await GetS3ObjectContentsAsync(s3Object.Key);
+                        foreach(var record in records) {
+                            Console.WriteLine($"{Settings.InfoColor}ArrivalTime:{Settings.ResetColor} {DateTimeOffset.FromUnixTimeMilliseconds(record.arrivalTimestamp)}");
+                            Console.WriteLine($"{Settings.InfoColor}AttemptEndingTimestamp:{Settings.ResetColor} {DateTimeOffset.FromUnixTimeMilliseconds(record.attemptEndingTimestamp)}");
+                            Console.WriteLine($"{Settings.InfoColor}AttemptsMade:{Settings.ResetColor} {record.attemptsMade}");
+                            Console.WriteLine($"{Settings.InfoColor}ErrorCode:{Settings.ResetColor} {record.errorCode}");
+                            Console.WriteLine($"{Settings.InfoColor}ErrorMessage:{Settings.ResetColor} {record.errorMessage}");
+                            Console.WriteLine($"{Settings.InfoColor}Lambda ARN:{Settings.ResetColor} {record.lambdaArn}");
+                            var entries = await DecodeBase64GzipDataAsync(record.rawData);
+                            Console.WriteLine($"{Settings.InfoColor}Entries:{Settings.ResetColor} {JObject.Parse(entries).ToString(Formatting.Indented)}");
+                        }
+                    } catch(DeserializeKinesisFailedLogRecordException e) {
+                        Console.WriteLine($"{Settings.InfoColor}BadData:{Settings.ResetColor} {e.BadData}");
+                    }
                     Console.WriteLine();
                 }
                 request.ContinuationToken = response.NextContinuationToken;
             } while(request.ContinuationToken != null);
 
             // local functions
-            async Task<KinesisFailedLogRecord> GetS3ObjectContentsAsync(string key) {
+            async Task<IEnumerable<KinesisFailedLogRecord>> GetS3ObjectContentsAsync(string key) {
                 try {
                     var response = await settings.S3Client.GetObjectAsync(new GetObjectRequest {
                         BucketName = settings.LoggingBucketName,
@@ -1068,8 +1074,9 @@ namespace LambdaSharp.Tool.Cli {
                     using(var decompressionStream = new GZipStream(response.ResponseStream, CompressionMode.Decompress))
                     using(var destinationStream = new MemoryStream()) {
                         await decompressionStream.CopyToAsync(destinationStream);
-                        var json = Encoding.UTF8.GetString(destinationStream.ToArray());
-                        return JsonConvert.DeserializeObject<KinesisFailedLogRecord>(json);
+                        return Encoding.UTF8.GetString(destinationStream.ToArray())
+                            .Split('\r', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(json => JsonConvert.DeserializeObject<KinesisFailedLogRecord>(json));
                     }
                 } catch(AmazonS3Exception) {
                     return null;

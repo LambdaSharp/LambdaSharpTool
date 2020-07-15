@@ -263,6 +263,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // create a WebSocket API
             _builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression);
+            _builder.TryGetOverride("Module::WebSocket.ApiKeySelectionExpression", out var apiKeySelectionExpression);
             var webSocket = _builder.AddResource(
                 parent: moduleItem,
                 name: "WebSocket",
@@ -272,7 +273,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["Name"] = FnSub("${AWS::StackName} Module WebSocket"),
                     ["ProtocolType"] = "WEBSOCKET",
                     ["Description"] = FnSub("${Module::FullName} WebSocket (v${Module::Version})"),
-                    ["RouteSelectionExpression"] = routeSelectionExpression ?? "$request.body.action"
+                    ["RouteSelectionExpression"] = routeSelectionExpression ?? "$request.body.action",
+                    ["ApiKeySelectionExpression"] = apiKeySelectionExpression
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
@@ -528,6 +530,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             var resourcesSignature = string.Join("\n", webSocketResources
                 .OrderBy(kv => kv.Key)
                 .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
+
+                // include dependency on AWS::ApiGatewayV2::Authorizer if one exists
+                .Union(_builder.Items
+                    .OfType<ResourceItem>()
+                    .Where(item => item.Type == "AWS::ApiGatewayV2::Authorizer")
+                    .Select(item => $"{item.FullName}={JsonConvert.SerializeObject(item.Resource)}")
+                )
             );
             string methodsChecksum = resourcesSignature.ToMD5Hash();
 
@@ -611,7 +620,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["ApiId"] = FnRef("Module::WebSocket"),
                     ["StageName"] = FnRef("Module::WebSocket::StageName"),
                     ["Description"] = FnSub("Module WebSocket ${Module::WebSocket::StageName} Stage"),
-                    ["DeploymentId"] = FnRef(deployment.FullName)
+                    ["DeploymentId"] = FnRef(deployment.FullName),
+                    ["RouteSettings"] = _webSocketRoutes.ToDictionary(route => route.Source.RouteKey, route => new Dictionary<string, dynamic> {
+                        ["DataTraceEnabled"] = true,
+                        ["DetailedMetricsEnabled"] = true,
+                        ["LoggingLevel"] = "INFO"
+                    })
                 },
                 resourceExportAttribute: null,
                 dependsOn: new[] { webSocketLogGroup.FullName },

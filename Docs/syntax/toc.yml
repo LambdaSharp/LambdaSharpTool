@@ -39,20 +39,17 @@
         - name: Alexa
           href: Module-Function-Sources-Alexa.md
 
-        - name: API
+        - name: Api
           href: Module-Function-Sources-APIGateway.md
 
         - name: DynamoDB
           href: Module-Function-Sources-DynamoDB.md
 
-        - name: Event
+        - name: EventBus
           href: Module-Function-Sources-EventBus.md
 
-        - name: Kinesis Stream
+        - name: Kinesis
           href: Module-Function-Sources-Kinesis.md
-
-        - name: Route
-          href: Module-Function-Sources-WebSocket.md
 
         - name: S3
           href: Module-Function-Sources-S3.md
@@ -60,14 +57,17 @@
         - name: Schedule
           href: Module-Function-Sources-Schedule.md
 
-        - name: Slack
+        - name: SlackCommand
           href: Module-Function-Sources-SlackCommand.md
 
-        - name: SNS
+        - name: Topic
           href: Module-Function-Sources-SNS.md
 
-        - name: SQS
+        - name: Sqs
           href: Module-Function-Sources-SQS.md
+
+        - name: WebSocket
+          href: Module-Function-Sources-WebSocket.md
 
 - name: Group
   href: Module-Group.md

@@ -26,11 +26,13 @@ LambdaSharp modules have variables and resources defined implicitly as part of t
 
 ## Deployment Variables
 
-|Variable                      |Type      |Definition                                    |
-|------------------------------|----------|----------------------------------------------|
-|`Deployment::BucketName`      |String    |S3 Bucket name from which the module is being deployed from
-|`Deployment::Tier`            |String    |Deployment tier name. Empty string for default deployment tier
-|`Deployment::TierLowercase`   |String    |Deployment tier name in lowercase characters. Empty string for default deployment tier
+|Variable                           |Type      |Definition                                    |
+|-----------------------------------|----------|----------------------------------------------|
+|`Deployment::BucketName`           |String    |S3 Bucket name from which the module is being deployed from.
+|`Deployment::Tier`                 |String    |Deployment tier name. Empty string for default deployment tier.
+|`Deployment::TierLowercase`        |String    |Deployment tier name in lowercase characters. Empty string for default deployment tier.
+|`Deployment::TierPrefix`           |String    |Deployment tier prefix used to isolate resources. Empty string for default deployment tier.
+|`Deployment::TierPrefixLowercase`  |String    |Deployment tier prefix in lowercase characters. Used by resources that require only lowercase characters (e.g. S3 buckets, domain names). Empty string for default deployment tier.
 
 
 **NOTE:**
@@ -68,9 +70,9 @@ The following resources and variables are defined when a module contains a funct
 |`Module::WebSocket::Stage`      |AWS::ApiGatewayV2::Stage      |Stage for deploying WebSocket API; the stage name is always `LATEST`
 |`Module::WebSocket::Url`        |String                        |URL of the WebSocket API
 
-## Module Deployment Variables
+## Module Deployment Parameters
 
-The following variables are set by LambdaSharp CLI when deploying a module.
+The following parameters are set by LambdaSharp CLI when deploying a module.
 
 |Variable                      |Type                           |Definition                                    |
 |------------------------------|-------------------------------|----------------------------------------------|

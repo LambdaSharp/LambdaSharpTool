@@ -941,11 +941,26 @@ namespace LambdaSharp {
         protected void SendEvent<T>(string source, string detailType, T details, IEnumerable<string>? resources = null) {
 
             // augment event resources with LambdaSharp specific resources
-            var lambdaResources = new List<string>(resources ?? Enumerable.Empty<string>()) {
-                $"lambdasharp:stack:{Info.ModuleId}",
-                $"lambdasharp:module:{Info.ModuleFullName}",
-                $"lambdasharp:tier:{Info.DeploymentTier}"
-            };
+            var lambdaResources = new List<string>();
+            if(resources != null) {
+                lambdaResources.AddRange(resources);
+            }
+            if(Info.ModuleId != null) {
+                lambdaResources.Add($"lambdasharp:stack:{Info.ModuleId}");
+            }
+            if(Info.ModuleFullName != null) {
+                lambdaResources.Add($"lambdasharp:module:{Info.ModuleFullName}");
+            }
+            if(Info.DeploymentTier != null) {
+                lambdaResources.Add($"lambdasharp:tier:{Info.DeploymentTier}");
+            }
+            if(Info.ModuleInfo != null) {
+                lambdaResources.Add($"lambdasharp:moduleinfo:{Info.ModuleInfo}");
+                ParseModuleInfoString(Info.ModuleInfo, out _, out _, out _, out var moduleOrigin);
+                if(moduleOrigin != null) {
+                    lambdaResources.Add($"lambdasharp:origin:{moduleOrigin}");
+                }
+            }
 
             // create event record for logging
             var now = DateTimeOffset.UtcNow;

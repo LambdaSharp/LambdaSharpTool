@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.0.6) - TBD
+# LambdaSharp "Hicetas" Release (v0.8.0.7) - TBD
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,7 +141,35 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.0.6) - TBD
+### (v0.8.0.7) - TBD
+
+#### Features
+
+#### Fixes
+
+* CLI
+  * Fixed an issue in `util show-kinesis-failed-logs` where logs with multiple entries were not parsed properly.
+
+### (v0.8.0.6) - 2020-07-14
+
+#### Features
+
+* CLI
+  * Enabled detailed CloudWatch metrics for WebSocket deployments.
+  * Added `lambdasharp:moduleinfo:$MODULE_INFO` and `lambdasharp:origin:$MODULE_ORIGIN` metadata to emitted CloudWatch events.
+  * Added support for `!Ref` function in parameter files to read built-in variables.
+  * Added `Deployment::BucketName`, `Deployment::Tier`, `Deployment::TierLowercase`, `Deployment::TierPrefix`, `Deployment::TierPrefixLowercase` as built-in variables for parameter files.
+  * Updated embedded CloudFormation spec to 16.1.0.
+
+* Syntax
+  * Added pragma for overriding `Module::WebSocket.ApiKeySelectionExpression`.
+  * Added `Deployment::TierPrefix` and `Deployment::TierPrefixLowercase` as module variables.
+
+#### Fixes
+
+* CLI
+  * Fixed an issue where references to missing environment variables in the _parameters.yml_ file were not reported as errors.
+  * Fixed an issue where an API Gateway deployment (REST API and WebSocket) was not updated properly when an authorizer was changed.
 
 ### (v0.8.0.5) - 2020-07-02
 
