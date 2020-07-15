@@ -457,6 +457,24 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 $"lambdasharp:module:{owner?.Module}",
                 $"lambdasharp:tier:{Info.DeploymentTier}"
             };
+
+            // add module info and origin when possible
+            if(owner?.ModuleInfo != null) {
+
+                // add module info
+                resources.Add($"lambdasharp:moduleinfo:{owner.ModuleInfo}");
+
+                // pare module info to extract origin information
+                var nameAndVersionOwner = owner.ModuleInfo.Split(':', 2);
+                var versionAndOwner = (nameAndVersionOwner.Length == 2)
+                    ? nameAndVersionOwner[1].Split('@', 2)
+                    : new[] { nameAndVersionOwner[0] };
+                if((versionAndOwner.Length == 2) && !string.IsNullOrEmpty(versionAndOwner[1])) {
+
+                    // add module origin
+                    resources.Add($"lambdasharp:origin:{versionAndOwner[1]}");
+                }
+            }
             if(record.Resources != null) {
                 resources.AddRange(resources);
             }

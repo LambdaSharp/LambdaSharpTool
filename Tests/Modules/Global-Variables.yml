@@ -1,0 +1,27 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  # List of all global variables
+  - Variable: ModuleVariables
+    Value:
+      - !Ref Module::DeadLetterQueue
+      - !Ref Module::FullName
+      - !Ref Module::Id
+      - !Ref Module::Info
+      - !Ref Module::LoggingStream
+      - !Ref Module::LoggingStreamRole
+      - !Ref Module::Name
+      - !Ref Module::Namespace
+      - !Ref Module::Role
+      - !Ref Module::RootId
+      - !Ref Module::Version
+      - !Ref Deployment::BucketName
+
+  - Variable: DeploymentVariables
+    Value:
+      - !Ref Deployment::BucketName
+      - !Ref Deployment::Tier
+      - !Ref Deployment::TierLowercase
+      - !Ref Deployment::TierPrefix
+      - !Ref Deployment::TierPrefixLowercase

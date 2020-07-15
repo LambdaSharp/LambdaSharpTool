@@ -457,7 +457,7 @@ namespace LambdaSharp.Tool.Model {
                 // check if import itself is conditional
                 import.Reference = FnIf(
                     condition.ResourceName,
-                    FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
+                    FnImportValue(FnSub("${Deployment::TierPrefix}${Import}", new Dictionary<string, object> {
                         ["Import"] = FnSelect("1", FnSplit("$", FnRef(import.ResourceName)))
                     })),
                     FnRef(import.ResourceName)

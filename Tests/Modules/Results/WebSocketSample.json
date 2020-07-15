@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8032E7EEF28EC36C56249DAE77C90766"
+      "Default": "121E7ABDAADC7119C87C4AE36C0653DB"
     }
   },
   "Resources": {
@@ -1088,6 +1088,28 @@
         "Description": "Module WebSocket LATEST Stage",
         "DeploymentId": {
           "Ref": "ModuleWebSocketDeployment0AD1D65879DDB5B7294C652C9B4E6C6A"
+        },
+        "RouteSettings": {
+          "$connect": {
+            "DataTraceEnabled": true,
+            "DetailedMetricsEnabled": true,
+            "LoggingLevel": "INFO"
+          },
+          "$disconnect": {
+            "DataTraceEnabled": true,
+            "DetailedMetricsEnabled": true,
+            "LoggingLevel": "INFO"
+          },
+          "send": {
+            "DataTraceEnabled": true,
+            "DetailedMetricsEnabled": true,
+            "LoggingLevel": "INFO"
+          },
+          "$default": {
+            "DataTraceEnabled": true,
+            "DetailedMetricsEnabled": true,
+            "LoggingLevel": "INFO"
+          }
         }
       },
       "DependsOn": [
@@ -1116,7 +1138,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.4"
+      "Value": "0.8.0.6"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1345,7 +1367,7 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "8032E7EEF28EC36C56249DAE77C90766",
+      "TemplateChecksum": "121E7ABDAADC7119C87C4AE36C0653DB",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

@@ -252,6 +252,7 @@ namespace LambdaSharp.Tool.Cli {
                         if(settings == null) {
                             return;
                         }
+                        await PopulateDeploymentTierSettingsAsync(settings);
                         var parameters = new ParameterFileReader(settings, filePathArgument.Value).ReadInputParametersFiles();
                         if(parameters?.Any() ?? false) {
                             Console.WriteLine();

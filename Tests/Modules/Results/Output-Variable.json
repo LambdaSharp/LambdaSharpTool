@@ -2,6 +2,10 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
   "Parameters": {
+    "MyParameter": {
+      "Type": "String",
+      "Default": "Hello"
+    },
     "Secrets": {
       "Type": "String",
       "Description": "Secret Keys (ARNs)",
@@ -36,7 +40,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "12E87FEDF2264DD0E6039ED8D1C24C62"
+      "Default": "0197A5D3093988B280ABD2FF18EEE9F1"
     }
   },
   "Resources": {
@@ -77,12 +81,21 @@
       "Description": "ManyValues description"
     },
     "OutputExpressionValue": {
-      "Value": "this is another value with extra stuff",
+      "Value": "this is a value with extra stuff",
       "Export": {
         "Name": {
           "Fn::Sub": "${AWS::StackName}::OutputExpressionValue"
         }
       }
+    },
+    "PublicConditionalValue": {
+      "Value": "Hello world!",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::PublicConditionalValue"
+        }
+      },
+      "Condition": "MyCondition"
     },
     "ModuleInfo": {
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
@@ -93,7 +106,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.4"
+      "Value": "0.8.0.6"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -112,6 +125,14 @@
     }
   },
   "Conditions": {
+    "MyCondition": {
+      "Fn::Equals": [
+        {
+          "Ref": "MyParameter"
+        },
+        "Hello"
+      ]
+    },
     "UseCoreServices": {
       "Fn::Equals": [
         {
@@ -149,6 +170,14 @@
       "ParameterGroups": [
         {
           "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "MyParameter"
+          ]
+        },
+        {
+          "Label": {
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
@@ -174,10 +203,20 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "12E87FEDF2264DD0E6039ED8D1C24C62",
+      "TemplateChecksum": "0197A5D3093988B280ABD2FF18EEE9F1",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
+        {
+          "Title": "Module Settings",
+          "Parameters": [
+            {
+              "Name": "MyParameter",
+              "Type": "String",
+              "Default": "Hello"
+            }
+          ]
+        },
         {
           "Title": "LambdaSharp Module Options",
           "Parameters": [
@@ -215,6 +254,10 @@
         },
         {
           "Name": "OutputExpressionValue",
+          "Type": "String"
+        },
+        {
+          "Name": "PublicConditionalValue",
           "Type": "String"
         },
         {
