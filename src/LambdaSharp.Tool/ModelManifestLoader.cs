@@ -114,7 +114,20 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport, bool showError, bool allowCaching = false) {
+        public Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport, bool showError, bool allowCaching = false)
+            => ResolveInfoToLocationAsync(moduleInfo, moduleInfo.Origin, dependencyType, allowImport, showError, allowCaching);
+
+        public async Task<ModuleLocation> ResolveInfoToLocationAsync(
+            ModuleInfo moduleInfo,
+            string originBucketName,
+            ModuleManifestDependencyType dependencyType,
+            bool allowImport,
+            bool showError,
+            bool allowCaching = false
+        ) {
+            if(originBucketName == null) {
+                throw new ArgumentNullException(nameof(originBucketName));
+            }
             LogInfoVerbose($"... resolving module {moduleInfo}");
             var stopwatch = Stopwatch.StartNew();
             var cached = false;
@@ -158,7 +171,7 @@ namespace LambdaSharp.Tool {
                 // check if the origin bucket needs to be checked
                 if(
                     allowImport
-                    && (Settings.DeploymentBucketName != moduleInfo.Origin)
+                    && (Settings.DeploymentBucketName != originBucketName)
                     && (
 
                         // no version has been found
@@ -174,7 +187,7 @@ namespace LambdaSharp.Tool {
                         || moduleInfo.Version.HasFloatingConstraints
                     )
                 ) {
-                    var originResult = await FindNewestModuleVersionAsync(moduleInfo.Origin);
+                    var originResult = await FindNewestModuleVersionAsync(originBucketName);
 
                     // check if module found at origin should be kept instead
                     if(

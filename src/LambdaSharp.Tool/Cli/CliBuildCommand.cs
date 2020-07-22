@@ -189,6 +189,7 @@ namespace LambdaSharp.Tool.Cli {
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
                 var moduleOriginOption = AddModuleOriginOption(cmd);
+                var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Import module from specified origin instead of module origin", CommandOptionType.SingleValue);
 
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to module or artifacts folder (default: Module.yml)", multipleValues: true);
@@ -236,7 +237,7 @@ namespace LambdaSharp.Tool.Cli {
                     VersionInfo moduleVersion = null;
                     if(moduleVersionOption.HasValue()) {
                         if(!VersionInfo.TryParse(moduleVersionOption.Value(), out moduleVersion)) {
-                            LogError("--module-version is not a valid version number");
+                            LogError("--module-version does not have a valid version number");
                             return;
                         }
                     }
@@ -244,7 +245,7 @@ namespace LambdaSharp.Tool.Cli {
                     // check if a module build time is supplied
                     if(moduleBuildDateOption.HasValue()) {
                         if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
-                            LogError("--module-build-date is not a valid date-time");
+                            LogError("--module-build-date does not have a valid date-time");
                             return;
                         }
                         settings.UtcNow = moduleBuildDate;
@@ -305,7 +306,7 @@ namespace LambdaSharp.Tool.Cli {
                                     break;
                                 }
                             } else if(moduleInfo != null) {
-                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromOriginOption.Value())) {
                                     break;
                                 }
                             }
@@ -529,15 +530,16 @@ namespace LambdaSharp.Tool.Cli {
             return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish, moduleOrigin);
         }
 
-        public async Task<bool> ImportStepAsync(Settings settings, ModuleInfo moduleInfo, bool forcePublish) {
+        public async Task<bool> ImportStepAsync(Settings settings, ModuleInfo moduleInfo, bool forcePublish, string fromOrigin = null) {
             if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                 return false;
             }
-            if(moduleInfo.Origin == settings.DeploymentBucketName) {
+            fromOrigin ??= moduleInfo.Origin;
+            if(fromOrigin == settings.DeploymentBucketName) {
                 LogWarn($"skipping import of {moduleInfo} because origin matches deployment bucket");
                 return true;
             }
-            return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish);
+            return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish, fromOrigin);
         }
 
         public async Task<bool> DeployStepAsync(

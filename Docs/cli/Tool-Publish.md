@@ -66,7 +66,13 @@ lash new function MyNewFunction
 <dt><code>--module-origin &lt;ORIGIN&gt;</code></dt>
 <dd>
 
-(optional) Set alternative module origin when publishing
+(optional) Set alternative module origin when publishing a locally built module
+</dd>
+
+<dt><code>--from-origin &lt;ORIGIN&gt;</code></dt>
+<dd>
+
+(optional) Import module from specified origin instead of module origin
 </dd>
 
 <dt><code>--module-version &lt;VERSION&gt;</code></dt>

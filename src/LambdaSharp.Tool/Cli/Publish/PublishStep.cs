@@ -160,7 +160,10 @@ namespace LambdaSharp.Tool.Cli.Publish {
             return manifest.ModuleInfo;
         }
 
-        public async Task<bool> DoImportAsync(ModuleInfo moduleInfo, bool forcePublish) {
+        public async Task<bool> DoImportAsync(ModuleInfo moduleInfo, bool forcePublish, string fromOrigin) {
+            if(fromOrigin == null) {
+                throw new ArgumentNullException(nameof(fromOrigin));
+            }
 
             // check if module has already been imported
             if(
@@ -172,7 +175,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // find manifest for module to import
-            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, ModuleManifestDependencyType.Root, allowImport: true, showError: true);
+            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, fromOrigin, ModuleManifestDependencyType.Root, allowImport: true, showError: true);
             if(moduleLocation == null) {
 
                 // nothing to do; loader already emitted an error
