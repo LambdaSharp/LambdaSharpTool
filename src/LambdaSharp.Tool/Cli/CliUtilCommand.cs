@@ -1056,8 +1056,8 @@ namespace LambdaSharp.Tool.Cli {
                             var entries = await DecodeBase64GzipDataAsync(record.rawData);
                             Console.WriteLine($"{Settings.InfoColor}Entries:{Settings.ResetColor} {JObject.Parse(entries).ToString(Formatting.Indented)}");
                         }
-                    } catch(DeserializeKinesisFailedLogRecordException e) {
-                        Console.WriteLine($"{Settings.InfoColor}BadData:{Settings.ResetColor} {e.BadData}");
+                    } catch(Exception e) {
+                        LogError($"unable to read records for {s3Object.Key}", e);
                     }
                     Console.WriteLine();
                 }
