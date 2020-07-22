@@ -169,7 +169,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // check if module has already been imported
             if(
                 !forcePublish
-                && !(moduleInfo.Version?.IsPreRelease ?? false)
+                && (moduleInfo.Version != null)
+                && !moduleInfo.Version.IsPreRelease
                 && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)
             ) {
                 return true;
@@ -199,9 +200,14 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // import module
             var imported = false;
             foreach(var artifact in manifest.Artifacts) {
-                imported = imported | await ImportS3Object(moduleLocation.ModuleInfo.Origin, artifact, replace: forcePublish);
+                imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, artifact, replace: forcePublish);
             }
-            imported = imported | await ImportS3Object(moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease);
+
+            // don't import module manifest if any of the artifacts failed to import
+            if(HasErrors) {
+                return false;
+            }
+            imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease);
             if(imported) {
                 Console.WriteLine($"=> Imported {moduleInfo}");
             } else {
@@ -343,8 +349,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 request.Metadata[AMAZON_METADATA_ORIGIN] = sourceBucket;
                 try {
                     await Settings.S3Client.CopyObjectAsync(request);
-                } catch(AmazonS3Exception) {
-                    LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket");
+                } catch(AmazonS3Exception e) {
+                    LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket", e);
                     return false;
                 }
                  _changesDetected = true;
