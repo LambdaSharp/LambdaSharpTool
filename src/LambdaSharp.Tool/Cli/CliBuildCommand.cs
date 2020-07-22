@@ -534,11 +534,6 @@ namespace LambdaSharp.Tool.Cli {
             if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                 return false;
             }
-            fromOrigin ??= moduleInfo.Origin;
-            if(fromOrigin == settings.DeploymentBucketName) {
-                LogWarn($"skipping import of {moduleInfo} because origin matches deployment bucket");
-                return true;
-            }
             return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish, fromOrigin);
         }
 

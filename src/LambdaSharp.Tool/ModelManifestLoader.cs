@@ -210,7 +210,11 @@ namespace LambdaSharp.Tool {
                         ? $"v{moduleInfo.Version} or later"
                         : "any version";
                     if(showError) {
-                        LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
+                        if(allowImport) {
+                            LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
+                        } else {
+                            LogError($"missing module dependency must be imported explicitly '{moduleInfo}' ({versionConstraint})");
+                        }
                     }
                     return null;
                 }
