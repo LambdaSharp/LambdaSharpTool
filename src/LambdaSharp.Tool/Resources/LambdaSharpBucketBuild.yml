@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: LambdaSharp Core Resources (v%%VERSION%%)
+
+##############
+# Parameters #
+##############
+Parameters:
+
+  BucketName:
+    Type: String
+    Description: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new bucket)
+    AllowedPattern: '^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$'
+    ConstraintDescription: Bucket name must be 3 to 63 characters long, with lowercase alphanumeric characters at the beginning and end
+
+#############
+# Resources #
+#############
+Resources:
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteArtifacts
+            ExpirationInDays: 30
+            Status: Enabled
+
+  AutoDeleteFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: "LambdaSharp Build Bucket clean-up function"
+      Environment:
+        Variables:
+          BucketName: !Ref BucketName
+          StackName: !Ref AWS::StackName
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+          const cfn = new AWS.CloudFormation({ apiVersion: '2010-05-15' });
+          exports.handler = async (event, context) => {
+
+            // check if bucket contains artifacts
+            let response = await s3.listObjects({ Bucket: process.env.BucketName, MaxKeys: 1 }).promise()
+            if(response.Contents.length !== 0) {
+              return "bucket is not empty: " + process.env.BucketName;
+            }
+
+            // initiate stack deletion
+            await cfn.deleteStack({ StackName: process.env.StackName }).promise();
+            return "bucket is empty, deleting stack: " + process.env.StackName;
+          };
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt AutoDeleteFunctionRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 30
+
+  AutoDeleteFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: LambdaPrincipal
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AutoDeleteFunctionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: BucketPermissions
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:DeleteBucket
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::${BucketName}"
+                  - !Sub "arn:${AWS::Partition}:s3:::${BucketName}/*"
+              - Sid: StackPermissions
+                Effect: Allow
+                Action:
+                  - cloudformation:DeleteStack
+                Resource: !Ref AWS::StackId
+
+  AutoDeleteFunctionSelfDeletePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${AWS::StackName}SelfDeletePolicy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: LambdaPermissions
+            Effect: Allow
+            Action:
+              - lambda:DeleteFunction
+            Resource: !GetAtt AutoDeleteFunction.Arn
+          - Sid: RolePermissions
+            Effect: Allow
+            Action:
+              - iam:DeleteRole
+            Resource: !GetAtt AutoDeleteFunctionRole.Arn
+          - Sid: PolicyPermissions
+            Effect: Allow
+            Action:
+              - iam:DeleteRolePolicy
+            Resource: "*"
+      Roles:
+        - !Ref AutoDeleteFunctionRole

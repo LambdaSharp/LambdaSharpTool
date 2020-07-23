@@ -149,11 +149,13 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Enhanced `publish` and `deploy` commands to allow omitting the version number to automatically use the latest published module version.
   * Enhanced `publish` and `deploy` command by adding `--from-origin` option to import modules from specified origin instead the module origin. Dependencies must be published explicitly.
   * Enhanced `deploy` command by adding `--no-import` option to prevent module artifacts or dependencies from being imported. All artifacts must already exist in the deployment tier bucket.
+  * Added `new build-bucket` command to create a temporary build bucket.
 
 #### Fixes
 
 * CLI
   * Fixed an issue in `util show-kinesis-failed-logs` where logs with multiple entries were not parsed properly.
+  * Fixed an issue in `init` where `--existing-s3-bucket-name` would not convert a S3 bucket name to a S3 bucket ARN.
 
 ### (v0.8.0.6) - 2020-07-14
 

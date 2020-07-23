@@ -225,6 +225,45 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
+
+                // public-bucket sub-command
+                cmd.Command("build-bucket", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create a private, temporaray S3 bucket for building LambdaSharp modules";
+                    var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
+                    AddStandardCommandOptions(subCmd);
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+
+                        // initialize AWS profile
+                        var awsAccount = await InitializeAwsProfile(
+                            awsProfileOption.Value(),
+                            awsRegion: awsRegionOption.Value(),
+                            allowCaching: true
+                        );
+
+                        // initialize settings instance
+                        var settings = new Settings {
+                            CfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint),
+                            S3Client = new AmazonS3Client(AWSConfigs.RegionEndpoint),
+                            AwsRegion = awsAccount.Region,
+                            AwsAccountId = awsAccount.AccountId,
+                            AwsUserArn = awsAccount.UserArn
+                        };
+
+                        // get the resource name
+                        var bucketName = nameArgument.Value;
+                        while(string.IsNullOrEmpty(bucketName)) {
+                            bucketName = settings.PromptString("Enter the S3 bucket name");
+                        }
+                        await NewBuildBucket(settings, bucketName);
+                        Console.WriteLine();
+                        Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                    });
+                });
+
                 // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
                     Program.ShowHelp = true;
@@ -602,6 +641,44 @@ namespace LambdaSharp.Tool.Cli {
             await settings.S3Client.PutBucketRequestPaymentAsync(bucketName, new RequestPaymentConfiguration {
                 Payer = "Requester"
             });
+        }
+
+        public async Task NewBuildBucket(Settings settings, string bucketName) {
+
+            // create bucket using template
+            var template = ReadResource("LambdaSharpBucketBuild.yml");
+            var stackName = $"LambdaSharpBuildBucket-{bucketName}";
+            var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                StackName = stackName,
+                Capabilities = new List<string> {
+                    "CAPABILITY_IAM"
+                },
+                OnFailure = OnFailure.DELETE,
+                Parameters = new List<Parameter> {
+                    new Parameter {
+                        ParameterKey = "BucketName",
+                        ParameterValue = bucketName
+                    }
+                },
+                TemplateBody = template,
+                Tags = new List<Tag> {
+                    new Tag {
+                        Key = "LambdaSharp:BuildBucket",
+                        Value = bucketName
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:DeployedBy",
+                        Value = settings.AwsUserArn.Split(':').Last()
+                    }
+                }
+            });
+            var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
+            if(created.Success) {
+                Console.WriteLine("=> Stack creation finished");
+            } else {
+                Console.WriteLine("=> Stack creation FAILED");
+                return;
+            }
         }
 
         private void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {
