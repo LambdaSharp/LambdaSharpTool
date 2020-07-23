@@ -189,7 +189,7 @@ namespace LambdaSharp.Tool.Cli {
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
                 var moduleOriginOption = AddModuleOriginOption(cmd);
-                var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Import module from specified origin instead of module origin", CommandOptionType.SingleValue);
+                var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Use specified origin to import module instead of module origin", CommandOptionType.SingleValue);
 
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to module or artifacts folder (default: Module.yml)", multipleValues: true);
@@ -329,10 +329,12 @@ namespace LambdaSharp.Tool.Cli {
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
+                var noImportOption = cmd.Option("--no-import", "(optional) Module artifacts must exist in deployment tier bucket and cannot be imported", CommandOptionType.NoValue);
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
                 var moduleOriginOption = AddModuleOriginOption(cmd);
+                var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Use specified origin to import module instead of module origin", CommandOptionType.SingleValue);
 
                 // build options
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
@@ -462,8 +464,8 @@ namespace LambdaSharp.Tool.Cli {
                                 if(moduleInfo == null) {
                                     break;
                                 }
-                            } else if(moduleInfo.Origin != null) {
-                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
+                            } else if(!noImportOption.HasValue() && (moduleInfo.Origin != null)) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromOriginOption.Value())) {
                                     break;
                                 }
                             }

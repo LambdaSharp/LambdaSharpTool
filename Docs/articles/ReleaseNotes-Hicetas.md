@@ -146,7 +146,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 #### Features
 
 * CLI
-  * Added `--from-origin` option for `publish` command to import modules from specified origin instead the module origin.
+  * Enhanced `publish` and `deploy` commands to allow omitting the version number to automatically use the latest published module version.
+  * Enhanced `publish` and `deploy` command by adding `--from-origin` option to import modules from specified origin instead the module origin. Dependencies must be published explicitly.
+  * Enhanced `deploy` command by adding `--no-import` option to prevent module artifacts or dependencies from being imported. All artifacts must already exist in the deployment tier bucket.
 
 #### Fixes
 
