@@ -208,7 +208,7 @@ namespace LambdaSharp.Tool {
                     // could not find a matching version
                     var versionConstraint = (moduleInfo.Version != null)
                         ? $"v{moduleInfo.Version} or later"
-                        : "any version";
+                        : "any released version";
                     if(showError) {
                         if(allowImport) {
                             LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
