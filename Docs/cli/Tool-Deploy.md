@@ -66,7 +66,13 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--no-import</code></dt>
 <dd>
 
-(optional) Module artifacts must exist in deployment tier bucket and cannot be imported
+(optional) All module artifacts must exist in deployment tier bucket and cannot be imported
+</dd>
+
+<dt><code>--no-dependency-upgrades</code></dt>
+<dd>
+
+(optional) Do not automatically upgrade shared dependencies
 </dd>
 
 <dt><code>--prompts-as-errors</code></dt>

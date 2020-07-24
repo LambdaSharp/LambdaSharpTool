@@ -329,7 +329,8 @@ namespace LambdaSharp.Tool.Cli {
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
-                var noImportOption = cmd.Option("--no-import", "(optional) Module artifacts must exist in deployment tier bucket and cannot be imported", CommandOptionType.NoValue);
+                var noImportOption = cmd.Option("--no-import", "(optional) All module artifacts must exist in deployment tier bucket and cannot be imported", CommandOptionType.NoValue);
+                var noUpgradesOption = cmd.Option("--no-dependency-upgrades", "(optional) Do not automatically upgrade shared dependencies", CommandOptionType.NoValue);
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
@@ -480,7 +481,8 @@ namespace LambdaSharp.Tool.Cli {
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
                                 xRayTracingLevel,
-                                deployOnlyIfExists: false
+                                deployOnlyIfExists: false,
+                                allowDependencyUpgrades: !noUpgradesOption.HasValue()
                             )) {
                                 break;
                             }
@@ -550,7 +552,8 @@ namespace LambdaSharp.Tool.Cli {
             bool forceDeploy,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
-            bool deployOnlyIfExists
+            bool deployOnlyIfExists,
+            bool allowDependencyUpgrades
         ) {
             try {
                 if(!await PopulateDeploymentTierSettingsAsync(settings)) {
@@ -571,7 +574,8 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy,
                     promptAllParameters,
                     xRayTracingLevel,
-                    deployOnlyIfExists
+                    deployOnlyIfExists,
+                    allowDependencyUpgrades
                 );
             } catch(Exception e) {
                 LogError(e);

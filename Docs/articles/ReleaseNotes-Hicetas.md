@@ -143,13 +143,19 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.0.7) - TBD
 
+### BREAKING CHANGES
+
+* CLI
+  * Renamed `new bucket` command to `new public-bucket` to make it clear the created S3 bucket is publicly accessible.
+
 #### Features
 
 * CLI
   * Enhanced `publish` and `deploy` commands to allow omitting the version number to automatically use the latest published module version.
   * Enhanced `publish` and `deploy` command by adding `--from-origin` option to import modules from specified origin instead the module origin. Dependencies must be published explicitly.
   * Enhanced `deploy` command by adding `--no-import` option to prevent module artifacts or dependencies from being imported. All artifacts must already exist in the deployment tier bucket.
-  * Added `new build-bucket` command to create a temporary build bucket.
+  * Enhanced `deploy` to automatically upgrade shared dependencies when deploying a module. This behavior can be turned off with the `--no-dependency-upgrades` option.
+  * Added `new expiring-bucket` command to create a temporary build bucket.
 
 #### Fixes
 

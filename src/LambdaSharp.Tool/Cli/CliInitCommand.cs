@@ -400,7 +400,8 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy: forceDeploy,
                     promptAllParameters: promptAllParameters,
                     xRayTracingLevel: xRayTracingLevel,
-                    deployOnlyIfExists: !isLambdaSharpCoreModule
+                    deployOnlyIfExists: !isLambdaSharpCoreModule,
+                    allowDependencyUpgrades: true
                 )) {
                     return false;
                 }

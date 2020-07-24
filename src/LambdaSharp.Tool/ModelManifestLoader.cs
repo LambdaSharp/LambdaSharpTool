@@ -297,7 +297,12 @@ namespace LambdaSharp.Tool {
                 => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
         }
 
-        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation, ModuleManifestDependencyType Type)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting, bool allowImport) {
+        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation, ModuleManifestDependencyType Type)>> DiscoverAllDependenciesAsync(
+            ModuleManifest manifest,
+            bool checkExisting,
+            bool allowImport,
+            bool allowDependencyUpgrades
+        ) {
             var deployments = new List<DependencyRecord>();
             var existing = new List<DependencyRecord>();
             var inProgress = new List<DependencyRecord>();
@@ -403,6 +408,11 @@ namespace LambdaSharp.Tool {
                 if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
                     LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
                 } else if(!deployedModuleInfo.Version.MatchesConstraint(dependency.ModuleInfo.Version)) {
+
+                    // for out-of-date dependencies, handle them as if they didn't exist when upgrades are allowed
+                    if(allowDependencyUpgrades) {
+                        return null;
+                    }
                     LogError($"deployed dependent module {dependency.ModuleInfo.FullName} (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
                 }
                 return result;
