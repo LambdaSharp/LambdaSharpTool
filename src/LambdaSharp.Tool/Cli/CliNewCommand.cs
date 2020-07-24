@@ -187,10 +187,10 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
-                // bucket sub-command
-                cmd.Command("bucket", subCmd => {
+                // public-bucket sub-command
+                cmd.Command("public-bucket", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
+                    subCmd.Description = "Create new public S3 bucket with Requester Pays access";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
@@ -219,20 +219,20 @@ namespace LambdaSharp.Tool.Cli {
                         while(string.IsNullOrEmpty(bucketName)) {
                             bucketName = settings.PromptString("Enter the S3 bucket name");
                         }
-                        await NewBucket(settings, bucketName);
+                        await NewPublicBucket(settings, bucketName);
                         Console.WriteLine();
                         Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
                     });
                 });
 
 
-                // public-bucket sub-command
-                cmd.Command("build-bucket", subCmd => {
+                // expiring-bucket sub-command
+                cmd.Command("expiring-bucket", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Create a temporary S3 bucket for building LambdaSharp modules";
+                    subCmd.Description = "Create an S3 bucket that self-deletes after expiration";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
-                    var expirationInDaysOption = subCmd.Option("--bucket-expiration", "(optional)", CommandOptionType.SingleValue);
+                    var expirationInDaysOption = subCmd.Option("--expiration-in-days <VALUE>", "(optional) Number of days until the bucket expires and is deleted (default: 7 days)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
@@ -260,11 +260,15 @@ namespace LambdaSharp.Tool.Cli {
                             bucketName = settings.PromptString("Enter the S3 bucket name");
                         }
 
-                        // get optional expiration in days
-                        if(!int.TryParse(expirationInDaysOption.Value() ?? "7", out var expirationInDays)) {
-                            LogError("invalid value for --bucket-expiration option");
+                        // get --expiration-in-days option
+                        if(
+                            !int.TryParse(expirationInDaysOption.Value() ?? "7", out var expirationInDays)
+                            || (expirationInDays < 1)
+                            || (expirationInDays > 365)
+                        ) {
+                            LogError("invalid value for --expiration-in-days option");
                         }
-                        await NewBuildBucket(settings, bucketName, expirationInDays);
+                        await NewExpiringBucket(settings, bucketName, expirationInDays);
                         Console.WriteLine();
                         Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
                     });
@@ -607,12 +611,13 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task NewBucket(Settings settings, string bucketName) {
+        public async Task NewPublicBucket(Settings settings, string bucketName) {
 
             // create bucket using template
             var template = ReadResource("LambdaSharpBucketPublic.yml", new Dictionary<string, string> {
-                ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
+                ["TOOL-VERSION"] = Version.ToString(),
             });
+            var stackName = $"LambdaSharpPublicBucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> { },
@@ -652,13 +657,13 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        public async Task NewBuildBucket(Settings settings, string bucketName, int expirationInDays) {
+        public async Task NewExpiringBucket(Settings settings, string bucketName, int expirationInDays) {
 
             // create bucket using template
-            var template = ReadResource("LambdaSharpBucketBuild.yml", new Dictionary<string, string> {
-                ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
+            var template = ReadResource("LambdaSharpBucketExpiring.yml", new Dictionary<string, string> {
+                ["TOOL-VERSION"] = Version.ToString(),
             });
-            var stackName = $"LambdaSharpBuildBucket-{bucketName}";
+            var stackName = $"LambdaSharpExpiringBucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> {
