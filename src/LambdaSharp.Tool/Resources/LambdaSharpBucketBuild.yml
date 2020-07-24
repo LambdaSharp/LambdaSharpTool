@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: LambdaSharp Core Resources (v%%VERSION%%)
+Description: LambdaSharp Build Bucket (v%%TOOL-VERSION%%)
 
 ##############
 # Parameters #
@@ -11,6 +11,12 @@ Parameters:
     Description: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new bucket)
     AllowedPattern: '^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$'
     ConstraintDescription: Bucket name must be 3 to 63 characters long, with lowercase alphanumeric characters at the beginning and end
+
+  ExpirationInDays:
+    Type: Number
+    Description: Number of days for objects to remain in the bucket
+    MinValue: 1
+    MaxValue: 365
 
 #############
 # Resources #
@@ -24,7 +30,7 @@ Resources:
       LifecycleConfiguration:
         Rules:
           - Id: DeleteArtifacts
-            ExpirationInDays: 30
+            ExpirationInDays: !Ref ExpirationInDays
             Status: Enabled
 
   AutoDeleteFunction:
@@ -109,6 +115,32 @@ Resources:
             Effect: Allow
             Action:
               - iam:DeleteRolePolicy
-            Resource: "*"
+            Resource: "*" # There doesn't seem to be an ARN format to limit the delete action to just this policy
       Roles:
         - !Ref AutoDeleteFunctionRole
+
+  AutoDeleteTimer:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(1 day)
+      Targets:
+        - Id: HourlyTimer
+          Arn: !GetAtt AutoDeleteFunction.Arn
+
+  AutoDeleteTimerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AutoDeleteFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt AutoDeleteTimer.Arn
+
+###########
+# Outputs #
+###########
+Outputs:
+  BucketArn:
+    Description: Build Bucket ARN
+    Value: !GetAtt Bucket.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-BucketArn"

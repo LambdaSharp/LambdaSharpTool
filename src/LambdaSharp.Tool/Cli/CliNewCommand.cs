@@ -192,7 +192,7 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.HelpOption();
                     subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
@@ -229,9 +229,10 @@ namespace LambdaSharp.Tool.Cli {
                 // public-bucket sub-command
                 cmd.Command("build-bucket", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Create a private, temporaray S3 bucket for building LambdaSharp modules";
+                    subCmd.Description = "Create a temporary S3 bucket for building LambdaSharp modules";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var expirationInDaysOption = subCmd.Option("--bucket-expiration", "(optional)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
@@ -258,7 +259,12 @@ namespace LambdaSharp.Tool.Cli {
                         while(string.IsNullOrEmpty(bucketName)) {
                             bucketName = settings.PromptString("Enter the S3 bucket name");
                         }
-                        await NewBuildBucket(settings, bucketName);
+
+                        // get optional expiration in days
+                        if(!int.TryParse(expirationInDaysOption.Value() ?? "7", out var expirationInDays)) {
+                            LogError("invalid value for --bucket-expiration option");
+                        }
+                        await NewBuildBucket(settings, bucketName, expirationInDays);
                         Console.WriteLine();
                         Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
                     });
@@ -604,8 +610,9 @@ namespace LambdaSharp.Tool.Cli {
         public async Task NewBucket(Settings settings, string bucketName) {
 
             // create bucket using template
-            var template = ReadResource("PublicLambdaSharpBucket.yml");
-            var stackName = $"PublicLambdaSharpBucket-{bucketName}";
+            var template = ReadResource("LambdaSharpBucketPublic.yml", new Dictionary<string, string> {
+                ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
+            });
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> { },
@@ -636,6 +643,8 @@ namespace LambdaSharp.Tool.Cli {
                 return;
             }
 
+            // TODO (2020-07-23, bjorg): consider creating an embedded finalizer to set Requester Pays access
+
             // update bucket to require requester pays
             Console.WriteLine("=> Updating S3 Bucket for Requester Pays access");
             await settings.S3Client.PutBucketRequestPaymentAsync(bucketName, new RequestPaymentConfiguration {
@@ -643,10 +652,12 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        public async Task NewBuildBucket(Settings settings, string bucketName) {
+        public async Task NewBuildBucket(Settings settings, string bucketName, int expirationInDays) {
 
             // create bucket using template
-            var template = ReadResource("LambdaSharpBucketBuild.yml");
+            var template = ReadResource("LambdaSharpBucketBuild.yml", new Dictionary<string, string> {
+                ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
+            });
             var stackName = $"LambdaSharpBuildBucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
@@ -658,7 +669,11 @@ namespace LambdaSharp.Tool.Cli {
                     new Parameter {
                         ParameterKey = "BucketName",
                         ParameterValue = bucketName
-                    }
+                    },
+                    new Parameter {
+                        ParameterKey = "ExpirationInDays",
+                        ParameterValue = expirationInDays.ToString()
+                    },
                 },
                 TemplateBody = template,
                 Tags = new List<Tag> {
