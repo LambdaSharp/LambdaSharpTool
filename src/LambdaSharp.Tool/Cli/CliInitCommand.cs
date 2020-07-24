@@ -292,11 +292,8 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // standard modules
-            var standardModules = new[] {
-                "LambdaSharp.Core",
-                "LambdaSharp.S3.IO",
-                "LambdaSharp.S3.Subscriber",
-                "LambdaSharp.Twitter.Query"
+            var standardModules = new List<string> {
+                "LambdaSharp.Core"
             };
 
             // check if the module must be built and published first (only applicable when running lash in contributor mode)
@@ -309,6 +306,14 @@ namespace LambdaSharp.Tool.Cli {
                     LogError("unable to parse module version from LAMBDASHARP_VERSION");
                     return false;
                 }
+
+                // gather list of module to build and publish
+                standardModules.AddRange(
+                    Directory.GetDirectories(Path.Combine(lambdaSharpPath, "Modules"))
+                        .Where(directory => File.Exists(Path.Combine(directory, "Module.yml")))
+                        .Select(directory => Path.GetFileName(directory))
+                        .Where(module => module != "LambdaSharp.Core")
+                );
                 foreach(var module in standardModules) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Modules", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
