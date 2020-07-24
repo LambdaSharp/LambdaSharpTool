@@ -155,7 +155,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Enhanced `publish` and `deploy` command by adding `--from-origin` option to import modules from specified origin instead the module origin. Dependencies must be published explicitly.
   * Enhanced `deploy` command by adding `--no-import` option to prevent module artifacts or dependencies from being imported. All artifacts must already exist in the deployment tier bucket.
   * Enhanced `deploy` to automatically upgrade shared dependencies when deploying a module. This behavior can be turned off with the `--no-dependency-upgrades` option.
-  * Added `new expiring-bucket` command to create a temporary build bucket.
+  * Added `new expiring-bucket` command to create a self-deleting S3 bucket.
 
 #### Fixes
 
