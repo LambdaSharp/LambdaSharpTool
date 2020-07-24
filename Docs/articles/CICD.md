@@ -30,11 +30,30 @@ DEPLOYMENT_TIER="production"
 
 ## Build Pipeline
 
-### Create a S3 bucket to host the module artifacts
+### Using LambdaSharp: Create a self-deleting S3 bucket to host the module artifacts
 
 ```bash
-lash new build-bucket $LASH_OPTIONS $BUILD_BUCKET
+lash new expiring-bucket $LASH_OPTIONS $BUILD_BUCKET --expiration-in-days 3
 ```
+
+### Using AWS CLI: Create a S3 bucket to host the module artifacts
+
+```bash
+aws $AWS_OPTIONS \
+    s3api create-bucket \
+    --acl private \
+    --bucket $BUILD_BUCKET
+```
+
+Set the bucket lifecycle to automatically delete all artifacts after 30 days.
+```bash
+aws $AWS_OPTIONS \
+    s3api put-bucket-lifecycle-configuration \
+    --bucket $BUILD_BUCKET \
+    --lifecycle-configuration '{"Rules":[{"ID":"DeleteBuildArtifacts","Expiration":{"Days":30},"Filter":{"Prefix":""},"Status":"Enabled"}]}'
+```
+
+**NOTE:** Bucket created with the AWS CLI must be manually deleted at a later date.
 
 ### Create a build tier using the new S3 bucket
 
