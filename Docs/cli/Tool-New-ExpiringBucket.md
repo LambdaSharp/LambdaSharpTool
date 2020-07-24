@@ -1,15 +1,15 @@
 ---
-title: LambdaSharp CLI New Command - Create a Public S3 Bucket
-description: Create a public S3 bucket for sharing LambdaSharp modules
+title: LambdaSharp CLI New Command - Create an Expiring S3 Bucket
+description: Create an S3 bucket that self-deletes after expiration
 keywords: cli, cloudformation, public, sharing, s3, bucket, module
 ---
-# Create New Public S3 Bucket
+# Create Expiring S3 Bucket
 
-The `new bucket` command is used to create a new public S3 bucket for sharing LambdaSharp modules. The bucket is configured to be publicly accessible, but requires the [requester to pay](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) for all data transfer. This ensures that the owner of the S3 bucket only pays for the storage of shared LambdaSharp modules.
+The `new expiring-bucket` command is used to create a private S3 bucket that self deletes after it expires.
 
 ## Arguments
 
-The `new bucket` command takes a single argument that specifies the S3 bucket name.
+The `new expiring-bucket` command takes a single argument that specifies the S3 bucket name.
 
 The following are the rules for naming S3 buckets in all AWS Regions:
 * Bucket names must be unique across all existing bucket names in Amazon S3.
@@ -22,7 +22,7 @@ The following are the rules for naming S3 buckets in all AWS Regions:
 * When you use virtual hosted–style buckets with Secure Sockets Layer (SSL), the SSL wildcard certificate only matches buckets that don't contain periods. To work around this, use HTTP or write your own certificate verification logic. We recommend that you do not use periods (".") in bucket names when using virtual hosted–style buckets.
 
 ```bash
-lash new bucket my-lambdasharp-bucket
+lash new expiring-bucket my-lambdasharp-bucket
 ```
 
 ## Options
@@ -41,27 +41,34 @@ lash new bucket my-lambdasharp-bucket
 (optional) Use a specific AWS region (default: read from AWS profile)
 </dd>
 
+<dt><code>--expiration-in-days &lt;VALUE&gt;</code></dt>
+<dd>
+
+(optional) Number of days until the bucket expires and is deleted (default: 7 days). Minimum value is 1 day. Maximum value is 365 days.
+</dd>
+
 </dl>
 
 ## Examples
 
-### Create a new public S3 bucket for sharing LambdaSharp modules
+### Create an S3 bucket that self-deletes in 3 days
 
 __Using PowerShell/Bash:__
 ```bash
-lash new bucket my-lambdasharp-bucket4
+lash new expiring-bucket my-bucket --expiration-in-days 3
 ```
 
 Output:
 ```
-LambdaSharp CLI (v0.7.0) - Create new public S3 bucket for sharing LambdaSharp modules
-CREATE_COMPLETE    AWS::CloudFormation::Stack    PublicLambdaSharpBucket-my-lambdasharp-bucket4
-CREATE_COMPLETE    AWS::S3::Bucket               Bucket
-CREATE_COMPLETE    AWS::S3::BucketPolicy         BucketPolicy
+LambdaSharp CLI (v0.8.0.7) - Create an S3 bucket that self-deletes after expiration
+CREATE_COMPLETE    AWS::CloudFormation::Stack    LambdaSharpExpiringBucket-my-bucket (51.09s)
+CREATE_COMPLETE    AWS::IAM::Role                AutoDeleteFunctionRole (19.34s)
+CREATE_COMPLETE    AWS::S3::Bucket               Bucket (23.66s)
+CREATE_COMPLETE    AWS::Lambda::Function         AutoDeleteFunction (1.06s)
+CREATE_COMPLETE    AWS::IAM::Policy              AutoDeleteFunctionSelfDeletePolicy (18.28s)
 => Stack creation finished
-=> Updating S3 Bucket for Requester Pays access
 
-=> S3 Bucket ARN: arn:aws:s3:::my-lambdasharp-bucket
+=> S3 Bucket ARN: arn:aws:s3:::my-bucket
 
-Done (finished: 9/7/2019 8:02:19 PM; duration: 00:00:32.2956094)
+Done (finished: 7/23/2020 1:05:50 PM; duration: 00:00:53.7584203)
 ```

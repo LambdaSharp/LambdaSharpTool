@@ -15,10 +15,11 @@ The LambdaSharp CLI is used to process the module definition, compile the C# pro
 1. [`deploy`](Tool-Deploy.md): deploy a module
 
 ## Development Commands
-1. [`new module`](Tool-NewModule.md): create a new module
-1. [`new function`](Tool-NewFunction.md): add a new function to a module
-1. [`new resource`](Tool-NewResource.md): add a new AWS resource to a module
-1. [`new bucket`](Tool-NewBucket.md): create a new public S3 bucket for sharing LambdaSharp modules
+1. [`new module`](Tool-New-Module.md): create a new module
+1. [`new function`](Tool-New-Function.md): add a new function to a module
+1. [`new resource`](Tool-New-Resource.md): add a new AWS resource to a module
+1. [`new public-bucket`](Tool-New-PublicBucket.md): create a public S3 bucket with Requester Pays access
+1. [`new expiring-bucket`](Tool-New-ExpiringBucket.md): create an expiring S3 bucket that self-deletes after expiration
 1. [`encrypt`](Tool-Encrypt.md): encrypt a value with a managed encryption key
 1. [`list`](Tool-List.md): list deployed modules
 1. [`info`](Tool-Info.md): show information about CLI setup
@@ -28,9 +29,13 @@ The LambdaSharp CLI is used to process the module definition, compile the C# pro
 
 ## Tier Commands
 1. [`tier coreservices`](Tool-Tier-CoreServices.md): show/update LambdaSharp Core Services configuration
+1. [`tier list`](Tool-Tier-List.md): list all deployment tiers
+1. [`tier version`](Tool-Tier-Version.md): show the version of the deployment tier
 
 ## Utility Commands
 1. [`util create-invoke-methods-schema`](Tool-Util-CreateInvokeMethodsSchema.md): create JSON schema for compiled methods
 1. [`util delete-orphan-logs`](Tool-Util-DeleteOrphanLogs.md): delete orphaned Lambda CloudWatch logs
 1. [`util download-cloudformation-spec`](Tool-Util-DownloadCloudFormationSpec.md): download the CloudFormation types specification
 1. [`util list-lambdas`](Tool-Util-ListLambdas.md): list Lambda function by CloudFormation stack
+1. [`util show-kinesis-failed-logs`](Tool-Util-ShowKinesisFailedLogs.md): show the failed Kinesis Firehose records from the S3 logging bucket
+1. [`util show-parameters`](Tool-Util-ShowParameters.md):
