@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: LambdaSharp Build Bucket (v%%TOOL-VERSION%%)
+Description: LambdaSharp Expiring Bucket (v%%TOOL-VERSION%%)
 
 ##############
 # Parameters #
@@ -36,7 +36,7 @@ Resources:
   AutoDeleteFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Description: "LambdaSharp Build Bucket clean-up function"
+      Description: "LambdaSharp Expiring Bucket clean-up function"
       Environment:
         Variables:
           BucketName: !Ref BucketName
@@ -140,7 +140,7 @@ Resources:
 ###########
 Outputs:
   BucketArn:
-    Description: Build Bucket ARN
+    Description: Expiring Bucket ARN
     Value: !GetAtt Bucket.Arn
     Export:
       Name: !Sub "${AWS::StackName}-BucketArn"
