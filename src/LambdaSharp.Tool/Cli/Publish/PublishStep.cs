@@ -209,7 +209,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
             imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease);
             if(imported) {
-                Console.WriteLine($"=> Imported {moduleInfo}");
+                Console.WriteLine($"=> Imported {moduleLocation.ModuleInfo}");
             } else {
                 Console.WriteLine($"=> Nothing to do");
             }
