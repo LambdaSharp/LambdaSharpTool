@@ -219,7 +219,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
         private async Task<bool> ImportDependencies(ModuleManifest manifest, bool allowImport = true) {
 
             // discover module dependencies
-            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport);
+            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport, allowDependencyUpgrades: false);
             if(HasErrors) {
                 return false;
             }
