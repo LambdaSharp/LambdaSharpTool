@@ -88,7 +88,7 @@ Done (finished: 6/26/2019 10:16:45 PM; duration: 00:00:02.7702739)
 
 __Using PowerShell/Bash:__
 ```bash
-lash tier coreservices --tier Sandbox --disable
+lash tier coreservices --tier Sandbox --disabled
 ```
 
 Output:

@@ -11,6 +11,9 @@
   href: Tool-Encrypt.md
 
 - name: Info
+  href: Tool-Info.md
+
+- name: Init
   href: Tool-Init.md
 
 - name: List
