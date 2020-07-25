@@ -45,7 +45,7 @@ namespace LambdaSharp.Tool.Cli {
                 // init options
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
-                var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
+                var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp.Core module (default: same as CLI version)", CommandOptionType.SingleValue);
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var quickStartOption = cmd.Option("--quick-start", "(optional, create-only) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
