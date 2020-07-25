@@ -93,6 +93,16 @@ Resources:
                 Action:
                   - cloudformation:DeleteStack
                 Resource: !Ref AWS::StackId
+              - Sid: EventsPermission
+                Effect: Allow
+                Action:
+                  - events:RemoveTargets
+                Resource: !GetAtt AutoDeleteTimer.Arn
+              - Sid: PolicyPermissions
+                Effect: Allow
+                Action:
+                  - iam:DeleteRolePolicy
+                Resource: "*" # There doesn't seem to be an ARN format to limit the delete action to just this policy
 
   AutoDeleteFunctionSelfDeletePolicy:
     Type: AWS::IAM::Policy
@@ -105,17 +115,13 @@ Resources:
             Effect: Allow
             Action:
               - lambda:DeleteFunction
+              - lambda:RemovePermission
             Resource: !GetAtt AutoDeleteFunction.Arn
           - Sid: RolePermissions
             Effect: Allow
             Action:
               - iam:DeleteRole
             Resource: !GetAtt AutoDeleteFunctionRole.Arn
-          - Sid: PolicyPermissions
-            Effect: Allow
-            Action:
-              - iam:DeleteRolePolicy
-            Resource: "*" # There doesn't seem to be an ARN format to limit the delete action to just this policy
       Roles:
         - !Ref AutoDeleteFunctionRole
 
