@@ -617,7 +617,7 @@ namespace LambdaSharp.Tool.Cli {
             var template = ReadResource("LambdaSharpBucketPublic.yml", new Dictionary<string, string> {
                 ["TOOL-VERSION"] = Version.ToString(),
             });
-            var stackName = $"LambdaSharpPublicBucket-{bucketName}";
+            var stackName = $"LambdaSharpBucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> { },
@@ -663,11 +663,11 @@ namespace LambdaSharp.Tool.Cli {
             var template = ReadResource("LambdaSharpBucketExpiring.yml", new Dictionary<string, string> {
                 ["TOOL-VERSION"] = Version.ToString(),
             });
-            var stackName = $"LambdaSharpExpiringBucket-{bucketName}";
+            var stackName = $"LambdaSharpBucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> {
-                    "CAPABILITY_IAM"
+                    "CAPABILITY_NAMED_IAM"
                 },
                 OnFailure = OnFailure.DELETE,
                 Parameters = new List<Parameter> {

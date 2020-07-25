@@ -36,6 +36,7 @@ Resources:
   AutoDeleteFunction:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: !Sub "${AWS::StackName}-Function"
       Description: "LambdaSharp Expiring Bucket clean-up function"
       Environment:
         Variables:
@@ -67,6 +68,7 @@ Resources:
   AutoDeleteFunctionRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub "${AWS::StackName}-Role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -80,6 +82,7 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
+
               - Sid: BucketPermissions
                 Effect: Allow
                 Action:
@@ -88,46 +91,38 @@ Resources:
                 Resource:
                   - !Sub "arn:${AWS::Partition}:s3:::${BucketName}"
                   - !Sub "arn:${AWS::Partition}:s3:::${BucketName}/*"
+
               - Sid: StackPermissions
                 Effect: Allow
                 Action:
                   - cloudformation:DeleteStack
                 Resource: !Ref AWS::StackId
+
+              - Sid: LambdaPermissions
+                Effect: Allow
+                Action:
+                  - lambda:DeleteFunction
+                  - lambda:RemovePermission
+                Resource: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-Function"
+
+              - Sid: RolePermissions
+                Effect: Allow
+                Action:
+                  - iam:DeleteRole
+                  - iam:DeleteRolePolicy
+                Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AWS::StackName}-Role"
+
               - Sid: EventsPermission
                 Effect: Allow
                 Action:
                   - events:RemoveTargets
-                Resource: !GetAtt AutoDeleteTimer.Arn
-              - Sid: PolicyPermissions
-                Effect: Allow
-                Action:
-                  - iam:DeleteRolePolicy
-                Resource: "*" # There doesn't seem to be an ARN format to limit the delete action to just this policy
-
-  AutoDeleteFunctionSelfDeletePolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub "${AWS::StackName}SelfDeletePolicy"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: LambdaPermissions
-            Effect: Allow
-            Action:
-              - lambda:DeleteFunction
-              - lambda:RemovePermission
-            Resource: !GetAtt AutoDeleteFunction.Arn
-          - Sid: RolePermissions
-            Effect: Allow
-            Action:
-              - iam:DeleteRole
-            Resource: !GetAtt AutoDeleteFunctionRole.Arn
-      Roles:
-        - !Ref AutoDeleteFunctionRole
+                  - events:DeleteRule
+                Resource: !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${AWS::StackName}-Timer"
 
   AutoDeleteTimer:
     Type: AWS::Events::Rule
     Properties:
+      Name: !Sub "${AWS::StackName}-Timer"
       ScheduleExpression: rate(1 day)
       Targets:
         - Id: HourlyTimer
