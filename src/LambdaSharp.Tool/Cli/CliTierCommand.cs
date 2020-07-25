@@ -175,6 +175,13 @@ namespace LambdaSharp.Tool.Cli {
 
             // validate that all modules in tier can enable/disable core services
             if(enabled.HasValue) {
+
+                // check if LambdaSharp.Core has Core Services enabled
+                if(enabled.Value && (settings.CoreServices != CoreServices.Enabled)) {
+                    LogError($"{settings.TierName} does not have Core Services enabled; run 'lash init --core-services enabled' first");
+                }
+
+                // check if deployed modules support Core Services
                 foreach(var details in moduleDetails) {
                     if(details.CoreServices == null) {
                         LogError($"{details.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
