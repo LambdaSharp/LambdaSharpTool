@@ -219,9 +219,10 @@ namespace LambdaSharp.Tool.Cli {
                         while(string.IsNullOrEmpty(bucketName)) {
                             bucketName = settings.PromptString("Enter the S3 bucket name");
                         }
-                        await NewPublicBucket(settings, bucketName);
-                        Console.WriteLine();
-                        Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                        if(await NewPublicBucket(settings, bucketName)) {
+                            Console.WriteLine();
+                            Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                        }
                     });
                 });
 
@@ -268,9 +269,10 @@ namespace LambdaSharp.Tool.Cli {
                         ) {
                             LogError("invalid value for --expiration-in-days option");
                         }
-                        await NewExpiringBucket(settings, bucketName, expirationInDays);
-                        Console.WriteLine();
-                        Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                        if(await NewExpiringBucket(settings, bucketName, expirationInDays)) {
+                            Console.WriteLine();
+                            Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                        }
                     });
                 });
 
@@ -611,13 +613,13 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task NewPublicBucket(Settings settings, string bucketName) {
+        public async Task<bool> NewPublicBucket(Settings settings, string bucketName) {
 
             // create bucket using template
             var template = ReadResource("LambdaSharpBucketPublic.yml", new Dictionary<string, string> {
                 ["TOOL-VERSION"] = Version.ToString(),
             });
-            var stackName = $"LambdaSharpBucket-{bucketName}";
+            var stackName = $"Bucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> { },
@@ -645,7 +647,7 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine("=> Stack creation finished");
             } else {
                 Console.WriteLine("=> Stack creation FAILED");
-                return;
+                return false;
             }
 
             // TODO (2020-07-23, bjorg): consider creating an embedded finalizer to set Requester Pays access
@@ -655,15 +657,16 @@ namespace LambdaSharp.Tool.Cli {
             await settings.S3Client.PutBucketRequestPaymentAsync(bucketName, new RequestPaymentConfiguration {
                 Payer = "Requester"
             });
+            return true;
         }
 
-        public async Task NewExpiringBucket(Settings settings, string bucketName, int expirationInDays) {
+        public async Task<bool> NewExpiringBucket(Settings settings, string bucketName, int expirationInDays) {
 
             // create bucket using template
             var template = ReadResource("LambdaSharpBucketExpiring.yml", new Dictionary<string, string> {
                 ["TOOL-VERSION"] = Version.ToString(),
             });
-            var stackName = $"LambdaSharpBucket-{bucketName}";
+            var stackName = $"Bucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> {
@@ -697,8 +700,9 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine("=> Stack creation finished");
             } else {
                 Console.WriteLine("=> Stack creation FAILED");
-                return;
+                return false;
             }
+            return true;
         }
 
         private void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {

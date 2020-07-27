@@ -36,7 +36,7 @@ Resources:
   AutoDeleteFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-Function"
+      FunctionName: !Sub "${AWS::StackName}-Func"
       Description: "LambdaSharp Expiring Bucket clean-up function"
       Environment:
         Variables:
@@ -103,7 +103,7 @@ Resources:
                 Action:
                   - lambda:DeleteFunction
                   - lambda:RemovePermission
-                Resource: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-Function"
+                Resource: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-Func"
 
               - Sid: RolePermissions
                 Effect: Allow
