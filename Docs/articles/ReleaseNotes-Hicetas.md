@@ -164,6 +164,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Fixed an issue in `init` where `--existing-s3-bucket-name` would not convert a S3 bucket name to a S3 bucket ARN.
   * Fixed an issue in `tier coreservices --enabled` would fail without an explanation when the deployment tier was created without _Core Services_.
   * Use `AWS::Partition` instead of hard-coding `aws` when constructing ARNs.
+  * Fixed an issue where the _Finalizer_ was not taking a dependency on conditional custom resources.
 
 ### (v0.8.0.6) - 2020-07-14
 
