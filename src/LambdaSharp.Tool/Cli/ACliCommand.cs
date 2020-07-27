@@ -146,8 +146,10 @@ namespace LambdaSharp.Tool.Cli {
                     AccountId = awsAccountId,
                     UserArn = awsUserArn
                 };
-                Directory.CreateDirectory(Path.GetDirectoryName(cachedProfile));
-                await File.WriteAllTextAsync(cachedProfile, JsonConvert.SerializeObject(result));
+                if(allowCaching && Settings.AllowCaching) {
+                    Directory.CreateDirectory(Path.GetDirectoryName(cachedProfile));
+                    await File.WriteAllTextAsync(cachedProfile, JsonConvert.SerializeObject(result));
+                }
                 return result;
             } finally {
                 Settings.LogInfoPerformance($"InitializeAwsProfile()", stopwatch.Elapsed, cached);
@@ -403,12 +405,14 @@ namespace LambdaSharp.Tool.Cli {
                     settings.CoreServices = coreServicesMode;
 
                     // cache deployment tier settings
-                    Directory.CreateDirectory(Path.GetDirectoryName(cachedDeploymentTierSettings));
-                    await File.WriteAllTextAsync(cachedDeploymentTierSettings, JsonConvert.SerializeObject(new CachedDeploymentTierSettingsInfo {
-                        DeploymentBucketName = settings.DeploymentBucketName,
-                        TierVersion = settings.TierVersion,
-                        CoreServices = settings.CoreServices
-                    }));
+                    if(allowCaching && Settings.AllowCaching) {
+                        Directory.CreateDirectory(Path.GetDirectoryName(cachedDeploymentTierSettings));
+                        await File.WriteAllTextAsync(cachedDeploymentTierSettings, JsonConvert.SerializeObject(new CachedDeploymentTierSettingsInfo {
+                            DeploymentBucketName = settings.DeploymentBucketName,
+                            TierVersion = settings.TierVersion,
+                            CoreServices = settings.CoreServices
+                        }));
+                    }
                     return result;
 
                     // local functions
