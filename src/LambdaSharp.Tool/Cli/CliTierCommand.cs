@@ -85,12 +85,17 @@ namespace LambdaSharp.Tool.Cli {
 
                         // fetch tier information
                         if(!await PopulateDeploymentTierSettingsAsync(settings, optional: true)) {
-                            return -1;
+                            if(!Program.Quiet) {
+                                Console.WriteLine();
+                                Console.WriteLine($"No deployment tier found {Settings.OutputColor}[ExitCode: 2]{Settings.ResetColor}");
+                            }
+                            return 2;
                         }
 
                         // validate options
                         if(minVersionOption.Value() == null) {
-                            Console.WriteLine($"Tier Version: {settings.TierVersion}");
+                            Console.WriteLine();
+                            Console.WriteLine($"Deployment tier version: {Settings.InfoColor}{settings.TierVersion}{Settings.ResetColor}");
                             return 0;
                         } else {
                             if(!VersionInfo.TryParse(minVersionOption.Value(), out var minVersion)) {
@@ -101,7 +106,8 @@ namespace LambdaSharp.Tool.Cli {
                             // compare version numbers
                             var exitCode = settings.TierVersion.IsGreaterOrEqualThanVersion(minVersion) ? 0 : 1;
                             if(!Program.Quiet) {
-                                Console.WriteLine($"Tier Version: {settings.TierVersion} [ExitCode: {exitCode}]");
+                                Console.WriteLine();
+                                Console.WriteLine($"Deployment tier version: {Settings.InfoColor}{settings.TierVersion} {Settings.OutputColor}[ExitCode: {exitCode}]{Settings.ResetColor}");
                             }
                             return exitCode;
                         }
