@@ -330,7 +330,7 @@ namespace LambdaSharp.Tool.Cli {
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var noImportOption = cmd.Option("--no-import", "(optional) All module artifacts must exist in deployment tier bucket and cannot be imported", CommandOptionType.NoValue);
-                var noUpgradesOption = cmd.Option("--no-dependency-upgrades", "(optional) Do not automatically upgrade shared dependencies", CommandOptionType.NoValue);
+                var noDependencyUpgradesOption = cmd.Option("--no-dependency-upgrades", "(optional) Do not automatically upgrade shared dependencies", CommandOptionType.NoValue);
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
@@ -482,7 +482,7 @@ namespace LambdaSharp.Tool.Cli {
                                 promptAllParametersOption.HasValue(),
                                 xRayTracingLevel,
                                 deployOnlyIfExists: false,
-                                allowDependencyUpgrades: !noUpgradesOption.HasValue()
+                                allowDependencyUpgrades: !noDependencyUpgradesOption.HasValue()
                             )) {
                                 break;
                             }

@@ -226,7 +226,6 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
-
                 // expiring-bucket sub-command
                 cmd.Command("expiring-bucket", subCmd => {
                     subCmd.HelpOption();

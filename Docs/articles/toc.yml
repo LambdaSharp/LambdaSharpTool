@@ -16,7 +16,7 @@
 - name: API Gateway for .NET
   href: APIGateway.md
 
-- name: Continuous Integration/Continuous Delivery
+- name: CI/CD Pipeline
   href: CICD.md
 
 - name: Metrics
