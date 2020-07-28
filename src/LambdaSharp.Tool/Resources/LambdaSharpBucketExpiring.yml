@@ -123,7 +123,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub "${AWS::StackName}-Timer"
-      ScheduleExpression: rate(1 day)
+      ScheduleExpression: rate(6 hours)
       Targets:
         - Id: HourlyTimer
           Arn: !GetAtt AutoDeleteFunction.Arn
