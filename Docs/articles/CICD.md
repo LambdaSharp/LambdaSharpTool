@@ -8,30 +8,13 @@ keywords: tutorial, wsl, linux, terminal
 
 ## Overview
 
-The CI/CD pipeline made of three phases: _Build_, _Validate_, and _Deploy_. During the _Build_ phase, modules are built and published to a new S3 bucket. Once all modules have been published, the _Validate_ phase deploys the modules from the S3 bucket to a staging deployment tier. Once the modules have passed their quality inspection, the same S3 bucket is used during the _Deploy_ phase to deploy the modules to the production deployment tier.
-
-This process ensures that the exact same artifacts that were tested are the one being deployed, which is both more efficient and safer.
-
-## Setup
-
-```bash
-PROFILE="AWS-PROFILE"
-REGION="AWS-REGION"
-
-LASH_OPTIONS="--aws-profile ${PROFILE} --aws-region ${REGION} --no-ansi"
-
-MODULE_ORIGIN="module-origin"
-
-BUILD_TIER=BuildTier-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)
-
-DEPLOYMENT_TIER="production"
-```
+The CI/CD pipeline made of two phases: _Build_ and _Deploy_. During the _Build_ phase, modules are built and published to an S3 bucket. Once all modules have been published, the _Deploy_ phase imports the published modules to the deployment tier and deploys them. The _Deploy_ phase can be run multiple times to deploy to the testing tier, then staging, and finally production. Since the _Deploy_ phase is using the same S3 bucket to import the modules, the exact same templates and artifacts are deployed too all deployment tiers. This process is both safer and more efficient.
 
 ## Build Phase
 
 The _Build_ phase is responsible for building modules and publishing their CloudFormation templates and artifacts. Each _Build_ phase begins with the creation of a fresh S3 bucket. This ensures that each build is clean from previous builds. It also means that if a build is not completed successful, it does not contaminate existing deployment tiers as their are isolated from the _Build_ phase.
 
-> **NOTE:** By default, an AWS account has a limit of 100 S3 buckets. However, support can increase this limit to 1,000 S3 buckets.
+> NOTE: By default, an AWS account has a limit of 100 S3 buckets. However, support can increase this limit to 1,000 S3 buckets.
 
 ### Create an S3 bucket name
 
@@ -60,11 +43,19 @@ This command makes it easy to create a temporary S3 bucket that cleans itself up
 
 **Command:**
 ```bash
+# set the name of the AWS profile and the AWS region to use
+PROFILE="AWS-PROFILE"
+REGION="AWS-REGION"
+
+# set commonly used LambdaSharp.Tool options
+LASH_OPTIONS="--aws-profile ${PROFILE} --aws-region ${REGION} --no-ansi"
+
+# create expiring bucket
 lash new expiring-bucket ${LASH_OPTIONS} --expiration-in-days 3 ${BUILD_BUCKET}
 ```
 
 **Output:**
-```bash
+```
 LambdaSharp CLI (v0.8.0.7) - Create an S3 bucket that self-deletes after expiration
 CREATE_COMPLETE    AWS::CloudFormation::Stack    Bucket-build-20200728-i318a4 (1m 40.23s)
 CREATE_COMPLETE    AWS::IAM::Role                AutoDeleteFunctionRole (16.53s)
@@ -83,13 +74,16 @@ Alternatively, the S3 bucket and  its lifecycle policy can be created using the 
 
 **Command (alternative):**
 ```bash
+# set AWS profile and region explicitly for all commands
 AWS_OPTIONS="--profile ${PROFILE} --region ${REGION}"
 
+# create an S3 bucket
 aws ${AWS_OPTIONS} \
     s3api create-bucket \
     --acl private \
     --bucket ${BUILD_BUCKET}
 
+# set the S3 bucket lifecycle to delete objects after 3 days
 aws ${AWS_OPTIONS} \
     s3api put-bucket-lifecycle-configuration \
     --bucket ${BUILD_BUCKET} \
@@ -104,8 +98,10 @@ Similarly to the S3 bucket name, the build deployment tier name should be genera
 
 **Command:**
 ```bash
+# name the build deployment tier
 BUILD_TIER=BuildTier-${JITTER}
 
+# create build deployment tier
 lash init ${LASH_OPTIONS} \
     --tier ${BUILD_TIER} \
     --prompts-as-errors \
@@ -115,28 +111,72 @@ lash init ${LASH_OPTIONS} \
 ```
 
 **Output:**
-```bash
-LambdaSharp CLI (v0.8.0.7) - Create or update a LambdaSharp deployment tier
-Creating LambdaSharp tier 'Build-i318a4'
-=> Stack creation initiated for Build-i318a4-LambdaSharp-Core
-CREATE_COMPLETE    AWS::CloudFormation::Stack    Build-i318a4-LambdaSharp-Core (3.27s)
+```
+LambdaSharp CLI (v0.8.0.7) - Create an S3 bucket that self-deletes after expiration
+CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Bucket-build-20200728-i318a4 (User Initiated)
+CREATE_IN_PROGRESS                  AWS::S3::Bucket                                         Bucket
+CREATE_IN_PROGRESS                  AWS::IAM::Role                                          AutoDeleteFunctionRole
+CREATE_IN_PROGRESS                  AWS::S3::Bucket                                         Bucket (Resource creation Initiated)
+CREATE_IN_PROGRESS                  AWS::IAM::Role                                          AutoDeleteFunctionRole (Resource creation Initiated)
+CREATE_COMPLETE                     AWS::IAM::Role                                          AutoDeleteFunctionRole
+CREATE_IN_PROGRESS                  AWS::Lambda::Function                                   AutoDeleteFunction
+CREATE_IN_PROGRESS                  AWS::Lambda::Function                                   AutoDeleteFunction (Resource creation Initiated)
+CREATE_COMPLETE                     AWS::Lambda::Function                                   AutoDeleteFunction
+CREATE_COMPLETE                     AWS::S3::Bucket                                         Bucket
+CREATE_IN_PROGRESS                  AWS::Events::Rule                                       AutoDeleteTimer
+CREATE_IN_PROGRESS                  AWS::Events::Rule                                       AutoDeleteTimer (Resource creation Initiated)
+CREATE_COMPLETE                     AWS::Events::Rule                                       AutoDeleteTimer
+CREATE_IN_PROGRESS                  AWS::Lambda::Permission                                 AutoDeleteTimerInvokePermission
+CREATE_IN_PROGRESS                  AWS::Lambda::Permission                                 AutoDeleteTimerInvokePermission (Resource creation Initiated)
+CREATE_COMPLETE                     AWS::Lambda::Permission                                 AutoDeleteTimerInvokePermission
+CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Bucket-build-20200728-i318a4
 => Stack creation finished
 
-Done (finished: 7/27/2020 10:34:54 PM; duration: 00:00:08.5055239)
+=> S3 Bucket ARN: arn:aws:s3:::build-20200728-i318a4
+
+Done (finished: 7/28/2020 10:41:24 AM; duration: 00:01:46.5435267)
 ```
 
 ### Publish modules to build tier
 
+Each module must now be built and published to the build deployment tier. The `--module-origin` option overwrites the origin identifier to the specified value.
+
+> NOTE: `lash publish` can build and publish multiple modules at once.
+
+**Command:**
 ```bash
+# set module origin explicitly
+MODULE_ORIGIN="acme-corp"
+
+# build and publish modules
 lash publish ${LASH_OPTIONS} \
     --tier ${BUILD_TIER} \
     --prompts-as-errors \
-    My.Module \
-    --module-origin ${MODULE_ORIGIN}
+    --module-origin ${MODULE_ORIGIN} \
+    My.Module
+```
+
+**Output:**
+```
+LambdaSharp CLI (v0.8.0.7) - Publish LambdaSharp module
+
+Reading module: My.Module\Module.yml
+Compiling: My.Module (v1.0)
+=> Building function MyFunction [netcoreapp3.1, Release]
+=> Module compilation done: bin\cloudformation.json
+Publishing module: My.Module
+=> Uploading artifact: function_My.Module_MyFunction_F2FD08EF81DED1BB7309D59C5BC10415.zip
+=> Uploading template: cloudformation_My.Module_952FDE40DB9F1C12A14BCFA77F1298B3.json
+=> Published: My.Module:1.0@acme-corp
+
+Done (finished: 7/28/2020 1:05:29 PM; duration: 00:00:09.4028395)
 ```
 
 ### Destroy build tier when all modules are published
 
+Once all modules have been built and published, the build deployment tier is no longer needed and can be deleted.
+
+**Command:**
 ```bash
 lash nuke ${LASH_OPTIONS} \
     --tier ${BUILD_TIER} \
@@ -144,26 +184,60 @@ lash nuke ${LASH_OPTIONS} \
     --confirm-tier ${BUILD_TIER}
 ```
 
-## Testing Pipeline
+**Output:**
+```
+LambdaSharp CLI (v0.8.0.7) - Delete a LambdaSharp deployment tier
+=> Inspecting deployment tier Build-i318a4
+=> Found 1 CloudFormation stack to delete
+=> Deleting Build-i318a4-LambdaSharp-Core
+DELETE_COMPLETE    AWS::CloudFormation::Stack    Build-i318a4-LambdaSharp-Core
+=> Stack delete finished
 
-> TODO:
-> * Create a testing tier where the module can be validate in isolation
-> * If all tests pass, proceed to the _Deploy Pipeline_
+Done (finished: 7/28/2020 1:08:35 PM; duration: 00:00:04.7492584)
+```
 
 ## Deploy Pipeline
 
-### (optional) Upgrade deployment tier if needed
+### Upgrade deployment tier when needed
 
-> TODO: steps to check if the deployment tier needs to be updated
+The recommended approach for production environments is to pin the expected deployment tier version. The `lash tier version` command can be used to check if the current deployment tier version is up-to-date. When it is not, the command exits with a non-zero status code. When that happens, the `lash init` command can be run to upgrade the deployment tier.
+
+> NOTE: To upgrade the deployment tier unassisted, make sure the `DEPLOYMENT-TIER-PARAMETERS.YML` file contains all parameters required by the new deployment tier version.
 
 ```bash
-lash init --version ${LASH_VERSION}
-lash publish LambdaSharp.S3.IO:${LASH_VERSION}@lambdasharp
+# set the expected version for LambdaSharp.Core services
+LASH_TIER_VERSION=0.8.0.2
+
+# set the name of the deployment tier to use
+DEPLOYMENT_TIER="prod"
+
+# check if the current deployment tier version is up-to-date
+if ! lash tier version --min-version ${LASH_TIER_VERSION}; then
+
+    # update/upgrade deployment tier
+    lash init ${LASH_OPTIONS} \
+        --tier ${DEPLOYMENT_TIER} \
+        --prompts-as-errors \
+        --version ${LASH_TIER_VERSION} \
+        --protect \
+        --core-services enabled \
+        --allow-upgrade \
+        --parameters DEPLOYMENT-TIER-PARAMETERS.YML
+
+    # (optional) import new versions of commonly used LambdaSharp modules
+    lash publish  ${LASH_OPTIONS} \
+        --tier ${DEPLOYMENT_TIER} \
+        --prompts-as-errors \
+        LambdaSharp.S3.IO:${LASH_TIER_VERSION}@lambdasharp \
+        LambdaSharp.S3.Subscriber:${LASH_TIER_VERSION}@lambdasharp
+fi
 ```
 
 ### Import module artifacts to deployment tier
 
-**NOTE:** cannot import dependencies!
+With the deployment tier upgraded, the previously built modules can now be imported. The following command copies the CloudFormation templates and artifacts produced by the _Build_ phase to the deployment tier bucket. All module dependencies must be imported explicitly when using the `--from-origin` option.
+
+> NOTE: `lash publish` can import multiple modules at once.
 
 ```bash
 lash publish ${LASH_OPTIONS} \
@@ -175,11 +249,15 @@ lash publish ${LASH_OPTIONS} \
 
 ### Deploy imported modules to deployment tier
 
+Finally, the newly built and imported modules can be deployed. The `--no-import` option makes sure dependencies must be resolved against modules published to the deployment tier bucket and cannot be imported from their origin. This guarantees only explicitly imported modules can be deployed.
+
 ```bash
 lash deploy ${LASH_OPTIONS} \
     --tier ${DEPLOYMENT_TIER} \
     --prompts-as-errors \
     --no-import \
+    --protect \
+    --xray
     My.Module@${MODULE_ORIGIN} \
-    -- parameters MODULE_PARAMETERS.yml
+    --parameters MODULE_PARAMETERS.YML
 ```
