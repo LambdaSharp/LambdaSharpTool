@@ -55,7 +55,7 @@ lash new public-bucket my-lambdasharp-bucket4
 Output:
 ```
 LambdaSharp CLI (v0.7.0) - Create new public S3 bucket with Requester Pays access
-CREATE_COMPLETE    AWS::CloudFormation::Stack    PublicLambdaSharpBucket-my-lambdasharp-bucket4
+CREATE_COMPLETE    AWS::CloudFormation::Stack    Bucket-my-lambdasharp-bucket4
 CREATE_COMPLETE    AWS::S3::Bucket               Bucket
 CREATE_COMPLETE    AWS::S3::BucketPolicy         BucketPolicy
 => Stack creation finished

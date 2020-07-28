@@ -61,7 +61,7 @@ lash new expiring-bucket my-bucket --expiration-in-days 3
 Output:
 ```
 LambdaSharp CLI (v0.8.0.7) - Create an S3 bucket that self-deletes after expiration
-CREATE_COMPLETE    AWS::CloudFormation::Stack    LambdaSharpExpiringBucket-my-bucket (51.09s)
+CREATE_COMPLETE    AWS::CloudFormation::Stack    Bucket-my-bucket (51.09s)
 CREATE_COMPLETE    AWS::IAM::Role                AutoDeleteFunctionRole (19.34s)
 CREATE_COMPLETE    AWS::S3::Bucket               Bucket (23.66s)
 CREATE_COMPLETE    AWS::Lambda::Function         AutoDeleteFunction (1.06s)
