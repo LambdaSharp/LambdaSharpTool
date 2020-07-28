@@ -425,99 +425,109 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         protected string GetGitShaValue(string workingDirectory, bool showWarningOnFailure = true) {
-
-            // read the gitSha using 'git' directly
-            var process = new Process {
-                StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    WorkingDirectory = workingDirectory
-                }
-            };
-
-            // attempt to get git-sha value
-            string gitSha = null;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try {
-                process.Start();
-                gitSha = process.StandardOutput.ReadToEnd().Trim();
-                process.WaitForExit();
-                if(process.ExitCode != 0) {
-                    gitSha = null;
+
+                // read the gitSha using 'git' directly
+                var process = new Process {
+                    StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory
+                    }
+                };
+
+                // attempt to get git-sha value
+                string gitSha = null;
+                try {
+                    process.Start();
+                    gitSha = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+                    if(process.ExitCode != 0) {
+                        gitSha = null;
+                        if(showWarningOnFailure) {
+                            LogWarn($"unable to get git-sha 'git rev-parse HEAD' failed with exit code = {process.ExitCode}");
+                        }
+                    }
+                } catch {
                     if(showWarningOnFailure) {
-                        LogWarn($"unable to get git-sha 'git rev-parse HEAD' failed with exit code = {process.ExitCode}");
+                        LogWarn("git is not installed; skipping git-sha detection");
                     }
                 }
-            } catch {
-                if(showWarningOnFailure) {
-                    LogWarn("git is not installed; skipping git-sha detection");
+                if(gitSha == null) {
+                    return null;
                 }
-            }
-            if(gitSha == null) {
-                return null;
-            }
 
-            // check if folder contains uncommitted/untracked changes
-            process = new Process {
-                StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "status", "--porcelain" })) {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    WorkingDirectory = workingDirectory
-                }
-            };
+                // check if folder contains uncommitted/untracked changes
+                process = new Process {
+                    StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "status", "--porcelain" })) {
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory
+                    }
+                };
 
-            // attempt to get git status
-            try {
-                process.Start();
-                var dirty = process.StandardOutput.ReadToEnd().Trim();
-                process.WaitForExit();
-                if(process.ExitCode != 0) {
+                // attempt to get git status
+                try {
+                    process.Start();
+                    var dirty = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+                    if(process.ExitCode != 0) {
+                        if(showWarningOnFailure) {
+                            LogWarn($"unable to get git status 'git status --porcelain' failed with exit code = {process.ExitCode}");
+                        }
+                    }
+
+                    // check if any changes were detected
+                    if(!string.IsNullOrEmpty(dirty)) {
+                        gitSha = "DIRTY-" + gitSha;
+                    }
+                } catch {
                     if(showWarningOnFailure) {
-                        LogWarn($"unable to get git status 'git status --porcelain' failed with exit code = {process.ExitCode}");
+                        LogWarn("git is not installed; skipping git status detection");
                     }
                 }
-
-                // check if any changes were detected
-                if(!string.IsNullOrEmpty(dirty)) {
-                    gitSha = "DIRTY-" + gitSha;
-                }
-            } catch {
-                if(showWarningOnFailure) {
-                    LogWarn("git is not installed; skipping git status detection");
-                }
+                return gitSha;
+            } finally {
+                Settings.LogInfoPerformance($"GetGitShaValue() for '{workingDirectory}'", stopwatch.Elapsed);
             }
-            return gitSha;
         }
 
         protected string GetGitBranch(string workingDirectory, bool showWarningOnFailure = true) {
-
-            // read the gitSha using 'git' directly
-            var process = new Process {
-                StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "--abbrev-ref", "HEAD" })) {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    WorkingDirectory = workingDirectory
-                }
-            };
-            string gitBranch = null;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try {
-                process.Start();
-                gitBranch = process.StandardOutput.ReadToEnd().Trim();
-                process.WaitForExit();
-                if(process.ExitCode != 0) {
-                    if(showWarningOnFailure) {
-                        LogWarn($"unable to get git branch 'git rev-parse --abbrev-ref HEAD' failed with exit code = {process.ExitCode}");
+
+                // read the gitSha using 'git' directly
+                var process = new Process {
+                    StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "--abbrev-ref", "HEAD" })) {
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory
                     }
-                    gitBranch = null;
+                };
+                string gitBranch = null;
+                try {
+                    process.Start();
+                    gitBranch = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+                    if(process.ExitCode != 0) {
+                        if(showWarningOnFailure) {
+                            LogWarn($"unable to get git branch 'git rev-parse --abbrev-ref HEAD' failed with exit code = {process.ExitCode}");
+                        }
+                        gitBranch = null;
+                    }
+                } catch {
+                    if(showWarningOnFailure) {
+                        LogWarn("git is not installed; skipping git branch detection");
+                    }
                 }
-            } catch {
-                if(showWarningOnFailure) {
-                    LogWarn("git is not installed; skipping git branch detection");
-                }
+                return gitBranch;
+            } finally {
+                Settings.LogInfoPerformance($"GetGitBranch() for '{workingDirectory}'", stopwatch.Elapsed);
             }
-            return gitBranch;
         }
 
         protected void AddStandardCommandOptions(CommandLineApplication cmd) {
