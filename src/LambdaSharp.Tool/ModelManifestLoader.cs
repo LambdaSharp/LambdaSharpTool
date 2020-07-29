@@ -236,12 +236,18 @@ namespace LambdaSharp.Tool {
                     return (Origin: bucketName, Version: null, Manifest: null);
                 }
 
-                // NOTE (2019-08-12, bjorg): unless the module is shared, we filter the list of found versions to
+                // NOTE (2019-08-12, bjorg): if the module is nested, we filter the list of found versions to
                 //  only contain versions that meet the module version constraint; for shared modules, we want to
                 //  keep the latest version that is compatible with the tool and is equal-or-greater than the
                 //  module version constraint.
-                if((dependencyType != ModuleManifestDependencyType.Shared) && (moduleInfo.Version != null)) {
-                    found = found.Where(version => version.MatchesConstraint(moduleInfo.Version)).ToList();
+                if((dependencyType == ModuleManifestDependencyType.Nested) && (moduleInfo.Version != null)) {
+                    found = found.Where(version => {
+                        var result = version.MatchesConstraint(moduleInfo.Version);
+                        if(!result) {
+                            LogInfoVerbose($"... rejected v{version}: does not match version constraint {moduleInfo.Version}");
+                        }
+                        return result;
+                    }).ToList();
                 }
 
                 // attempt to identify the newest module version compatible with the tool
@@ -252,7 +258,11 @@ namespace LambdaSharp.Tool {
                     manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                     // check if module is compatible with this tool
-                    return manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
+                    var result = manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
+                    if(!result) {
+                        LogInfoVerbose($"... rejected v{candidate}: it not compatible with tool version {Settings.ToolVersion}");
+                    }
+                    return result;
                 });
                 return (Origin: bucketName, Version: match, Manifest: manifest);
             }

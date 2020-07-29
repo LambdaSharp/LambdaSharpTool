@@ -255,10 +255,11 @@ namespace Tests.LambdaSharp.Tool {
                 versions,
                 minVersion: null,
                 coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
-            ).CompareToVersion(VersionInfo.Parse("0.7.0-rc6"));
+            );
 
             // assert
-            result.Should().Be(0);
+            result.Should().NotBeNull();
+            result.CompareToVersion(VersionInfo.Parse("0.7.0-rc6")).Should().Be(0);
         }
 
         [Fact]

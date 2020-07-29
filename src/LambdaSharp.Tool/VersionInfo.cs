@@ -98,7 +98,7 @@ namespace LambdaSharp.Tool {
                 // check if latest version meets minimum version constraint; or if none are provided, the version cannot be a pre-release
                 if(
                     ((minVersion != null) && minVersion.IsGreaterThanVersion(candidate))
-                    || ((minVersion == null) && candidate.IsPreRelease)) {
+                    || ((minVersion == null) && (validate == null) && candidate.IsPreRelease)) {
                     continue;
                 }
 
