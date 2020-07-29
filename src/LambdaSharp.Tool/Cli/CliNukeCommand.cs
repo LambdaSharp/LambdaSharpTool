@@ -204,7 +204,6 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                         Console.WriteLine("=> Stack delete finished");
-                        Console.WriteLine();
                     }
 
                     // remove this stack as a dependent from all dependencies
@@ -218,13 +217,16 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // delete any left over buckets, such as the logging bucket which has 'Retain' as deletion policy
-            foreach(var bucketName in bucketsToDelete) {
-                if(await settings.S3Client.DoesS3BucketExistAsync(bucketName)) {
-                    try {
-                        Console.WriteLine($"=> Deleting S3 Bucket {Settings.InfoColor}{bucketName}{Settings.ResetColor}");
-                        await settings.S3Client.DeleteBucketAsync(bucketName);
-                    } catch {
-                        LogWarn($"unable to delete S3 bucket: {bucketName}");
+            if(bucketsToDelete.Any()) {
+                Console.WriteLine();
+                foreach(var bucketName in bucketsToDelete) {
+                    if(await settings.S3Client.DoesS3BucketExistAsync(bucketName)) {
+                        try {
+                            Console.WriteLine($"=> Deleting S3 Bucket {Settings.InfoColor}{bucketName}{Settings.ResetColor}");
+                            await settings.S3Client.DeleteBucketAsync(bucketName);
+                        } catch {
+                            LogWarn($"unable to delete S3 bucket: {bucketName}");
+                        }
                     }
                 }
             }

@@ -66,7 +66,7 @@ lash new function MyNewFunction
 <dt><code>--module-origin &lt;ORIGIN&gt;</code></dt>
 <dd>
 
-(optional) Set alternative module origin when publishing
+(optional) Set alternative module origin when publishing a locally built module
 </dd>
 
 <dt><code>--module-version &lt;VERSION&gt;</code></dt>
@@ -79,6 +79,12 @@ lash new function MyNewFunction
 <dd>
 
 (optional) Override module build date [yyyyMMddHHmmss]
+</dd>
+
+<dt><code>--from-origin &lt;ORIGIN&gt;</code></dt>
+<dd>
+
+(optional) Use specified origin to import module instead of module origin
 </dd>
 
 <dt><code>--force-build</code></dt>

@@ -45,7 +45,7 @@ namespace LambdaSharp.Tool.Cli {
                 // init options
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
-                var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
+                var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp.Core module (default: same as CLI version)", CommandOptionType.SingleValue);
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var quickStartOption = cmd.Option("--quick-start", "(optional, create-only) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
@@ -292,11 +292,8 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // standard modules
-            var standardModules = new[] {
-                "LambdaSharp.Core",
-                "LambdaSharp.S3.IO",
-                "LambdaSharp.S3.Subscriber",
-                "LambdaSharp.Twitter.Query"
+            var standardModules = new List<string> {
+                "LambdaSharp.Core"
             };
 
             // check if the module must be built and published first (only applicable when running lash in contributor mode)
@@ -309,6 +306,14 @@ namespace LambdaSharp.Tool.Cli {
                     LogError("unable to parse module version from LAMBDASHARP_VERSION");
                     return false;
                 }
+
+                // gather list of module to build and publish
+                standardModules.AddRange(
+                    Directory.GetDirectories(Path.Combine(lambdaSharpPath, "Modules"))
+                        .Where(directory => File.Exists(Path.Combine(directory, "Module.yml")))
+                        .Select(directory => Path.GetFileName(directory))
+                        .Where(module => module != "LambdaSharp.Core")
+                );
                 foreach(var module in standardModules) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Modules", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
@@ -400,7 +405,8 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy: forceDeploy,
                     promptAllParameters: promptAllParameters,
                     xRayTracingLevel: xRayTracingLevel,
-                    deployOnlyIfExists: !isLambdaSharpCoreModule
+                    deployOnlyIfExists: !isLambdaSharpCoreModule,
+                    allowDependencyUpgrades: true
                 )) {
                     return false;
                 }
@@ -451,7 +457,9 @@ namespace LambdaSharp.Tool.Cli {
                     bootstrapParameters["CoreServices"] = coreServices.ToString();
                 }
                 if(existingS3BucketName != null) {
-                    bootstrapParameters["ExistingDeploymentBucket"] = existingS3BucketName;
+                    bootstrapParameters["ExistingDeploymentBucket"] = existingS3BucketName.StartsWith("arn:", StringComparison.Ordinal)
+                        ? existingS3BucketName
+                        : "arn:aws:s3:::" + existingS3BucketName;
                 }
 
                 // prompt for missing parameters

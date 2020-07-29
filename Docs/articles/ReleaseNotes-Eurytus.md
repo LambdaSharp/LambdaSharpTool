@@ -392,7 +392,7 @@ Similar to the change the `deploy` command, the `config` command now prompts for
 
 ### New Command
 
-The LambdaSharp CLI now allows to add a resource definition to a module, similar to the `new function` command. The new [`new resource` command](~/cli/Tool-NewResource.md) take a resource name and resource type. It then appends the a skeleont definition to the `Module.yml` file where the property values indicate the type of the property and if it is required.
+The LambdaSharp CLI now allows to add a resource definition to a module, similar to the `new function` command. The new [`new resource` command](~/cli/Tool-New-Resource.md) take a resource name and resource type. It then appends the a skeleont definition to the `Module.yml` file where the property values indicate the type of the property and if it is required.
 
 ```bash
 lash new resource MyTopic AWS::SNS::Topic

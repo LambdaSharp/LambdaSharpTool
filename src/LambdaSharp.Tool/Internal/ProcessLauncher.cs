@@ -49,26 +49,31 @@ namespace LambdaSharp.Tool.Internal {
             bool showOutput,
             Func<string, string> processOutputLine = null
         ) {
-            using(var process = new Process()) {
-                process.StartInfo = new ProcessStartInfo {
-                    FileName = application,
-                    Arguments = arguments,
-                    WorkingDirectory = workingFolder,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-                process.Start();
-                process.EnableRaisingEvents = true;
-                var output = Task.Run(() => process.StandardOutput.ReadToEndAsync());
-                var error = Task.Run(() => process.StandardError.ReadToEndAsync());;
-                process.WaitForExit();
-                var success = (process.ExitCode == 0);
-                if(showOutput || !success) {
-                    PrintLines(output.GetAwaiter().GetResult());
-                    PrintLines(error.GetAwaiter().GetResult());
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            try {
+                using(var process = new Process()) {
+                    process.StartInfo = new ProcessStartInfo {
+                        FileName = application,
+                        Arguments = arguments,
+                        WorkingDirectory = workingFolder,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+                    process.Start();
+                    process.EnableRaisingEvents = true;
+                    var output = Task.Run(() => process.StandardOutput.ReadToEndAsync());
+                    var error = Task.Run(() => process.StandardError.ReadToEndAsync());;
+                    process.WaitForExit();
+                    var success = (process.ExitCode == 0);
+                    if(showOutput || !success) {
+                        PrintLines(output.GetAwaiter().GetResult());
+                        PrintLines(error.GetAwaiter().GetResult());
+                    }
+                    return success;
                 }
-                return success;
+            } finally {
+                Settings.LogInfoPerformance($"Execute() '{Path.Combine(workingFolder ?? Directory.GetCurrentDirectory(), application)} {arguments}'", stopwatch.Elapsed);
             }
 
             // local functions
@@ -95,25 +100,30 @@ namespace LambdaSharp.Tool.Internal {
         }
 
         public static string ExecuteWithOutputCapture(string application, IEnumerable<string> arguments, string workingFolder) {
-            using(var process = new Process()) {
-                process.StartInfo = new ProcessStartInfo {
-                    FileName = application,
-                    Arguments = ArgumentEscaper.EscapeAndConcatenate(arguments),
-                    WorkingDirectory = workingFolder,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-                process.Start();
-                process.EnableRaisingEvents = true;
-                Task<string> output = null;
-                Task<string> error = null;
-                output = Task.Run(() => process.StandardOutput.ReadToEndAsync());
-                error = Task.Run(() => process.StandardError.ReadToEndAsync());
-                process.WaitForExit();
-                return (process.ExitCode == 0)
-                    ? output.GetAwaiter().GetResult()
-                    : null;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            try {
+                using(var process = new Process()) {
+                    process.StartInfo = new ProcessStartInfo {
+                        FileName = application,
+                        Arguments = ArgumentEscaper.EscapeAndConcatenate(arguments),
+                        WorkingDirectory = workingFolder,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+                    process.Start();
+                    process.EnableRaisingEvents = true;
+                    Task<string> output = null;
+                    Task<string> error = null;
+                    output = Task.Run(() => process.StandardOutput.ReadToEndAsync());
+                    error = Task.Run(() => process.StandardError.ReadToEndAsync());
+                    process.WaitForExit();
+                    return (process.ExitCode == 0)
+                        ? output.GetAwaiter().GetResult()
+                        : null;
+                }
+            } finally {
+                Settings.LogInfoPerformance($"ExecuteWithOutputCapture() '{Path.Combine(workingFolder ?? Directory.GetCurrentDirectory(), application)} {string.Join(" ", arguments)}'", stopwatch.Elapsed);
             }
         }
 

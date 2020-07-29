@@ -114,60 +114,70 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         private string GetDotNetVersion() {
-            var dotNetExe = ProcessLauncher.DotNetExe;
-            if(string.IsNullOrEmpty(dotNetExe)) {
-                return null;
-            }
-
-            // read the dotnet version
-            var process = new Process {
-                StartInfo = new ProcessStartInfo(dotNetExe, "--version") {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    WorkingDirectory = Directory.GetCurrentDirectory()
-                }
-            };
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try {
-                process.Start();
-                var dotnetVersion = process.StandardOutput.ReadToEnd().Trim();
-                process.WaitForExit();
-                if(process.ExitCode != 0) {
+                var dotNetExe = ProcessLauncher.DotNetExe;
+                if(string.IsNullOrEmpty(dotNetExe)) {
                     return null;
                 }
-                return dotnetVersion;
-            } catch {
-                return null;
+
+                // read the dotnet version
+                var process = new Process {
+                    StartInfo = new ProcessStartInfo(dotNetExe, "--version") {
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        WorkingDirectory = Directory.GetCurrentDirectory()
+                    }
+                };
+                try {
+                    process.Start();
+                    var dotnetVersion = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+                    if(process.ExitCode != 0) {
+                        return null;
+                    }
+                    return dotnetVersion;
+                } catch {
+                    return null;
+                }
+            } finally {
+                Settings.LogInfoPerformance($"GetDotNetVersion()", stopwatch.Elapsed);
             }
         }
 
         private string GetGitVersion() {
-
-            // constants
-            const string GIT_VERSION_PREFIX = "git version ";
-
-            // read the gitSha using 'git' directly
-            var process = new Process {
-                StartInfo = new ProcessStartInfo("git", "--version") {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    WorkingDirectory = Directory.GetCurrentDirectory()
-                }
-            };
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try {
-                process.Start();
-                var gitVersion = process.StandardOutput.ReadToEnd().Trim();
-                process.WaitForExit();
-                if(process.ExitCode != 0) {
+
+                // constants
+                const string GIT_VERSION_PREFIX = "git version ";
+
+                // read the gitSha using 'git' directly
+                var process = new Process {
+                    StartInfo = new ProcessStartInfo("git", "--version") {
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        WorkingDirectory = Directory.GetCurrentDirectory()
+                    }
+                };
+                try {
+                    process.Start();
+                    var gitVersion = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+                    if(process.ExitCode != 0) {
+                        return null;
+                    }
+                    if(gitVersion.StartsWith(GIT_VERSION_PREFIX, StringComparison.Ordinal)) {
+                        gitVersion = gitVersion.Substring(GIT_VERSION_PREFIX.Length);
+                    }
+                    return gitVersion;
+                } catch {
                     return null;
                 }
-                if(gitVersion.StartsWith(GIT_VERSION_PREFIX, StringComparison.Ordinal)) {
-                    gitVersion = gitVersion.Substring(GIT_VERSION_PREFIX.Length);
-                }
-                return gitVersion;
-            } catch {
-                return null;
+            } finally {
+                Settings.LogInfoPerformance($"GetGitVersion()", stopwatch.Elapsed);
             }
         }
 

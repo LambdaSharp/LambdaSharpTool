@@ -11,6 +11,9 @@
   href: Tool-Encrypt.md
 
 - name: Info
+  href: Tool-Info.md
+
+- name: Init
   href: Tool-Init.md
 
 - name: List
@@ -20,13 +23,19 @@
   items:
 
   - name: Function
-    href: Tool-NewFunction.md
+    href: Tool-New-Function.md
 
   - name: Module
-    href: Tool-NewModule.md
+    href: Tool-New-Module.md
 
   - name: Resource
-    href: Tool-NewResource.md
+    href: Tool-New-Resource.md
+
+  - name: Public Bucket
+    href: Tool-New-PublicBucket.md
+
+  - name: Expiring Bucket
+    href: Tool-New-ExpiringBucket.md
 
 - name: Publish
   href: Tool-Publish.md
@@ -59,7 +68,7 @@
       href: Tool-Util-ListLambdas.md
 
     - name: Show Failed Kinesis Log Entries
-      href: Tool-Util-KinesisFailedLogs.md
+      href: Tool-Util-ShowKinesisFailedLogs.md
 
     - name: Show Processed Parameters File
       href: Tool-Util-ShowParameters.md

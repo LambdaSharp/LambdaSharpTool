@@ -16,6 +16,9 @@
 - name: API Gateway for .NET
   href: APIGateway.md
 
+- name: CI/CD Pipeline
+  href: CICD.md
+
 - name: Metrics
   href: Metrics.md
   items:
@@ -51,7 +54,7 @@
 - name: Releases
   items:
 
-    - name: Hicetas (v0.8.0.6)
+    - name: Hicetas (v0.8.0.7)
       href: ReleaseNotes-Hicetas.md
 
     - name: Geminus (v0.7.0.17)

@@ -665,7 +665,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddGrant(
                 name: "EventBus",
                 awsType: null,
-                reference: FnSub("arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"),
+                reference: FnSub("arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"),
                 allow: new[] {
                     "events:PutEvents"
                 },
