@@ -187,12 +187,12 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
-                // bucket sub-command
-                cmd.Command("bucket", subCmd => {
+                // public-bucket sub-command
+                cmd.Command("public-bucket", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
+                    subCmd.Description = "Create new public S3 bucket with Requester Pays access";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
@@ -219,9 +219,59 @@ namespace LambdaSharp.Tool.Cli {
                         while(string.IsNullOrEmpty(bucketName)) {
                             bucketName = settings.PromptString("Enter the S3 bucket name");
                         }
-                        await NewBucket(settings, bucketName);
-                        Console.WriteLine();
-                        Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                        if(await NewPublicBucket(settings, bucketName)) {
+                            Console.WriteLine();
+                            Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                        }
+                    });
+                });
+
+                // expiring-bucket sub-command
+                cmd.Command("expiring-bucket", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create an S3 bucket that self-deletes after expiration";
+                    var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var expirationInDaysOption = subCmd.Option("--expiration-in-days <VALUE>", "(optional) Number of days until the bucket expires and is deleted (default: 7 days)", CommandOptionType.SingleValue);
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
+                    AddStandardCommandOptions(subCmd);
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+
+                        // initialize AWS profile
+                        var awsAccount = await InitializeAwsProfile(
+                            awsProfileOption.Value(),
+                            awsRegion: awsRegionOption.Value(),
+                            allowCaching: true
+                        );
+
+                        // initialize settings instance
+                        var settings = new Settings {
+                            CfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint),
+                            S3Client = new AmazonS3Client(AWSConfigs.RegionEndpoint),
+                            AwsRegion = awsAccount.Region,
+                            AwsAccountId = awsAccount.AccountId,
+                            AwsUserArn = awsAccount.UserArn
+                        };
+
+                        // get the resource name
+                        var bucketName = nameArgument.Value;
+                        while(string.IsNullOrEmpty(bucketName)) {
+                            bucketName = settings.PromptString("Enter the S3 bucket name");
+                        }
+
+                        // get --expiration-in-days option
+                        if(
+                            !int.TryParse(expirationInDaysOption.Value() ?? "7", out var expirationInDays)
+                            || (expirationInDays < 1)
+                            || (expirationInDays > 365)
+                        ) {
+                            LogError("invalid value for --expiration-in-days option");
+                        }
+                        if(await NewExpiringBucket(settings, bucketName, expirationInDays)) {
+                            Console.WriteLine();
+                            Console.WriteLine($"=> S3 Bucket ARN: {Settings.OutputColor}arn:aws:s3:::{bucketName}{Settings.ResetColor}");
+                        }
                     });
                 });
 
@@ -562,11 +612,13 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task NewBucket(Settings settings, string bucketName) {
+        public async Task<bool> NewPublicBucket(Settings settings, string bucketName) {
 
             // create bucket using template
-            var template = ReadResource("PublicLambdaSharpBucket.yml");
-            var stackName = $"PublicLambdaSharpBucket-{bucketName}";
+            var template = ReadResource("LambdaSharpBucketPublic.yml", new Dictionary<string, string> {
+                ["TOOL-VERSION"] = Version.ToString(),
+            });
+            var stackName = $"Bucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                 StackName = stackName,
                 Capabilities = new List<string> { },
@@ -594,14 +646,62 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine("=> Stack creation finished");
             } else {
                 Console.WriteLine("=> Stack creation FAILED");
-                return;
+                return false;
             }
+
+            // TODO (2020-07-23, bjorg): consider creating an embedded finalizer to set Requester Pays access
 
             // update bucket to require requester pays
             Console.WriteLine("=> Updating S3 Bucket for Requester Pays access");
             await settings.S3Client.PutBucketRequestPaymentAsync(bucketName, new RequestPaymentConfiguration {
                 Payer = "Requester"
             });
+            return true;
+        }
+
+        public async Task<bool> NewExpiringBucket(Settings settings, string bucketName, int expirationInDays) {
+
+            // create bucket using template
+            var template = ReadResource("LambdaSharpBucketExpiring.yml", new Dictionary<string, string> {
+                ["TOOL-VERSION"] = Version.ToString(),
+            });
+            var stackName = $"Bucket-{bucketName}";
+            var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                StackName = stackName,
+                Capabilities = new List<string> {
+                    "CAPABILITY_NAMED_IAM"
+                },
+                OnFailure = OnFailure.DELETE,
+                Parameters = new List<Parameter> {
+                    new Parameter {
+                        ParameterKey = "BucketName",
+                        ParameterValue = bucketName
+                    },
+                    new Parameter {
+                        ParameterKey = "ExpirationInDays",
+                        ParameterValue = expirationInDays.ToString()
+                    },
+                },
+                TemplateBody = template,
+                Tags = new List<Tag> {
+                    new Tag {
+                        Key = "LambdaSharp:BuildBucket",
+                        Value = bucketName
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:DeployedBy",
+                        Value = settings.AwsUserArn.Split(':').Last()
+                    }
+                }
+            });
+            var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
+            if(created.Success) {
+                Console.WriteLine("=> Stack creation finished");
+            } else {
+                Console.WriteLine("=> Stack creation FAILED");
+                return false;
+            }
+            return true;
         }
 
         private void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {

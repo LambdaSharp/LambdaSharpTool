@@ -85,12 +85,17 @@ namespace LambdaSharp.Tool.Cli {
 
                         // fetch tier information
                         if(!await PopulateDeploymentTierSettingsAsync(settings, optional: true)) {
-                            return -1;
+                            if(!Program.Quiet) {
+                                Console.WriteLine();
+                                Console.WriteLine($"No deployment tier found {Settings.OutputColor}[ExitCode: 2]{Settings.ResetColor}");
+                            }
+                            return 2;
                         }
 
                         // validate options
                         if(minVersionOption.Value() == null) {
-                            Console.WriteLine($"Tier Version: {settings.TierVersion}");
+                            Console.WriteLine();
+                            Console.WriteLine($"Deployment tier version: {Settings.InfoColor}{settings.TierVersion}{Settings.ResetColor}");
                             return 0;
                         } else {
                             if(!VersionInfo.TryParse(minVersionOption.Value(), out var minVersion)) {
@@ -101,7 +106,8 @@ namespace LambdaSharp.Tool.Cli {
                             // compare version numbers
                             var exitCode = settings.TierVersion.IsGreaterOrEqualThanVersion(minVersion) ? 0 : 1;
                             if(!Program.Quiet) {
-                                Console.WriteLine($"Tier Version: {settings.TierVersion} [ExitCode: {exitCode}]");
+                                Console.WriteLine();
+                                Console.WriteLine($"Deployment tier version: {Settings.InfoColor}{settings.TierVersion} {Settings.OutputColor}[ExitCode: {exitCode}]{Settings.ResetColor}");
                             }
                             return exitCode;
                         }
@@ -175,6 +181,14 @@ namespace LambdaSharp.Tool.Cli {
 
             // validate that all modules in tier can enable/disable core services
             if(enabled.HasValue) {
+
+                // check if LambdaSharp.Core has Core Services enabled
+                if(enabled.Value && (settings.CoreServices != CoreServices.Enabled)) {
+                    LogError($"{settings.TierName} does not have Core Services enabled; run 'lash init --core-services enabled' first");
+                    return;
+                }
+
+                // check if deployed modules support Core Services
                 foreach(var details in moduleDetails) {
                     if(details.CoreServices == null) {
                         LogError($"{details.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");

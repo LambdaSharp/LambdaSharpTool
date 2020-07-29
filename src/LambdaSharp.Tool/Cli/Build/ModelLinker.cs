@@ -165,18 +165,15 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .OrderBy(logicalId => logicalId)
                     .ToList();
 
-                // NOTE: for conditional resources, we need to take a dependency via an expression; however
-                //  this approach doesn't work for custom resources because they don't support !Ref
+                // NOTE: for conditional resources, we need to take a dependency via an expression
                 var allConditionalResourceItems = allResourceItems
                     .Where(item => item.Condition != null)
-                    .Where(item => item.HasAwsType)
                     .ToList();
                 if(allConditionalResourceItems.Any()) {
                     finalizerCustomResource["DependsOn"] = allConditionalResourceItems
                         .Select(item => FnIf(item.Condition, FnRef(item.LogicalId), FnRef("AWS::NoValue")))
                         .ToList();
                 }
-
             }
             return;
 

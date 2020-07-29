@@ -1,15 +1,15 @@
 ---
 title: LambdaSharp CLI New Command - Create a Public S3 Bucket
-description: Create a public S3 bucket for sharing LambdaSharp modules
+description: Create a public S3 bucket with Requester Pays access
 keywords: cli, cloudformation, public, sharing, s3, bucket, module
 ---
-# Create New Public S3 Bucket
+# Create Public S3 Bucket
 
-The `new bucket` command is used to create a new public S3 bucket for sharing LambdaSharp modules. The bucket is configured to be publicly accessible, but requires the [requester to pay](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) for all data transfer. This ensures that the owner of the S3 bucket only pays for the storage of shared LambdaSharp modules.
+The `new public-bucket` command is used to create a public S3 bucket. The bucket is configured to be publicly accessible, but requires the [requester to pay](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) for all data transfer. This ensures that the owner of the S3 bucket only pays for the storage of shared LambdaSharp modules.
 
 ## Arguments
 
-The `new bucket` command takes a single argument that specifies the S3 bucket name.
+The `new public-bucket` command takes a single argument that specifies the S3 bucket name.
 
 The following are the rules for naming S3 buckets in all AWS Regions:
 * Bucket names must be unique across all existing bucket names in Amazon S3.
@@ -22,7 +22,7 @@ The following are the rules for naming S3 buckets in all AWS Regions:
 * When you use virtual hosted–style buckets with Secure Sockets Layer (SSL), the SSL wildcard certificate only matches buckets that don't contain periods. To work around this, use HTTP or write your own certificate verification logic. We recommend that you do not use periods (".") in bucket names when using virtual hosted–style buckets.
 
 ```bash
-lash new bucket my-lambdasharp-bucket
+lash new public-bucket my-lambdasharp-bucket
 ```
 
 ## Options
@@ -45,17 +45,17 @@ lash new bucket my-lambdasharp-bucket
 
 ## Examples
 
-### Create a new public S3 bucket for sharing LambdaSharp modules
+### Create a public S3 bucket with Requester Pays access
 
 __Using PowerShell/Bash:__
 ```bash
-lash new bucket my-lambdasharp-bucket4
+lash new public-bucket my-lambdasharp-bucket4
 ```
 
 Output:
 ```
-LambdaSharp CLI (v0.7.0) - Create new public S3 bucket for sharing LambdaSharp modules
-CREATE_COMPLETE    AWS::CloudFormation::Stack    PublicLambdaSharpBucket-my-lambdasharp-bucket4
+LambdaSharp CLI (v0.7.0) - Create new public S3 bucket with Requester Pays access
+CREATE_COMPLETE    AWS::CloudFormation::Stack    Bucket-my-lambdasharp-bucket4
 CREATE_COMPLETE    AWS::S3::Bucket               Bucket
 CREATE_COMPLETE    AWS::S3::BucketPolicy         BucketPolicy
 => Stack creation finished

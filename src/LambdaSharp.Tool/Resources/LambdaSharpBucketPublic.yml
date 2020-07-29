@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: LambdaSharp Core Resources (v%%VERSION%%)
+Description: LambdaSharp Public Bucket (v%%TOOL-VERSION%%)
 
 ##############
 # Parameters #
@@ -29,7 +29,6 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-
           - Sid: AnonymousAccess
             Effect: Allow
             Principal: "*"
@@ -39,3 +38,13 @@ Resources:
             Resource:
               - !GetAtt Bucket.Arn
               - !Sub "${Bucket.Arn}/*"
+
+###########
+# Outputs #
+###########
+Outputs:
+  BucketArn:
+    Description: Public Bucket ARN
+    Value: !GetAtt Bucket.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-BucketArn"

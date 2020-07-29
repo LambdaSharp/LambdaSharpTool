@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: LambdaSharp Expiring Bucket (v%%TOOL-VERSION%%)
+
+##############
+# Parameters #
+##############
+Parameters:
+
+  BucketName:
+    Type: String
+    Description: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new bucket)
+    AllowedPattern: '^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$'
+    ConstraintDescription: Bucket name must be 3 to 63 characters long, with lowercase alphanumeric characters at the beginning and end
+
+  ExpirationInDays:
+    Type: Number
+    Description: Number of days for objects to remain in the bucket
+    MinValue: 1
+    MaxValue: 365
+
+#############
+# Resources #
+#############
+Resources:
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteArtifacts
+            ExpirationInDays: !Ref ExpirationInDays
+            Status: Enabled
+
+  AutoDeleteFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-Func"
+      Description: "LambdaSharp Expiring Bucket clean-up function"
+      Environment:
+        Variables:
+          BucketName: !Ref BucketName
+          StackName: !Ref AWS::StackName
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+          const cfn = new AWS.CloudFormation({ apiVersion: '2010-05-15' });
+          exports.handler = async (event, context) => {
+
+            // check if bucket contains artifacts
+            let response = await s3.listObjects({ Bucket: process.env.BucketName, MaxKeys: 1 }).promise()
+            if(response.Contents.length !== 0) {
+              return "bucket is not empty: " + process.env.BucketName;
+            }
+
+            // initiate stack deletion
+            await cfn.deleteStack({ StackName: process.env.StackName }).promise();
+            return "bucket is empty, deleting stack: " + process.env.StackName;
+          };
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt AutoDeleteFunctionRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 30
+
+  AutoDeleteFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-Role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: LambdaPrincipal
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AutoDeleteFunctionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+
+              - Sid: BucketPermissions
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:DeleteBucket
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::${BucketName}"
+                  - !Sub "arn:${AWS::Partition}:s3:::${BucketName}/*"
+
+              - Sid: StackPermissions
+                Effect: Allow
+                Action:
+                  - cloudformation:DeleteStack
+                Resource: !Ref AWS::StackId
+
+              - Sid: LambdaPermissions
+                Effect: Allow
+                Action:
+                  - lambda:DeleteFunction
+                  - lambda:RemovePermission
+                Resource: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-Func"
+
+              - Sid: RolePermissions
+                Effect: Allow
+                Action:
+                  - iam:DeleteRole
+                  - iam:DeleteRolePolicy
+                Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AWS::StackName}-Role"
+
+              - Sid: EventsPermission
+                Effect: Allow
+                Action:
+                  - events:RemoveTargets
+                  - events:DeleteRule
+                Resource: !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${AWS::StackName}-Timer"
+
+  AutoDeleteTimer:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${AWS::StackName}-Timer"
+      ScheduleExpression: rate(6 hours)
+      Targets:
+        - Id: HourlyTimer
+          Arn: !GetAtt AutoDeleteFunction.Arn
+
+  AutoDeleteTimerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AutoDeleteFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt AutoDeleteTimer.Arn
+
+###########
+# Outputs #
+###########
+Outputs:
+  BucketArn:
+    Description: Expiring Bucket ARN
+    Value: !GetAtt Bucket.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-BucketArn"

@@ -182,7 +182,7 @@ See the [updated documentation](~/cli/Tool-Encrypt.md) for more details.
 
 The `new function` command now allows specifying the target language when adding a function.
 
-See the [updated documentation](~/cli/Tool-NewFunction.md) for more details.
+See the [updated documentation](~/cli/Tool-New-Function.md) for more details.
 
 
 ## New LambdaSharp Module Features

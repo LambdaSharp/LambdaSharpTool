@@ -28,7 +28,7 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 <dt><code>--version &lt;VERSION&gt;</code></dt>
 <dd>
 
-(optional) Specify version for LambdaSharp modules (default: same as CLI version)
+(optional) Specify version for LambdaSharp.Core module (default: same as CLI version)
 </dd>
 
 <dt><code>--parameters &lt;FILE&gt;</code></dt>
