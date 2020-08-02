@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.0.7) - TBD
+# LambdaSharp "Hicetas" Release (v0.8.0.7) - 2020-07-28
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,14 +141,31 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.0.7) - TBD
+### (v0.8.0.7) - 2020-07-28
+
+#### BREAKING CHANGES
+
+* CLI
+  * Renamed `new bucket` command to `new public-bucket` to make it clear the created S3 bucket is publicly accessible.
 
 #### Features
+
+* CLI
+  * Added `new expiring-bucket` command to create a self-deleting S3 bucket.
+  * Enhanced `publish` and `deploy` commands to allow omitting the version number to automatically use the latest published module version.
+  * Enhanced `publish` and `deploy` command by adding `--from-origin` option to import modules from specified origin instead the module origin. Dependencies must be published explicitly.
+  * Enhanced `deploy` command by adding `--no-import` option to prevent module artifacts or dependencies from being imported. All artifacts must already exist in the deployment tier bucket.
+  * Enhanced `deploy` to automatically upgrade shared dependencies when deploying a module. This behavior can be turned off with the `--no-dependency-upgrades` option.
+  * Enhanced output for `tier version` command. The command now also returns status code 2 when the deployment tier does not exist.
 
 #### Fixes
 
 * CLI
   * Fixed an issue in `util show-kinesis-failed-logs` where logs with multiple entries were not parsed properly.
+  * Fixed an issue in `init` where `--existing-s3-bucket-name` would not convert a S3 bucket name to a S3 bucket ARN.
+  * Fixed an issue in `tier coreservices --enabled` would fail without an explanation when the deployment tier was created without _Core Services_.
+  * Use `AWS::Partition` instead of hard-coding `aws` when constructing ARNs.
+  * Fixed an issue where the _Finalizer_ was not taking a dependency on conditional custom resources.
 
 ### (v0.8.0.6) - 2020-07-14
 

@@ -16,6 +16,9 @@
 - name: API Gateway for .NET
   href: APIGateway.md
 
+- name: CI/CD Pipeline
+  href: CICD.md
+
 - name: Metrics
   href: Metrics.md
   items:

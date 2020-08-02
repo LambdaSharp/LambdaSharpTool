@@ -254,7 +254,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddGrant(
                 name: "WebSocketConnections",
                 awsType: null,
-                reference: FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/POST/@connections/*"),
+                reference: FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/POST/@connections/*"),
                 allow: new[] {
                     "execute-api:ManageConnections"
                 },
@@ -306,7 +306,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["ApiId"] = FnRef(webSocket.FullName),
                     ["Description"] = $"WebSocket Integration for '{function.FullName}'",
                     ["IntegrationType"] = "AWS_PROXY",
-                    ["IntegrationUri"] = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{function.FullName}.Arn}}/invocations"),
+                    ["IntegrationUri"] = FnSub($"arn:${{AWS::Partition}}:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{function.FullName}.Arn}}/invocations"),
                     ["PassthroughBehavior"] = "WHEN_NO_TEMPLATES"
                 };
                 var integration = _builder.AddResource(
@@ -514,7 +514,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 Action = "lambda:InvokeFunction",
                                 FunctionName = FnRef(webSocketRoute.Function.FullName),
                                 Principal = "apigateway.amazonaws.com",
-                                SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/*")
+                                SourceArn = FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/*")
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -614,7 +614,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 scope: null,
                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Stage") {
                     ["AccessLogSettings"] = new Dictionary<string, dynamic> {
-                        ["DestinationArn"] = FnSub($"arn:aws:logs:${{AWS::Region}}:${{AWS::AccountId}}:log-group:${{{webSocketLogGroup.FullName}}}"),
+                        ["DestinationArn"] = FnSub($"arn:${{AWS::Partition}}:logs:${{AWS::Region}}:${{AWS::AccountId}}:log-group:${{{webSocketLogGroup.FullName}}}"),
                         ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.WebSocketLogging.json")), Formatting.None)
                     },
                     ["ApiId"] = FnRef("Module::WebSocket"),
@@ -868,7 +868,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Action = "lambda:InvokeFunction",
                             FunctionName = FnRef(route.Function.FullName),
                             Principal = "apigateway.amazonaws.com",
-                            SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::RestApi}/${Module::RestApi::StageName}/*")
+                            SourceArn = FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::RestApi}/${Module::RestApi::StageName}/*")
                         },
                         resourceExportAttribute: null,
                         dependsOn: null,
@@ -924,7 +924,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
                         Type = "AWS_PROXY",
                         IntegrationHttpMethod = "POST",
-                        Uri = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{function.FullName}.Arn}}/invocations")
+                        Uri = FnSub($"arn:${{AWS::Partition}}:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{function.FullName}.Arn}}/invocations")
                     }
                 };
             }
@@ -944,7 +944,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
                         Type = "AWS",
                         IntegrationHttpMethod = "POST",
-                        Uri = FnSub($"arn:aws:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{function.FullName}.Arn}}/invocations"),
+                        Uri = FnSub($"arn:${{AWS::Partition}}:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{function.FullName}.Arn}}/invocations"),
                         RequestParameters = new Dictionary<string, object> {
                             ["integration.request.header.X-Amz-Invocation-Type"] = "'Event'"
                         },

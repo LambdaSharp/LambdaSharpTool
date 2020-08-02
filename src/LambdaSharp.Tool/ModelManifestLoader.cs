@@ -114,7 +114,20 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport, bool showError, bool allowCaching = false) {
+        public Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport, bool showError, bool allowCaching = false)
+            => ResolveInfoToLocationAsync(moduleInfo, moduleInfo.Origin, dependencyType, allowImport, showError, allowCaching);
+
+        public async Task<ModuleLocation> ResolveInfoToLocationAsync(
+            ModuleInfo moduleInfo,
+            string originBucketName,
+            ModuleManifestDependencyType dependencyType,
+            bool allowImport,
+            bool showError,
+            bool allowCaching = false
+        ) {
+            if(originBucketName == null) {
+                throw new ArgumentNullException(nameof(originBucketName));
+            }
             LogInfoVerbose($"... resolving module {moduleInfo}");
             var stopwatch = Stopwatch.StartNew();
             var cached = false;
@@ -158,7 +171,7 @@ namespace LambdaSharp.Tool {
                 // check if the origin bucket needs to be checked
                 if(
                     allowImport
-                    && (Settings.DeploymentBucketName != moduleInfo.Origin)
+                    && (Settings.DeploymentBucketName != originBucketName)
                     && (
 
                         // no version has been found
@@ -174,7 +187,7 @@ namespace LambdaSharp.Tool {
                         || moduleInfo.Version.HasFloatingConstraints
                     )
                 ) {
-                    var originResult = await FindNewestModuleVersionAsync(moduleInfo.Origin);
+                    var originResult = await FindNewestModuleVersionAsync(originBucketName);
 
                     // check if module found at origin should be kept instead
                     if(
@@ -195,9 +208,13 @@ namespace LambdaSharp.Tool {
                     // could not find a matching version
                     var versionConstraint = (moduleInfo.Version != null)
                         ? $"v{moduleInfo.Version} or later"
-                        : "any version";
+                        : "any released version";
                     if(showError) {
-                        LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
+                        if(allowImport) {
+                            LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
+                        } else {
+                            LogError($"missing module dependency must be imported explicitly '{moduleInfo}' ({versionConstraint})");
+                        }
                     }
                     return null;
                 }
@@ -219,12 +236,18 @@ namespace LambdaSharp.Tool {
                     return (Origin: bucketName, Version: null, Manifest: null);
                 }
 
-                // NOTE (2019-08-12, bjorg): unless the module is shared, we filter the list of found versions to
+                // NOTE (2019-08-12, bjorg): if the module is nested, we filter the list of found versions to
                 //  only contain versions that meet the module version constraint; for shared modules, we want to
                 //  keep the latest version that is compatible with the tool and is equal-or-greater than the
                 //  module version constraint.
-                if((dependencyType != ModuleManifestDependencyType.Shared) && (moduleInfo.Version != null)) {
-                    found = found.Where(version => version.MatchesConstraint(moduleInfo.Version)).ToList();
+                if((dependencyType == ModuleManifestDependencyType.Nested) && (moduleInfo.Version != null)) {
+                    found = found.Where(version => {
+                        var result = version.MatchesConstraint(moduleInfo.Version);
+                        if(!result) {
+                            LogInfoVerbose($"... rejected v{version}: does not match version constraint {moduleInfo.Version}");
+                        }
+                        return result;
+                    }).ToList();
                 }
 
                 // attempt to identify the newest module version compatible with the tool
@@ -235,7 +258,11 @@ namespace LambdaSharp.Tool {
                     manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                     // check if module is compatible with this tool
-                    return VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(manifest.CoreServicesVersion, Settings.ToolVersion);
+                    var result = manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
+                    if(!result) {
+                        LogInfoVerbose($"... rejected v{candidate}: it not compatible with tool version {Settings.ToolVersion}");
+                    }
+                    return result;
                 });
                 return (Origin: bucketName, Version: match, Manifest: manifest);
             }
@@ -280,7 +307,12 @@ namespace LambdaSharp.Tool {
                 => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
         }
 
-        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation, ModuleManifestDependencyType Type)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting, bool allowImport) {
+        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation, ModuleManifestDependencyType Type)>> DiscoverAllDependenciesAsync(
+            ModuleManifest manifest,
+            bool checkExisting,
+            bool allowImport,
+            bool allowDependencyUpgrades
+        ) {
             var deployments = new List<DependencyRecord>();
             var existing = new List<DependencyRecord>();
             var inProgress = new List<DependencyRecord>();
@@ -386,6 +418,11 @@ namespace LambdaSharp.Tool {
                 if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
                     LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
                 } else if(!deployedModuleInfo.Version.MatchesConstraint(dependency.ModuleInfo.Version)) {
+
+                    // for out-of-date dependencies, handle them as if they didn't exist when upgrades are allowed
+                    if(allowDependencyUpgrades) {
+                        return null;
+                    }
                     LogError($"deployed dependent module {dependency.ModuleInfo.FullName} (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
                 }
                 return result;

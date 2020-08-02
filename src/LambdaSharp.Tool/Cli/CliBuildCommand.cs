@@ -189,6 +189,7 @@ namespace LambdaSharp.Tool.Cli {
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
                 var moduleOriginOption = AddModuleOriginOption(cmd);
+                var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Use specified origin to import module instead of module origin", CommandOptionType.SingleValue);
 
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to module or artifacts folder (default: Module.yml)", multipleValues: true);
@@ -236,7 +237,7 @@ namespace LambdaSharp.Tool.Cli {
                     VersionInfo moduleVersion = null;
                     if(moduleVersionOption.HasValue()) {
                         if(!VersionInfo.TryParse(moduleVersionOption.Value(), out moduleVersion)) {
-                            LogError("--module-version is not a valid version number");
+                            LogError("--module-version does not have a valid version number");
                             return;
                         }
                     }
@@ -244,7 +245,7 @@ namespace LambdaSharp.Tool.Cli {
                     // check if a module build time is supplied
                     if(moduleBuildDateOption.HasValue()) {
                         if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
-                            LogError("--module-build-date is not a valid date-time");
+                            LogError("--module-build-date does not have a valid date-time");
                             return;
                         }
                         settings.UtcNow = moduleBuildDate;
@@ -305,7 +306,7 @@ namespace LambdaSharp.Tool.Cli {
                                     break;
                                 }
                             } else if(moduleInfo != null) {
-                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromOriginOption.Value())) {
                                     break;
                                 }
                             }
@@ -328,10 +329,13 @@ namespace LambdaSharp.Tool.Cli {
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
+                var noImportOption = cmd.Option("--no-import", "(optional) All module artifacts must exist in deployment tier bucket and cannot be imported", CommandOptionType.NoValue);
+                var noDependencyUpgradesOption = cmd.Option("--no-dependency-upgrades", "(optional) Do not automatically upgrade shared dependencies", CommandOptionType.NoValue);
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
                 var moduleOriginOption = AddModuleOriginOption(cmd);
+                var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Use specified origin to import module instead of module origin", CommandOptionType.SingleValue);
 
                 // build options
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
@@ -461,8 +465,8 @@ namespace LambdaSharp.Tool.Cli {
                                 if(moduleInfo == null) {
                                     break;
                                 }
-                            } else if(moduleInfo.Origin != null) {
-                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
+                            } else if(!noImportOption.HasValue() && (moduleInfo.Origin != null)) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromOriginOption.Value())) {
                                     break;
                                 }
                             }
@@ -477,7 +481,8 @@ namespace LambdaSharp.Tool.Cli {
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
                                 xRayTracingLevel,
-                                deployOnlyIfExists: false
+                                deployOnlyIfExists: false,
+                                allowDependencyUpgrades: !noDependencyUpgradesOption.HasValue()
                             )) {
                                 break;
                             }
@@ -529,15 +534,11 @@ namespace LambdaSharp.Tool.Cli {
             return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish, moduleOrigin);
         }
 
-        public async Task<bool> ImportStepAsync(Settings settings, ModuleInfo moduleInfo, bool forcePublish) {
+        public async Task<bool> ImportStepAsync(Settings settings, ModuleInfo moduleInfo, bool forcePublish, string fromOrigin = null) {
             if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                 return false;
             }
-            if(moduleInfo.Origin == settings.DeploymentBucketName) {
-                LogWarn($"skipping import of {moduleInfo} because origin matches deployment bucket");
-                return true;
-            }
-            return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish);
+            return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish, fromOrigin);
         }
 
         public async Task<bool> DeployStepAsync(
@@ -551,7 +552,8 @@ namespace LambdaSharp.Tool.Cli {
             bool forceDeploy,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
-            bool deployOnlyIfExists
+            bool deployOnlyIfExists,
+            bool allowDependencyUpgrades
         ) {
             try {
                 if(!await PopulateDeploymentTierSettingsAsync(settings)) {
@@ -572,7 +574,8 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy,
                     promptAllParameters,
                     xRayTracingLevel,
-                    deployOnlyIfExists
+                    deployOnlyIfExists,
+                    allowDependencyUpgrades
                 );
             } catch(Exception e) {
                 LogError(e);

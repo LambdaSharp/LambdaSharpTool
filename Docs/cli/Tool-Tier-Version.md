@@ -68,7 +68,8 @@ lash tier version
 Output:
 ```
 LambdaSharp CLI (v0.8.0.3) - Check Tier Version
-Tier Version: 0.8.0.3
+
+Deployment tier version: 0.8.0.3
 
 Done (finished: 6/18/2020 9:28:34 PM; duration: 00:00:00.9270535)
 ```
@@ -83,7 +84,8 @@ lash tier version --min-version 0.8.0.5
 Output:
 ```
 LambdaSharp CLI (v0.8.0.3) - Check Tier Version
-Tier Version: 0.8.0.3 [ExitCode: 1]
+
+Deployment tier version: 0.8.0.3 [ExitCode: 1]
 
 Done (finished: 6/18/2020 9:29:21 PM; duration: 00:00:00.9652105)
 ```

@@ -50,7 +50,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             bool forceDeploy,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
-            bool deployOnlyIfExists
+            bool deployOnlyIfExists,
+            bool allowDependencyUpgrades
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
@@ -119,8 +120,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     });
                 }
 
-                // discover shard module dependencies and prompt for missing parameters
-                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false))
+                // discover shared module dependencies and prompt for missing parameters
+                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false, allowDependencyUpgrades: allowDependencyUpgrades))
                     .Where(dependency => dependency.Type == ModuleManifestDependencyType.Shared)
                     .ToList();
                 if(HasErrors) {

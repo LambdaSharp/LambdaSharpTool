@@ -160,19 +160,24 @@ namespace LambdaSharp.Tool.Cli.Publish {
             return manifest.ModuleInfo;
         }
 
-        public async Task<bool> DoImportAsync(ModuleInfo moduleInfo, bool forcePublish) {
+        public async Task<bool> DoImportAsync(ModuleInfo moduleInfo, bool forcePublish, string fromOrigin) {
+            if((fromOrigin ?? moduleInfo.Origin) == Settings.DeploymentBucketName) {
+                LogWarn($"skipping import of {moduleInfo} because origin matches deployment bucket");
+                return true;
+            }
 
             // check if module has already been imported
             if(
                 !forcePublish
-                && !(moduleInfo.Version?.IsPreRelease ?? false)
+                && (moduleInfo.Version != null)
+                && !moduleInfo.Version.IsPreRelease
                 && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)
             ) {
                 return true;
             }
 
             // find manifest for module to import
-            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, ModuleManifestDependencyType.Root, allowImport: true, showError: true);
+            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, fromOrigin ?? moduleInfo.Origin, ModuleManifestDependencyType.Root, allowImport: true, showError: true);
             if(moduleLocation == null) {
 
                 // nothing to do; loader already emitted an error
@@ -185,8 +190,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 return false;
             }
 
-            // import module dependencies
-            if(!await ImportDependencies(manifest)) {
+            // import module dependencies only if `--from-origin` was NOT specified
+            if(!await ImportDependencies(manifest, allowImport: fromOrigin == null)) {
 
                 // error has already been reported
                 return false;
@@ -195,21 +200,26 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // import module
             var imported = false;
             foreach(var artifact in manifest.Artifacts) {
-                imported = imported | await ImportS3Object(moduleLocation.ModuleInfo.Origin, artifact, replace: forcePublish);
+                imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, artifact, replace: forcePublish);
             }
-            imported = imported | await ImportS3Object(moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease);
+
+            // don't import module manifest if any of the artifacts failed to import
+            if(HasErrors) {
+                return false;
+            }
+            imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease);
             if(imported) {
-                Console.WriteLine($"=> Imported {moduleInfo}");
+                Console.WriteLine($"=> Imported {moduleLocation.ModuleInfo}");
             } else {
                 Console.WriteLine($"=> Nothing to do");
             }
             return true;
         }
 
-        private async Task<bool> ImportDependencies(ModuleManifest manifest) {
+        private async Task<bool> ImportDependencies(ModuleManifest manifest, bool allowImport = true) {
 
             // discover module dependencies
-            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport: true);
+            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport, allowDependencyUpgrades: false);
             if(HasErrors) {
                 return false;
             }
@@ -339,8 +349,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 request.Metadata[AMAZON_METADATA_ORIGIN] = sourceBucket;
                 try {
                     await Settings.S3Client.CopyObjectAsync(request);
-                } catch(AmazonS3Exception) {
-                    LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket");
+                } catch(AmazonS3Exception e) {
+                    LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket", e);
                     return false;
                 }
                  _changesDetected = true;

@@ -74,7 +74,7 @@ Items:
       Policies:
 
         # Give Firehose access to S3 bucket
-        - PolicyName: !Sub "${AWS::StackName}FirehoseS3Policy"
+        - PolicyName: FirehoseS3Policy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -91,7 +91,7 @@ Items:
                   - !Sub "${FirehoseBucket.Arn}/*"
 
         # Give Firehose access to invoking the Lambda function
-        - PolicyName: !Sub "${AWS::StackName}FirehoseLambdaPolicy"
+        - PolicyName: FirehoseLambdaPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -102,7 +102,7 @@ Items:
                 Resource: !GetAtt FirehoseAnalyzerFunction.Arn
 
         # Give Firehose access to writing to CloudWatch logs
-        - PolicyName: !Sub "${AWS::StackName}FirehoseLogPolicy"
+        - PolicyName: FirehoseLogPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -137,7 +137,7 @@ Items:
               Service: !Sub "logs.${AWS::Region}.amazonaws.com"
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: !Sub "${AWS::StackName}CloudWatchLogsFirehosePolicy"
+        - PolicyName: CloudWatchLogsFirehosePolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
