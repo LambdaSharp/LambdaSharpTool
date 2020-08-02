@@ -370,7 +370,7 @@ namespace LambdaSharp.Tool {
                 && (!versionConstraint.Patch.HasValue || (Patch == versionConstraint.Patch));
         }
 
-        private VersionInfo GetMajorVersion() => new VersionInfo(Major, MajorPartial, 0, patch: null, Suffix);
+        private VersionInfo GetMajorVersion() => new VersionInfo(Major, MajorPartial, minor: 0, patch: null, Suffix);
     }
 
     public class VersionInfoConverter : JsonConverter {

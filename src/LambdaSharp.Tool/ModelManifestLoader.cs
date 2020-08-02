@@ -258,7 +258,7 @@ namespace LambdaSharp.Tool {
                     manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                     // check if module is compatible with this tool
-                    var result = manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
+                    var result = VersionInfo.IsModuleCoreVersionCompatibleWithTierVersion(manifest.CoreServicesVersion, Settings.ToolVersion);
                     if(!result) {
                         LogInfoVerbose($"... rejected v{candidate}: it not compatible with tool version {Settings.ToolVersion}");
                     }

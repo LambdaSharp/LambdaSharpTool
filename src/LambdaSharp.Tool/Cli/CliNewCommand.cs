@@ -616,7 +616,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // create bucket using template
             var template = ReadResource("LambdaSharpBucketPublic.yml", new Dictionary<string, string> {
-                ["TOOL-VERSION"] = Version.ToString(),
+                ["TOOL-VERSION"] = Settings.ToolVersion.ToString(),
             });
             var stackName = $"Bucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
@@ -663,7 +663,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // create bucket using template
             var template = ReadResource("LambdaSharpBucketExpiring.yml", new Dictionary<string, string> {
-                ["TOOL-VERSION"] = Version.ToString(),
+                ["TOOL-VERSION"] = Settings.ToolVersion.ToString(),
             });
             var stackName = $"Bucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
