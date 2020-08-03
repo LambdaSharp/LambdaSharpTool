@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -55,7 +56,7 @@ namespace LambdaSharp.Modules {
             }
         }
 
-        public static bool TryParse(string text, out VersionInfo? version) {
+        public static bool TryParse(string text, [NotNullWhen(true)] out VersionInfo? version) {
             version = null;
             if(!VersionWithSuffix.TryParse(text, out var major, out var minor, out var build, out var revision, out var suffix)) {
                 return false;

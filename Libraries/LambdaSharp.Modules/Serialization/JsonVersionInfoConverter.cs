@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+// NOTE (2020-08-02, bjorg): nullable is disabled, because the converter can return null
+//  even though the type is non-nullable
 #nullable disable
 
 using System;

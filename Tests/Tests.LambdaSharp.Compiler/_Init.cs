@@ -32,6 +32,7 @@ using Xunit.Abstractions;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Modules;
 
 namespace Tests.LambdaSharp.Compiler {
 

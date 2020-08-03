@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />
     <ProjectReference Include="..\..\Libraries\LambdaSharp.Compiler\LambdaSharp.Compiler.csproj" />
+    <ProjectReference Include="..\..\Libraries\LambdaSharp.Modules\LambdaSharp.Modules.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\**" />

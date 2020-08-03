@@ -24,6 +24,7 @@ using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.TypeSystem;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 

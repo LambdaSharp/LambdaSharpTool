@@ -16,35 +16,14 @@
  * limitations under the License.
  */
 
-#nullable disable
-
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using LambdaSharp.Compiler.Serialization;
-using LambdaSharp.Modules;
+using LambdaSharp.Modules.Serialization;
 
-namespace LambdaSharp.Compiler {
-
-    public class ModuleLocation {
-
-        //--- Fields ---
-        public readonly string SourceBucketName;
-        public readonly ModuleInfo ModuleInfo;
-        public readonly string Hash;
-
-        //--- Properties ---
-        public string ModuleTemplateUrl => $"https://{SourceBucketName}.s3.amazonaws.com/{ModuleTemplateKey}";
-        public string ModuleTemplateKey => ModuleInfo.GetArtifactPath($"cloudformation_{ModuleInfo.FullName}_{Hash}.json");
-
-        //--- Constructors ---
-        public ModuleLocation(string sourceBucketName, ModuleInfo moduleInfo, string hash) {
-            SourceBucketName = sourceBucketName ?? throw new ArgumentNullException(nameof(sourceBucketName));
-            ModuleInfo = moduleInfo ?? throw new ArgumentNullException(nameof(moduleInfo));
-            Hash = hash ?? throw new ArgumentNullException(nameof(hash));
-        }
-    }
+namespace LambdaSharp.Modules {
 
     [JsonConverter(typeof(JsonModuleInfoConverter))]
     public class ModuleInfo {
@@ -72,7 +51,7 @@ namespace LambdaSharp.Compiler {
             throw new FormatException("Input string was not in a correct format.");
         }
 
-        public static bool TryParse(string moduleReference, out ModuleInfo moduleInfo) {
+        public static bool TryParse(string moduleReference, [NotNullWhen(true)] out ModuleInfo? moduleInfo) {
             if(moduleReference == null) {
                 moduleInfo = null;
                 return false;
@@ -86,6 +65,10 @@ namespace LambdaSharp.Compiler {
             }
             var ns = GetMatchValue("Namespace");
             var name = GetMatchValue("Name");
+            if((ns == null) || (name == null)) {
+                moduleInfo = null;
+                return false;
+            }
             var origin = GetMatchValue("Origin");
 
             // parse optional version
@@ -97,21 +80,14 @@ namespace LambdaSharp.Compiler {
             return true;
 
             // local function
-            string GetMatchValue(string groupName) {
+            string? GetMatchValue(string groupName) {
                 var group = match.Groups[groupName];
                 return group.Success ? group.Value : null;
             }
         }
 
-        //--- Fields ---
-        public readonly string Namespace;
-        public readonly string Name;
-        public readonly VersionInfo Version;
-        public readonly string Origin;
-        public readonly string FullName;
-
         //--- Constructors ---
-        public ModuleInfo(string ns, string name, VersionInfo version, string origin) {
+        public ModuleInfo(string ns, string name, VersionInfo? version, string? origin) {
             Namespace = ns ?? throw new ArgumentNullException(nameof(ns));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             FullName = $"{Namespace}.{Name}";
@@ -120,6 +96,11 @@ namespace LambdaSharp.Compiler {
         }
 
         //--- Properties ---
+        public string Namespace { get; }
+        public string Name { get; }
+        public VersionInfo? Version { get; }
+        public string? Origin { get; }
+        public string FullName { get; }
         public string VersionPath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Namespace}/{Name}/{Version ?? throw new ApplicationException("missing Version information")}";
 
         //--- Methods ---

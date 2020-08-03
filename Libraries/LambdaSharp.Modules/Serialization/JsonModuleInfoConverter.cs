@@ -16,13 +16,15 @@
  * limitations under the License.
  */
 
+// NOTE (2020-08-02, bjorg): nullable is disabled, because the converter can return null
+//  even though the type is non-nullable
 #nullable disable
 
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LambdaSharp.Compiler.Serialization {
+namespace LambdaSharp.Modules.Serialization {
 
     public class JsonModuleInfoConverter : JsonConverter<ModuleInfo> {
 
