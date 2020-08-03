@@ -19,6 +19,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using LambdaSharp.Modules;
 using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool {

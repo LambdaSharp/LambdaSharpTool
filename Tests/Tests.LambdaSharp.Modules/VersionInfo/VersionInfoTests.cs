@@ -17,11 +17,11 @@
  */
 
 using FluentAssertions;
-using LambdaSharp.Tool;
 using Xunit;
 using Xunit.Abstractions;
+using LambdaSharp.Modules;
 
-namespace Tests.LambdaSharp.Tool.VersionInfoTests {
+namespace Tests.LambdaSharp.Modules.VersionInfoTests {
 
     public class VersionInfoTests {
 

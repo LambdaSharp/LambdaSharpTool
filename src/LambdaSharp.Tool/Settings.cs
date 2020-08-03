@@ -33,6 +33,7 @@ using Amazon.KeyManagementService;
 using Amazon.Lambda;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
+using LambdaSharp.Modules;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;

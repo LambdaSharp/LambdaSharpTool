@@ -19,7 +19,7 @@
 
 using System;
 
-namespace LambdaSharp.Tool {
+namespace LambdaSharp.Modules {
 
     public class VersionWithSuffix {
 
@@ -86,7 +86,7 @@ namespace LambdaSharp.Tool {
             return new VersionWithSuffix(new Version(major, minor, build, revision), suffix);
         }
 
-        public static bool TryParse(string text, out VersionWithSuffix version) {
+        public static bool TryParse(string text, out VersionWithSuffix? version) {
             if(TryParse(text, out var major, out var minor, out var build, out var revision, out var suffix)) {
                 if(build == -1) {
                     version = new VersionWithSuffix(new Version(major, minor), suffix);

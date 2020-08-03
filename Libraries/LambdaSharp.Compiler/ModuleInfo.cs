@@ -23,6 +23,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using LambdaSharp.Compiler.Serialization;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler {
 

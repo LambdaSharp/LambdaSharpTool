@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+using LambdaSharp.Modules.Serialization;
 
-namespace LambdaSharp.Tool {
+namespace LambdaSharp.Modules {
 
-    [JsonConverter(typeof(VersionInfoConverter))]
+    [JsonConverter(typeof(JsonVersionInfoConverter))]
     public class VersionInfo {
 
         //--- Class Methods ---
@@ -55,7 +55,7 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public static bool TryParse(string text, out VersionInfo version) {
+        public static bool TryParse(string text, out VersionInfo? version) {
             version = null;
             if(!VersionWithSuffix.TryParse(text, out var major, out var minor, out var build, out var revision, out var suffix)) {
                 return false;
@@ -103,7 +103,7 @@ namespace LambdaSharp.Tool {
                 );
         }
 
-        public static VersionInfo Max(IEnumerable<VersionInfo> versionInfos, bool strict = false) {
+        public static VersionInfo? Max(IEnumerable<VersionInfo> versionInfos, bool strict = false) {
             if(!versionInfos.Any()) {
                 return null;
             }
@@ -116,12 +116,17 @@ namespace LambdaSharp.Tool {
             return result;
         }
 
-        public static VersionInfo FindLatestMatchingVersion(IEnumerable<VersionInfo> versionInfos, VersionInfo minVersion, Predicate<VersionInfo> validate) {
+        public static VersionInfo? FindLatestMatchingVersion(IEnumerable<VersionInfo> versionInfos, VersionInfo minVersion, Predicate<VersionInfo> validate) {
             var candidates = new List<VersionInfo>(versionInfos);
             while(candidates.Any()) {
 
                 // find latest version
                 var candidate = VersionInfo.Max(candidates);
+                if(candidate == null) {
+
+                    // TODO: change to ShouldNeverHappenException() when available
+                    throw new InvalidOperationException();
+                }
                 candidates.Remove(candidate);
 
                 // check if latest version meets minimum version constraint; or if none are provided, the version cannot be a pre-release
@@ -371,20 +376,5 @@ namespace LambdaSharp.Tool {
         }
 
         private VersionInfo GetMajorVersion() => new VersionInfo(Major, MajorPartial, minor: 0, patch: null, Suffix);
-    }
-
-    public class VersionInfoConverter : JsonConverter {
-
-        //--- Methods ---
-        public override bool CanConvert(Type objectType)
-            => objectType == typeof(VersionInfo);
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            => (reader.Value != null)
-                ? VersionInfo.Parse((string)reader.Value)
-                : null;
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-            => writer.WriteValue(value.ToString());
     }
 }

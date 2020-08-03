@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Cli.Build {
 

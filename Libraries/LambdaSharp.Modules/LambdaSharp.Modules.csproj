@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>LambdaSharp.Compiler</RootNamespace>
+    <RootNamespace>LambdaSharp.Modules</RootNamespace>
     <NoWarn>CS1998</NoWarn>
     <Nullable>enable</Nullable>
 
-    <PackageId>LambdaSharp.Compiler</PackageId>
+    <PackageId>LambdaSharp.Modules</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
-    <Title>LambdaSharp (λ#) Compiler</Title>
-    <Description>Serverless .NET for AWS - LambdaSharp Compiler Library</Description>
+    <Title>LambdaSharp (λ#) Modules</Title>
+    <Description>Serverless .NET for AWS - LambdaSharp Modules Library</Description>
     <Company>LambdaSharp</Company>
     <Copyright>Copyright (C) 2018-2020</Copyright>
     <Authors>Bjorg</Authors>
@@ -19,14 +19,4 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="YamlDotNet" Version="6.1.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />
-    <ProjectReference Include="..\LambdaSharp.Modules\LambdaSharp.Modules.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\*" />
-  </ItemGroup>
 </Project>

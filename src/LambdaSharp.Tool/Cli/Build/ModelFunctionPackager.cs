@@ -30,6 +30,7 @@ using LambdaSharp.Tool.Model;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Cli.Build {
 

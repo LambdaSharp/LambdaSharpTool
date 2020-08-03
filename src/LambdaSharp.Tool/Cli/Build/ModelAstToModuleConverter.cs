@@ -28,6 +28,7 @@ using LambdaSharp.Tool.Model;
 using LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Cli.Build {
 

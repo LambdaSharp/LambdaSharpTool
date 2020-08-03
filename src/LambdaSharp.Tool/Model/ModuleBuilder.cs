@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using Newtonsoft.Json.Linq;
 

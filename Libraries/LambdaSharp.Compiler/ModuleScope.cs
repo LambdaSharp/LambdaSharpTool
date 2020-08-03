@@ -30,6 +30,7 @@ using LambdaSharp.Compiler.SyntaxProcessors;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler {
 
