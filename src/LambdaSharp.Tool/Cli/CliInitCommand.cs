@@ -457,7 +457,10 @@ namespace LambdaSharp.Tool.Cli {
                     bootstrapParameters["CoreServices"] = coreServices.ToString();
                 }
                 if(existingS3BucketName != null) {
-                    bootstrapParameters["ExistingDeploymentBucket"] = existingS3BucketName.StartsWith("arn:", StringComparison.Ordinal)
+                    bootstrapParameters["ExistingDeploymentBucket"] = (
+                        string.IsNullOrEmpty(existingS3BucketName)
+                        || existingS3BucketName.StartsWith("arn:", StringComparison.Ordinal)
+                    )
                         ? existingS3BucketName
                         : "arn:aws:s3:::" + existingS3BucketName;
                 }
