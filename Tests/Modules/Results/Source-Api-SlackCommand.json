@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D8536904334E4C438033C854271B1F7F"
+      "Default": "7337B4A8D4BEDED0CA37D0C8AC510D64"
     }
   },
   "Resources": {
@@ -305,7 +305,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -315,7 +315,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
                   }
                 }
               ]
@@ -607,7 +607,7 @@
           },
           "Type": "AWS",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "MethodResponses": [
@@ -635,7 +635,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
+          "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -648,11 +648,11 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1": {
+    "ModuleRestApiDeployment8E4C26C61CEEA1A2CBD8C06C3662DFBE": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [1D1D317CDC4C2886ADBCC3C5E5DC5FF1]"
+          "Fn::Sub": "${AWS::StackName} API [8E4C26C61CEEA1A2CBD8C06C3662DFBE]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
@@ -667,7 +667,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1"
+          "Ref": "ModuleRestApiDeployment8E4C26C61CEEA1A2CBD8C06C3662DFBE"
         },
         "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
@@ -706,7 +706,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -947,9 +947,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "D8536904334E4C438033C854271B1F7F",
+      "TemplateChecksum": "7337B4A8D4BEDED0CA37D0C8AC510D64",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1050,7 +1050,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "FunctionRestApiPermission": "Function::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1": "Module::RestApi::Deployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1",
+        "ModuleRestApiDeployment8E4C26C61CEEA1A2CBD8C06C3662DFBE": "Module::RestApi::Deployment8E4C26C61CEEA1A2CBD8C06C3662DFBE",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

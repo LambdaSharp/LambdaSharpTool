@@ -23,9 +23,18 @@ namespace LambdaSharp.Core.Registrations {
     public class OwnerMetaData {
 
         //--- Properties ---
-        public string? ModuleInfo { get; set; }
-        public string? Module { get; set; }
         public string? ModuleId { get; set; }
+
+        #region --- Module Record ---
+        public string? ModuleInfo { get; set; }
+        public int RollbarProjectId { get; set; }
+        public string? RollbarAccessToken { get; set; }
+
+        // NOTE (2020-07-27, bjorg): this property was replaced by `ModuleInfo`
+        public string? Module { get; set; }
+        #endregion
+
+        #region --- Function Record ---
         public string? FunctionId { get; set; }
         public string? FunctionName { get; set; }
         public string? FunctionLogGroupName { get; set; }
@@ -34,7 +43,15 @@ namespace LambdaSharp.Core.Registrations {
         public string? FunctionLanguage { get; set; }
         public int FunctionMaxMemory { get; set; }
         public TimeSpan FunctionMaxDuration { get; set; }
-        public int RollbarProjectId { get; set; }
-        public string? RollbarAccessToken { get; set; }
+        #endregion
+
+        #region --- App Record ---
+        public string? AppId { get; set; }
+        public string? AppName { get; set; }
+        public string? AppLogGroup { get; set; }
+        public string? AppPlatform { get; set; }
+        public string? AppFramework { get; set; }
+        public string? AppLanguage { get; set; }
+        #endregion
     }
 }

@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A2C3A01AC801EEF9799BECB83E3FB88A"
+      "Default": "1FE15BE837957ECF9F10C3D3A2E3AD6B"
     }
   },
   "Resources": {
@@ -383,7 +383,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -393,7 +393,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Demo/SlackTodo/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Demo/SlackTodo/.artifacts/*"
                   }
                 }
               ]
@@ -685,7 +685,7 @@
           },
           "Type": "AWS",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SlackCommand.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SlackCommand.Arn}/invocations"
           }
         },
         "MethodResponses": [
@@ -713,7 +713,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
+          "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -726,11 +726,11 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment429A5A7BE3B2A3C04BB31F7D99D3FE97": {
+    "ModuleRestApiDeployment1AC06444A8537572B5ED7AE63707F2F4": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [429A5A7BE3B2A3C04BB31F7D99D3FE97]"
+          "Fn::Sub": "${AWS::StackName} API [1AC06444A8537572B5ED7AE63707F2F4]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
@@ -745,7 +745,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment429A5A7BE3B2A3C04BB31F7D99D3FE97"
+          "Ref": "ModuleRestApiDeployment1AC06444A8537572B5ED7AE63707F2F4"
         },
         "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
@@ -795,7 +795,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1036,9 +1036,9 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "A2C3A01AC801EEF9799BECB83E3FB88A",
+      "TemplateChecksum": "1FE15BE837957ECF9F10C3D3A2E3AD6B",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1145,7 +1145,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "SlackCommandRestApiPermission": "SlackCommand::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment429A5A7BE3B2A3C04BB31F7D99D3FE97": "Module::RestApi::Deployment429A5A7BE3B2A3C04BB31F7D99D3FE97",
+        "ModuleRestApiDeployment1AC06444A8537572B5ED7AE63707F2F4": "Module::RestApi::Deployment1AC06444A8537572B5ED7AE63707F2F4",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

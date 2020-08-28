@@ -40,12 +40,20 @@ update() {
 # remove all bin/obj folders from previous builds
 find "$LAMBDASHARP" -name 'bin' -or -name 'obj' | xargs rm -rf
 
+# Update LambdaSharp.Logging
+cd $LAMBDASHARP/src/LambdaSharp.Logging
+update
+
 # Update LambdaSharp
 cd $LAMBDASHARP/src/LambdaSharp
 update
 
 # Update LambdaSharp.Slack
 cd $LAMBDASHARP/src/LambdaSharp.Slack
+update
+
+# Update LambdaSharp
+cd $LAMBDASHARP/src/LambdaSharp.App
 update
 
 # Update LambdaSharp.Tool

@@ -44,8 +44,8 @@ namespace FinalizerSample.Finalizer {
             LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
         }
 
-        public override async Task UpdateDeployment(FinalizerProperties next, FinalizerProperties previous) {
-            LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {next.DeploymentChecksum}");
+        public override async Task UpdateDeployment(FinalizerProperties current, FinalizerProperties previous) {
+            LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {current.DeploymentChecksum}");
         }
 
         public override async Task DeleteDeployment(FinalizerProperties current) {

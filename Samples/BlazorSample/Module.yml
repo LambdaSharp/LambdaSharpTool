@@ -15,57 +15,13 @@
 # limitations under the License.
 
 Module: Sample.BlazorWebAssembly
-Description: A sample module showing how to deploy a ASP.NET Core Blazor WebAssembly website
-Using:
-  - Module: LambdaSharp.S3.IO@lambdasharp
-
+Description: A sample module showing how to deploy a Blazor WebAssembly website
 Items:
 
-  # Build the ASP.NET Core Blazor application and compress it into a zip package
-  - Package: WebsiteContents
-    Build: dotnet publish -c Release MyBlazorApp -p:BlazorEnableCompression=false
-    Files: MyBlazorApp/bin/Release/netstandard2.1/publish/wwwroot/
+  - App: MyBlazorApp
+    Description: Sample Blazor WebAssembly application
 
-  # Create S3 bucket, make it publicly accessible, and register it for automatic emptying
-  - Resource: WebsiteBucket
-    Type: AWS::S3::Bucket
-    Allow: ReadWrite
-    Properties:
-      AccessControl: PublicRead
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: error.html
-
-  - Resource: BucketPolicy
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      PolicyDocument:
-        Id: WebsiteBucket
-        Version: 2012-10-17
-        Statement:
-          - Sid: PublicReadForGetBucketObjects
-            Effect: Allow
-            Principal: '*'
-            Action: s3:GetObject
-            Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
-      Bucket: !Ref WebsiteBucket
-
-  - Resource: EmptyBucket
-    Type: LambdaSharp::S3::EmptyBucket
-    Properties:
-      Bucket: !Ref WebsiteBucket
-
-  # Upload the HTML assets and copy them to the bucket
-  - Resource: UnzipWebsiteContents
-    Type: LambdaSharp::S3::Unzip
-    Properties:
-      SourceBucket: !Ref Deployment::BucketName
-      SourceKey: !Ref WebsiteContents
-      DestinationBucket: !Ref WebsiteBucket
-      DestinationKey: ""
-      Encoding: GZIP
-
-  - Variable: WebsiteUrl
-    Description: Website URL
+  - Variable: MyBlazorAppWebsiteUrl
+    Description: MyBlazorApp Website URL
     Scope: public
-    Value: !GetAtt WebsiteBucket.WebsiteURL
+    Value: !GetAtt MyBlazorApp::Bucket.Outputs.WebsiteUrl

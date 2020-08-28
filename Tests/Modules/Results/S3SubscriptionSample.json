@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "24800AF9263232544AC1F936F0E02B82"
+      "Default": "20F615A95FEE720763C77860F2BF8A33"
     }
   },
   "Resources": {
@@ -409,7 +409,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -419,7 +419,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/S3.Subscription/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/S3.Subscription/.artifacts/*"
                   }
                 }
               ]
@@ -780,7 +780,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1010,9 +1010,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.S3.Subscription:1.0-DEV",
       "Description": "A sample module integrating with S3 Bucket events",
-      "TemplateChecksum": "24800AF9263232544AC1F936F0E02B82",
+      "TemplateChecksum": "20F615A95FEE720763C77860F2BF8A33",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1086,7 +1086,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.S3.Subscriber:1@lambdasharp",
           "Type": "Shared"
         }
       ],

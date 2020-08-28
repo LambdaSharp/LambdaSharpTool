@@ -17,7 +17,8 @@
  */
 
 using System;
-using LambdaSharp.ErrorReports;
+using LambdaSharp.Logging.ErrorReports;
+using LambdaSharp.Logging.ErrorReports.Models;
 
 namespace LambdaSharp.Records.ErrorReports {
 

@@ -5,7 +5,9 @@ keywords: lambda, function, declaration, syntax, yaml, cloudformation
 ---
 # Function
 
-The `Function` definition specifies a Lambda function for deployment. Each definition is compiled and uploaded as part of the deployment process. The deployed Lambda function is prefixed with `${Deployment::TierPrefix}` to uniquely distinguish is from other functions.
+The `Function` declaration specifies a Lambda function for deployment. Each declaration is compiled and uploaded as part of the deployment process. The deployed Lambda function is prefixed with `${Deployment::TierPrefix}` to uniquely distinguish is from other functions.
+
+Use the [lash new app](~/cli/Tool-New-Function.md) command to add the `Function` declaration with a pre-configured project to your module.
 
 ## Syntax
 
@@ -23,7 +25,7 @@ Language: String
 Pragmas:
   - PragmaDefinition
 Environment:
-  String: String
+  String: String or Expression
 Properties:
   ResourceProperties
 Sources:
@@ -102,7 +104,7 @@ The <code>Pragmas</code> section specifies directives that change the default co
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Pragma Definition](Module-Pragmas.md)
+<i>Type:</i> List of [Pragma Definition](Module-Function-Pragmas.md)
 </dd>
 
 <dt><code>Project</code></dt>

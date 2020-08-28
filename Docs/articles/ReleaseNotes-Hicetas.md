@@ -4,14 +4,14 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.0.8) - 2020-08-03
+# LambdaSharp "Hicetas" Release (v0.8.1.0) - 2020-08-28
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
 
 ## What's New
 
-This release introduces some key new capabilities for Lambda functions and the _LambdaSharp.Core_ module. The [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) base class has new methods for [sending events](xref:LambdaSharp.ALambdaFunction.SendEvent``1(System.String,System.String,``0,System.Collections.Generic.IEnumerable{System.String})), [capturing metrics](xref:LambdaSharp.ALambdaFunction.LogMetric(System.Collections.Generic.IEnumerable{LambdaSharp.LambdaMetric})), and [logging debug statements](xref:LambdaSharp.ALambdaFunction.LogDebug(System.String,System.Object[])). In addition, the _LambdaSharp.Core_ module now uses [Amazon Kinesis Firehose](https://aws.amazon.com/kinesis/data-firehose/) for ingesting CloudWatch Log streams. Kinesis Firehose is more cost effective, scales automatically, and also provides built-in integration with S3 for retaining ingested logs. Finally, during the ingestion process, the logs are converted into [queryable JSON documents](LogRecords.md).
+This release introduces some key new capabilities for Lambda functions and the _LambdaSharp.Core_ module. The [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) base class has new methods for [sending events](xref:LambdaSharp.ALambdaFunction.LogEvent``1(System.String,System.String,``0,System.Collections.Generic.IEnumerable{System.String})), [capturing metrics](xref:LambdaSharp.ALambdaFunction.LogMetric(System.Collections.Generic.IEnumerable{LambdaSharp.Logging.Metrics.LambdaMetric})), and [logging debug statements](xref:LambdaSharp.ALambdaFunction.LogDebug(System.String,System.Object[])). In addition, the _LambdaSharp.Core_ module now uses [Amazon Kinesis Firehose](https://aws.amazon.com/kinesis/data-firehose/) for ingesting CloudWatch Log streams. Kinesis Firehose is more cost effective, scales automatically, and also provides built-in integration with S3 for retaining ingested logs. Finally, during the ingestion process, the logs are converted into [queryable JSON documents](LogRecords.md).
 
 ### Upgrading from v0.7 to v0.8
 1. Ensure all modules are deployed with v0.6.1 or later
@@ -108,15 +108,15 @@ The CLI remains mostly unchanged from the previous release.
 
 ### CloudWatch Metrics
 
-Several Lambda function base classes have been enhanced with [custom CloudWatch metrics](Metrics-Function.md) to augment existing AWS metrics. In addition, the [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) base class has new [LogMetric(...)](xref:LambdaSharp.ALambdaFunction.LogMetric(System.Collections.Generic.IEnumerable{LambdaSharp.LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
+Several Lambda function base classes have been enhanced with [custom CloudWatch metrics](Metrics-Function.md) to augment existing AWS metrics. In addition, the [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) base class has new [LogMetric(...)](xref:LambdaSharp.ALambdaFunction.LogMetric(System.Collections.Generic.IEnumerable{LambdaSharp.Logging.Metrics.LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
 
-[The MetricSample module](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/MetricSample) shows how to use the new [LogMetric(...)](xref:LambdaSharp.ALambdaFunction.LogMetric(System.String,System.Double,LambdaSharp.LambdaMetricUnit)) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
+[The MetricSample module](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/MetricSample) shows how to use the new [LogMetric(...)](xref:LambdaSharp.ALambdaFunction.LogMetric(System.String,System.Double,LambdaSharp.Logging.Metrics.LambdaMetricUnit)) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
 
 ### CloudWatch Events
 
-The [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) base class has a new [SendEvent(...)](xref:LambdaSharp.ALambdaFunction.SendEvent``1(System.String,System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
+The [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) base class has a new [LogEvent(...)](xref:LambdaSharp.ALambdaFunction.LogEvent``1(System.String,System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
 
-[The EventSample module](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/EventSample) shows how to use the new [LogEvent(...)](xref:LambdaSharp.ALambdaFunction.SendEvent``1(System.String,System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) method for sending CloudWatch Events.
+[The EventSample module](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/EventSample) shows how to use the new [LogEvent(...)](xref:LambdaSharp.ALambdaFunction.LogEvent``1(System.String,System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) method for sending CloudWatch Events.
 
 ### Debug Logging
 
@@ -141,6 +141,45 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
+### (v0.8.1.0) - 2020-08-28
+
+This release introduce support for Blazor WebAssembly apps at the syntax and SDK level. Similar to Lambda functions, Blazor apps have access to the `ILambdaSharpLogger` to log messages, metrics, and events to CloudWatch. This capability is accomplished by generating a REST API that enables the front-end Blazor app to securely integrate with CloudWatch Logs, Metrics, and EventBridge. By default, Blazor apps are served from an S3 bucket configured as a website. Optionally, the S3 bucket can be configured for integration with CloudFront.
+
+#### BREAKING CHANGES
+
+* SDK
+  * Moved logging related functionality from _LambdaSharp_ assembly to _LambdaSharp.Logging_.
+  * Renamed `ILambdaLogLevelLogger` to `ILambdaSharpLogger`.
+  * Renamed `ALambdaRecord` to `ALambdaLogRecord`.
+  * Base class is now based on .NET Standard 2.0 for broader compatibility.
+
+#### Features
+
+* CLI
+  * Added `new app` command to add a Blazor WebAssembly app to a module.
+  * Added `util extract-assembly-metadata` command to extract version metadata from a Blazor app assembly.
+  * Enhanced `util create-invoke-methods-schema` to support _System.Text.Json_ attributes on `[FromBody]` and `[FromUri]` parameters.
+  * Updated embedded CloudFormation spec to 18.0.0.
+
+* Modules
+  * Added `LambdaSharp::Registration::App` resource type to register deployed apps.
+  * Added _LambdaSharp.App.Site_ module for hosting app packages.
+  * Added _Lambdasharp.App.Api_ module for creating a CloudWatch Logs and Events proxy API.
+  * Enhanced `RollbarProjectPattern` parameter in _LambdaSharp.Core_ to allow `{ModuleId}` and `{ModuleIdNoTierPrefix}` as pattern variables for Rollbar project names.
+  * Added support in _LambdaSharp.Core_ for categorizing Lambda exit errors with `Runtime.ExitError` as fatal.
+
+* SDK
+  * Enhanced error report platform description to include .NET Core framework description (e.g. `"AWS Lambda [.NET Core 3.1.1] (Unix 4.14.177.104)"`)
+  * Added `ALambdaComponent` class for use with Blazor WebAssembly components.
+
+#### Fixes
+
+* CLI
+  * Fixed an issue in `util show-kinesis-failed-logs` where logs with multiple entries were not parsed properly.
+  * Fixed an issue where a _Finalizer_ would not run when only stack parameters are changed.
+  * Fixed an issue with resource timings being updated twice.
+  * Fixed an issue where the single-quote character (') was incorrectly escaped by some API Gateway integrations.
+
 ### (v0.8.0.8) - 2020-08-03
 
 #### Fixes
@@ -150,7 +189,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.0.7) - 2020-07-28
 
-### BREAKING CHANGES
+#### BREAKING CHANGES
 
 * CLI
   * Renamed `new bucket` command to `new public-bucket` to make it clear the created S3 bucket is publicly accessible.

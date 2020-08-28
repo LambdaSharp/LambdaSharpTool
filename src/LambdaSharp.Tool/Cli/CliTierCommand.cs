@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using LambdaSharp.Modules;
 using LambdaSharp.Tool.Cli.Tier;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;

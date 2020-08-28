@@ -21,8 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using LambdaSharp.Tool.Model;
-using LambdaSharp.Tool.Model.AST;
+using LambdaSharp.Build;
 
 namespace LambdaSharp.Tool {
 
@@ -45,12 +44,21 @@ namespace LambdaSharp.Tool {
         protected AModelProcessor(Settings settings, string sourceFilename) {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _sourceFilenames.Add(sourceFilename);
+
+            // setup configuration for catching build logging events
+            BuildEventsConfig = new BuildEventsConfig();
+            BuildEventsConfig.OnLogErrorEvent += (sender, args) => LogError(args.Message, args.Exception);
+            BuildEventsConfig.OnLogWarnEvent += (sender, args) => LogWarn(args.Message);
+            BuildEventsConfig.OnLogInfoEvent += (sender, args) => LogInfo(args.Message);
+            BuildEventsConfig.OnLogInfoVerboseEvent += (sender, args) => LogInfoVerbose(args.Message);
+            BuildEventsConfig.OnLogInfoPerformanceEvent += (sender, args) => Settings.LogInfoPerformance(args.Message, args.Duration);
         }
 
         //--- Properties ---
         public Settings Settings => _settings;
         public string SourceFilename => _sourceFilenames.Last();
         public bool HasErrors => Settings.HasErrors;
+        protected BuildEventsConfig BuildEventsConfig { get; }
 
         //--- Methods ---
         protected void AtLocation(string location, Action action) {

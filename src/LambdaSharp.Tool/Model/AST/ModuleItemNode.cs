@@ -22,6 +22,29 @@ namespace LambdaSharp.Tool.Model.AST {
 
     public class ModuleItemNode {
 
+        //--- Types ---
+        public class AppApi {
+
+            //--- Properties ---
+            public object RootPath { get; set; }
+            public object CorsOrigin { get; set; }
+            public object BurstLimit { get; set; }
+            public object RateLimit { get; set; }
+        }
+
+        public class AppBucket {
+
+            //--- Properties ---
+            public object CloudFrontOriginAccessIdentity { get; set; }
+            public object ContentEncoding { get; set; }
+        }
+
+        public class AppClient {
+
+            //--- Properties ---
+            public object ApiUrl { get; set; }
+        }
+
         //--- Class Fields ---
         public static readonly Dictionary<string, IEnumerable<string>> FieldCombinations = new Dictionary<string, IEnumerable<string>> {
 
@@ -121,6 +144,16 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Macro"] = new[] {
                 "Description",
                 "Handler"
+            },
+            ["App"] = new[] {
+                "Description",
+                "Project",
+                "AppSettings",
+                "LogRetentionInDays",
+                "Pragmas",
+                "Api",
+                "Bucket",
+                "Client"
             },
 
             // nodes with optional nested items
@@ -305,5 +338,30 @@ namespace LambdaSharp.Tool.Model.AST {
          * Handler: object
          */
         public string Macro { get; set; }
+
+        /*
+         * App: string
+         * Description: string
+         * Project: string
+         * AppSettings: map
+         * LogRetentionInDays: number -or- expression
+         * Pragmas: list<any>
+         * Api:
+         *   RootPath: string -or- expression
+         *   CorsOrigin: string -or- expression
+         *   BurstLimit: string -or- expression
+         *   RateLimit: string -or- expression
+         * Bucket:
+         *   CloudFrontOriginAccessIdentity: string -or- expression
+         *   ContentEncoding: string -or- expression
+         * Client:
+         *   Url: string -or- expression
+         */
+         public string App { get; set; }
+         public Dictionary<string, object> AppSettings { get; set; }
+         public AppApi Api { get; set; }
+         public AppBucket Bucket { get; set; }
+         public AppClient Client { get; set; }
+         public object LogRetentionInDays { get; set; }
     }
 }

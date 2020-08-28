@@ -19,6 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using LambdaSharp.Build;
+using LambdaSharp.Build.CSharp;
 using LambdaSharp.Tool.Internal;
 
 namespace LambdaSharp.Tool.Model {
@@ -97,7 +100,7 @@ namespace LambdaSharp.Tool.Model {
             IList<string> scope,
             string files,
             string build
-        ) : base(parent, name, description, "String", scope, false) {
+        ) : base(parent, name, description, "String", scope, reference: null) {
             Files = files ?? throw new ArgumentNullException(nameof(files));
             Build = build;
         }
@@ -218,7 +221,7 @@ namespace LambdaSharp.Tool.Model {
                 : FnRef(FullName);
     }
 
-    public class FunctionItem : AResourceItem {
+    public class FunctionItem : AResourceItem, IFunction {
 
         //--- Constructors ---
         public FunctionItem(
@@ -252,7 +255,7 @@ namespace LambdaSharp.Tool.Model {
         public IList<AFunctionSource> Sources { get; set; }
         public Humidifier.Lambda.Function Function { get; set; }
         public object ExportReference { get; set; }
-        public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+        public bool HasFunctionRegistration => !HasPragma("no-function-registration") && !HasPragma("no-registration");
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
@@ -271,6 +274,11 @@ namespace LambdaSharp.Tool.Model {
 
         public override object GetExportReference() => ExportReference;
         public override bool HasPragma(string pragma) => Pragmas.Contains(pragma);
+
+        //--- IFunction Members --
+        string IFunction.Handler => Function.Handler as string;
+        IEnumerable<IFunctionRestApiSource> IFunction.RestApiSources => Sources.OfType<RestApiSource>();
+        IEnumerable<IFunctionWebSocketSource> IFunction.WebSocketSources => Sources.OfType<WebSocketSource>();
     }
 
     public class ConditionItem : AModuleItem {
@@ -329,5 +337,24 @@ namespace LambdaSharp.Tool.Model {
             TryGetFnRef(result, out var newHandler);
             Handler = newHandler;
         }
+    }
+
+    public class AppItem : AModuleItem, IApp {
+
+        //--- Constructors ---
+        public AppItem(
+            AModuleItem parent,
+            string name,
+            string description,
+            string project,
+            IList<object> pragmas
+        ) : base(parent, name, description, "String", scope: null, reference: name) {
+            Project = project ?? throw new ArgumentNullException(nameof(project));
+        }
+
+        //--- Properties ---
+        public bool HasAppRegistration => !HasPragma("no-registration");
+        public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
+        public string Project { get; }
     }
 }

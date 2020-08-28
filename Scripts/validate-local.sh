@@ -11,6 +11,7 @@ cd $LAMBDASHARP
 # Setup and validate λ# CLI
 Scripts/install-cli.sh
 
+
 echo "*******************************************"
 echo "*** Update CloudFormation Specification ***"
 echo "*******************************************"
@@ -57,7 +58,7 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Tool"
+dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Modules"
 if [ $? -ne 0 ]; then
     exit $?
 fi
@@ -67,14 +68,16 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
+
 echo "************************"
 echo "*** Init LambdaSharp ***"
 echo "*************************"
 
 cd $LAMBDASHARP
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
-LAMBDASHARP_TIER=TestContrib$SUFFIX
+export LAMBDASHARP_TIER=TestContrib$SUFFIX
 
+echo "Creating test tier: $LAMBDASHARP_TIER"
 lash init \
     --core-services enabled \
     --existing-s3-bucket-name="" \
@@ -95,6 +98,7 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
+
 echo "********************"
 echo "*** Build Demos ***"
 echo "********************"
@@ -104,6 +108,7 @@ lash build `find . -name "Module.yml"`
 if [ $? -ne 0 ]; then
     exit $?
 fi
+
 
 # Deploy all λ# Sample Modules
 echo "**********************"

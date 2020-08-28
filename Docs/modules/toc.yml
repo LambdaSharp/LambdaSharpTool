@@ -33,3 +33,9 @@
 
 - name: LambdaSharp.Twitter.Query
   href: LambdaSharp-Twitter-Query.md
+
+- name: LambdaSharp.App.Api
+  href: LambdaSharp-App-Api.md
+
+- name: LambdaSharp.App.Bucket
+  href: LambdaSharp-App-Bucket.md

@@ -24,6 +24,7 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using LambdaSharp.Tool.Model;
 using LambdaSharp.Tool.Internal;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;

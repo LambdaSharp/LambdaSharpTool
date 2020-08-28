@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Deterministic>true</Deterministic>
     <RootNamespace>LambdaSharp</RootNamespace>
     <NoWarn>CS1998</NoWarn>
@@ -12,7 +12,7 @@
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
     <Title>LambdaSharp (λ#)</Title>
-    <Description>Serverless .NET for AWS - Base Library</Description>
+    <Description>Serverless .NET for AWS - Lambda Library</Description>
     <Company>LambdaSharp</Company>
     <Copyright>Copyright (C) 2018-2020</Copyright>
     <Authors>Bjorg</Authors>
@@ -37,6 +37,10 @@
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.8.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.7.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="3.2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LambdaSharp.Logging\LambdaSharp.Logging.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />

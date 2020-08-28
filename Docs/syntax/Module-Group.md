@@ -5,7 +5,7 @@ keywords: module, group, declaration, syntax, yaml, cloudformation
 ---
 # Group
 
-The `Group` definition creates a group of nested items. Groups are useful for organizing related definitions together.
+The `Group` declaration creates a group of nested items. Groups are useful for organizing related definitions together.
 
 Nested items are accessed by combining the group name and item name with `::`. For example, use `Reporting::Message` to access the variable `Message` in the group `Reporting`.
 

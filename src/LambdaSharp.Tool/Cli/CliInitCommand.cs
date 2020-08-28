@@ -25,6 +25,7 @@ using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
+using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using McMaster.Extensions.CommandLineUtils;
@@ -69,7 +70,7 @@ namespace LambdaSharp.Tool.Cli {
                             || (Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") == null)
                         )
                     ) {
-                        var tmpSettings = new Settings();
+                        var tmpSettings = new Settings(Version);
 
                         // prompt for AWS credentials information
                         Console.WriteLine();
@@ -126,7 +127,7 @@ namespace LambdaSharp.Tool.Cli {
                         allowDataLoos: true,
                         protectStackOption.HasValue(),
                         forceDeployOption.HasValue(),
-                        versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version.GetCoreServicesReferenceVersion(),
+                        versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : VersionInfoCompatibility.GetCoreServicesReferenceVersion(Version),
                         usePublishedOption.HasValue()
                             ? null
                             : (localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP")),
@@ -201,14 +202,14 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // determine if the deployment tier needs to be updated
-                var tierToToolVersionComparison = settings.TierVersion.GetCoreServicesReferenceVersion().CompareToVersion(settings.CoreServicesReferenceVersion);
+                var tierToToolVersionComparison = VersionInfoCompatibility.CompareTierVersionToToolVersion(settings.TierVersion, settings.ToolVersion);
                 if(tierToToolVersionComparison == 0) {
 
                     // versions are identical; nothing to do, unless we're forced to update
                     updateExistingTier = forceDeploy
 
                         // it's a pre-release, which always needs to be updated
-                        || settings.ToolVersion.IsPreRelease
+                        || settings.ToolVersion.IsPreRelease()
 
                         // we're running in contributor mode, which means new binaries may be built
                         || (lambdaSharpPath != null)
@@ -239,14 +240,20 @@ namespace LambdaSharp.Tool.Cli {
                     updateExistingTier = true;
 
                     // tool version is more recent; if it's a minor update, proceed without prompting, otherwise ask user to confirm upgrade
-                    if(!settings.TierVersion.IsCoreServicesCompatible(settings.CoreServicesReferenceVersion) && !allowUpgrade) {
-                        Console.WriteLine($"LambdaSharp Tier is out of date");
-                        updateExistingTier = settings.PromptYesNo($"Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.CoreServicesReferenceVersion}?", defaultAnswer: false);
+                    if(!VersionInfoCompatibility.IsTierVersionCompatibleWithToolVersion(settings.TierVersion, settings.ToolVersion)) {
+
+                        // update requires core service to be replaced
+                        disableCoreServicesForUpgrade = true;
+
+                        // check if an interactive confirmation prompt is required
+                        if(!allowUpgrade) {
+                            Console.WriteLine($"LambdaSharp Tier is out of date");
+                            updateExistingTier = settings.PromptYesNo($"Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.CoreServicesReferenceVersion}?", defaultAnswer: false);
+                        }
                     }
                     if(!updateExistingTier) {
                         return false;
                     }
-                    disableCoreServicesForUpgrade = true;
                 } else if(!forceDeploy) {
                     LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;

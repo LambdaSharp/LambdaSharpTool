@@ -5,7 +5,7 @@ keywords: resource, declaration, syntax, yaml, cloudformation
 ---
 # Resource
 
-The `Resource` definition is used to create new resources and/or specify access for the Lambda function in the module to existing resources.
+The `Resource` declaration is used to create new resources and/or specify access for the Lambda function in the module to existing resources.
 
 ## Syntax
 

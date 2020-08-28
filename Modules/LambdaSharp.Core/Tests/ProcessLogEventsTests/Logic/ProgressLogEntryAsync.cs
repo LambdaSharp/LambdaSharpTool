@@ -22,9 +22,9 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LambdaSharp.Core.LoggingStreamAnalyzerFunction;
 using LambdaSharp.Core.Registrations;
-using LambdaSharp.ErrorReports;
-using LambdaSharp.Records.Events;
-using LambdaSharp.Records.Metrics;
+using LambdaSharp.Logging.ErrorReports.Models;
+using LambdaSharp.Logging.Events.Models;
+using LambdaSharp.Logging.Metrics.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -75,7 +75,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
         //--- Constructors ---
         public ProgressLogEntryAsync(ITestOutputHelper output) {
             _provider = new MockDependencyProvider(output);
-            _logic = new Logic(_provider, new LambdaSharp.Serialization.LambdaJsonSerializer());
+            _logic = new Logic(_provider);
             _owner = new OwnerMetaData {
                 ModuleInfo = "Test.Module:1.0@origin",
                 Module = "Test.Module",
@@ -306,6 +306,16 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Process exited before completing request", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("Lambda exited before completing request");
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
+            _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
+        }
+
+        [Fact]
+        public void X() {
+            _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Error: Runtime exited without providing a reason\nRuntime.ExitError", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            CommonErrorReportAsserts();
+            _provider.ErrorReport.Message.Should().Be("Runtime exited without providing a reason [Runtime.ExitError]");
+            _provider.ErrorReport.Level.Should().Be("FATAL");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
         }

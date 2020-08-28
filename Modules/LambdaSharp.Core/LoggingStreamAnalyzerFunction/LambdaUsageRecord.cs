@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-using System;
-using LambdaSharp.Records;
+using LambdaSharp.Logging;
 
 namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
-    public class LambdaUsageRecord : ALambdaRecord {
+    public class LambdaUsageRecord : ALambdaLogRecord {
 
         //--- Constructors ---
         public LambdaUsageRecord() {

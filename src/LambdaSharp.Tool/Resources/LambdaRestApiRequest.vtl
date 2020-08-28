@@ -8,14 +8,14 @@
 "httpMethod": "$context.httpMethod",
 "headers": {
 #foreach($key in $headers.keySet())
-"$key": "$util.escapeJavaScript($headers.get($key))"
+"$key": "$util.escapeJavaScript($headers.get($key)).replaceAll("\\'","'")"
 #if($foreach.hasNext),#end
 #end
 },
 #if($queryStringParameters.size() > 0)
 "queryStringParameters": {
 #foreach($key in $queryStringParameters.keySet())
-"$key": "$util.escapeJavaScript($queryStringParameters.get($key))"
+"$key": "$util.escapeJavaScript($queryStringParameters.get($key)).replaceAll("\\'","'")"
 #if($foreach.hasNext),#end
 #end
 },
@@ -25,7 +25,7 @@
 #if($pathParameters.size() > 0)
 "pathParameters": {
 #foreach($key in $pathParameters.keySet())
-"$key": "$util.escapeJavaScript($pathParameters.get($key))"
+"$key": "$util.escapeJavaScript($pathParameters.get($key)).replaceAll("\\'","'")"
 #if($foreach.hasNext),#end
 #end
 },
@@ -35,7 +35,7 @@
 #if($stageVariables.size() > 0)
 "stageVariables": {
 #foreach($key in $stageVariables.keySet())
-"$key": "$util.escapeJavaScript($stageVariables.get($key))"
+"$key": "$util.escapeJavaScript($stageVariables.get($key)).replaceAll("\\'","'")"
 #if($foreach.hasNext),#end
 #end
 },
@@ -70,6 +70,6 @@
 "domainName": "$context.domainName",
 "apiId": "$context.apiId"
 },
-"body": "$util.escapeJavaScript($input.body)",
+"body": "$util.escapeJavaScript($input.body).replaceAll("\\'","'")",
 "isBase64Encoded": false
 }

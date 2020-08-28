@@ -50,6 +50,9 @@
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\LambdaSharp.Build\LambdaSharp.Build.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Resources\*" />
   </ItemGroup>
   <ItemGroup>

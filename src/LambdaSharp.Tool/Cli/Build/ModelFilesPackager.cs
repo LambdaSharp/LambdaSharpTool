@@ -25,6 +25,7 @@ using System.Text;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using ICSharpCode.SharpZipLib.Zip;
+using LambdaSharp.Build;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -111,9 +112,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // check if a build command is present
                 if(parameter.Build != null) {
-                    Console.WriteLine($"=> Building package {Settings.InfoColor}{parameter.Name}{Settings.ResetColor}");
+                    Console.WriteLine($"=> Building package {Settings.InfoColor}{parameter.FullName}{Settings.ResetColor}");
                     var commandAndArguments = parameter.Build.Split(' ', 2);
-                    if(!ProcessLauncher.Execute(
+                    if(!new ProcessLauncher(BuildEventsConfig).Execute(
                         commandAndArguments[0],
                         commandAndArguments[1],
                         Settings.WorkingDirectory,
@@ -151,7 +152,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return;
                 }
 
-                // compute MD5 hash for package
+                // check if at least one file is an ELF executable
                 var bytes = new List<byte>();
                 foreach(var file in files) {
 
@@ -174,7 +175,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // create zip package
                     if(parameter.Build == null) {
-                        Console.WriteLine($"=> Building package {Settings.InfoColor}{parameter.Name}{Settings.ResetColor}");
+                        Console.WriteLine($"=> Building package {Settings.InfoColor}{parameter.FullName}{Settings.ResetColor}");
                     }
                     if(containsElfExecutable) {
 

@@ -5,7 +5,7 @@ keywords: parameter, declaration, syntax, yaml, cloudformation
 ---
 # Parameter
 
-The `Parameter` definition specifies a value that is supplied at module deployment time either by the LambdaSharp CLI or a parent module. Module parameters can be modified subsequently by updating the CloudFormation stack in the AWS console.
+The `Parameter` declaration specifies a value that is supplied at module deployment time either by the LambdaSharp CLI or a parent module. Module parameters can be modified subsequently by updating the CloudFormation stack in the AWS console.
 
 ## Syntax
 

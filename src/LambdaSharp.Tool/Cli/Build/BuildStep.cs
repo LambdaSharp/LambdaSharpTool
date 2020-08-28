@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -80,6 +81,17 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(HasErrors) {
                 return false;
             }
+
+            // package all apps
+            new ModelAppPackager(Settings, SourceFilename).Package(
+                module,
+                noCompile: noPackageBuild,
+                noAssemblyValidation: noAssemblyValidation,
+                gitSha: gitSha,
+                gitBranch: gitBranch,
+                buildConfiguration: buildConfiguration,
+                forceBuild: forceBuild
+            );
 
             // package all functions
             new ModelFunctionPackager(Settings, SourceFilename).Package(

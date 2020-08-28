@@ -22,6 +22,12 @@
 - name: New
   items:
 
+  - name: App
+    href: Tool-New-App.md
+
+  - name: Expiring Bucket
+    href: Tool-New-ExpiringBucket.md
+
   - name: Function
     href: Tool-New-Function.md
 
@@ -33,9 +39,6 @@
 
   - name: Public Bucket
     href: Tool-New-PublicBucket.md
-
-  - name: Expiring Bucket
-    href: Tool-New-ExpiringBucket.md
 
 - name: Publish
   href: Tool-Publish.md

@@ -19,9 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Tool.Internal;
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Model {
 
