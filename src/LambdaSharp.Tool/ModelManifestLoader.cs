@@ -29,6 +29,7 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
+using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -82,7 +83,7 @@ namespace LambdaSharp.Tool {
             var cached = false;
             try {
                 var cachedManifest = Path.Combine(Settings.GetOriginCacheDirectory(moduleLocation.ModuleInfo), moduleLocation.ModuleInfo.Version.ToString());
-                if(allowCaching && Settings.AllowCaching && !moduleLocation.ModuleInfo.Version.IsPreRelease && File.Exists(cachedManifest)) {
+                if(allowCaching && Settings.AllowCaching && !moduleLocation.ModuleInfo.Version.IsPreRelease() && File.Exists(cachedManifest)) {
                     cached = true;
                     return JsonConvert.DeserializeObject<ModuleManifest>(await File.ReadAllTextAsync(cachedManifest));
                 }
@@ -155,7 +156,7 @@ namespace LambdaSharp.Tool {
                         manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                         // check if module is compatible with this tool
-                        return manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
+                        return VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(manifest.CoreServicesVersion, Settings.ToolVersion);
                     });
                     if(manifest != null) {
                         cached = true;
@@ -181,10 +182,11 @@ namespace LambdaSharp.Tool {
                         || (moduleInfo.Version == null)
 
                         // the module version constraint is for a pre-release; we always prefer the origin version then
-                        || moduleInfo.Version.IsPreRelease
+                        || moduleInfo.Version.IsPreRelease()
 
                         // the module version constraint is floating; we need to check if origin has a newer version
-                        || moduleInfo.Version.HasFloatingConstraints
+                        || !moduleInfo.Version.Minor.HasValue
+                        || !moduleInfo.Version.Patch.HasValue
                     )
                 ) {
                     var originResult = await FindNewestModuleVersionAsync(originBucketName);
@@ -194,7 +196,7 @@ namespace LambdaSharp.Tool {
                         (originResult.Version != null)
                         && (
                             (result.Version == null)
-                            || (moduleInfo.Version?.IsPreRelease ?? false)
+                            || (moduleInfo.Version?.IsPreRelease() ?? false)
                             || originResult.Version.IsGreaterThanVersion(result.Version)
                         )
                     ) {
@@ -258,7 +260,7 @@ namespace LambdaSharp.Tool {
                     manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                     // check if module is compatible with this tool
-                    var result = manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
+                    var result = VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(manifest.CoreServicesVersion, Settings.ToolVersion);
                     if(!result) {
                         LogInfoVerbose($"... rejected v{candidate}: it not compatible with tool version {Settings.ToolVersion}");
                     }
@@ -296,7 +298,10 @@ namespace LambdaSharp.Tool {
                         );
                         request.ContinuationToken = response.NextContinuationToken;
                     } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
-                        break;
+
+                        // show message that access was denied for this location
+                        LogInfoVerbose($"... access denied to {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
+                        return versions;
                     }
                 } while(request.ContinuationToken != null);
                 LogInfoVerbose($"... found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");

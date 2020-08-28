@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DCFC99574B5DD69E131D32F4AB05AF33"
+      "Default": "88CDB62793EE2946065A6D08FF6C9575"
     }
   },
   "Resources": {
@@ -297,7 +297,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -307,7 +307,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/ScheduledEvent/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/ScheduledEvent/.artifacts/*"
                   }
                 }
               ]
@@ -681,7 +681,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -911,9 +911,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.ScheduledEvent:1.0-DEV",
       "Description": "A sample module using schedule events",
-      "TemplateChecksum": "DCFC99574B5DD69E131D32F4AB05AF33",
+      "TemplateChecksum": "88CDB62793EE2946065A6D08FF6C9575",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

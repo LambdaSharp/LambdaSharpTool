@@ -18,6 +18,7 @@
 
 using System.Threading.Tasks;
 using LambdaSharp;
+using LambdaSharp.Logging.Metrics;
 
 namespace Sample.Metric.MyFunction {
 

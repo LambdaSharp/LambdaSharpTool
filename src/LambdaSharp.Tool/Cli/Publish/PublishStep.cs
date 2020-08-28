@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -82,13 +83,13 @@ namespace LambdaSharp.Tool.Cli.Publish {
             if(!forcePublish) {
 
                 // check if module has a stable version, but is compiled from a dirty git branch
-                if(!moduleInfo.Version.IsPreRelease && (manifest.Git.SHA?.StartsWith("DIRTY-") ?? false)) {
+                if(!moduleInfo.Version.IsPreRelease() && (manifest.Git.SHA?.StartsWith("DIRTY-") ?? false)) {
                     LogError($"attempting to publish an immutable release of {moduleInfo.FullName} (v{moduleInfo.Version}) with uncommitted/untracked changes; use --force-publish to proceed anyway");
                     return null;
                 }
 
                 // check if a manifest already exists for this version
-                if(!moduleInfo.Version.IsPreRelease && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)) {
+                if(!moduleInfo.Version.IsPreRelease() && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)) {
                     LogError($"{moduleInfo.FullName} (v{moduleInfo.Version}) is already published; use --force-publish to proceed anyway");
                     return null;
                 }
@@ -153,10 +154,10 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     }
                 };
                 await _transferUtility.UploadAsync(request);
+                Console.WriteLine($"=> Published: {Settings.OutputColor}{manifest.ModuleInfo}{Settings.ResetColor}");
             } else {
-                Console.WriteLine($"{Settings.LowContrastColor}=> No changes found to upload{Settings.ResetColor}");
+                Console.WriteLine($"{Settings.LowContrastColor}=> No changes found to publish{Settings.ResetColor}");
             }
-            Console.WriteLine($"=> Published: {Settings.OutputColor}{manifest.ModuleInfo}{Settings.ResetColor}");
             return manifest.ModuleInfo;
         }
 
@@ -170,7 +171,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             if(
                 !forcePublish
                 && (moduleInfo.Version != null)
-                && !moduleInfo.Version.IsPreRelease
+                && !moduleInfo.Version.IsPreRelease()
                 && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)
             ) {
                 return true;
@@ -207,7 +208,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             if(HasErrors) {
                 return false;
             }
-            imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease);
+            imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease());
             if(imported) {
                 Console.WriteLine($"=> Imported {moduleLocation.ModuleInfo}");
             } else {
@@ -234,7 +235,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 }
 
                 // copy version manifest
-                imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease);
+                imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease());
 
                 // show message if any artifacts were imported
                 if(imported) {

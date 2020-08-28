@@ -34,9 +34,17 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
         //--- Properties ---
         public string? ResourceType { get; set; }
-        public string? ModuleInfo { get; set; }
-        public string? Module { get; set; }
+
+        #region --- LambdaSharp::Registration::Module ---
         public string? ModuleId { get; set; }
+        public string? ModuleInfo { get; set; }
+
+        // NOTE (2020-07-27, bjorg): this property was replaced by `ModuleInfo`
+        public string? Module { get; set; }
+        #endregion
+
+        #region --- LambdaSharp::Registration::Function ---
+        // public string? ModuleId { get; set; }
         public string? FunctionId { get; set; }
         public string? FunctionName { get; set; }
         public string? FunctionLogGroupName { get; set; }
@@ -45,6 +53,17 @@ namespace LambdaSharp.Core.RegistrationFunction {
         public string? FunctionPlatform { get; set; }
         public string? FunctionFramework { get; set; }
         public string? FunctionLanguage { get; set; }
+        #endregion
+
+        #region --- LambdaSharp::Registration::App ---
+        // public string? ModuleId { get; set; }
+        public string? AppId { get; set; }
+        public string? AppName { get; set; }
+        public string? AppLogGroup { get; set; }
+        public string? AppPlatform { get; set; }
+        public string? AppFramework { get; set; }
+        public string? AppLanguage { get; set; }
+        #endregion
 
         //--- Methods ---
         public string? GetModuleInfo() => ModuleInfo ?? Module;
@@ -139,7 +158,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     owner.RollbarAccessToken = rollbarProject.ProjectAccessToken;
 
                     // create module record
-                    await Registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
+                    await Registrations.PutOwnerMetaDataAsync($"M:{properties.ModuleId}", owner);
                     return Respond($"registration:module:{properties.ModuleId}");
                 }
             case "LambdaSharp::Registration::Function": {
@@ -148,14 +167,29 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     }
 
                     // create function record
-                    LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
+                    LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}, ModuleId={properties.ModuleId}");
                     var owner = await Registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     if(owner == null) {
                         throw new RegistrarException("no registration found for module {0}", properties.ModuleId);
                     }
                     owner = PopulateOwnerMetaData(properties, owner);
-                    await Registrations.PutOwnerMetaDataAsync($"F:{owner.FunctionId}", owner);
+                    await Registrations.PutOwnerMetaDataAsync($"F:{properties.FunctionId}", owner);
                     return Respond($"registration:function:{properties.FunctionId}");
+                }
+            case "LambdaSharp::Registration::App": {
+                    if(properties.AppId == null) {
+                        throw new RegistrarException("missing app ID");
+                    }
+
+                    // create function record
+                    LogInfo($"Adding App: Id={properties.AppId}, Name={properties.AppName}, ModuleId={properties.ModuleId}");
+                    var owner = await Registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    if(owner == null) {
+                        throw new RegistrarException("no registration found for module {0}", properties.ModuleId);
+                    }
+                    owner = PopulateOwnerMetaData(properties, owner);
+                    await Registrations.PutOwnerMetaDataAsync($"L:{properties.AppLogGroup}", owner);
+                    return Respond($"registration:app:{properties.AppId}");
                 }
             default:
                 throw new RegistrarException("unrecognized resource type: {0}", properties.ResourceType);
@@ -203,8 +237,18 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     }
 
                     // delete function record
-                    LogInfo($"Removing Function: Id={properties.FunctionId}, Name={properties.FunctionName}, LogGroup={properties.FunctionLogGroupName}");
+                    LogInfo($"Removing Function: Id={properties.FunctionId}, Name={properties.FunctionName}, ModuleId={properties.ModuleId}");
                     await Registrations.DeleteOwnerMetaDataAsync($"F:{properties.FunctionId}");
+                    break;
+                }
+            case "LambdaSharp::Registration::App": {
+                    if(properties.AppId == null) {
+                        throw new RegistrarException("missing app ID");
+                    }
+
+                    // delete function record
+                    LogInfo($"Removing App: Id={properties.AppId}, Name={properties.AppName}, ModuleId={properties.ModuleId}");
+                    await Registrations.DeleteOwnerMetaDataAsync($"L:{properties.AppLogGroup}");
                     break;
                 }
             default:
@@ -239,7 +283,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     // update module record
                     LogInfo($"Updating Module: Id={properties.ModuleId}, Info={properties.GetModuleInfo()}");
                     var owner = PopulateOwnerMetaData(properties);
-                    await Registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
+                    await Registrations.PutOwnerMetaDataAsync($"M:{properties.ModuleId}", owner);
                     return Respond(request.PhysicalResourceId);
                 }
             case "LambdaSharp::Registration::Function": {
@@ -248,13 +292,28 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     }
 
                     // update function record
-                    LogInfo($"Updating Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
+                    LogInfo($"Updating Function: Id={properties.FunctionId}, Name={properties.FunctionName}, ModuleId={properties.ModuleId}");
                     var owner = await Registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     if(owner == null) {
                         throw new RegistrarException("no registration found for module {0}", properties.ModuleId);
                     }
                     owner = PopulateOwnerMetaData(properties, owner);
-                    await Registrations.PutOwnerMetaDataAsync($"F:{owner.FunctionId}", owner);
+                    await Registrations.PutOwnerMetaDataAsync($"F:{properties.FunctionId}", owner);
+                    return Respond(request.PhysicalResourceId);
+                }
+            case "LambdaSharp::Registration::App": {
+                    if(properties.AppId == null) {
+                        throw new RegistrarException("missing app ID");
+                    }
+
+                    // update function record
+                    LogInfo($"Updating App: Id={properties.AppId}, Name={properties.AppName}, ModuleId={properties.ModuleId}");
+                    var owner = await Registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    if(owner == null) {
+                        throw new RegistrarException("no registration found for module {0}", properties.ModuleId);
+                    }
+                    owner = PopulateOwnerMetaData(properties, owner);
+                    await Registrations.PutOwnerMetaDataAsync($"L:{properties.AppLogGroup}", owner);
                     return Respond(request.PhysicalResourceId);
                 }
             default:
@@ -290,6 +349,8 @@ namespace LambdaSharp.Core.RegistrationFunction {
             owner.ModuleId = properties.ModuleId ?? owner.ModuleId;
             owner.Module = module ?? owner.Module;
             owner.ModuleInfo = moduleInfo ?? owner.ModuleInfo;
+
+            // function record
             owner.FunctionId = properties.FunctionId ?? owner.FunctionId;
             owner.FunctionName = properties.FunctionName ?? owner.FunctionName;
             owner.FunctionLogGroupName = properties.FunctionLogGroupName ?? owner.FunctionLogGroupName;
@@ -302,6 +363,14 @@ namespace LambdaSharp.Core.RegistrationFunction {
             owner.FunctionMaxDuration = (TimeSpan.FromSeconds(properties.FunctionMaxDuration) != TimeSpan.Zero)
                 ? TimeSpan.FromSeconds(properties.FunctionMaxDuration)
                 : TimeSpan.FromSeconds(owner.FunctionMaxDuration.TotalSeconds);
+
+            // app record
+            owner.AppId = properties.AppId ?? owner.AppId;
+            owner.AppName = properties.AppName ?? owner.AppName;
+            owner.AppLogGroup = properties.AppLogGroup ?? owner.AppLogGroup;
+            owner.AppPlatform = properties.AppPlatform ?? owner.AppPlatform;
+            owner.AppFramework = properties.AppFramework ?? owner.AppFramework;
+            owner.AppLanguage = properties.AppLanguage ?? owner.AppLanguage;
             return owner;
         }
 
@@ -320,6 +389,12 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     return properties.GetModuleNamespace();
                 case "{ModuleName}":
                     return properties.GetModuleName();
+                case "{ModuleId}":
+                    return properties.ModuleId;
+                case "{ModuleIdNoTierPrefix}":
+                    return string.IsNullOrEmpty(Info.DeploymentTier)
+                        ? properties.ModuleId
+                        : properties.ModuleId?.Substring(Info.DeploymentTier.Length + 1);
                 default:
 
                     // remove curly braces for unrecognized placeholders

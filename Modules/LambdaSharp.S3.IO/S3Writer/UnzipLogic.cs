@@ -28,7 +28,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using LambdaSharp.CustomResource;
-using LambdaSharp.Logger;
+using LambdaSharp.Logging;
 
 namespace LambdaSharp.S3.IO.S3Writer {
 
@@ -66,13 +66,13 @@ namespace LambdaSharp.S3.IO.S3Writer {
         private const int MAX_BATCH_DELETE_OBJECTS = 1000;
 
         //--- Fields ---
-        private readonly ILambdaLogLevelLogger _logger;
+        private readonly ILambdaSharpLogger _logger;
         private readonly string _manifestBucket;
         private readonly IAmazonS3 _s3Client;
         private readonly TransferUtility _transferUtility;
 
         //--- Constructors ---
-        public UnzipLogic(ILambdaLogLevelLogger logger, string manifestBucket, IAmazonS3 s3Client) {
+        public UnzipLogic(ILambdaSharpLogger logger, string manifestBucket, IAmazonS3 s3Client) {
             _logger = logger;
             _manifestBucket = manifestBucket;
             _s3Client = new AmazonS3Client();

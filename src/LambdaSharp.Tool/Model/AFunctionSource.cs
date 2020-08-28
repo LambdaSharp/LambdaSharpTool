@@ -18,6 +18,7 @@
 
 
 using System.Collections.Generic;
+using LambdaSharp.Build;
 
 namespace LambdaSharp.Tool.Model {
 
@@ -59,7 +60,7 @@ namespace LambdaSharp.Tool.Model {
         SlackCommand
     }
 
-    public class RestApiSource : AFunctionSource {
+    public class RestApiSource : AFunctionSource, IFunctionRestApiSource {
 
        //--- Properties ---
         public string HttpMethod { get; set; }
@@ -83,7 +84,7 @@ namespace LambdaSharp.Tool.Model {
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }
     }
 
-    public class WebSocketSource : AFunctionSource {
+    public class WebSocketSource : AFunctionSource, IFunctionWebSocketSource {
 
         //--- Properties ---
         public string RouteKey { get; set; }

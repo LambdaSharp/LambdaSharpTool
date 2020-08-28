@@ -18,6 +18,7 @@
 
 using System;
 using System.Reflection;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Cli {
 

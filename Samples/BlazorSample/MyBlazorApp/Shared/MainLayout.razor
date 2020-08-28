@@ -1,15 +1,67 @@
-﻿@inherits LayoutComponentBase
+@*
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2020
+ * lambdasharp.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
 
-<div class="sidebar">
-    <NavMenu />
-</div>
+@inherits LayoutComponentBase
 
-<div class="main">
-    <div class="top-row px-4">
-        <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
-    </div>
-
-    <div class="content px-4">
-        @Body
-    </div>
-</div>
+<Layout Sider="true">
+    <LayoutSider>
+        <LayoutSiderContent>
+            <Bar Breakpoint="Breakpoint.Desktop" NavigationBreakpoint="Breakpoint.Tablet" ThemeContrast="ThemeContrast.Dark" Mode="BarMode.VerticalInline" CollapseMode="BarCollapseMode.Small" Visible="@true">
+                <BarBrand>
+                    <BarItem>
+                        <BarLink To="">App</BarLink>
+                    </BarItem>
+                </BarBrand>
+                <BarMenu>
+                    <BarStart>
+                        <BarLabel>Main</BarLabel>
+                        <BarItem>
+                            <BarLink To="/">
+                                <BarIcon IconName="IconName.Home" />
+                                Home
+                            </BarLink>
+                        </BarItem>
+                        <BarItem>
+                            <BarLink To="/todo">
+                                <BarIcon IconName="IconName.Smartphone" />
+                                To Do
+                            </BarLink>
+                        </BarItem>
+                    </BarStart>
+                </BarMenu>
+            </Bar>
+        </LayoutSiderContent>
+    </LayoutSider>
+    <Layout>
+        <LayoutHeader Fixed="true">
+            <Bar Style="height: 64px;" Breakpoint="Breakpoint.Desktop" Background="Background.Primary" ThemeContrast="ThemeContrast.Light">
+                <BarBrand>
+                    <BarItem>
+                        <BarLink To="https://blazorise.com/">
+                            <BarIcon IconName="IconName.Dashboard" />
+                            Built with Blazorise
+                        </BarLink>
+                    </BarItem>
+                </BarBrand>
+            </Bar>
+        </LayoutHeader>
+        <LayoutContent Padding="Padding.Is4.OnX">
+            @Body
+        </LayoutContent>
+    </Layout>
+</Layout>

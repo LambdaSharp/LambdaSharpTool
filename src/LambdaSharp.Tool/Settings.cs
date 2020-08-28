@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +31,7 @@ using Amazon.KeyManagementService;
 using Amazon.Lambda;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
+using LambdaSharp.Modules;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -228,13 +228,13 @@ namespace LambdaSharp.Tool {
         public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
         //--- Properties ---
-        public VersionInfo ToolVersion { get; set; }
+        public VersionInfo ToolVersion { get; }
 
         /// <summary>
         /// This property determines the reference version for compatibility between the tool, the tier, and the core services.
-        /// The reference version is `Major.Minor`, where `Major` can be a fractional version.
+        /// The reference version is `Major`, where `Major` can be a fractional version.
         /// </summary>
-        public VersionInfo CoreServicesReferenceVersion => ToolVersion.GetCoreServicesReferenceVersion();
+        public VersionInfo CoreServicesReferenceVersion => VersionInfoCompatibility.GetCoreServicesReferenceVersion(ToolVersion);
 
         public string Tier { get; set; }
         public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;
@@ -260,10 +260,11 @@ namespace LambdaSharp.Tool {
         public DateTime UtcNow { get; set; }
 
         //--- Constructors ---
-        public Settings() {
+        public Settings(VersionInfo toolVersion) {
             var now = DateTime.UtcNow;
             now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
             UtcNow = now;
+            ToolVersion = toolVersion ?? throw new ArgumentNullException(nameof(toolVersion));
         }
 
         //--- Methods ---

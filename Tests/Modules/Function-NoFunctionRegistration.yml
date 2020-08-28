@@ -7,4 +7,4 @@ Items:
     Memory: 128
     Timeout: 30
     Pragmas:
-      - no-function-registration
+      - no-registration

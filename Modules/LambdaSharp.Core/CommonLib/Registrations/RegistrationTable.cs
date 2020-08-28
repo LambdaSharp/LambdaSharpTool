@@ -38,9 +38,17 @@ namespace LambdaSharp.Core.Registrations {
                 return null;
             }
             return new OwnerMetaData {
+
+                // common
+                ModuleId = TryGetAsString("ModuleId"),
+
+                // module record
                 ModuleInfo = TryGetAsString("ModuleInfo"),
                 Module = TryGetAsString("Module"),
-                ModuleId = TryGetAsString("ModuleId"),
+                RollbarProjectId = TryGetAsInt("RollbarProjectId"),
+                RollbarAccessToken = TryGetAsString("RollbarAccessToken"),
+
+                // function record
                 FunctionId = TryGetAsString("FunctionId"),
                 FunctionName = TryGetAsString("FunctionName"),
                 FunctionLogGroupName = TryGetAsString("FunctionLogGroupName"),
@@ -49,8 +57,14 @@ namespace LambdaSharp.Core.Registrations {
                 FunctionLanguage = TryGetAsString("FunctionLanguage"),
                 FunctionMaxMemory = TryGetAsInt("FunctionMaxMemory"),
                 FunctionMaxDuration = TryGetAsTimeSpan("FunctionMaxDuration"),
-                RollbarProjectId = TryGetAsInt("RollbarProjectId"),
-                RollbarAccessToken = TryGetAsString("RollbarAccessToken")
+
+                // app record
+                AppId = TryGetAsString("AppId"),
+                AppName = TryGetAsString("AppName"),
+                AppLogGroup = TryGetAsString("AppLogGroup"),
+                AppPlatform = TryGetAsString("AppPlatform"),
+                AppFramework = TryGetAsString("AppFramework"),
+                AppLanguage = TryGetAsString("AppLanguage")
             };
 
             // local functions
@@ -71,6 +85,10 @@ namespace LambdaSharp.Core.Registrations {
                 ["Module"] = owner.Module,
                 ["ModuleId"] = owner.ModuleId
             };
+            if(owner.RollbarAccessToken != null) {
+                document["RollbarProjectId"] = owner.RollbarProjectId;
+                document["RollbarAccessToken"] = owner.RollbarAccessToken;
+            }
             if(owner.FunctionId != null) {
                 document["FunctionId"] = owner.FunctionId;
                 document["FunctionName"] = owner.FunctionName;
@@ -81,10 +99,13 @@ namespace LambdaSharp.Core.Registrations {
                 document["FunctionMaxMemory"] = owner.FunctionMaxMemory;
                 document["FunctionMaxDuration"] = owner.FunctionMaxDuration.ToString();
             }
-            if(owner.RollbarAccessToken != null) {
-                document["RollbarProjectId"] = owner.RollbarProjectId;
-                document["RollbarAccessToken"] = owner.RollbarAccessToken;
-
+            if(owner.AppId != null) {
+                document["AppId"] = owner.AppId;
+                document["AppName"] = owner.AppName;
+                document["AppLogGroup"] = owner.AppLogGroup;
+                document["AppPlatform"] = owner.AppPlatform;
+                document["AppFramework"] = owner.AppFramework;
+                document["AppLanguage"] = owner.AppLanguage;
             }
             await _table.PutItemAsync(document);
         }

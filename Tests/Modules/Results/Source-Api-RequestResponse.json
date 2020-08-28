@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EDAB425D7BB4381B8DB3D2E81537E6A1"
+      "Default": "FFDC1634FFE71F9FF2F0D552BA23619F"
     }
   },
   "Resources": {
@@ -297,7 +297,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -307,7 +307,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
                   }
                 }
               ]
@@ -585,7 +585,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -605,7 +605,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
+          "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -619,7 +619,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -652,7 +652,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -673,7 +673,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "OperationName": "UpdateItem",
@@ -696,7 +696,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -716,11 +716,11 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment0B453647CBD379B4A07F20EAF725C320": {
+    "ModuleRestApiDeployment3CE5669276675234BD61E12B8CA149BA": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [0B453647CBD379B4A07F20EAF725C320]"
+          "Fn::Sub": "${AWS::StackName} API [3CE5669276675234BD61E12B8CA149BA]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
@@ -740,7 +740,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment0B453647CBD379B4A07F20EAF725C320"
+          "Ref": "ModuleRestApiDeployment3CE5669276675234BD61E12B8CA149BA"
         },
         "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
@@ -779,7 +779,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1009,9 +1009,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "EDAB425D7BB4381B8DB3D2E81537E6A1",
+      "TemplateChecksum": "FFDC1634FFE71F9FF2F0D552BA23619F",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1107,7 +1107,7 @@
         "ModuleRestApiItemsResourceIdResourcePUT": "Module::RestApi::ItemsResource::IdResource::PUT",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment0B453647CBD379B4A07F20EAF725C320": "Module::RestApi::Deployment0B453647CBD379B4A07F20EAF725C320",
+        "ModuleRestApiDeployment3CE5669276675234BD61E12B8CA149BA": "Module::RestApi::Deployment3CE5669276675234BD61E12B8CA149BA",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

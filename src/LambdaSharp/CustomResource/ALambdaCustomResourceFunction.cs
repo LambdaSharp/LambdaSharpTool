@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SNSEvents;
 using LambdaSharp.CustomResource.Internal;
 using LambdaSharp.Exceptions;
-using LambdaSharp.Logger;
+using LambdaSharp.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -145,8 +145,13 @@ namespace LambdaSharp.CustomResource {
                 // check if the custom resource logic completes before function times out
                 var timeout = CurrentContext.RemainingTime - TimeSpan.FromSeconds(0.5);
                 if(await Task.WhenAny(Task.Delay(timeout), responseTask) != responseTask) {
+
+                    // TODO (2020-07-31, bjorg): set cancellation token when available on ProcessXYSResourceAsync()
                     throw new TimeoutException($"custom resource operation timed out");
                 }
+
+                // await completed task to trigger any contained exceptions
+                await responseTask;
                 LogInfo($"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation was successful");
                 rawResponse = new CloudFormationResourceResponse<TAttributes> {
                     Status = CloudFormationResourceResponseStatus.SUCCESS,
@@ -157,6 +162,19 @@ namespace LambdaSharp.CustomResource {
                     PhysicalResourceId = responseTask.Result.PhysicalResourceId ?? rawRequest.PhysicalResourceId,
                     NoEcho = responseTask.Result.NoEcho,
                     Data = responseTask.Result.Attributes
+                };
+            } catch(AggregateException aggregateException) when(
+                (aggregateException.InnerExceptions.Count() == 1)
+                && (aggregateException.InnerExceptions[0] is CustomResourceAbortException e)
+            ) {
+                LogInfo($"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation ABORTED [{{0}}]", e.Message);
+                rawResponse = new CloudFormationResourceResponse<TAttributes> {
+                    Status = CloudFormationResourceResponseStatus.FAILED,
+                    Reason = e.Message,
+                    StackId = rawRequest.StackId,
+                    RequestId = rawRequest.RequestId,
+                    LogicalResourceId = rawRequest.LogicalResourceId,
+                    PhysicalResourceId = rawRequest.PhysicalResourceId ?? "no-physical-id"
                 };
             } catch(CustomResourceAbortException e) {
                 LogInfo($"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation ABORTED [{{0}}]", e.Message);
@@ -299,7 +317,7 @@ namespace LambdaSharp.CustomResource {
                     exception = e;
                     LogErrorAsWarning(e, "writing response to pre-signed S3 URL failed");
                     await Task.Delay(backoff);
-                    backoff = backoff * 2;
+                    backoff = TimeSpan.FromSeconds(backoff.TotalSeconds * 2);
                 }
             }
             if(exception == null) {

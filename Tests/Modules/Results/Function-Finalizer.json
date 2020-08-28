@@ -53,7 +53,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2B4398BB29D43BA898A2BFCEE659A831"
+      "Default": "F3C33CE1360E0FC5323DABC8E19DCCCF"
     }
   },
   "Resources": {
@@ -186,8 +186,46 @@
                 "Ref": "AWS::NoValue"
               }
             ]
+          },
+          {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Ref": "ModuleRegistration"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
           }
-        ]
+        ],
+        "Parameter_Secrets": {
+          "Ref": "Secrets"
+        },
+        "Parameter_XRayTracing": {
+          "Ref": "XRayTracing"
+        },
+        "Parameter_LambdaSharpCoreServices": {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Parameter_LambdaSharpCoreDeadLetterQueue": {
+          "Ref": "LambdaSharpCoreDeadLetterQueue"
+        },
+        "Parameter_DeploymentBucketName": {
+          "Ref": "DeploymentBucketName"
+        },
+        "Parameter_DeploymentPrefix": {
+          "Ref": "DeploymentPrefix"
+        },
+        "Parameter_DeploymentPrefixLowercase": {
+          "Ref": "DeploymentPrefixLowercase"
+        },
+        "Parameter_DeploymentRoot": {
+          "Ref": "DeploymentRoot"
+        },
+        "Parameter_DeploymentChecksum": {
+          "Ref": "DeploymentChecksum"
+        }
       },
       "DependsOn": [
         "Finalizer",
@@ -255,7 +293,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -265,7 +303,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
                   }
                 }
               ]
@@ -403,7 +441,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -557,9 +595,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "2B4398BB29D43BA898A2BFCEE659A831",
+      "TemplateChecksum": "F3C33CE1360E0FC5323DABC8E19DCCCF",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

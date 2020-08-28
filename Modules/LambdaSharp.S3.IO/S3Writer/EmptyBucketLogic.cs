@@ -22,18 +22,18 @@ using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.CustomResource;
-using LambdaSharp.Logger;
+using LambdaSharp.Logging;
 
 namespace LambdaSharp.S3.IO.S3Writer {
 
     public class EmptyBucketLogic {
 
         //--- Fields ---
-        private readonly ILambdaLogLevelLogger _logger;
+        private readonly ILambdaSharpLogger _logger;
         private readonly IAmazonS3 _s3Client;
 
         //--- Constructors ---
-        public EmptyBucketLogic(ILambdaLogLevelLogger logger, IAmazonS3 s3Client) {
+        public EmptyBucketLogic(ILambdaSharpLogger logger, IAmazonS3 s3Client) {
             _logger = logger;
             _s3Client = s3Client;
         }

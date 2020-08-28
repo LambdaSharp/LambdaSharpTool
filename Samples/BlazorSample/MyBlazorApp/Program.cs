@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection;
+using LambdaSharp.App;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 
-namespace MyBlazorApp {
+namespace Sample.BlazorWebAssembly.MyBlazorApp {
 
     public class Program {
 
@@ -30,8 +31,24 @@ namespace MyBlazorApp {
         public static async Task Main(string[] args) {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
-            builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-            await builder.Build().RunAsync();
+
+            // initialize LambdaSharp dependencies
+            builder.AddLambdaSharp<Program>();
+
+            // initialize Blazorise dependencies
+            builder.Services
+                .AddBlazorise()
+                .AddBootstrapProviders()
+                .AddFontAwesomeIcons();
+
+            // use Blazorise dependencies
+            var host = builder.Build();
+            host.Services
+                .UseBootstrapProviders()
+                .UseFontAwesomeIcons();
+
+            // run application
+            await host.RunAsync();
         }
     }
 }

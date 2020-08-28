@@ -18,7 +18,7 @@ namespace %%ROOTNAMESPACE%% {
             // TO-DO: add business logic when creating a CloudFormation stack
         }
 
-        public override async Task UpdateDeployment(FinalizerProperties next, FinalizerProperties previous) {
+        public override async Task UpdateDeployment(FinalizerProperties current, FinalizerProperties previous) {
 
             // TO-DO: add business logic when updating a CloudFormation stack
         }

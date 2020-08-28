@@ -60,6 +60,11 @@ Items:
     Memory: 128
     Timeout: 15
 
+  - Function: FailRuntimeExitFunction
+    Description: Throws an ExecutionEngineException, which cannot be caught or handled
+    Memory: 128
+    Timeout: 15
+
   - Function: JsError
     Description: Throws an exception in Javascript function
     Memory: 128

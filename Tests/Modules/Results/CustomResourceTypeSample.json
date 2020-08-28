@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "949518531E40F734C7AC3482A36D3730"
+      "Default": "5F4EEA0BC411B289D80B5CBD2FCFEFCE"
     }
   },
   "Resources": {
@@ -297,7 +297,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -307,7 +307,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/CustomResourceType/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/CustomResourceType/.artifacts/*"
                   }
                 }
               ]
@@ -575,7 +575,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -805,9 +805,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "949518531E40F734C7AC3482A36D3730",
+      "TemplateChecksum": "5F4EEA0BC411B289D80B5CBD2FCFEFCE",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

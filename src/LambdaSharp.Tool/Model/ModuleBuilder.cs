@@ -23,6 +23,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using LambdaSharp.Build.CSharp;
+using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using Newtonsoft.Json.Linq;
 
@@ -38,6 +40,9 @@ namespace LambdaSharp.Tool.Model {
     }
 
     public class ModuleBuilder : AModelProcessor {
+
+        //--- Class Methods ---
+        private static object GetModuleArtifactExpression(string filename) => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
 
         //--- Fields ---
         private string _namespace;
@@ -859,7 +864,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // update the package variable to use the package-name variable
-            package.Reference = ModuleInfo.GetModuleArtifactExpression($"${{{packageName.FullName}}}");
+            package.Reference = GetModuleArtifactExpression($"${{{packageName.FullName}}}");
             return package;
         }
 
@@ -968,7 +973,7 @@ namespace LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
-            function.Function.Code.S3Key = ModuleInfo.GetModuleArtifactExpression($"${{{packageName.FullName}}}");
+            function.Function.Code.S3Key = GetModuleArtifactExpression($"${{{packageName.FullName}}}");
 
             // create function log-group with retention window
             AddResource(
@@ -995,7 +1000,7 @@ namespace LambdaSharp.Tool.Model {
 
                 // finalizer doesn't need a log-group or registration b/c it gets deleted anyway on failure or teardown
                 function.Pragmas = new List<object>(function.Pragmas) {
-                    "no-function-registration",
+                    "no-registration",
                     "no-dead-letter-queue"
                 };
 
@@ -1021,6 +1026,206 @@ namespace LambdaSharp.Tool.Model {
                 );
             }
             return function;
+        }
+
+        public AModuleItem AddApp(
+            AModuleItem parent,
+            string name,
+            string description,
+            string project,
+            object logRetentionInDays,
+            IList<object> pragmas,
+            Dictionary<string, object> appSettings,
+            object apiRootPath,
+            object apiCorsOrigin,
+            object apiBurstLimit,
+            object apiRateLimit,
+            object bucketCloudFrontOriginAccessIdentity,
+            object bucketContentEncoding,
+            object clientApiUrl
+        ) {
+            var app = new AppItem(
+                parent: parent,
+                name: name,
+                description: description,
+                project: project,
+                pragmas: pragmas
+            );
+            AddItem(app);
+            app.Reference = FnSub($"${{AWS::StackName}}-{name}");
+
+            // create nested variable for tracking the package-name
+            var appPackageName = AddVariable(
+                parent: app,
+                name: "PackageName",
+                description: null,
+                type: "String",
+                scope: null,
+                value: $"{app.LogicalId}-DRYRUN.zip",
+                allow: null,
+                encryptionContext: null
+            );
+            var appPlatform = AddVariable(
+                parent: app,
+                name: "AppPlatform",
+                description: null,
+                type: "String",
+                scope: null,
+                value: $"<MISSING>",
+                allow: null,
+                encryptionContext: null
+            );
+            var appFramework = AddVariable(
+                parent: app,
+                name: "AppFramework",
+                description: null,
+                type: "String",
+                scope: null,
+                value: $"<MISSING>",
+                allow: null,
+                encryptionContext: null
+            );
+            var appLanguage = AddVariable(
+                parent: app,
+                name: "AppLanguage",
+                description: null,
+                type: "String",
+                scope: null,
+                value: $"<MISSING>",
+                allow: null,
+                encryptionContext: null
+            );
+
+            // create log group for app
+            var appLogGroup = AddResource(
+                parent: app,
+                name: "LogGroup",
+                description: null,
+                scope: null,
+                resource: new Humidifier.Logs.LogGroup {
+                    RetentionInDays = logRetentionInDays ?? FnRef("Module::LogRetentionInDays")
+                },
+                resourceExportAttribute: null,
+                dependsOn: null,
+                condition: null,
+                pragmas: null,
+                deletionPolicy: null
+            );
+
+            // create app bucket
+            var appBucket = AddNestedModule(
+                parent: app,
+                name: "Bucket",
+                description: null,
+                moduleInfo: new ModuleInfo("LambdaSharp", "App.Bucket", Settings.CoreServicesReferenceVersion, "lambdasharp"),
+                scope: null,
+                dependsOn: null,
+                parameters: new Dictionary<string, object> {
+                    ["CloudFrontOriginAccessIdentity"] = bucketCloudFrontOriginAccessIdentity ?? "",
+                    ["Package"] = GetModuleArtifactExpression($"${{{appPackageName.FullName}}}"),
+                    ["ContentEncoding"] = bucketContentEncoding ?? "DEFAULT"
+                }
+            );
+
+            // add variable for app version identifier
+            var appVersionId = AddVariable(
+                parent: app,
+                name: "VersionId",
+                description: null,
+                type: "String",
+                scope: null,
+                value: "<MISSING>",
+                allow: null,
+                encryptionContext: null
+            );
+
+            // add developer mode parameter to control if the API can be accessed from localhost
+            var devModeParameter = Items.FirstOrDefault(item => item.FullName == "AppDeveloperMode");
+            if(devModeParameter == null) {
+                devModeParameter = AddParameter(
+                    name: "AppDeveloperMode",
+                    section: "LambdaSharp App Options",
+                    label: "App Developer Mode",
+                    description: "Developer mode relaxes API key constraints and enables debug logging",
+                    type: "String",
+                    scope: null,
+                    noEcho: false,
+                    defaultValue: "Disabled",
+                    constraintDescription: null,
+                    allowedPattern: null,
+                    allowedValues: new List<string> {
+                        "Enabled",
+                        "Disabled"
+                    },
+                    maxLength: null,
+                    maxValue: null,
+                    minLength: null,
+                    minValue: null,
+                    allow: null,
+                    properties: null,
+                    arnAttribute: null,
+                    encryptionContext: null,
+                    pragmas: null,
+                    deletionPolicy: null
+                );
+            }
+
+            // add nested stack for the app API
+            var appApi = AddNestedModule(
+                parent: app,
+                name: "Api",
+                description: null,
+                moduleInfo: new ModuleInfo("LambdaSharp", "App.Api", Settings.CoreServicesReferenceVersion, "lambdasharp"),
+                scope: null,
+                dependsOn: null,
+                parameters: new Dictionary<string, object> {
+                    ["ParentModuleId"] = FnRef("Module::Id"),
+                    ["ParentModuleInfo"] = FnRef("Module::Info"),
+                    ["LogGroupName"] = FnRef(appLogGroup.FullName),
+                    ["RootPath"] = apiRootPath ?? ".app",
+                    ["CorsOrigin"] = apiCorsOrigin ?? FnGetAtt(appBucket.FullName, "Outputs.WebsiteUrl"),
+                    ["BurstLimit"] = apiBurstLimit ?? 200,
+                    ["RateLimit"] = apiRateLimit ?? 100,
+                    ["AppVersionId"] = FnRef(appVersionId.FullName),
+                    ["DevMode"] = FnRef(devModeParameter.FullName)
+                }
+            );
+
+            // add resource to generate `appsettings.Production.json` file
+            AddDependencyAsync(new ModuleInfo("LambdaSharp", "S3.IO", Settings.CoreServicesReferenceVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
+            if(appSettings == null) {
+                appSettings = new Dictionary<string, object>();
+            }
+            appSettings["LambdaSharp"] = new Dictionary<string, object> {
+                ["ApiUrl"] = clientApiUrl ?? FnGetAtt(appApi.FullName, "Outputs.Url"),
+                ["ApiKey"] = FnGetAtt(appApi.FullName, "Outputs.ApiKey"),
+                ["ModuleId"] = FnRef("Module::Id"),
+                ["ModuleInfo"] = FnRef("Module::Info"),
+                ["DeploymentTier"] = FnRef("Deployment::Tier"),
+                ["AppId"] = FnRef(app.FullName),
+                ["AppName"] = name,
+                ["AppFramework"] = FnRef(appFramework.FullName),
+                ["DevMode"] = FnRef(devModeParameter.FullName)
+            };
+            var appConfigJson = AddResource(
+                parent: app,
+                name: "AppSettingsJson",
+                description: null,
+                type: "LambdaSharp::S3::WriteJson",
+                scope: null,
+                allow: null,
+                properties: new Dictionary<string, object> {
+                    ["Bucket"] = FnGetAtt(appBucket.FullName, "Outputs.Arn"),
+                    ["Key"] = AppBuilder.AppSettingsProductionJsonFileName,
+                    ["Contents"] = appSettings
+                },
+                dependsOn: null,
+                arnAttribute: null,
+                condition: null,
+                pragmas: null,
+                deletionPolicy: null
+            );
+            return app;
         }
 
         public AModuleItem AddInlineFunction(

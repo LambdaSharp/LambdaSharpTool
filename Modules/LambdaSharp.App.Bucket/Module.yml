@@ -1,0 +1,128 @@
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2020
+# lambdasharp.net
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.App.Bucket
+Description: Deploy LambdaSharp app package to an S3 bucket
+Using:
+  - Module: LambdaSharp.S3.IO@lambdasharp
+
+Items:
+
+  ###
+  # Module Parameters
+  ###
+
+  - Parameter: CloudFrontOriginAccessIdentity
+    Description: CloudFront Origin Identity for authenticating distribution with the S3 bucket (Empty value configures S3 bucket as a public website)
+    Type: String
+
+  - Condition: CloudFrontOriginAccessIdentityHasValue
+    Value: !Not [ !Equals [ !Ref CloudFrontOriginAccessIdentity, "" ]]
+
+  - Parameter: Package
+    Description: S3 key to LambdaSharp app package to deploy
+    Type: String
+
+  - Condition: PackageHasValue
+    Value: !Not [ !Equals [ !Ref Package, "" ]]
+
+  - Parameter: ContentEncoding
+    Description: Content encoding for LambdaSharp app assets (DEFAULT uses BROTLI for CloudFront and GZIP otherwise)
+    Type: String
+    AllowedValues:
+      - NONE
+      - GZIP
+      - BROTLI
+      - DEFAULT
+
+  - Condition: ContentEncodingIsDefault
+    Value: !Equals [ !Ref ContentEncoding, "DEFAULT" ]
+
+  ###
+  # Module Exports
+  ###
+
+  - Variable: Arn
+    Scope: public
+    Description: App assets S3 bucket ARN
+    Value: !GetAtt Bucket.Arn
+
+  - Variable: DomainName
+    Scope: public
+    Description: App assets S3 bucket domain name
+    Value: !GetAtt Bucket.DomainName
+
+  - Variable: WebsiteUrl
+    Scope: public
+    Description: App assets S3 bucket website URL
+    Value: !GetAtt Bucket.WebsiteURL
+
+  ###
+  # Module Resources
+  ###
+
+  - Resource: Bucket
+    Description: S3 bucket for hosting app assets
+    Type: AWS::S3::Bucket
+    Properties:
+        AccessControl: !If [ CloudFrontOriginAccessIdentityHasValue, !Ref AWS::NoValue, PublicRead ]
+        WebsiteConfiguration: !If
+          - CloudFrontOriginAccessIdentityHasValue
+          - !Ref AWS::NoValue
+          - IndexDocument: index.html
+            ErrorDocument: index.html
+
+  # Deploy app files to S3 bucket
+  - Resource: AssetsDeployment
+    If: PackageHasValue
+    Type: LambdaSharp::S3::Unzip
+    Properties:
+      SourceBucket: !Ref DeploymentBucketName
+      SourceKey: !Ref Package
+      DestinationBucket: !Ref Bucket
+      DestinationKey: ""
+      Encoding: !If
+        - ContentEncodingIsDefault
+        - !If
+          - CloudFrontOriginAccessIdentityHasValue
+          - BROTLI
+          - GZIP
+        - !Ref ContentEncoding
+
+  - Resource: BucketPolicy
+    Description: S3 bucket access policy
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument: !If
+        - CloudFrontOriginAccessIdentityHasValue
+        - Id: AppBucket
+          Version: 2012-10-17
+          Statement:
+            - Sid: AllowCloudFrontAccess
+              Effect: Allow
+              Principal:
+                AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOriginAccessIdentity}"
+              Action: s3:GetObject
+              Resource: !Sub "${Bucket.Arn}/*"
+        - Id: AppBucket
+          Version: 2012-10-17
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: s3:GetObject
+              Resource: !Sub "${Bucket.Arn}/*"
+      Bucket: !Ref Bucket

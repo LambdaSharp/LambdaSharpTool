@@ -24,19 +24,19 @@ using Amazon.Lambda.Core;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.CustomResource;
-using LambdaSharp.Logger;
+using LambdaSharp.Logging;
 
 namespace LambdaSharp.S3.IO.S3Writer {
 
     public class WriteJsonLogic {
 
         //--- Fields ---
-        private readonly ILambdaLogLevelLogger _logger;
+        private readonly ILambdaSharpLogger _logger;
         private readonly IAmazonS3 _s3Client;
         private readonly ILambdaSerializer _jsonSerializer;
 
         //--- Constructors ---
-        public WriteJsonLogic(ILambdaLogLevelLogger logger, IAmazonS3 s3Client, ILambdaSerializer jsonSerializer) {
+        public WriteJsonLogic(ILambdaSharpLogger logger, IAmazonS3 s3Client, ILambdaSerializer jsonSerializer) {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _s3Client = s3Client ?? throw new ArgumentNullException(nameof(s3Client));
             _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));

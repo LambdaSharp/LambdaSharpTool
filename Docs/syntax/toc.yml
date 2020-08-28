@@ -18,6 +18,9 @@
     - name: Using
       href: Module-Using.md
 
+- name: App
+  href: Module-App.md
+
 - name: Condition
   href: Module-Condition.md
 

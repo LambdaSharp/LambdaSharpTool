@@ -22,7 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Tool.Internal {
 

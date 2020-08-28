@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6D46C9B3278917F0BE9D8A4F90295E4C"
+      "Default": "6AB8A210FE37D38C3396A2A8CE3065CB"
     }
   },
   "Resources": {
@@ -311,7 +311,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -321,7 +321,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Sns/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Sns/.artifacts/*"
                   }
                 }
               ]
@@ -604,7 +604,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -834,9 +834,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Sns:1.0-DEV",
       "Description": "A sample module using an SNS topic",
-      "TemplateChecksum": "6D46C9B3278917F0BE9D8A4F90295E4C",
+      "TemplateChecksum": "6AB8A210FE37D38C3396A2A8CE3065CB",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

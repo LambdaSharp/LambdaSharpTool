@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Amazon.APIGateway.Model;
 using Amazon.IdentityManagement.Model;
 using Amazon.Lambda.Model;
+using LambdaSharp.Build;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -190,7 +191,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // check if Amazon Lambda Tools extension is installed
-            var result = ProcessLauncher.ExecuteWithOutputCapture(
+            var result = new ProcessLauncher(BuildEventsConfig).ExecuteWithOutputCapture(
                 dotNetExe,
                 new[] { "lambda", "tool", "help" },
                 workingFolder: null

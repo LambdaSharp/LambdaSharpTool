@@ -53,7 +53,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DD0C20C63B3C66970355AF6C0EE2E04F"
+      "Default": "553DA87ACF44274D3110CFFE24E907A7"
     }
   },
   "Resources": {
@@ -192,8 +192,46 @@
                 "Ref": "AWS::NoValue"
               }
             ]
+          },
+          {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Ref": "ModuleRegistration"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
           }
-        ]
+        ],
+        "Parameter_Secrets": {
+          "Ref": "Secrets"
+        },
+        "Parameter_XRayTracing": {
+          "Ref": "XRayTracing"
+        },
+        "Parameter_LambdaSharpCoreServices": {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Parameter_LambdaSharpCoreDeadLetterQueue": {
+          "Ref": "LambdaSharpCoreDeadLetterQueue"
+        },
+        "Parameter_DeploymentBucketName": {
+          "Ref": "DeploymentBucketName"
+        },
+        "Parameter_DeploymentPrefix": {
+          "Ref": "DeploymentPrefix"
+        },
+        "Parameter_DeploymentPrefixLowercase": {
+          "Ref": "DeploymentPrefixLowercase"
+        },
+        "Parameter_DeploymentRoot": {
+          "Ref": "DeploymentRoot"
+        },
+        "Parameter_DeploymentChecksum": {
+          "Ref": "DeploymentChecksum"
+        }
       },
       "DependsOn": [
         "Finalizer",
@@ -313,7 +351,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -323,7 +361,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Finalizer/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Finalizer/.artifacts/*"
                   }
                 }
               ]
@@ -461,7 +499,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -615,9 +653,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Finalizer:1.0-DEV",
       "Description": "A sample module with a finalizer function",
-      "TemplateChecksum": "DD0C20C63B3C66970355AF6C0EE2E04F",
+      "TemplateChecksum": "553DA87ACF44274D3110CFFE24E907A7",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

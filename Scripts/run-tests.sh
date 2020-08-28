@@ -4,6 +4,8 @@ if [ -z "$LAMBDASHARP" ]; then
     exit 1
 fi
 
+VERSION_PREFIX="1.0.0"
+
 if [ -z "$1" ]; then
 
     # run everything
@@ -13,8 +15,8 @@ if [ -z "$1" ]; then
         --aws-region us-east-1 \
         --aws-account-id 123456789012 \
         --aws-user-arn arn:aws:iam::123456789012:user/test-user \
-        --tier-version $LAMBDASHARP_VERSION_PREFIX \
-        --cli-version $LAMBDASHARP_VERSION_PREFIX \
+        --tier-version $VERSION_PREFIX \
+        --cli-version $VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name
 
     if [ $? -ne 0 ]; then
@@ -32,8 +34,8 @@ if [ -z "$1" ]; then
         --aws-user-arn arn:aws:iam::123456789012:user/test-user \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --tier-version $LAMBDASHARP_VERSION_PREFIX \
-        --cli-version $LAMBDASHARP_VERSION_PREFIX \
+        --tier-version $VERSION_PREFIX \
+        --cli-version $VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name \
         --no-dependency-validation \
         --module-build-date 20190809150000 \
@@ -98,6 +100,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Samples/AlexaSample \
         $LAMBDASHARP/Samples/ApiSample \
         $LAMBDASHARP/Samples/ApiInvokeSample \
+        $LAMBDASHARP/Samples/BlazorSample \
         $LAMBDASHARP/Samples/CustomResourceTypeSample \
         $LAMBDASHARP/Samples/DynamoDBSample \
         $LAMBDASHARP/Samples/EventSample \
@@ -133,8 +136,8 @@ else
         --aws-region us-east-1 \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --tier-version $LAMBDASHARP_VERSION_PREFIX \
-        --cli-version $LAMBDASHARP_VERSION_PREFIX \
+        --tier-version $VERSION_PREFIX \
+        --cli-version $VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name \
         --no-dependency-validation \
         --module-build-date 20190809150000 \

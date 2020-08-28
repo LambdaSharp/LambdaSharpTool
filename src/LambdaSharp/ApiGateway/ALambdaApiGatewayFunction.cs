@@ -24,7 +24,8 @@ using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp.ApiGateway.Internal;
 using LambdaSharp.Exceptions;
-using LambdaSharp.Logger;
+using LambdaSharp.Logging;
+using LambdaSharp.Logging.Metrics;
 
 namespace LambdaSharp.ApiGateway {
 

@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "21FF4001E19E7606D1762EBE0CBF5431"
+      "Default": "A187AE78EEA90B34D7C51467B146AFF9"
     }
   },
   "Resources": {
@@ -379,7 +379,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -389,7 +389,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/DemoS3Subscriber/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/DemoS3Subscriber/.artifacts/*"
                   }
                 }
               ]
@@ -743,7 +743,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1017,9 +1017,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
-      "TemplateChecksum": "21FF4001E19E7606D1762EBE0CBF5431",
+      "TemplateChecksum": "A187AE78EEA90B34D7C51467B146AFF9",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "Demo.S3Bucket Imports",
@@ -1107,7 +1107,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.S3.Subscriber:1@lambdasharp",
           "Type": "Shared"
         }
       ],

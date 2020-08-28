@@ -20,7 +20,7 @@ using System;
 using System.Threading.Tasks;
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
-using LambdaSharp.Logger;
+using LambdaSharp.Logging;
 using Newtonsoft.Json;
 
 namespace ApiInvokeSample.Shared {
@@ -62,10 +62,10 @@ namespace ApiInvokeSample.Shared {
     public class Logic {
 
         //--- Fields ---
-        private ILambdaLogLevelLogger _logger;
+        private ILambdaSharpLogger _logger;
 
         //--- Constructors ---
-        public Logic(ILambdaLogLevelLogger logger) {
+        public Logic(ILambdaSharpLogger logger) {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 

@@ -5,7 +5,7 @@ keywords: custom resource, resource type, lambda, declaration, syntax, yaml, clo
 ---
 # Resource Type
 
-The `ResourceType` definition is used to register a new resource type for a deployment tier. The handler for the resource type can either be an SNS topic or a Lambda function. Once deployed, the resource type is available to all subsequent module deployments.
+The `ResourceType` declaration is used to register a new resource type for a deployment tier. The handler for the resource type can either be an SNS topic or a Lambda function. Once deployed, the resource type is available to all subsequent module deployments.
 
 A deployed module with a resource type that is in-use by another deployed module cannot be torn down or changed. All dependent modules must first be removed before the resource type can be modified or deleted.
 

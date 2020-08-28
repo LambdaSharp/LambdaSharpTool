@@ -31,7 +31,7 @@ namespace Sample.Event.MyFunction {
         public override async Task InitializeAsync(LambdaConfig config) { }
 
         public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-            SendEvent("MySample", "MyEvent", new {
+            LogEvent("MySample", "MyEvent", new {
                 Message = "hello world!"
             });
             return new FunctionResponse();

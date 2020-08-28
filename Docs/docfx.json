@@ -4,7 +4,9 @@
       "src": [
         {
           "files": [
-            "LambdaSharp/LambdaSharp.csproj"
+            "LambdaSharp.Logging/LambdaSharp.Logging.csproj",
+            "LambdaSharp/LambdaSharp.csproj",
+            "LambdaSharp.App/LambdaSharp.App.csproj"
           ],
           "cwd": "../src"
         }

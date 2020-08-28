@@ -95,7 +95,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "30411449FD626E231FD5BDEF1CE41B4E"
+      "Default": "948DF4DD8E9E4693E0BEAFA681577E55"
     }
   },
   "Resources": {
@@ -883,7 +883,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -893,7 +893,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Core/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Core/.artifacts/*"
                   }
                 }
               ]
@@ -1058,6 +1058,20 @@
       },
       "Description": "Custom resource type for function registrations"
     },
+    "LambdaSharpRegistrationApp": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RegistrationFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::App"
+        }
+      },
+      "Description": "Custom resource type for application registrations"
+    },
     "CoreServices": {
       "Value": "Enabled",
       "Export": {
@@ -1098,7 +1112,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1312,9 +1326,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "30411449FD626E231FD5BDEF1CE41B4E",
+      "TemplateChecksum": "948DF4DD8E9E4693E0BEAFA681577E55",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",
@@ -1431,6 +1445,68 @@
       "Artifacts": [],
       "Dependencies": [],
       "ResourceTypes": [
+        {
+          "Type": "LambdaSharp::Registration::App",
+          "Description": "Custom resource type for application registrations",
+          "Properties": [
+            {
+              "Name": "ModuleId",
+              "Description": "Module CloudFormation stack name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "AppId",
+              "Description": "Application identifier",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "AppName",
+              "Description": "Application name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "AppDomainName",
+              "Description": "Application domain name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "AppLogGroup",
+              "Description": "Application CloudWatch log group name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "AppPlatform",
+              "Description": "Application execution platform",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "AppFramework",
+              "Description": "Application execution framework",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "AppLanguage",
+              "Description": "Application programming language",
+              "Type": "String",
+              "Required": true
+            }
+          ],
+          "Attributes": [
+            {
+              "Name": "Registration",
+              "Description": "Registration ID",
+              "Type": "String",
+              "Required": true
+            }
+          ]
+        },
         {
           "Type": "LambdaSharp::Registration::Function",
           "Description": "Custom resource type for function registrations",
