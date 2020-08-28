@@ -19,17 +19,17 @@
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\src\LambdaSharp\LambdaMetric.cs" Link="LambdaMetric.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromBodyAttribute.cs" Link="FromBodyAttribute.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromUriAttribute.cs" Link="FromUriAttribute.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayAsyncEndpointException.cs" Link="ApiGatewayAsyncEndpointException.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetDirectory.cs" Link="ApiGatewayInvocationTargetDirectory.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetParameterException.cs" Link="ApiGatewayInvocationTargetParameterException.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetReturnException.cs" Link="ApiGatewayInvocationTargetReturnException.cs" />
-    <Compile Include="..\..\src\LambdaSharp\Exceptions\ALambdaException.cs" Link="ALambdaException.cs" />
-    <Compile Include="..\..\src\LambdaSharp\Exceptions\ILambdaExceptionFingerprinter.cs" Link="ILambdaExceptionFingerprinter.cs" />
     <Compile Include="..\..\src\LambdaSharp\Exceptions\ShouldNeverHappenException.cs" Link="ShouldNeverHappenException.cs" />
     <Compile Include="..\..\src\LambdaSharp\ILambdaSerializerEx.cs" Link="ILambdaSerializerEx.cs" />
     <Compile Include="..\..\src\LambdaSharp\Serialization\LambdaJsonSerializer.cs" Link="LambdaJsonSerializer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LambdaSharp.Logging\LambdaSharp.Logging.csproj" />
   </ItemGroup>
 </Project>

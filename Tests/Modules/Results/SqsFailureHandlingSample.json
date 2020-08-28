@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "696AD3D2F7E6BDDCD41E2399DCA88BA4"
+      "Default": "7A048A236959AD708C7FFCF4EC778AA0"
     }
   },
   "Resources": {
@@ -517,7 +517,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -527,7 +527,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/SqsHandler/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/SqsHandler/.artifacts/*"
                   }
                 }
               ]
@@ -913,7 +913,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1143,9 +1143,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.SqsHandler:1.0-DEV",
       "Description": "Sample module to demonstrate receiving events from an SQS queue",
-      "TemplateChecksum": "696AD3D2F7E6BDDCD41E2399DCA88BA4",
+      "TemplateChecksum": "7A048A236959AD708C7FFCF4EC778AA0",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

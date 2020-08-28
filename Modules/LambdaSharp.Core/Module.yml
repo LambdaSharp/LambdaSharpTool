@@ -250,7 +250,6 @@ Items:
     Description: Custom resource type for module registrations
     Handler: RegistrationFunction
     Properties:
-
       - Name: ModuleId
         Description: Module CloudFormation stack name
         Type: String
@@ -267,7 +266,6 @@ Items:
         Required: false
 
     Attributes:
-
       - Name: Registration
         Description: Registration ID
         Type: String
@@ -276,7 +274,6 @@ Items:
     Description: Custom resource type for function registrations
     Handler: RegistrationFunction
     Properties:
-
       - Name: ModuleId
         Description: Module CloudFormation stack name
         Type: String
@@ -323,7 +320,55 @@ Items:
         Required: true
 
     Attributes:
+      - Name: Registration
+        Description: Registration ID
+        Type: String
 
+  - ResourceType: LambdaSharp::Registration::App
+    Description: Custom resource type for application registrations
+    Handler: RegistrationFunction
+    Properties:
+      - Name: ModuleId
+        Description: Module CloudFormation stack name
+        Type: String
+        Required: true
+
+      - Name: AppId
+        Description: Application identifier
+        Type: String
+        Required: true
+
+      - Name: AppName
+        Description: Application name
+        Type: String
+        Required: true
+
+      - Name: AppDomainName
+        Description: Application domain name
+        Type: String
+        Required: true
+
+      - Name: AppLogGroup
+        Description: Application CloudWatch log group name
+        Type: String
+        Required: true
+
+      - Name: AppPlatform
+        Description: Application execution platform
+        Type: String
+        Required: true
+
+      - Name: AppFramework
+        Description: Application execution framework
+        Type: String
+        Required: true
+
+      - Name: AppLanguage
+        Description: Application programming language
+        Type: String
+        Required: true
+
+    Attributes:
       - Name: Registration
         Description: Registration ID
         Type: String

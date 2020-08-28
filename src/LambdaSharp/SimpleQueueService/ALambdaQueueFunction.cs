@@ -24,7 +24,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using LambdaSharp.Exceptions;
-using LambdaSharp.Logger;
+using LambdaSharp.Logging;
+using LambdaSharp.Logging.Metrics;
 using LambdaSharp.SimpleQueueService.Extensions;
 
 namespace LambdaSharp.SimpleQueueService {

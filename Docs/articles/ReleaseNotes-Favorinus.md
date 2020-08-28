@@ -234,7 +234,7 @@ The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayF
 * Added `ALambdaFunction.RunTask()` and `ALambdaFunction.AddPendingTask(Task)` to queue background operations that must complete before the Lambda invocation finishes.
 * Added `HttpClient` with X-Ray tracing instrumentation to `ALambdaFunction` base class.
 * `ALambdaFunction` now unrolls `AggregateException` instances and reports errors individually.
-* `lash util delete-orphan-logs` replaces `delete-orphan-lambda-logs`, which now also delete orphaned API Gateway V1/V2 CloudWatch logs
+* `lash util delete-orphan-logs` replaces `delete-orphan-lambda-logs`, which now also delete orphaned API Gateway CloudWatch logs
 
 #### Fixes
 * Fixed an issue with setting the correct IAM role for the API Gateway account.

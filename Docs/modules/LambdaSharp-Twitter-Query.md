@@ -9,7 +9,7 @@ _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 
 ## Overview
 
-The `LambdaSharp.Twitter.Query` module conducts a Twitter search at regular intervals and publishes found tweets to a dedicated SNS topic.
+The _LambdaSharp.Twitter.Query_ module conducts a Twitter search at regular intervals and publishes found tweets to a dedicated SNS topic.
 
 This module requires a Twitter developer account. See the [Twitter Developer Documentation](https://developer.twitter.com/en/docs/basics/getting-started) for more information.
 
@@ -74,7 +74,7 @@ The <code>TwitterQueryInterval</code> parameter sets the interval between querie
 <dt><code>TwitterSentimentFilter</code></dt>
 <dd>
 
-The <code>TwitterSentimentFilter</code> parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL).
+The <code>TwitterSentimentFilter</code> parameter sets the sentiment filter (one of: <code>SKIP</code>, <code>POSITIVE</code>, <code>NEUTRAL</code>, <code>NEGATIVE</code>, <code>MIXED</code>, <code>ALL</code>).
 
 <b>NOTE:</b> Analyzing tweets for sentiment incurs additional costs. Please check pricing for the [AWS Comprehend Sentiment Analysis API](https://aws.amazon.com/comprehend/pricing/).
 
@@ -82,34 +82,34 @@ The <code>TwitterSentimentFilter</code> parameter sets the sentiment filter (one
 
 <i>Type:</i> String
 
-The <code>TwitterSentimentFilter</code> must have one of the following values:
+The <code>TwitterSentimentFilter</code> parameter must have one of the following values:
 <dl>
-<dt>ALL</dt>
+<dt><code>ALL</code></dt>
 <dd>
 
 Analyze and publish all tweets.
 </dd>
-<dt>MIXED</dt>
+<dt><code>MIXED</code></dt>
 <dd>
 
 Only publish tweets with mixed sentiment.
 </dd>
-<dt>NEGATIVE</dt>
+<dt><code>NEGATIVE</code></dt>
 <dd>
 
 Only publish tweets with negative sentiment.
 </dd>
-<dt>NEUTRAL</dt>
+<dt><code>NEUTRAL</code></dt>
 <dd>
 
 Only publish tweets with neutral sentiment.
 </dd>
-<dt>POSITIVE</dt>
+<dt><code>POSITIVE</code></dt>
 <dd>
 
 Only publish tweets with positive sentiment.
 </dd>
-<dt>SKIP</dt>
+<dt><code>SKIP</code></dt>
 <dd>
 
 Publish all tweets without analyzing them.

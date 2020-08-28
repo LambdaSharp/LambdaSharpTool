@@ -20,12 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp.ApiGateway.Internal;
 using LambdaSharp.Exceptions;
-using LambdaSharp.Logger;
-using System.Linq;
+using LambdaSharp.Logging;
+using LambdaSharp.Logging.Metrics;
 
 namespace LambdaSharp.ApiGateway {
 

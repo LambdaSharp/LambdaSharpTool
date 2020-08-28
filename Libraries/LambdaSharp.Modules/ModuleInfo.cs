@@ -26,6 +26,7 @@ using LambdaSharp.Modules.Serialization;
 namespace LambdaSharp.Modules {
 
     [JsonConverter(typeof(JsonModuleInfoConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(ModuleInfoConverter))]
     public class ModuleInfo {
 
         // NOTE: module reference formats:

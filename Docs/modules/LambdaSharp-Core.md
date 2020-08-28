@@ -10,7 +10,7 @@ _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 
 ## Overview
 
-The `LambdaSharp.Core` module defines the core resources and resource types for deploying LambdaSharp modules. This module is included automatically by all LambdaSharp modules.
+The _LambdaSharp.Core_ module defines the core resources and resource types for deploying LambdaSharp modules. This module is included automatically by all LambdaSharp modules.
 
 
 ## Resource Types

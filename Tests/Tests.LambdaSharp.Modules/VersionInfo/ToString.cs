@@ -25,13 +25,39 @@ namespace Tests.LambdaSharp.Modules.VersionInfoTests {
 
     public class ToString {
 
-        //--- Fields ---
-        private readonly ITestOutputHelper _output;
-
         //--- Constructors ---
-        public ToString(ITestOutputHelper output) => _output = output;
+        public ToString(ITestOutputHelper output) => Output = output;
+
+        //--- Properties ---
+        private ITestOutputHelper Output { get; }
 
         //--- Methods ---
+
+        [Fact]
+        public void Zero_major() {
+
+            // arrange
+            var text = "0";
+
+            // act
+            var result = VersionInfo.Parse(text).ToString();
+
+            // assert
+            result.Should().Be(text);
+        }
+
+        [Fact]
+        public void Zero_major_minor() {
+
+            // arrange
+            var text = "0.0";
+
+            // act
+            var result = VersionInfo.Parse(text).ToString();
+
+            // assert
+            result.Should().Be(text);
+        }
 
         [Fact]
         public void Major_minor() {

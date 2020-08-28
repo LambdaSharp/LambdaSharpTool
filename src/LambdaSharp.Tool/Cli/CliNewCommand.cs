@@ -31,6 +31,9 @@ using LambdaSharp.Tool.Internal;
 using System.Threading.Tasks;
 using Amazon;
 using System.Text.RegularExpressions;
+using LambdaSharp.Modules;
+using System.IO.Compression;
+using System.Text;
 
 namespace LambdaSharp.Tool.Cli {
     using Tag = Amazon.CloudFormation.Model.Tag;
@@ -88,7 +91,7 @@ namespace LambdaSharp.Tool.Cli {
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(() => {
                         ExecuteCommandActions(subCmd);
-                        var settings = new Settings { };
+                        var settings = new Settings(Version);
 
                         // get function name
                         var functionName = nameArgument.Value;
@@ -126,6 +129,38 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
+                // app sub-command
+                cmd.Command("app", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create new LambdaSharp app";
+
+                    // sub-command options
+                    var namespaceOption = subCmd.Option("--namespace <NAME>", "(optional) Root namespace for project (default: same as app name)", CommandOptionType.SingleValue);
+                    var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New app project parent directory (default: current directory)", CommandOptionType.SingleValue);
+                    var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
+                    inputFileOption.ShowInHelpText = false;
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyApp)");
+                    AddStandardCommandOptions(subCmd);
+                    subCmd.OnExecute(() => {
+                        ExecuteCommandActions(subCmd);
+                        var settings = new Settings(Version);
+
+                        // get app name
+                        var appName = nameArgument.Value;
+                        while(string.IsNullOrEmpty(appName)) {
+                            appName = settings.PromptString("Enter the app name");
+                        }
+                        var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
+                        NewApp(
+                            settings,
+                            appName,
+                            namespaceOption.Value(),
+                            workingDirectory,
+                            Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml")
+                        );
+                    });
+                });
+
                 // module sub-command
                 cmd.Command("module", subCmd => {
                     subCmd.HelpOption();
@@ -137,7 +172,7 @@ namespace LambdaSharp.Tool.Cli {
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(() => {
                         ExecuteCommandActions(subCmd);
-                        var settings = new Settings { };
+                        var settings = new Settings(Version);
 
                         // get the module name
                         var moduleName = nameArgument.Value;
@@ -165,7 +200,7 @@ namespace LambdaSharp.Tool.Cli {
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(() => {
                         ExecuteCommandActions(subCmd);
-                        var settings = new Settings { };
+                        var settings = new Settings(Version);
 
                         // get the resource name
                         var name = nameArgument.Value;
@@ -206,7 +241,7 @@ namespace LambdaSharp.Tool.Cli {
                         );
 
                         // initialize settings instance
-                        var settings = new Settings {
+                        var settings = new Settings(Version) {
                             CfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint),
                             S3Client = new AmazonS3Client(AWSConfigs.RegionEndpoint),
                             AwsRegion = awsAccount.Region,
@@ -246,7 +281,7 @@ namespace LambdaSharp.Tool.Cli {
                         );
 
                         // initialize settings instance
-                        var settings = new Settings {
+                        var settings = new Settings(Version) {
                             CfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint),
                             S3Client = new AmazonS3Client(AWSConfigs.RegionEndpoint),
                             AwsRegion = awsAccount.Region,
@@ -331,7 +366,7 @@ namespace LambdaSharp.Tool.Cli {
                 return;
             }
             var moduleContents = File.ReadAllText(moduleFile);
-            var module = new ModelYamlToAstConverter(new Settings(), moduleFile).Convert(moduleContents, selector: null);
+            var module = new ModelYamlToAstConverter(new Settings(Version), moduleFile).Convert(moduleContents, selector: null);
             if(HasErrors) {
                 return;
             }
@@ -424,7 +459,7 @@ namespace LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_VERSION"] = Settings.ToolVersion.GetLambdaSharpAssemblyWildcardVersion(framework)
+                ["LAMBDASHARP_VERSION"] = VersionInfoCompatibility.GetLambdaSharpAssemblyWildcardVersion(settings.ToolVersion, framework)
             };
             try {
                 var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);
@@ -474,6 +509,109 @@ namespace LambdaSharp.Tool.Cli {
                 LogError($"unable to create function file '{functionFile}'", e);
                 return;
             }
+        }
+
+        public void NewApp(
+            Settings settings,
+            string appName,
+            string rootNamespace,
+            string workingDirectory,
+            string moduleFile
+        ) {
+
+            // validate name
+            if(!IsValidResourceName(appName)) {
+                LogError("app name is not valid");
+                return;
+            }
+
+            // parse yaml module definition
+            if(!File.Exists(moduleFile)) {
+                LogError($"could not find module '{moduleFile}'");
+                return;
+            }
+            var moduleContents = File.ReadAllText(moduleFile);
+            var module = new ModelYamlToAstConverter(new Settings(Version), moduleFile).Convert(moduleContents, selector: null);
+            if(HasErrors) {
+                return;
+            }
+
+            // set default namespace if none is set
+            if(rootNamespace == null) {
+                rootNamespace = $"{module.Module}.{appName}";
+            }
+
+            // create directory for app project
+            var projectDirectory = Path.Combine(workingDirectory, appName);
+            if(Directory.Exists(projectDirectory)) {
+                LogError($"project directory '{projectDirectory}' already exists");
+                return;
+            }
+            try {
+                Directory.CreateDirectory(projectDirectory);
+            } catch(Exception e) {
+                LogError($"unable to create directory '{projectDirectory}'", e);
+                return;
+            }
+
+            // generate project
+            var substitutions = new Dictionary<string, string> {
+                ["ROOTNAMESPACE"] = rootNamespace
+            };
+            using(var projectStream = typeof(CliNewCommand).Assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.BlazorProjectTemplate.zip"))
+            using(var projectArchive = new ZipArchive(projectStream)) {
+                foreach(var entry in projectArchive.Entries) {
+                    var entryPath = Path.Combine(projectDirectory, entry.FullName);
+                    if(entry.FullName.EndsWith("/")) {
+                        Directory.CreateDirectory(entryPath);
+                    } else {
+
+                        // use app name for .csproj file
+                        entryPath = (entry.Name == "MyApp.csproj")
+                            ? Path.Combine(projectDirectory, $"{appName}.csproj")
+                            : entryPath;
+                        using(var file = File.OpenWrite(entryPath))
+                        using(var entryStream = entry.Open()) {
+                            var fileExtension = Path.GetExtension(entryPath);
+                            switch(fileExtension) {
+                            case ".cs":
+                            case ".csproj":
+                            case ".razor":
+                            case ".html":
+
+                                // apply substitutions to source files
+                                using(var entryReader = new StreamReader(entryStream)) {
+                                    var contents = entryReader.ReadToEnd();
+                                    foreach(var kv in substitutions) {
+                                        contents = contents.Replace($"%%{kv.Key}%%", kv.Value);
+                                    }
+                                    var contentsBytes = Encoding.UTF8.GetBytes(contents);
+                                    file.Write(contentsBytes, 0, contentsBytes.Length);
+                                }
+                                break;
+                            default:
+
+                                // copy zip contents verbatim
+                                entryStream.CopyTo(file);
+                                break;
+                            }
+                        }
+                        Console.WriteLine($"Created file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), entryPath)}");
+                    }
+                }
+            }
+
+            // insert app definition and a variable to output the app website URL
+            InsertModuleItemsLines(moduleFile, new[] {
+                $"  - App: {appName}",
+                $"    Description: TO-DO - update app description"
+            });
+            InsertModuleItemsLines(moduleFile, new[] {
+                $"  - Variable: {appName}WebsiteUrl",
+                $"    Description: {appName} Website URL",
+                $"    Scope: public",
+                $"    Value: !GetAtt {appName}::Bucket.Outputs.WebsiteUrl"
+            });
         }
 
         public void NewResource(Settings settings, string moduleFile, string resourceName, string resourceTypeName) {
@@ -616,7 +754,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // create bucket using template
             var template = ReadResource("LambdaSharpBucketPublic.yml", new Dictionary<string, string> {
-                ["TOOL-VERSION"] = Settings.ToolVersion.ToString(),
+                ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
             });
             var stackName = $"Bucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
@@ -663,7 +801,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // create bucket using template
             var template = ReadResource("LambdaSharpBucketExpiring.yml", new Dictionary<string, string> {
-                ["TOOL-VERSION"] = Settings.ToolVersion.ToString(),
+                ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
             });
             var stackName = $"Bucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {

@@ -63,10 +63,10 @@ namespace LambdaSharp.Finalizer {
         /// <summary>
         /// The <see cref="CreateDeployment(FinalizerProperties)"/> method is invoked when the LambdaSharp module is being updated.
         /// </summary>
-        /// <param name="next">The <see cref="FinalizerProperties"/> instance with the next deployment information.</param>
+        /// <param name="current">The <see cref="FinalizerProperties"/> instance with the next deployment information.</param>
         /// <param name="previous">The <see cref="FinalizerProperties"/> instance with the previous deployment information.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual async Task UpdateDeployment(FinalizerProperties next, FinalizerProperties previous) { }
+        public virtual async Task UpdateDeployment(FinalizerProperties current, FinalizerProperties previous) { }
 
         /// <summary>
         /// The <see cref="CreateDeployment(FinalizerProperties)"/> method is invoked when the LambdaSharp module is being torn down.

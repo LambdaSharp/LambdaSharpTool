@@ -111,11 +111,12 @@ namespace LambdaSharp.ApiGateway.Internal {
                             if(state.PathQueryParametersJson == null) {
                                 var pathParameters = request.PathParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
                                 var queryStringParameters = request.QueryStringParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
-                                state.PathQueryParametersJson = serializer.Serialize(new Dictionary<string, string>(
+                                state.PathQueryParametersJson = serializer.Serialize(
                                     pathParameters.Union(queryStringParameters)
                                         .GroupBy(kv => kv.Key)
                                         .Select(grouping => grouping.First())
-                                ));
+                                        .ToDictionary(kv => kv.Key, kv => kv.Value)
+                                );
                             }
                             return serializer.Deserialize(state.PathQueryParametersJson, parameter.ParameterType);
                         } catch {
@@ -152,7 +153,7 @@ namespace LambdaSharp.ApiGateway.Internal {
         public void Add(string key, string methodReference) {
 
             // validate parameters
-            var methodReferenceParts = methodReference.Split("::", 3);
+            var methodReferenceParts = methodReference.Split(new[] { "::" }, 3, StringSplitOptions.None);
             if(methodReferenceParts.Length != 3) {
                 throw new ArgumentException("invalid method reference", nameof(methodReference));
             }

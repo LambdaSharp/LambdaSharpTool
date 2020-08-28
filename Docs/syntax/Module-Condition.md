@@ -5,7 +5,7 @@ keywords: condition, declaration, syntax, yaml, cloudformation
 ---
 # Condition
 
-The `Condition` definition specifies a statement that defines the circumstances under which entities are created or configured.
+The `Condition` declaration specifies a statement that defines the circumstances under which entities are created or configured.
 
 ## Syntax
 

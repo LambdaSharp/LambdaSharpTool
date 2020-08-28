@@ -38,21 +38,18 @@ namespace Tests.LambdaSharp.Modules.VersionInfoTests {
             VersionInfo.Parse("0.7.1.2"),
             VersionInfo.Parse("0.7.2"),
             VersionInfo.Parse("0.7.2.1"),
+            VersionInfo.Parse("0.7.2.2-rc1"),
             VersionInfo.Parse("0.7.2.2"),
             VersionInfo.Parse("0.8.0-rc1")
         };
 
-        //--- Fields ---
-        private readonly ITestOutputHelper _output;
-
         //--- Constructors ---
-        public FindLatestMatchingVersion(ITestOutputHelper output) => _output = output;
+        public FindLatestMatchingVersion(ITestOutputHelper output) => Output = output;
+
+        //--- Properties ---
+        private ITestOutputHelper Output { get; }
 
         //--- Methods ---
-
-        // TODO: tests to add
-        //  * add test for toolversion 0.7.0-rc2 should find 0.7.0-rc1
-        //  * add test for toolversion 0.7.2-rc1 should find 0.7.1
 
         [Fact]
         public void Find_matching_prerelease_version() {
@@ -64,7 +61,7 @@ namespace Tests.LambdaSharp.Modules.VersionInfoTests {
             var result = VersionInfo.FindLatestMatchingVersion(
                 _versions,
                 minVersion: null,
-                moduleVersion => VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
+                moduleVersion => VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
             );
 
             // assert
@@ -99,12 +96,48 @@ namespace Tests.LambdaSharp.Modules.VersionInfoTests {
             var result = VersionInfo.FindLatestMatchingVersion(
                 _versions,
                 minVersion: VersionInfo.Parse("0.7.0-rc5"),
-                moduleVersion => VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
+                moduleVersion => VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
             );
 
             // assert
             result.Should().NotBeNull();
             result.CompareToVersion(VersionInfo.Parse("0.7.0-rc6")).Should().Be(0);
+        }
+
+        [Fact]
+        public void Find_previous_prerelease_version_for_tool_prerelease_without_minimum_constraint() {
+
+            // arrange
+            var toolVersion = VersionInfo.Parse("0.7.2.2-rc2");
+
+            // act
+            var result = VersionInfo.FindLatestMatchingVersion(
+                _versions,
+                minVersion: null,
+                moduleVersion => VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
+            );
+
+            // assert
+            result.Should().NotBeNull();
+            result.CompareToVersion(VersionInfo.Parse("0.7.2.2-rc1")).Should().Be(0);
+        }
+
+        [Fact]
+        public void Find_previous_stable_release_version_for_tool_prerelease_without_minimum_constraint() {
+
+            // arrange
+            var toolVersion = VersionInfo.Parse("0.7.1-rc1");
+
+            // act
+            var result = VersionInfo.FindLatestMatchingVersion(
+                _versions,
+                minVersion: null,
+                moduleVersion => VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
+            );
+
+            // assert
+            result.Should().NotBeNull();
+            result.CompareToVersion(VersionInfo.Parse("0.7.0")).Should().Be(0);
         }
 
         [Fact]
@@ -117,7 +150,7 @@ namespace Tests.LambdaSharp.Modules.VersionInfoTests {
             var result = VersionInfo.FindLatestMatchingVersion(
                 _versions,
                 minVersion: null,
-                moduleVersion => VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
+                moduleVersion => VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
             );
 
             // assert
@@ -138,13 +171,31 @@ namespace Tests.LambdaSharp.Modules.VersionInfoTests {
                 minVersion: VersionInfo.Parse("0.7.1"),
                 moduleVersion => {
                     ++counter;
-                    return VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion);
+                    return VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion);
                 }
             );
 
             // assert
             result.CompareToVersion(VersionInfo.Parse("0.7.2.2")).Should().Be(0);
             counter.Should().Be(2);
+        }
+
+        [Fact]
+        public void Find_previous_stable_release_version_for_tool_stable_release_without_minimum_constraint() {
+
+            // arrange
+            var toolVersion = VersionInfo.Parse("0.7.3");
+
+            // act
+            var result = VersionInfo.FindLatestMatchingVersion(
+                _versions,
+                minVersion: null,
+                moduleVersion => VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
+            );
+
+            // assert
+            result.Should().NotBeNull();
+            result.CompareToVersion(VersionInfo.Parse("0.7.2.2")).Should().Be(0);
         }
     }
 }

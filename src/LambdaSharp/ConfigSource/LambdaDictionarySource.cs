@@ -48,10 +48,13 @@ namespace LambdaSharp.ConfigSource {
 
         private LambdaDictionarySource(string path, IEnumerable<KeyValuePair<string, string>> parameters) {
             _path = path ?? throw new ArgumentNullException(nameof(path));
-            _parameters = new Dictionary<string, string>(
-                parameters ?? throw new ArgumentNullException(nameof(parameters)),
-                StringComparer.OrdinalIgnoreCase
-            );
+            if(parameters == null) {
+                throw new ArgumentNullException(nameof(parameters));
+            }
+            _parameters = new Dictionary<string, string>(parameters.Count(), StringComparer.OrdinalIgnoreCase);
+            foreach(var kv in parameters) {
+                _parameters.Add(kv.Key, kv.Value);
+            }
         }
 
         //--- Methods ---

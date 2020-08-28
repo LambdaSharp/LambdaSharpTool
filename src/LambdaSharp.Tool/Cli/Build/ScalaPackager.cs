@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using LambdaSharp.Build;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -31,10 +32,13 @@ using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
-    public class ScalaPackager {
+    public class ScalaPackager : AModelProcessor {
 
-        //--- Class Methods ---
-        public static void DetermineFunctionProperties(
+        //--- Constructors ---
+        public ScalaPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
+
+        //--- Methods ---
+        public void DetermineFunctionProperties(
             string functionName,
             string project,
             ref string language,
@@ -46,7 +50,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             handler = handler ?? throw new ArgumentException("The handler name is required for Scala functions");
         }
 
-        public static string Process(
+        public string Process(
             FunctionItem function,
             bool skipCompile,
             bool noAssemblyValidation,
@@ -65,7 +69,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // compile function and create assembly
             if (!skipCompile) {
-                ProcessLauncher.Execute(
+                new ProcessLauncher(BuildEventsConfig).Execute(
                     "sbt",
                     new[] { "assembly" },
                    projectDirectory,
@@ -83,7 +87,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             return scalaOutputJar;
         }
 
-        public static void ProcessScala(
+        public void ProcessScala(
             FunctionItem function,
             bool skipCompile,
             bool noAssemblyValidation,
@@ -96,7 +100,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             ModuleBuilder builder
         ) {
             var showOutput = Settings.VerboseLevel >= VerboseLevel.Detailed;
-            var scalaOutputJar = ScalaPackager.Process(function, skipCompile, noAssemblyValidation, gitSha, gitBranch, buildConfiguration, showOutput);
+            var scalaOutputJar = Process(function, skipCompile, noAssemblyValidation, gitSha, gitBranch, buildConfiguration, showOutput);
 
             // compute hash for zip contents
             string hash;

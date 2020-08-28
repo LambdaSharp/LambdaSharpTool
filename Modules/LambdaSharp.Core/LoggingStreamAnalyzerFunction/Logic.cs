@@ -26,10 +26,10 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using LambdaSharp.Core.Registrations;
-using LambdaSharp.Records;
-using LambdaSharp.Records.Events;
-using LambdaSharp.Records.ErrorReports;
-using LambdaSharp.Records.Metrics;
+using LambdaSharp.Logging;
+using LambdaSharp.Logging.ErrorReports.Models;
+using LambdaSharp.Logging.Events.Models;
+using LambdaSharp.Logging.Metrics.Models;
 
 namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
@@ -42,7 +42,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         Task SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record);
     }
 
-    public class LambdaLogRecord : ALambdaRecord {
+    public class LambdaLogRecord : ALambdaLogRecord {
 
         //--- Properties ---
 
@@ -81,15 +81,23 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             report.ModuleInfo = owner.ModuleInfo;
             report.Module = owner.Module;
             report.ModuleId = owner.ModuleId;
-            report.FunctionId = owner.FunctionId;
-            report.FunctionName = owner.FunctionName;
-            report.Platform = owner.FunctionPlatform;
-            report.Framework = owner.FunctionFramework;
-            report.Language = owner.FunctionLanguage;
+
+            // common
+            report.Fingerprint = ToMD5Hash($"{owner.FunctionId ?? owner.AppId}:{pattern}");
             report.Level = "ERROR";
             report.Raw = message.Trim();
             report.Timestamp = timestamp.ToUnixTimeMilliseconds();
-            report.Fingerprint = ToMD5Hash($"{owner.FunctionId}:{pattern}");
+            report.Platform = owner.FunctionPlatform ?? owner.AppPlatform;
+            report.Framework = owner.FunctionFramework;
+            report.Language = owner.FunctionLanguage;
+
+            // function information
+            report.FunctionId = owner.FunctionId;
+            report.FunctionName = owner.FunctionName;
+
+            // app information
+            report.AppId = owner.AppId;
+            report.AppName = owner.AppName;
             return report;
         }
 
@@ -105,12 +113,10 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         //--- Fields ---
         private readonly ILogicDependencyProvider _provider;
         private readonly IEnumerable<(Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)> _mappings;
-        private readonly ILambdaSerializer _serializer;
 
         //--- Constructors ---
-        public Logic(ILogicDependencyProvider provider, ILambdaSerializer serializer) {
+        public Logic(ILogicDependencyProvider provider) {
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _mappings = new (Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)[] {
 
                 // Lambda report entries
@@ -140,7 +146,10 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                 // Lambda timeout error
                 CreateMatchPattern(@"^(?<Timestamp>[\d\-T\.:Z]+)\s+(?<RequestId>[\da-f\-]+) (?<ErrorMessage>Task timed out after (?<Duration>[\d\.]+) seconds)$", MatchTimeoutAsync),
-                CreateMatchPattern(@"^RequestId: (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Process exited before completing request)$", MatchProcessExitedBeforeCompletionAsync),
+                CreateMatchPattern(@"^RequestId: (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Process exited before completing request)$", MatchLambdaExitedBeforeCompletionAsync),
+
+                // Lambda runtime error
+                CreateMatchPattern(@"^RequestId: (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Error: Runtime exited without providing a reason)$", MatchRuntimeExitedBeforeCompletionAsync),
 
                 // Javascript errors
                 CreateMatchPattern(@"^(?<Timestamp>[\d\-T\.:Z]+)\s+(?<RequestId>[\da-f\-]+)\s+(?<ErrorMessage>{""errorMessage.*})\s*$", MatchJavascriptExceptionAsync),
@@ -181,14 +190,14 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
         private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var text = match.ToString();
-            var record = _serializer.Deserialize<LambdaLogRecord>(text);
+            var record = JsonSerializer.Deserialize<LambdaLogRecord>(text);
 
             // check for pre-0.8 log record
             if((record.Type == null) && (record.Source != null)) {
                 if(record.Source == "LambdaError") {
 
                     // report error record
-                    var errorReport = _serializer.Deserialize<LambdaErrorReport>(text);
+                    var errorReport = JsonSerializer.Deserialize<LambdaErrorReport>(text);
 
                     // convert old format into new
                     errorReport.ModuleInfo = errorReport.Module;
@@ -202,19 +211,19 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 case "LambdaError":
 
                     // report error record
-                    var errorReport = _serializer.Deserialize<LambdaErrorReport>(text);
+                    var errorReport = JsonSerializer.Deserialize<LambdaErrorReport>(text);
                     await _provider.SendErrorReportAsync(owner, timestamp, errorReport);
                     break;
                 case "LambdaEvent":
 
                     // report event record
-                    var eventRecord = _serializer.Deserialize<LambdaEventRecord>(text);
+                    var eventRecord = JsonSerializer.Deserialize<LambdaEventRecord>(text);
                     await _provider.SendEventAsync(owner, timestamp, eventRecord);
                     break;
                 case "LambdaMetrics":
 
                     // report metrics record
-                    var metricsRecord = _serializer.Deserialize<LambdaMetricsRecord>(text);
+                    var metricsRecord = JsonSerializer.Deserialize<LambdaMetricsRecord>(text);
                     await _provider.SendMetricsAsync(owner, timestamp, metricsRecord);
                     break;
                 case null:
@@ -296,9 +305,28 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
-        private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
+        private Task MatchLambdaExitedBeforeCompletionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = "Lambda exited before completing request";
+            report.RequestId = GetRequestId(match);
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
+        }
+
+        private Task MatchRuntimeExitedBeforeCompletionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
+            var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
+            report.Message = "Runtime exited without providing a reason";
+
+            // append additional information
+            var parts = message.Split('\n', 2);
+            if(parts.Length > 1) {
+                var secondPart = parts[1].Trim();
+                report.Message += $" [{secondPart}]";
+                if(secondPart == "Runtime.ExitError") {
+
+                    // NOTE (2020-08-17, bjorg): this message is shown on an unrecoverable exception being thrown during Lambda execution
+                    report.Level = "FATAL";
+                }
+            }
             report.RequestId = GetRequestId(match);
             return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
@@ -358,7 +386,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private Task MatchJavascriptExceptionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.RequestId = GetRequestId(match);
-            var error = _serializer.Deserialize<JavascriptException>(match.Groups["ErrorMessage"].Value);
+            var error = JsonSerializer.Deserialize<JavascriptException>(match.Groups["ErrorMessage"].Value);
             report.Message = error.ErrorMessage;
             if(error.StackTrace?.Any() == true) {
                 report.Traces = new List<LambdaErrorReportStackTrace> {

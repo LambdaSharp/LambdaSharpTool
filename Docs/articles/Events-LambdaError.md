@@ -65,7 +65,7 @@ The <code>Version</code> property holds the event type version. This property is
 <dt><code>ModuleInfo</code></dt>
 <dd>
 
-The <code>ModuleInfo</code> property holds .
+The <code>ModuleInfo</code> property holds the LambdaSharp module name, version, and origin.
 
 <i>Type</i>: String
 </dd>
@@ -73,7 +73,7 @@ The <code>ModuleInfo</code> property holds .
 <dt><code>Module</code></dt>
 <dd>
 
-The <code>Module</code> property holds .
+The <code>Module</code> property holds the LambdaSharp module name.
 
 <i>Type</i>: String
 </dd>
@@ -81,7 +81,7 @@ The <code>Module</code> property holds .
 <dt><code>ModuleId</code></dt>
 <dd>
 
-The <code>ModuleId</code> property holds .
+The <code>ModuleId</code> property holds the stack name of the deployed LambdaSharp module.
 
 <i>Type</i>: String
 </dd>
@@ -89,7 +89,7 @@ The <code>ModuleId</code> property holds .
 <dt><code>FunctionId</code></dt>
 <dd>
 
-The <code>FunctionId</code> property holds .
+The <code>FunctionId</code> property holds the Lambda function name.
 
 <i>Type</i>: String
 </dd>
@@ -97,7 +97,31 @@ The <code>FunctionId</code> property holds .
 <dt><code>FunctionName</code></dt>
 <dd>
 
-The <code>FunctionName</code> property holds .
+The <code>FunctionName</code> property holds the Lambda function name.
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>AppId</code></dt>
+<dd>
+
+The <code>AppId</code> property holds the application identifier.
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>AppName</code></dt>
+<dd>
+
+The <code>AppName</code> property holds the application name.
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>AppDomainName</code></dt>
+<dd>
+
+The <code>AppDomainName</code> property holds the application domain name.
 
 <i>Type</i>: String
 </dd>
@@ -105,7 +129,7 @@ The <code>FunctionName</code> property holds .
 <dt><code>Platform</code></dt>
 <dd>
 
-The <code>Platform</code> property holds .
+The <code>Platform</code> property holds the Lambda or app execution platform.
 
 <i>Type</i>: String
 </dd>
@@ -113,7 +137,7 @@ The <code>Platform</code> property holds .
 <dt><code>Framework</code></dt>
 <dd>
 
-The <code>Framework</code> property holds .
+The <code>Framework</code> property holds the Lambda or app execution framework.
 
 <i>Type</i>: String
 </dd>
@@ -121,7 +145,7 @@ The <code>Framework</code> property holds .
 <dt><code>Language</code></dt>
 <dd>
 
-The <code>Language</code> property holds .
+The <code>Language</code> property holds the Lambda or app implementation language.
 
 <i>Type</i>: String
 </dd>

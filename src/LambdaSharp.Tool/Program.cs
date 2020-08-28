@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool {
         public static int Main(string[] args) {
             var app = new CommandLineApplication(throwOnUnexpectedArg: false) {
                 Name = Settings.Lash,
-                FullName = $"LambdaSharp CLI (v{Settings.ToolVersion})",
+                FullName = $"LambdaSharp CLI (v{Version})",
                 Description = "Project Home: https://github.com/LambdaSharp/LambdaSharpTool"
             };
             app.HelpOption();

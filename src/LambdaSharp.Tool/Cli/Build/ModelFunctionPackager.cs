@@ -22,15 +22,13 @@ using System.Linq;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Xml.Linq;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using System.Text.RegularExpressions;
+using LambdaSharp.Build;
 using LambdaSharp.Modules;
+using LambdaSharp.Build.CSharp.Function;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -38,30 +36,44 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
-        private const string API_MAPPINGS = "api-mappings.json";
-        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
 
-        private class ApiGatewayInvocationMappings {
+        //--- Types ---
+        private class FunctionBuilderDependencyProvider : IFunctionBuilderDependencyProvider {
+
+            //--- Fields ---
+            private readonly ModuleBuilder _builder;
+            private readonly Settings _settings;
+            private readonly HashSet<string> _existingPackages;
+
+            //--- Constructors ---
+            public FunctionBuilderDependencyProvider(ModuleBuilder builder, Settings settings, HashSet<string> existingPackages) {
+                _builder = builder ?? throw new ArgumentNullException(nameof(builder));
+                _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+                _existingPackages = existingPackages ?? throw new ArgumentNullException(nameof(existingPackages));
+            }
 
             //--- Properties ---
-            public List<ApiGatewayInvocationMapping> Mappings = new List<ApiGatewayInvocationMapping>();
-        }
+            public string ModuleFullName => _builder.FullName;
+            public string WorkingDirectory => _settings.WorkingDirectory;
+            public string OutputDirectory => _settings.OutputDirectory;
+            public string InfoColor => Settings.InfoColor;
+            public string WarningColor => Settings.WarningColor;
+            public string ErrorColor => Settings.ErrorColor;
+            public string ResetColor => Settings.ResetColor;
+            public string Lash => Settings.Lash;
+            public HashSet<string> ExistingPackages => _existingPackages;
+            public bool DetailedOutput => Settings.VerboseLevel >= VerboseLevel.Detailed;
+            public VersionInfo ToolVersion => _settings.ToolVersion;
 
-        private class ApiGatewayInvocationMapping {
-
-            //--- Properties ---
-            public string RestApi;
-            public string WebSocket;
-            public string Method;
-            public RestApiSource RestApiSource;
-            public WebSocketSource WebSocketSource;
+            //--- Methods ---
+            public void AddArtifact(string fullName, string artifact) => _builder.AddArtifact(fullName, artifact);
+            public bool IsAmazonLinux2() => Settings.IsAmazonLinux2();
+            public void WriteLine(string message) => Console.WriteLine(message);
         }
 
         //--- Fields ---
         private ModuleBuilder _builder;
         private HashSet<string> _existingPackages;
-        private bool _dotnetLambdaToolVersionChecked;
-        private bool _dotnetLambdaToolVersionValid;
 
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -140,7 +152,15 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // inline project; nothing to do
                 break;
             case ".csproj":
-                ProcessDotNet(
+
+                // set function language
+                function.Language = "csharp";
+
+                // build C# function
+                new FunctionBuilder(
+                    new FunctionBuilderDependencyProvider(_builder, Settings, _existingPackages),
+                    BuildEventsConfig
+                ).Build(
                     function,
                     noCompile,
                     noAssemblyValidation,
@@ -161,7 +181,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 );
                 break;
             case ".sbt":
-                ScalaPackager.ProcessScala(
+                new ScalaPackager(Settings, function.Name).ProcessScala(
                     function,
                     noCompile,
                     noAssemblyValidation,
@@ -174,551 +194,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     _builder
                 );
                 break;
-
             default:
                 LogError("could not determine the function language");
                 return;
             }
-        }
-
-        private void ProcessDotNet(
-            FunctionItem function,
-            bool noCompile,
-            bool noAssemblyValidation,
-            string gitSha,
-            string gitBranch,
-            string buildConfiguration,
-            bool forceBuild
-        ) {
-            function.Language = "csharp";
-
-            // check if AWS Lambda Tools extension is installed
-            if(!CheckDotNetLambdaToolIsInstalled()) {
-                return;
-            }
-
-            // collect sources with invoke methods
-            var mappings = ExtractMappings(function);
-            if(mappings == null) {
-                return;
-            }
-
-            // check if a function package already exists
-            if(!forceBuild) {
-                var functionPackage = _existingPackages.FirstOrDefault(p =>
-                    Path.GetFileName(p).StartsWith($"function_{_builder.FullName}_{function.LogicalId}_", StringComparison.Ordinal)
-                    && p.EndsWith(".zip", StringComparison.Ordinal)
-                );
-
-                // to skip the build, we both need the function package and the function schema when mappings are present
-                var schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{_builder.FullName}_{function.LogicalId}.json");
-                if((functionPackage != null) && (!mappings.Any() || File.Exists(schemaFile))) {
-                    LogInfoVerbose($"=> Analyzing function {function.Name} dependencies");
-
-                    // find all files used to create the function package
-                    var files = new HashSet<string>();
-                    AddProjectFiles(files, MsBuildFileUtilities.MaybeAdjustFilePath("", function.Project));
-
-                    // check if any of the files has been modified more recently than the function package
-                    var functionPackageDate = File.GetLastWriteTime(functionPackage);
-                    var file = files.FirstOrDefault(f => File.GetLastWriteTime(f) > functionPackageDate);
-                    if(file == null) {
-                        var success = true;
-                        if(mappings.Any()) {
-
-                            // apply function schema to generate REST API and WebSocket models
-                            try {
-                                if(!ApplyInvocationSchemas(function, mappings, schemaFile, silent: true)) {
-                                    success = false;
-
-                                    // reset the mappings as the call to ApplyInvocationSchemas() may have modified them
-                                    mappings = ExtractMappings(function);
-                                }
-                            } catch(Exception e) {
-                                LogError("unable to read create-invoke-methods-schema output", e);
-                                return;
-                            }
-
-                            // check if the mappings have changed by comparing the new data-structure to the one inside the zip file
-                            if(success) {
-                                var newMappingsJson = JObject.FromObject(new ApiGatewayInvocationMappings {
-                                    Mappings = mappings
-                                }).ToString(Formatting.None);
-                                using(var zipArchive = ZipFile.Open(functionPackage, ZipArchiveMode.Read)) {
-                                    var entry = zipArchive.Entries.FirstOrDefault(entry => entry.FullName == API_MAPPINGS);
-                                    if(entry != null) {
-                                        using(var stream = entry.Open())
-                                        using(var reader = new StreamReader(stream)) {
-                                            if(newMappingsJson != reader.ReadToEnd()) {
-
-                                                // module mappings have change
-                                                success = false;
-                                                LogInfoVerbose($"... mappings change changed");
-                                            }
-                                        }
-                                    } else {
-
-                                        // we now have mappings and we didn't use to
-                                        success = false;
-                                        LogInfoVerbose($"... mappings change changed");
-                                    }
-                                }
-
-                            }
-                        }
-
-                        // only skip compilation if we were able to apply the invocation schemas (or didn't have to)
-                        if(success) {
-                            Console.WriteLine($"=> Skipping function {Settings.InfoColor}{function.Name}{Settings.ResetColor} (no changes found)");
-
-                            // keep the existing package
-                            _existingPackages.Remove(functionPackage);
-
-                            // set the module variable to the final package name
-                            _builder.AddArtifact($"{function.FullName}::PackageName", functionPackage);
-                            return;
-                        }
-                    } else {
-                        LogInfoVerbose($"... change detected in {file}");
-                    }
-                }
-            } else {
-                LogInfoVerbose($"=> Analyzing function {function.Name} dependencies");
-
-                // find all files used to create the function package
-                var files = new HashSet<string>();
-                AddProjectFiles(files, MsBuildFileUtilities.MaybeAdjustFilePath("", function.Project));
-
-                // loop over all project folders
-                foreach(var projectFolder in files.Where(file => file.EndsWith(".csproj", StringComparison.Ordinal)).Select(file => Path.GetDirectoryName(file))) {
-                    LogInfoVerbose($"... deleting build folders for {projectFolder}");
-                    DeleteFolder(Path.Combine(projectFolder, "obj"));
-                    DeleteFolder(Path.Combine(projectFolder, "bin"));
-
-                    // local functions
-                    void DeleteFolder(string folder) {
-                        if(Directory.Exists(folder)) {
-                            try {
-                                Directory.Delete(folder, recursive: true);
-                            } catch {
-                                LogWarn($"unable to delete: {folder}");
-                            }
-                        }
-                    }
-                }
-            }
-
-            // read settings from project file
-            var csproj = XDocument.Load(function.Project, LoadOptions.PreserveWhitespace);
-            var mainPropertyGroup = csproj.Element("Project")?.Element("PropertyGroup");
-            var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
-            var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
-            var projectName = mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(function.Project);
-
-            // compile function project
-            var isNetCore31OrLater = targetFramework.CompareTo("netcoreapp3.") >= 0;
-            var isAmazonLinux2 = Settings.IsAmazonLinux2();
-            var isReadyToRun = isNetCore31OrLater && isAmazonLinux2;
-            var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
-            Console.WriteLine($"=> Building function {Settings.InfoColor}{function.Name}{Settings.ResetColor} [{targetFramework}, {buildConfiguration}{readyToRunText}]");
-            var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
-            var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
-
-            // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
-            var obsoleteNodes = csproj.Descendants()
-                .Where(element =>
-                    (element.Name == "DotNetCliToolReference")
-                    && ((string)element.Attribute("Include") == "Amazon.Lambda.Tools")
-                )
-                .ToList();
-            if(obsoleteNodes.Any()) {
-                LogWarn($"removing obsolete AWS Lambda Tools extension from {Path.GetRelativePath(Settings.WorkingDirectory, function.Project)}");
-                foreach(var obsoleteNode in obsoleteNodes) {
-                    var parent = obsoleteNode.Parent;
-
-                    // remove obsolete node
-                    obsoleteNode.Remove();
-
-                    // remove parent if no children are left
-                    if(!parent.Elements().Any()) {
-                        parent.Remove();
-                    }
-                }
-                csproj.Save(function.Project);
-            }
-
-            // validate the project is using the most recent lambdasharp assembly references
-            var hasErrors = false;
-            if(!noAssemblyValidation && function.HasAssemblyValidation) {
-                var includes = csproj.Element("Project")
-                    ?.Descendants("PackageReference")
-                    .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false)
-                    ?? Enumerable.Empty<XElement>();
-                foreach(var include in includes) {
-                    var expectedVersion = Settings.ToolVersion.GetLambdaSharpAssemblyReferenceVersion();
-                    var library = include.Attribute("Include").Value;
-                    var libraryVersionText = include.Attribute("Version")?.Value;
-                    if(libraryVersionText == null) {
-                        hasErrors = true;
-                        LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
-                    } else {
-                        try {
-                            if(!VersionInfo.IsValidLambdaSharpAssemblyReferenceForToolVersion(Settings.ToolVersion, targetFramework, libraryVersionText)) {
-
-                                // check if we're compiling a conditional package reference in contributor mode
-                                if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
-
-                                    // show error as warning instead since this package reference will not be used anyway
-                                    LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                                } else {
-                                    hasErrors = true;
-                                    LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                                }
-                            }
-                        } catch {
-                            hasErrors = true;
-                            LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                        }
-                    }
-                }
-                if(hasErrors) {
-                    return;
-                }
-            }
-            if(noCompile) {
-                return;
-            }
-
-            // build project with AWS dotnet CLI lambda tool
-            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory, forceBuild, isNetCore31OrLater, isAmazonLinux2, isReadyToRun)) {
-
-                // nothing to do; error was already reported
-                return;
-            }
-
-            // verify the function handler can be found in the compiled assembly
-            var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish");
-            if(function.HasHandlerValidation) {
-                if(function.Function.Handler is string handler) {
-                    if(!ValidateEntryPoint(
-                        buildFolder,
-                        handler
-                    )) {
-                        return;
-                    }
-                }
-            }
-
-            // create request/response schemas for invocation methods
-            if(!LambdaSharpCreateInvocationSchemas(
-                function,
-                buildFolder,
-                rootNamespace,
-                function.Function.Handler as string,
-                mappings
-            )) {
-                LogError($"'{Settings.Lash} util create-invoke-methods-schema' command failed");
-                return;
-            }
-
-            // add api mappings JSON file(s)
-            if(mappings.Any()) {
-                using(var zipArchive = ZipFile.Open(temporaryPackage, ZipArchiveMode.Update)) {
-                    var entry = zipArchive.CreateEntry(API_MAPPINGS);
-
-                    // Set RW-R--R-- permissions attributes on non-Windows operating system
-                    if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
-                    }
-                    using(var stream = entry.Open()) {
-                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new ApiGatewayInvocationMappings {
-                            Mappings = mappings
-                        }).ToString(Formatting.None)));
-                    }
-                }
-            }
-
-            // compute hash for zip contents
-            string hash;
-            using(var zipArchive = ZipFile.OpenRead(temporaryPackage)) {
-                using(var md5 = MD5.Create())
-                using(var hashStream = new CryptoStream(Stream.Null, md5, CryptoStreamMode.Write)) {
-                    foreach(var entry in zipArchive.Entries.OrderBy(e => e.FullName)) {
-
-                        // hash file path
-                        var filePathBytes = Encoding.UTF8.GetBytes(entry.FullName.Replace('\\', '/'));
-                        hashStream.Write(filePathBytes, 0, filePathBytes.Length);
-
-                        // hash file contents
-                        using(var stream = entry.Open()) {
-                            stream.CopyTo(hashStream);
-                        }
-                    }
-                    hashStream.FlushFinalBlock();
-                    hash = md5.Hash.ToHexString();
-                }
-            }
-
-            // rename function package with hash
-            var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
-            if(_existingPackages.Remove(package)) {
-
-                // remove old, existing package so we can move the new package into location (which also preserves the more recent build timestamp)
-                File.Delete(package);
-            }
-            File.Move(temporaryPackage, package);
-
-            // add git-info.json file
-            using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Update)) {
-                var entry = zipArchive.CreateEntry(GIT_INFO_FILE);
-
-                // Set RW-R--R-- permissions attributes on non-Windows operating system
-                if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                    entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
-                }
-                using(var stream = entry.Open()) {
-                    stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new ModuleManifestGitInfo {
-                        SHA = gitSha,
-                        Branch = gitBranch
-                    }).ToString(Formatting.None)));
-                }
-            }
-
-            // set the module variable to the final package name
-            _builder.AddArtifact($"{function.FullName}::PackageName", package);
-        }
-
-        private void AddProjectFiles(HashSet<string> files, string project) {
-            try {
-
-                // skip project if project file doesn't exist or has already been added
-                if(!File.Exists(project) || files.Contains(project)) {
-                    return;
-                }
-                files.Add(project);
-                LogInfoVerbose($"... analyzing {project}");
-
-                // enumerate all files in project folder
-                var projectFolder = Path.GetDirectoryName(project);
-                AddFiles(projectFolder, SearchOption.AllDirectories);
-                files.RemoveWhere(file => file.StartsWith(Path.GetFullPath(Path.Combine(projectFolder, "bin"))));
-                files.RemoveWhere(file => file.StartsWith(Path.GetFullPath(Path.Combine(projectFolder, "obj"))));
-
-                // analyze project for references
-                var csproj = XDocument.Load(project, LoadOptions.PreserveWhitespace);
-
-                // TODO (2019-10-22, bjorg): enhance precision for understanding elements in .csrpoj files
-
-                // recurse into referenced projects
-                foreach(var projectReference in csproj.Descendants("ProjectReference").Where(node => node.Attribute("Include") != null)) {
-                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(projectReference));
-                }
-
-                // add compile file references
-                foreach(var compile in csproj.Descendants("Compile").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(GetFilePathFromIncludeAttribute(compile));
-                }
-
-                // add content file references
-                foreach(var content in csproj.Descendants("Content").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(GetFilePathFromIncludeAttribute(content));
-                }
-
-                // added embedded resources
-                foreach(var embeddedResource in csproj.Descendants("EmbeddedResource").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(GetFilePathFromIncludeAttribute(embeddedResource));
-                }
-
-                // local functions
-                string GetFilePathFromIncludeAttribute(XElement element)
-                    => Path.GetFullPath(Path.Combine(projectFolder, MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(element.Attribute("Include").Value))));
-
-            } catch(Exception e) {
-                LogError($"error while analyzing '{project}'", e);
-            }
-
-            // local function
-            void AddFileReferences(string path) {
-                var parts = path.Split(new[] { '/', '\\' });
-                if(path.Contains("**")) {
-
-                    // NOTE: path contains a recursive wildcard; take part of path up until segment that contains the recursion wildcard '**'
-                    var recursionRootPath = Path.Combine(parts.TakeWhile(part => !part.Contains("**")).ToArray());
-                    AddFiles(recursionRootPath, SearchOption.AllDirectories);
-                } else if(parts.Take(parts.Length - 1).Any(part => part.Contains("*") || part.Contains("?"))) {
-
-                    // NOTE: path contains a wildcard character in a folder portion of the path; enumerate all contents like we do for '**';
-                    var recursionRootPath = Path.Combine(parts.TakeWhile(part => !part.Contains("*") && !part.Contains("?")).ToArray());
-                    AddFiles(recursionRootPath, SearchOption.AllDirectories);
-                } else if(parts.Last().Contains("*")) {
-
-                    // NOTE: last segment in path contains a wildcard for the filename; enumerate the folder contents without recursion
-
-                    // exclude last path segment that contains the wildcard
-                    var rootPath = Path.Combine(parts.Take(parts.Length - 1).ToArray());
-                    AddFiles(rootPath, SearchOption.TopDirectoryOnly);
-                } else if(Directory.Exists(path)) {
-                    AddFiles(path, SearchOption.TopDirectoryOnly);
-                } else if(File.Exists(path)) {
-                    files.Add(path);
-                }
-            }
-
-            void AddFiles(string folder, SearchOption option) {
-                if(Directory.Exists(folder)) {
-                    foreach(var file in Directory.GetFiles(folder, "*.*", option)) {
-                        files.Add(file);
-                    }
-                }
-            }
-
-            string ResolveFilePath(string path) => Regex.Replace(path, @"\$\((?!\!)[^\)]+\)", match => {
-                var matchText = match.ToString();
-                var name = matchText.Substring(2, matchText.Length - 3).Trim();
-                return Environment.GetEnvironmentVariable(name) ?? matchText;
-            });
-        }
-
-        private bool DotNetLambdaPackage(
-            string targetFramework,
-            string buildConfiguration,
-            string outputPackagePath,
-            string projectDirectory,
-            bool forceBuild,
-            bool isNetCore31OrLater,
-            bool isAmazonLinux2,
-            bool isReadyToRun
-        ) {
-            var dotNetExe = ProcessLauncher.DotNetExe;
-            if(string.IsNullOrEmpty(dotNetExe)) {
-                LogError("failed to find the \"dotnet\" executable in path.");
-                return false;
-            }
-
-            // set MSBuild optimization parameters
-            var msBuildParametersList = new List<string>();
-            if(isNetCore31OrLater) {
-
-                // allows disable tiered compilation since Lambda functions are generally short lived
-                msBuildParametersList.Add("/p:TieredCompilation=false");
-                msBuildParametersList.Add("/p:TieredCompilationQuickJit=false");
-            }
-
-            // enable Ready2Run when compiling on Amazon Linux 2
-            if(isReadyToRun) {
-                msBuildParametersList.Add("/p:PublishReadyToRun=true");
-            }
-            var msBuildParameters = string.Join(" ", msBuildParametersList);
-
-            // NOTE: with --force-build, we need to explicitly invoke `dotnet build` to pass in the `--no-incremental` and `--force` options;
-            //  we do this to ensure that `dotnet build` doesn't create an invalid executable when environment variables, such as LAMBDASHARP, change between builds.
-            if(forceBuild && !ProcessLauncher.Execute(
-                dotNetExe,
-                new[] {
-                    "build",
-                    "--force",
-                    "--no-incremental",
-                    "--configuration", buildConfiguration,
-                    "--framework", targetFramework,
-                    "--runtime", isNetCore31OrLater ? "linux-x64" : "rhel.7.2-x64",
-                    msBuildParameters
-                },
-                projectDirectory,
-                Settings.VerboseLevel >= VerboseLevel.Detailed,
-                ColorizeOutput
-            )) {
-                LogError("'dotnet build' command failed");
-                return false;
-            }
-            if(!ProcessLauncher.Execute(
-                dotNetExe,
-                new[] {
-                    "lambda", "package",
-                    "--configuration", buildConfiguration,
-                    "--framework", targetFramework,
-                    "--output-package", outputPackagePath,
-                    "--disable-interactive", "true",
-                    "--msbuild-parameters", $"\"{msBuildParameters}\""
-                },
-                projectDirectory,
-                Settings.VerboseLevel >= VerboseLevel.Detailed,
-                ColorizeOutput
-            )) {
-                LogError("'dotnet lambda package' command failed");
-                return false;
-            }
-            return true;
-
-            // local functions
-            string ColorizeOutput(string line)
-                => line.Contains(": error ", StringComparison.Ordinal)
-                    ? $"{Settings.ErrorColor}{line}{Settings.ResetColor}"
-                    : line.Contains(": warning ", StringComparison.Ordinal)
-                    ? $"{Settings.WarningColor}{line}{Settings.ResetColor}"
-                    : line;
-        }
-
-        private bool CheckDotNetLambdaToolIsInstalled() {
-
-            // only run check once
-            if(_dotnetLambdaToolVersionChecked) {
-                return _dotnetLambdaToolVersionValid;
-            }
-            _dotnetLambdaToolVersionChecked = true;
-
-            // check if dotnet executable can be found
-            var dotNetExe = ProcessLauncher.DotNetExe;
-            if(string.IsNullOrEmpty(dotNetExe)) {
-                LogError("failed to find the \"dotnet\" executable in path.");
-                return false;
-            }
-
-            // check if AWS Lambda Tools extension is installed
-            var result = ProcessLauncher.ExecuteWithOutputCapture(
-                dotNetExe,
-                new[] { "lambda", "tool", "help" },
-                workingFolder: null
-            );
-            if(result == null) {
-
-                // attempt to install the AWS Lambda Tools extension
-                if(!ProcessLauncher.Execute(
-                    dotNetExe,
-                    new[] { "tool", "install", "-g", "Amazon.Lambda.Tools" },
-                    workingFolder: null,
-                    showOutput: false
-                )) {
-                    LogError("'dotnet tool install -g Amazon.Lambda.Tools' command failed");
-                    return false;
-                }
-
-                // latest version is now installed, we're good to proceed
-                _dotnetLambdaToolVersionValid = true;
-                return true;
-            }
-
-            // check version of installed AWS Lambda Tools extension
-            var match = Regex.Match(result, @"\((?<Version>.*)\)");
-            if(!match.Success || !VersionWithSuffix.TryParse(match.Groups["Version"].Value, out var version)) {
-                LogWarn("proceeding compilation with unknown version of 'Amazon.Lambda.Tools'; please ensure latest version is installed");
-                _dotnetLambdaToolVersionValid = true;
-                return true;
-            }
-            if(version.IsLessThanVersion(VersionWithSuffix.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION))) {
-
-                // attempt to install the AWS Lambda Tools extension
-                if(!ProcessLauncher.Execute(
-                    dotNetExe,
-                    new[] { "tool", "update", "-g", "Amazon.Lambda.Tools" },
-                    workingFolder: null,
-                    showOutput: false
-                )) {
-                    LogError("'dotnet tool update -g Amazon.Lambda.Tools' command failed");
-                    return false;
-                }
-            }
-            _dotnetLambdaToolVersionValid = true;
-            return true;
         }
 
         private bool ZipWithTool(string zipArchivePath, string zipFolder) {
@@ -727,7 +206,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 LogError("failed to find the \"zip\" utility program in path. This program is required to maintain Linux file permissions in the zip archive.");
                 return false;
             }
-            return ProcessLauncher.Execute(
+            return new ProcessLauncher(BuildEventsConfig).Execute(
                 zipTool,
                 new[] { "-r", zipArchivePath, "." },
                 zipFolder,
@@ -799,288 +278,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 File.Delete(package);
             }
             File.Move(zipTempPackage, package);
-        }
-
-        private bool ValidateEntryPoint(string buildFolder, string handler) {
-            var hasErrors = false;
-            RunLashTool(
-                new[] {
-                    "util", "validate-assembly",
-                    "--directory", buildFolder,
-                    "--entry-point", handler,
-                    "--quiet",
-                    "--no-ansi"
-                },
-                showOutput: false,
-                output => {
-                    if(output.StartsWith("ERROR:", StringComparison.Ordinal)) {
-                        hasErrors = true;
-                        LogError(output.Substring(6).Trim());
-                    } else if(output.StartsWith("WARNING:")) {
-                        hasErrors = true;
-                        LogError(output.Substring(8).Trim());
-                    }
-                    return null;
-                }
-            );
-            return !hasErrors;
-        }
-
-        private List<ApiGatewayInvocationMapping> ExtractMappings(FunctionItem function) {
-
-            // find all REST API and WebSocket mappings function sources
-            var mappings = Enumerable.Empty<ApiGatewayInvocationMapping>()
-                .Union(function.Sources
-                    .OfType<RestApiSource>()
-                    .Where(source => source.Invoke != null)
-                    .Select(source => new ApiGatewayInvocationMapping {
-                        RestApi = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
-                        Method = source.Invoke,
-                        RestApiSource = source
-                    })
-                )
-                .Union(function.Sources
-                    .OfType<WebSocketSource>()
-                    .Where(source => source.Invoke != null)
-                    .Select(source => new ApiGatewayInvocationMapping {
-                        WebSocket = source.RouteKey,
-                        Method = source.Invoke,
-                        WebSocketSource = source
-                    })
-                )
-                .ToList();
-
-            // check if we have enough information to resolve the invocation methods
-            var incompleteMappings = mappings.Where(mapping =>
-                !StringEx.TryParseAssemblyClassMethodReference(
-                    mapping.Method,
-                    out var mappingAssemblyName,
-                    out var mappingClassName,
-                    out var mappingMethodName
-                )
-                || (mappingAssemblyName == null)
-                || (mappingClassName == null)
-            ).ToList();
-            if(incompleteMappings.Any()) {
-                var handler = function.Function.Handler as string;
-                if(handler == null) {
-                    LogError("either function 'Handler' attribute must be specified as a literal value or all invocation methods must be fully qualified");
-                    return null;
-                }
-
-                // extract the assembly and class name from the handler
-                if(!StringEx.TryParseAssemblyClassMethodReference(
-                    handler,
-                    out var lambdaFunctionAssemblyName,
-                    out var lambdaFunctionClassName,
-                    out var lambdaFunctionEntryPointName
-                )) {
-                    LogError("'Handler' attribute has invalid value");
-                    return null;
-                }
-
-                // set default qualifier to the class name of the function handler
-                foreach(var mapping in incompleteMappings) {
-                    if(!StringEx.TryParseAssemblyClassMethodReference(
-                        mapping.Method,
-                        out var mappingAssemblyName,
-                        out var mappingClassName,
-                        out var mappingMethodName
-                    )) {
-                        LogError("'Invoke' attribute has invalid value");
-                        return null;
-                    }
-                    mapping.Method = $"{mappingAssemblyName ?? lambdaFunctionAssemblyName}::{mappingClassName ?? lambdaFunctionClassName}::{mappingMethodName}";
-
-                }
-            }
-            return mappings;
-        }
-
-        private bool LambdaSharpCreateInvocationSchemas(
-            FunctionItem function,
-            string buildFolder,
-            string rootNamespace,
-            string handler,
-            IEnumerable<ApiGatewayInvocationMapping> mappings
-        ) {
-
-            // check if there is anything to do
-            if(!mappings.Any()) {
-                return true;
-            }
-
-            // build invocation arguments
-            string schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{_builder.FullName}_{function.LogicalId}.json");
-            _existingPackages.Remove(schemaFile);
-            var arguments = new[] {
-                "util", "create-invoke-methods-schema",
-                "--directory", buildFolder,
-                "--default-namespace", rootNamespace,
-                "--out", schemaFile,
-                "--quiet"
-            }
-                .Union(mappings.Select(mapping => $"--method={mapping.Method}"))
-                .ToList();
-
-            // check if lambdasharp is installed or if we need to run it using dotnet
-            var success = RunLashTool(arguments, Settings.VerboseLevel >= VerboseLevel.Detailed);
-            if(!success) {
-                return false;
-            }
-            try {
-                ApplyInvocationSchemas(function, mappings, schemaFile);
-            } catch(Exception e) {
-                LogError("unable to read create-invoke-methods-schema output", e);
-                return false;
-            }
-            return true;
-        }
-
-        private bool ApplyInvocationSchemas(
-            FunctionItem function,
-            IEnumerable<ApiGatewayInvocationMapping> mappings,
-            string schemaFile,
-            bool silent = false
-        ) {
-            _existingPackages.Remove(schemaFile);
-            var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile))
-                .ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
-
-            // process schema contents
-            var success = true;
-            foreach(var mapping in mappings) {
-                if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
-                    if(!silent) {
-                        LogError($"failed to resolve method '{mapping.Method}'");
-                    }
-                    success = false;
-                    continue;
-                }
-                if(invocationTarget.Error != null) {
-                    if(!silent) {
-                        LogError(invocationTarget.Error);
-                    }
-                    success = false;
-                    continue;
-                }
-
-                // update mapping information
-                mapping.Method = $"{invocationTarget.Assembly}::{invocationTarget.Type}::{invocationTarget.Method}";
-                if(mapping.RestApiSource != null) {
-                    mapping.RestApiSource.RequestContentType = mapping.RestApiSource.RequestContentType ?? invocationTarget.RequestContentType;
-                    mapping.RestApiSource.RequestSchema = mapping.RestApiSource.RequestSchema ?? invocationTarget.RequestSchema;
-                    mapping.RestApiSource.RequestSchemaName = mapping.RestApiSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
-                    mapping.RestApiSource.ResponseContentType = mapping.RestApiSource.ResponseContentType ?? invocationTarget.ResponseContentType;
-                    mapping.RestApiSource.ResponseSchema = mapping.RestApiSource.ResponseSchema ?? invocationTarget.ResponseSchema;
-                    mapping.RestApiSource.ResponseSchemaName = mapping.RestApiSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
-                    mapping.RestApiSource.OperationName = mapping.RestApiSource.OperationName ?? invocationTarget.OperationName;
-
-                    // determine which uri parameters come from the request path vs. the query-string
-                    var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
-                    foreach(var pathParameter in mapping.RestApiSource.Path
-                        .Where(segment => segment.StartsWith("{", StringComparison.Ordinal) && segment.EndsWith("}", StringComparison.Ordinal))
-                        .Select(segment => segment.ToIdentifier())
-                        .ToArray()
-                    ) {
-                        if(!uriParameters.Remove(pathParameter)) {
-                            if(!silent) {
-                                LogError($"path parameter '{pathParameter}' is missing in method declaration '{invocationTarget.Type}::{invocationTarget.Method}'");
-                            }
-                            success = false;
-                        }
-                    }
-
-                    // remaining uri parameters must be supplied as query parameters
-                    if(uriParameters.Any()) {
-                        if(mapping.RestApiSource.QueryStringParameters == null) {
-                            mapping.RestApiSource.QueryStringParameters = new Dictionary<string, bool>();
-                        }
-                        foreach(var uriParameter in uriParameters) {
-
-                            // either record new query-string parameter or upgrade requirements for an existing one
-                            if(!mapping.RestApiSource.QueryStringParameters.TryGetValue(uriParameter.Key, out var existingRequiredValue) || !existingRequiredValue) {
-                                mapping.RestApiSource.QueryStringParameters[uriParameter.Key] = uriParameter.Value;
-                            }
-                        }
-                    }
-                }
-                if(mapping.WebSocketSource != null) {
-                    mapping.WebSocketSource.RequestContentType = mapping.WebSocketSource.RequestContentType ?? invocationTarget.RequestContentType;
-                    mapping.WebSocketSource.RequestSchema = mapping.WebSocketSource.RequestSchema ?? invocationTarget.RequestSchema;
-                    mapping.WebSocketSource.RequestSchemaName = mapping.WebSocketSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
-                    mapping.WebSocketSource.ResponseContentType = mapping.WebSocketSource.ResponseContentType ?? invocationTarget.ResponseContentType;
-                    mapping.WebSocketSource.ResponseSchema = mapping.WebSocketSource.ResponseSchema ?? invocationTarget.ResponseSchema;
-                    mapping.WebSocketSource.ResponseSchemaName = mapping.WebSocketSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
-                    mapping.WebSocketSource.OperationName = mapping.WebSocketSource.OperationName ?? invocationTarget.OperationName;
-
-                    // check if method defined any uri parameters
-                    var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
-                    if(uriParameters.Any()) {
-
-                        // uri parameters are only valid for $connect route
-                        if(mapping.WebSocketSource.RouteKey == "$connect") {
-
-                            // API Gateway V2 cannot be configured to enforce required parameters; so all parameters must be optional
-                            foreach(var requiredParameter in uriParameters.Where(uriParameter => uriParameter.Value)) {
-                                if(!silent) {
-                                    LogError($"uri parameter '{requiredParameter.Key}' for '{mapping.WebSocketSource.RouteKey}' route must be optional");
-                                }
-                                success = false;
-                            }
-                        } else {
-                            foreach(var uriParameter in uriParameters) {
-                                if(!silent) {
-                                    LogError($"'{mapping.WebSocketSource.RouteKey}' route cannot have uri parameter '{uriParameter.Key}'");
-                                }
-                                success = false;
-                            }
-                        }
-                    }
-                }
-            }
-            return success;
-        }
-
-        private bool RunLashTool(IEnumerable<string> arguments, bool showOutput, Func<string, string> processOutputLine = null) {
-
-            // check if lambdasharp is installed or if we need to run it using dotnet
-            var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
-            bool success;
-            if(lambdaSharpFolder == null) {
-
-                // check if lash executable exists (it should since we're running)
-                var lash = ProcessLauncher.Lash;
-                if(string.IsNullOrEmpty(lash)) {
-                    LogError("failed to find the \"lash\" executable in path.");
-                    return false;
-                }
-                success = ProcessLauncher.Execute(
-                    lash,
-                    arguments,
-                    Settings.WorkingDirectory,
-                    showOutput,
-                    processOutputLine
-                );
-            } else {
-
-                // check if dotnet executable exists
-                var dotNetExe = ProcessLauncher.DotNetExe;
-                if(string.IsNullOrEmpty(dotNetExe)) {
-                    LogError("failed to find the \"dotnet\" executable in path.");
-                    return false;
-                }
-                success = ProcessLauncher.Execute(
-                    dotNetExe,
-                    new[] {
-                        "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
-                    }.Union(arguments).ToList(),
-                    Settings.WorkingDirectory,
-                    showOutput,
-                    processOutputLine
-                );
-            }
-            return success;
         }
     }
 }

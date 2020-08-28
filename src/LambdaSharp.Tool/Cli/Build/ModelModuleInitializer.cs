@@ -316,7 +316,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 value: FnEquals(FnRef("XRayTracing"), XRayTracingLevel.AllModules.ToString())
             );
 
-            // check if module might depdent on core services
+            // check if module might depend on core services
             if(_builder.HasLambdaSharpDependencies || _builder.HasModuleRegistration) {
                 _builder.AddParameter(
                     name: "LambdaSharpCoreServices",
@@ -484,7 +484,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 sources: null,
                 condition: null,
                 pragmas: new[] {
-                    "no-function-registration",
+                    "no-registration",
                     "no-dead-letter-queue",
                     "no-wildcard-scoped-variables"
                 },
@@ -703,7 +703,6 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "Core", Settings.CoreServicesVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
 
                 // create module registration
                 _builder.AddResource(
@@ -743,7 +742,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             allow: null,
                             properties: new Dictionary<string, object> {
-                                ["ModuleId"] = FnRef("AWS::StackName"),
+                                ["ModuleId"] = FnRef("Module::Id"),
                                 ["FunctionId"] = FnRef(function.FullName),
                                 ["FunctionName"] = function.Name,
                                 ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{function.FullName}}}"),
@@ -783,6 +782,66 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 condition: (function.Condition != null)
                                     ? FnAnd(FnCondition("UseCoreServices"), FnCondition(function.Condition))
                                     : "UseCoreServices",
+                                pragmas: null,
+                                deletionPolicy: null
+                            );
+                        }
+                    }
+                }
+
+                // add app registration
+                var registeredApps = _builder.Items
+                    .OfType<AppItem>()
+                    .Where(app => app.HasAppRegistration)
+                    .ToList();
+                if(registeredApps.Any()) {
+
+                    // create registration-related resources for functions
+                    foreach(var app in registeredApps) {
+
+                        // create app log-group subscription
+                        if(
+                            _builder.TryGetItem("Module::LoggingStream", out _)
+                            && _builder.TryGetItem("Module::LoggingStreamRole", out _)
+                        ) {
+                            _builder.AddResource(
+                                parent: app,
+                                name: "LogGroupSubscription",
+                                description: null,
+                                scope: null,
+                                resource: new Humidifier.Logs.SubscriptionFilter {
+                                    DestinationArn = FnRef("Module::LoggingStream"),
+                                    FilterPattern = "-\"*** \"",
+                                    LogGroupName = FnRef($"{app.FullName}::LogGroup"),
+                                    RoleArn = FnRef("Module::LoggingStreamRole")
+                                },
+                                resourceExportAttribute: null,
+                                dependsOn: null,
+                                condition: "UseCoreServices",
+                                pragmas: null,
+                                deletionPolicy: null
+                            );
+
+                            // create app registration
+                            _builder.AddResource(
+                                parent: app,
+                                name: "Registration",
+                                description: null,
+                                type: "LambdaSharp::Registration::App",
+                                scope: null,
+                                allow: null,
+                                properties: new Dictionary<string, object> {
+                                    ["ModuleId"] = FnRef("Module::Id"),
+                                    ["AppLogGroup"] = FnRef($"{app.FullName}::LogGroup"),
+                                    ["AppId"] = FnRef(app.FullName),
+                                    ["AppName"] = app.Name,
+                                    ["AppPlatform"] = FnRef($"{app.FullName}::AppPlatform"),
+                                    ["AppFramework"] = FnRef($"{app.FullName}::AppFramework"),
+                                    ["AppLanguage"] = FnRef($"{app.FullName}::AppLanguage")
+                                },
+                                dependsOn: new[] { "Module::Registration" },
+                                arnAttribute: null,
+                                condition: "UseCoreServices",
                                 pragmas: null,
                                 deletionPolicy: null
                             );

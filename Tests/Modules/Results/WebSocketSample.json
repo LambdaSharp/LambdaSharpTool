@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "121E7ABDAADC7119C87C4AE36C0653DB"
+      "Default": "1FC83FD43546E49992016F3667F08817"
     }
   },
   "Resources": {
@@ -551,7 +551,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -561,7 +561,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/WebSockets/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/WebSockets/.artifacts/*"
                   }
                 },
                 {
@@ -571,7 +571,7 @@
                     "execute-api:ManageConnections"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/POST/@connections/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/POST/@connections/*"
                   }
                 }
               ]
@@ -950,7 +950,7 @@
         "Description": "WebSocket Integration for 'ConnectionFunction'",
         "IntegrationType": "AWS_PROXY",
         "IntegrationUri": {
-          "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectionFunction.Arn}/invocations"
+          "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectionFunction.Arn}/invocations"
         },
         "PassthroughBehavior": "WHEN_NO_TEMPLATES"
       }
@@ -977,7 +977,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/*"
+          "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/*"
         }
       }
     },
@@ -1003,7 +1003,7 @@
         "Description": "WebSocket Integration for 'MessageFunction'",
         "IntegrationType": "AWS_PROXY",
         "IntegrationUri": {
-          "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MessageFunction.Arn}/invocations"
+          "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MessageFunction.Arn}/invocations"
         },
         "PassthroughBehavior": "WHEN_NO_TEMPLATES"
       }
@@ -1030,7 +1030,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/*"
+          "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/*"
         }
       }
     },
@@ -1047,14 +1047,14 @@
         }
       }
     },
-    "ModuleWebSocketDeployment0AD1D65879DDB5B7294C652C9B4E6C6A": {
+    "ModuleWebSocketDeployment5BF80A5C3A182572171C1992E64FCB2E": {
       "Type": "AWS::ApiGatewayV2::Deployment",
       "Properties": {
         "ApiId": {
           "Ref": "ModuleWebSocket"
         },
         "Description": {
-          "Fn::Sub": "${AWS::StackName} WebSocket [0AD1D65879DDB5B7294C652C9B4E6C6A]"
+          "Fn::Sub": "${AWS::StackName} WebSocket [5BF80A5C3A182572171C1992E64FCB2E]"
         }
       },
       "DependsOn": [
@@ -1077,7 +1077,7 @@
       "Properties": {
         "AccessLogSettings": {
           "DestinationArn": {
-            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${ModuleWebSocketLogGroup}"
+            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${ModuleWebSocketLogGroup}"
           },
           "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"apiKeyId\":\"$context.identity.apiKeyId\",\"domainName\":\"$context.domainName\",\"requestTime\":\"$context.requestTime\",\"eventType\":\"$context.eventType\",\"apiId\":\"$context.apiId\",\"stage\":\"$context.stage\",\"connectionId\":\"$context.connectionId\",\"route\":\"$context.routeKey\",\"error\":\"$context.error.message\"}"
         },
@@ -1087,7 +1087,7 @@
         "StageName": "LATEST",
         "Description": "Module WebSocket LATEST Stage",
         "DeploymentId": {
-          "Ref": "ModuleWebSocketDeployment0AD1D65879DDB5B7294C652C9B4E6C6A"
+          "Ref": "ModuleWebSocketDeployment5BF80A5C3A182572171C1992E64FCB2E"
         },
         "RouteSettings": {
           "$connect": {
@@ -1138,7 +1138,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1367,9 +1367,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "121E7ABDAADC7119C87C4AE36C0653DB",
+      "TemplateChecksum": "1FC83FD43546E49992016F3667F08817",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1473,7 +1473,7 @@
         "MessageFunctionDefaultRoute": "MessageFunction::DefaultRoute",
         "MessageFunctionWebSocketPermission": "MessageFunction::WebSocketPermission",
         "MessageFunctionSendRoute": "MessageFunction::SendRoute",
-        "ModuleWebSocketDeployment0AD1D65879DDB5B7294C652C9B4E6C6A": "Module::WebSocket::Deployment0AD1D65879DDB5B7294C652C9B4E6C6A",
+        "ModuleWebSocketDeployment5BF80A5C3A182572171C1992E64FCB2E": "Module::WebSocket::Deployment5BF80A5C3A182572171C1992E64FCB2E",
         "ModuleWebSocketLogGroup": "Module::WebSocket::LogGroup",
         "ModuleWebSocketStage": "Module::WebSocket::Stage"
       },

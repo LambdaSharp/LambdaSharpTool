@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -97,7 +96,6 @@ namespace LambdaSharp.Tool {
         public static bool AllowCaching = false;
         public static TimeSpan MaxCacheAge = TimeSpan.FromDays(1);
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
-        private static VersionInfo _toolVersion;
         private static string PromptColor => UseAnsiConsole ? AnsiTerminal.Cyan : "";
         private static string LabelColor => UseAnsiConsole ? AnsiTerminal.BrightCyan : "";
         public static string ResetColor => UseAnsiConsole ? AnsiTerminal.Reset : "";
@@ -126,13 +124,6 @@ namespace LambdaSharp.Tool {
             return false;
         });
 
-        //--- Class Constructor ---
-        static Settings() {
-
-            // initialize from assembly build version
-            _toolVersion = VersionInfo.From(VersionWithSuffix.Parse(typeof(Settings).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion));
-        }
-
         //--- Class Properties ---
         public static bool UseAnsiConsole  {
             get => AnsiTerminal.Enabled;
@@ -149,7 +140,8 @@ namespace LambdaSharp.Tool {
                 ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_PROFILE")
                 ?? "default";
         public static string CloudFormationResourceSpecificationCacheFilePath = Path.Combine(ToolCacheDirectory, "CloudFormationResourceSpecification.json");
-        public static VersionInfo ToolVersion => _toolVersion;
+
+        public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
         //--- Class Methods ---
         public static void ShowErrors() {
@@ -236,14 +228,14 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
-
         //--- Properties ---
+        public VersionInfo ToolVersion { get; }
+
         /// <summary>
         /// This property determines the reference version for compatibility between the tool, the tier, and the core services.
-        /// The reference version is `Major.Minor`, where `Major` can be a fractional version.
+        /// The reference version is `Major`, where `Major` can be a fractional version.
         /// </summary>
-        public VersionInfo CoreServicesVersion => VersionInfo.GetCoreVersion(ToolVersion);
+        public VersionInfo CoreServicesReferenceVersion => VersionInfoCompatibility.GetCoreServicesReferenceVersion(ToolVersion);
 
         public string Tier { get; set; }
         public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;
@@ -269,10 +261,11 @@ namespace LambdaSharp.Tool {
         public DateTime UtcNow { get; set; }
 
         //--- Constructors ---
-        public Settings() {
+        public Settings(VersionInfo toolVersion) {
             var now = DateTime.UtcNow;
             now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
             UtcNow = now;
+            ToolVersion = toolVersion ?? throw new ArgumentNullException(nameof(toolVersion));
         }
 
         //--- Methods ---

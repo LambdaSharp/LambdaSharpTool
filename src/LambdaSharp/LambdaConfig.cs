@@ -204,7 +204,7 @@ namespace LambdaSharp {
 
             // open nested scopes as needed
             var nestedSource = _source;
-            var keys = key.Split("::");
+            var keys = key.Split(new[] { "::" }, StringSplitOptions.None);
             for(var i = 0; i < keys.Length - 1; ++i) {
                 nestedSource = nestedSource.Open(keys[i]);
             }
@@ -301,7 +301,7 @@ namespace LambdaSharp {
         /// Thrown when the value fails validation.
         /// </exception>
         public IEnumerable<string> ReadCommaDelimitedList(string key, Action<IEnumerable<string>>? validate = null)
-            => Read(key, fallback: null, convert: v => v.Split(",", StringSplitOptions.RemoveEmptyEntries), validate: validate);
+            => Read(key, fallback: null, convert: v => v.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), validate: validate);
 
         /// <summary>
         /// Read the <c>int</c> value for a key at the current path in the hierarchy.

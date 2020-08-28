@@ -131,8 +131,10 @@ The LambdaSharp Core module expects the access tokens to be encrypted, which can
 ### Using `RollbarProjectPattern` Parameter
 The `RollbarProjectPattern` parameter is used to flexibly configure how Rollbar projects are named based on the module information. The following placeholders values are available for the pattern (assuming a module named `Acme.Example.Module:123@origin`):
 * `{ModuleFullName}`: The full module name (e.g. `Acme.Example.Module`)
-* `{ModuleNamespace}`: The module namespace (e.g. `Acme`)
+* `{ModuleId}`: The name of the CloudFormation stack (e.g. `Dev-Acme-Example-Module`)
+* `{ModuleIdNoTierPrefix}`: The name of the CloudFormation stack without the deployment tier prefix (e.g. `Acme-Example-Module`)
 * `{ModuleName}`: The module name (e.g. `Example.Module`)
+* `{ModuleNamespace}`: The module namespace (e.g. `Acme`)
 
 During execution, the placeholders values are substituted with information from the module to generate the actual Rollbar project name. Note a Rollbar project name must start with a letter; can contain letters, numbers, spaces, underscores, hyphens, periods, and commas. If the generated Rollbar project name exceeds 32 characters, the last 6 characters in the available project name are substituted with 6 characters from the SHA256 hash of the entire name to ensure uniqueness.
 

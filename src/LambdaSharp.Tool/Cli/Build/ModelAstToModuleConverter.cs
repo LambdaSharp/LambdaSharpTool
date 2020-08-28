@@ -73,6 +73,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // convert collections
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
+                if(_builder.HasLambdaSharpDependencies) {
+                    _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "Core", Settings.CoreServicesReferenceVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
+                }
                 ForEach("Secrets", module.Secrets, ConvertSecret);
                 ForEach("Using", module.Using, ConvertUsing);
                 ForEach("Items", module.Items, ConvertItem);
@@ -238,6 +241,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ConvertItem(int index, ModuleItemNode node)
             => ConvertItem(null, index, node, new[] {
+                "App",
                 "Condition",
                 "Function",
                 "Group",
@@ -641,6 +645,46 @@ namespace LambdaSharp.Tool.Cli.Build {
                 Validate(node.Handler != null, "missing 'Handler' attribute");
                 AtLocation(node.Macro, () => _builder.AddMacro(node.Macro, node.Description, node.Handler));
                 break;
+            case "App":
+                AtLocation(node.App, () => {
+
+                    // determine app project location
+                    if(node.Project == null) {
+
+                        // identify folder for app
+                        var folderName = new[] {
+                            $"{_builder.Name}.{node.App}",
+                            node.App,
+                        }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
+                        if(folderName != null) {
+                            node.Project = Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj");
+                        } else {
+                            LogError($"could not locate app directory");
+                        }
+                    } else if(Path.GetExtension(node.Project) == ".csproj") {
+                        node.Project = Path.Combine(Settings.WorkingDirectory, node.Project);
+                    } else {
+                        LogError("could not locate the app project");
+                        node.Project = "<MISSING>";
+                    }
+                    _builder.AddApp(
+                        parent: parent,
+                        name: node.App,
+                        description: node.Description,
+                        project: node.Project,
+                        logRetentionInDays: node.LogRetentionInDays,
+                        pragmas: node.Pragmas,
+                        appSettings: node.AppSettings,
+                        apiRootPath: node.Api?.RootPath,
+                        apiCorsOrigin: node.Api?.CorsOrigin,
+                        apiBurstLimit: node.Api?.BurstLimit,
+                        apiRateLimit: node.Api?.RateLimit,
+                        bucketCloudFrontOriginAccessIdentity: node.Bucket?.CloudFrontOriginAccessIdentity,
+                        bucketContentEncoding: node.Bucket?.ContentEncoding,
+                        clientApiUrl: node.Client?.ApiUrl
+                    );
+                });
+                break;
             }
 
             // local functions
@@ -825,8 +869,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // identify folder for function
                 var folderName = new[] {
-                    functionName,
-                    $"{_builder.Name}.{functionName}"
+                    $"{_builder.Name}.{functionName}",
+                    functionName
                 }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
                 if(folderName == null) {
                     LogError($"could not locate function directory");
@@ -866,7 +910,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 DetermineJavascriptFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
                 break;
             case ".sbt":
-                ScalaPackager.DetermineFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
+                new ScalaPackager(Settings, functionName).DetermineFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
                 break;
             default:
                 LogError("could not determine the function language");

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EADB18C51B23A88C64D9BEA8BCD2B0A0"
+      "Default": "645FBD91D0676098ECDF382E8C9EDECF"
     }
   },
   "Resources": {
@@ -1407,6 +1407,173 @@
         "RetentionInDays": 30
       }
     },
+    "FailRuntimeExitFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/FailRuntimeExitFunction-DRYRUN.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Fn::If": [
+                  "LambdaSharpCoreDeadLetterQueueIsImported",
+                  {
+                    "Fn::ImportValue": {
+                      "Fn::Sub": [
+                        "${DeploymentPrefix}${Import}",
+                        {
+                          "Import": {
+                            "Fn::Select": [
+                              "1",
+                              {
+                                "Fn::Split": [
+                                  "$",
+                                  {
+                                    "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "Ref": "LambdaSharpCoreDeadLetterQueue"
+                  }
+                ]
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        },
+        "Description": "Throws an ExecutionEngineException, which cannot be caught or handled (v1.0-DEV)",
+        "Environment": {
+          "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
+            "LAMBDA_NAME": "FailRuntimeExitFunction",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Fn::If": [
+                    "LambdaSharpCoreDeadLetterQueueIsImported",
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": [
+                          "${DeploymentPrefix}${Import}",
+                          {
+                            "Import": {
+                              "Fn::Select": [
+                                "1",
+                                {
+                                  "Fn::Split": [
+                                    "$",
+                                    {
+                                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                    }
+                  ]
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_DEADLETTERQUEUEPOLICY": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Ref": "ModuleRoleDeadLetterQueuePolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          }
+        },
+        "Handler": "FailRuntimeExitFunction::LambdaSharp.BadModule.FailRuntimeExitFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore3.1",
+        "Timeout": "15",
+        "TracingConfig": {
+          "Mode": {
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
+          }
+        }
+      }
+    },
+    "FailRuntimeExitFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${FailRuntimeExitFunction}"
+        },
+        "RetentionInDays": 30
+      }
+    },
     "JsError": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -1800,7 +1967,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -1810,7 +1977,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/*"
                   }
                 }
               ]
@@ -2865,6 +3032,122 @@
         }
       }
     },
+    "FailRuntimeExitFunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationFunction",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Function",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "FailRuntimeExitFunction"
+        },
+        "FunctionName": "FailRuntimeExitFunction",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${FailRuntimeExitFunction}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore3.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "15"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "FailRuntimeExitFunctionLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStream"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStream"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "FailRuntimeExitFunctionLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamRoleIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
     "JsErrorRegistration": {
       "Type": "Custom::LambdaSharpRegistrationFunction",
       "Condition": "UseCoreServices",
@@ -3108,7 +3391,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -3338,9 +3621,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
-      "TemplateChecksum": "EADB18C51B23A88C64D9BEA8BCD2B0A0",
+      "TemplateChecksum": "645FBD91D0676098ECDF382E8C9EDECF",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -3427,6 +3710,7 @@
         "FailOutOfMemoryLogGroup": "FailOutOfMemory::LogGroup",
         "FailConstructorLogGroup": "FailConstructor::LogGroup",
         "JsBadSyntaxLogGroup": "JsBadSyntax::LogGroup",
+        "FailRuntimeExitFunctionLogGroup": "FailRuntimeExitFunction::LogGroup",
         "JsErrorLogGroup": "JsError::LogGroup",
         "JsThrowLogGroup": "JsThrow::LogGroup",
         "ModuleRole": "Module::Role",
@@ -3449,6 +3733,8 @@
         "FailConstructorLogGroupSubscription": "FailConstructor::LogGroupSubscription",
         "JsBadSyntaxRegistration": "JsBadSyntax::Registration",
         "JsBadSyntaxLogGroupSubscription": "JsBadSyntax::LogGroupSubscription",
+        "FailRuntimeExitFunctionRegistration": "FailRuntimeExitFunction::Registration",
+        "FailRuntimeExitFunctionLogGroupSubscription": "FailRuntimeExitFunction::LogGroupSubscription",
         "JsErrorRegistration": "JsError::Registration",
         "JsErrorLogGroupSubscription": "JsError::LogGroupSubscription",
         "JsThrowRegistration": "JsThrow::Registration",

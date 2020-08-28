@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "912F6E3CBCD9390DAA0B3D3915B5051E"
+      "Default": "A5530EB2075A49A7355ADA2EDB306A7F"
     }
   },
   "Resources": {
@@ -297,7 +297,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -307,7 +307,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/ApiGatewayInvoke/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/ApiGatewayInvoke/.artifacts/*"
                   }
                 }
               ]
@@ -585,7 +585,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -605,7 +605,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
+          "Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -619,7 +619,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -652,7 +652,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -673,7 +673,7 @@
           "PassthroughBehavior": "WHEN_NO_TEMPLATES",
           "Type": "AWS_PROXY",
           "Uri": {
-            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyFunction.Arn}/invocations"
           }
         },
         "ResourceId": {
@@ -693,11 +693,11 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeploymentC96C506347CF556FAD9935D5B698EF1C": {
+    "ModuleRestApiDeployment4CD68166913653232578E7820111D542": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [C96C506347CF556FAD9935D5B698EF1C]"
+          "Fn::Sub": "${AWS::StackName} API [4CD68166913653232578E7820111D542]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
@@ -716,7 +716,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeploymentC96C506347CF556FAD9935D5B698EF1C"
+          "Ref": "ModuleRestApiDeployment4CD68166913653232578E7820111D542"
         },
         "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
@@ -766,7 +766,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -996,9 +996,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGatewayInvoke:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "912F6E3CBCD9390DAA0B3D3915B5051E",
+      "TemplateChecksum": "A5530EB2075A49A7355ADA2EDB306A7F",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1099,7 +1099,7 @@
         "ModuleRestApiItemsResourceIdResourceGET": "Module::RestApi::ItemsResource::IdResource::GET",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeploymentC96C506347CF556FAD9935D5B698EF1C": "Module::RestApi::DeploymentC96C506347CF556FAD9935D5B698EF1C",
+        "ModuleRestApiDeployment4CD68166913653232578E7820111D542": "Module::RestApi::Deployment4CD68166913653232578E7820111D542",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

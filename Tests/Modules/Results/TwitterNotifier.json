@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A6363129338DA51B6174213D4CD82B7C"
+      "Default": "4A07F91A4A913617DF639D90FFAE1FA7"
     }
   },
   "Resources": {
@@ -441,7 +441,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -451,7 +451,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Demo/TwitterNotifier/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Demo/TwitterNotifier/.artifacts/*"
                   }
                 }
               ]
@@ -739,7 +739,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1026,9 +1026,9 @@
       "Version": "2019-07-04",
       "Module": "Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "A6363129338DA51B6174213D4CD82B7C",
+      "TemplateChecksum": "4A07F91A4A913617DF639D90FFAE1FA7",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "Twitter Settings",
@@ -1160,7 +1160,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Twitter.Query:0.8.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.Twitter.Query:0.8@lambdasharp",
           "Type": "Nested"
         }
       ],

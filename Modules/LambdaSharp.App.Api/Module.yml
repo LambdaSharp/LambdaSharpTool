@@ -1,0 +1,708 @@
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2020
+# lambdasharp.net
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.App.Api
+Description: LambdaSharp App API for CloudWatch Logs, Metrics, and Events
+Items:
+
+  ###
+  # Module Parameters
+  ###
+
+  - Parameter: ParentModuleId
+    Description: Module ID of the parent stack
+    Type: String
+
+  - Parameter: ParentModuleInfo
+    Description: ModuleInfo of the parent stack
+    Type: String
+
+  - Parameter: LogGroupName
+    Description: CloudWatch LogGroup name for app
+    Type: String
+
+  - Parameter: RootPath
+    Description: Name of root resource for app API
+    Scope: public
+    Type: String
+    AllowedPattern: "^[a-zA-Z0-9\\._\\-]+$"
+    ConstraintDescription: Must be non-empty sequence of alphanumeric characters, periods ('.'), underscores ('_'), or dashes ('-').
+
+  - Parameter: CorsOrigin
+    Description: Source URL allowed to invoke the API
+    Type: String
+    AllowedPattern: "^\\*|https?:\\/\\/((?!-)[a-z0-9-]{1,63}(?<!-)\\.)+[a-z]{2,6}$"
+    ConstraintDescription: Must be 'http://' or 'https://' followed by a valid domain name in lowercase letters, or '*' to allow any domain.
+
+  - Parameter: BurstLimit
+    Description: Maximum number of requests per second over a short period of time
+    Type: Number
+    MinValue: 10
+
+  - Parameter: RateLimit
+    Description: Maximum number of request per second over a long period of time
+    Type: Number
+    MinValue: 10
+
+  - Parameter: AppVersionId
+    Description: App version identifier
+    Type: String
+    NoEcho: true
+
+  - Parameter: DevMode
+    Description: Developer mode relaxes API key constraints and enables debug logging
+    Type: String
+    AllowedValues:
+      - Enabled
+      - Disabled
+    Default: Disabled
+
+  - Condition: DevModeIsEnabled
+    Value: !Equals [ !Ref DevMode, "Enabled" ]
+
+  ###
+  # Module Exports
+  ###
+
+  - Variable: DomainName
+    Description: App API domain name
+    Scope: public
+    Value: !Sub "${RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
+
+  - Variable: CloudFrontOriginPath
+    Description: App API origin path for CloudFront
+    Scope: public
+    Value: !Sub "/${RestApiStage}"
+
+  - Variable: CloudFrontPathPattern
+    Description: App API path pattern for CloudFront
+    Scope: public
+    Value: !Sub "${RootPath}/*"
+
+  - Variable: Url
+    Description: App API URL
+    Scope: public
+    Value: !Sub "https://${DomainName}/${RestApiStage}/${RootPath}"
+
+  - Variable: ApiKey
+    Description: App API Key
+    Scope: public
+    Value:
+      Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
+
+  ###
+  # Module Resources
+  ###
+
+  # REST API
+  - Resource: RestApi
+    Type: AWS::ApiGateway::RestApi
+    Scope: Finalizer
+    Properties:
+      Name: !Sub "${AWS::StackName} LambdaSharp App API"
+
+  - Resource: RestApiAppResource
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: !Ref RootPath
+
+  - Resource: RestApiStage
+    Type: AWS::ApiGateway::Stage
+    Scope: Finalizer
+    Properties:
+      DeploymentId: !Ref RestApiDeployment
+      Description: LambdaSharp App API LATEST Stage
+      RestApiId: !Ref RestApi
+      StageName: LATEST
+
+  - Resource: RestApiDeployment
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: !Sub "${AWS::StackName} LambdaSharp App API"
+      RestApiId: !Ref RestApi
+    DependsOn:
+      - RestApiAppLogsResource
+      - RestApiAppLogsResourcePOST
+      - RestApiAppLogsResourcePOSTRequestModel
+      - RestApiAppLogsResourcePUT
+      - RestApiAppLogsResourcePUTRequestModel
+
+  - Resource: RestApiKey
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Description: !Sub "${AWS::StackName} LambdaSharp App API Key"
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref RestApi
+          StageName: !Ref RestApiStage
+      Value: !If
+        - DevModeIsEnabled
+        - Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
+        - Fn::Base64: !Sub
+          - "${Prefix}:${Suffix}"
+          - Prefix: !Ref AppVersionId
+            Suffix: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
+
+  - Resource: RestApiUsagePlan
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+        - ApiId: !Ref RestApi
+          Stage: !Ref RestApiStage
+      Description: !Sub "${AWS::StackName} LambdaSharp App API Usage Plan"
+      Throttle:
+        BurstLimit: !Ref BurstLimit
+        RateLimit: !Ref RateLimit
+
+  - Resource: RestApiUsagePlanKey
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref RestApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref RestApiUsagePlan
+
+  - Resource: RestApiValidator
+    Type: AWS::ApiGateway::RequestValidator
+    Properties:
+      RestApiId: !Ref RestApi
+      ValidateRequestBody: true
+      ValidateRequestParameters: true
+
+  - Resource: RestApiRole
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ApiGatewayPrincipal
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ApiLogsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: LogGroupPermission
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}"
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*"
+
+              - Sid: EventBridgePermission
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+
+  # Finalizer to automatically publish the API whenever the module is updated
+  - Resource: RestApiDeploymentsPermissions
+    Value: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${RestApi}/deployments"
+    Allow:
+      - apigateway:GET  # get list of deployments
+      - apigateway:POST # create a new deployment
+
+  - Resource: RestApiDeploymentPermissions
+    Value: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${RestApi}/deployments/*"
+    Allow:
+      - apigateway:DELETE # delete a deployment
+
+  - Resource: RestApiStagePermissions
+    Value: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${RestApi}/stages/${RestApiStage}"
+    Allow:
+      - apigateway:PATCH  # update stage to new deployment
+
+  - Function: Finalizer
+    Memory: 256
+    Timeout: 30
+
+  # REST API /${RootPath}/logs
+  - Resource: RestApiAppLogsResource
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref RestApiAppResource
+      PathPart: "logs"
+
+  # CORS - OPTIONS:/${RootPath}/logs
+  - Resource: RestApiAppLogsResourceOPTIONS
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RestApiAppLogsResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - StatusCode: 204
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,POST,PUT'"
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+              method.response.header.Access-Control-Max-Age: "'600'"
+            ResponseTemplates:
+              application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - StatusCode: 204
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: false
+              method.response.header.Access-Control-Allow-Methods: false
+              method.response.header.Access-Control-Allow-Origin: false
+              method.response.header.Access-Control-Max-Age: false
+
+  # CreateLogStream - POST:/${RootPath}/logs
+  - Resource: RestApiAppLogsResourcePOST
+    Type: AWS::ApiGateway::Method
+    Properties:
+      OperationName: CreateLogStream
+      ApiKeyRequired: true
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RestApiAppLogsResource
+      AuthorizationType: NONE
+      HttpMethod: POST
+      RequestModels:
+        application/json: !Ref RestApiAppLogsResourcePOSTRequestModel
+      RequestValidatorId: !Ref RestApiValidator
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:logs:action/CreateLogStream"
+        Credentials: !GetAtt  RestApiRole.Arn
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+        RequestParameters:
+          integration.request.header.Content-Type: "'application/x-amz-json-1.1'"
+          integration.request.header.X-Amz-Target: "'Logs_20140328.CreateLogStream'"
+        RequestTemplates:
+          application/json: !Sub |-
+            #set($body = $input.path('$'))
+            {
+              "logGroupName": "${LogGroupName}",
+              "logStreamName": "$body.logStreamName"
+            }
+        IntegrationResponses:
+          - SelectionPattern: "200"
+            StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                { }
+
+          - SelectionPattern: "400"
+            StatusCode: 400
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                #set($body = $input.path('$'))
+                {
+                #if($body.message.isEmpty())
+                  "error": "Unknown error"
+                #else
+                  "error": "$util.escapeJavaScript($body.message).replaceAll("\\'","'")"
+                #end
+                }
+
+          - StatusCode: 500
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                {
+                  "error": "Unexpected response from service."
+                }
+
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+        - StatusCode: 400
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+        - StatusCode: 500
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+  - Resource: RestApiAppLogsResourcePOSTRequestModel
+    Type: AWS::ApiGateway::Model
+    Properties:
+      Description: CreateLogStream
+      ContentType: application/json
+      RestApiId: !Ref RestApi
+      Schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        type: object
+        properties:
+          logStreamName:
+            type: string
+        required:
+          - logStreamName
+
+  # PutLogEvents - PUT:/${RootPath}/logs
+  - Resource: RestApiAppLogsResourcePUT
+    Type: AWS::ApiGateway::Method
+    Properties:
+      OperationName: PutLogEvents
+      ApiKeyRequired: true
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RestApiAppLogsResource
+      AuthorizationType: NONE
+      HttpMethod: PUT
+      RequestModels:
+        application/json: !Ref RestApiAppLogsResourcePUTRequestModel
+      RequestValidatorId: !Ref RestApiValidator
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:logs:action/PutLogEvents"
+        Credentials: !GetAtt  RestApiRole.Arn
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+        RequestParameters:
+          integration.request.header.Content-Type: "'application/x-amz-json-1.1'"
+          integration.request.header.X-Amz-Target: "'Logs_20140328.PutLogEvents'"
+          integration.request.header.X-Amzn-Logs-Format: "'json/emf'"
+        RequestTemplates:
+          application/json: !Sub |-
+            #set($body = $input.path('$'))
+            {
+              "logEvents": [
+            #foreach($logEvent in $body.logEvents)
+                  {
+                    "message": "$util.escapeJavaScript($logEvent.message).replaceAll("\\'","'")",
+                    "timestamp": $logEvent.timestamp
+                  }#if($foreach.hasNext),#end
+            #end
+              ],
+              "logGroupName": "${LogGroupName}",
+              "logStreamName": "$body.logStreamName",
+              "sequenceToken": #if($body.sequenceToken.isEmpty()) null#else "$body.sequenceToken"#end
+            }
+        IntegrationResponses:
+          - SelectionPattern: "200"
+            StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                {
+                  "nextSequenceToken": "$input.path('$.nextSequenceToken')"
+                }
+
+          - SelectionPattern: "400"
+            StatusCode: 400
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                #set($body = $input.path('$'))
+                #if($body.expectedSequenceToken.isEmpty())
+                {
+                #if($body.message.isEmpty())
+                  "error": "Unknown error"
+                #else
+                  "error": "$util.escapeJavaScript($body.message).replaceAll("\\'","'")"
+                #end
+                }
+                #else
+                {
+                #if($body.message.isEmpty())
+                  "error": "unknown error",
+                #else
+                  "error": "$util.escapeJavaScript($body.message).replaceAll("\\'","'")",
+                #end
+                  "nextSequenceToken": "$body.expectedSequenceToken"
+                }
+                #end
+
+          - StatusCode: 500
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                {
+                  "error": "Unexpected response from service."
+                }
+
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+        - StatusCode: 400
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+        - StatusCode: 500
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+  - Resource: RestApiAppLogsResourcePUTRequestModel
+    Type: AWS::ApiGateway::Model
+    Properties:
+      Description: PutLogEvents
+      ContentType: application/json
+      RestApiId: !Ref RestApi
+      Schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        type: object
+        properties:
+          logEvents:
+            type: array
+            items:
+              - type: object
+                properties:
+                  message:
+                    type: string
+                  timestamp:
+                    type: integer
+                required:
+                  - message
+                  - timestamp
+          logStreamName:
+            type: string
+          sequenceToken:
+            type:
+              - string
+              - "null"
+        required:
+          - logEvents
+          - logStreamName
+
+  # REST API: /${RootPath}/events
+  - Resource: RestApiAppEventsResource
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref RestApiAppResource
+      PathPart: "events"
+
+  # CORS - OPTIONS:/${RootPath}/events
+  - Resource: RestApiAppEventsResourceOPTIONS
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RestApiAppEventsResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - StatusCode: 204
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,POST'"
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+              method.response.header.Access-Control-Max-Age: "'600'"
+            ResponseTemplates:
+              application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - StatusCode: 204
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: false
+              method.response.header.Access-Control-Allow-Methods: false
+              method.response.header.Access-Control-Allow-Origin: false
+              method.response.header.Access-Control-Max-Age: false
+
+  # PutEvents - POST:/${RootPath}/events
+  - Resource: RestApiAppEventsResourcePOST
+    Type: AWS::ApiGateway::Method
+    Properties:
+      OperationName: PutEvents
+      ApiKeyRequired: true
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RestApiAppEventsResource
+      AuthorizationType: NONE
+      HttpMethod: POST
+      RequestModels:
+        application/json: !Ref RestApiLogsEventsPOSTRequestModel
+      RequestValidatorId: !Ref RestApiValidator
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:events:action/PutEvents"
+        Credentials: !GetAtt  RestApiRole.Arn
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+        RequestParameters:
+          integration.request.header.Content-Type: "'application/x-amz-json-1.1'"
+          integration.request.header.X-Amz-Target: "'AWSEvents.PutEvents'"
+        RequestTemplates:
+          application/json: !Sub
+            - |-
+              #set($body = $input.path('$'))
+              {
+                "Entries": [
+              #foreach($entry in $body.Entries)
+                  {
+                    "Source": "$util.escapeJavaScript($entry.Source).replaceAll("\\'","'")",
+                    "Detail": "$util.escapeJavaScript($entry.Detail).replaceAll("\\'","'")",
+                    "DetailType": "$util.escapeJavaScript($entry.DetailType).replaceAll("\\'","'")",
+                    "EventBusName": "default"#if(($entry.Resources != $null)),
+                    "Resources": [
+              #foreach($resource in $entry.Resources)
+                      "$util.escapeJavaScript($resource).replaceAll("\\'","'")"#if($foreach.hasNext),#end
+              #end
+              #end
+                    ]
+                  }#if($foreach.hasNext),#end
+              #end
+                ]
+              }
+            - ParentModuleId: !Ref ParentModuleId
+              ParentModuleFullName: !Select [ 0, !Split [ ":", !Ref ParentModuleInfo ]]
+              ParentModuleOrigin: !Select [ 1, !Split [ "@", !Ref ParentModuleInfo ]]
+              DeploymentTier: !Ref Deployment::Tier
+
+        IntegrationResponses:
+          - SelectionPattern: "200"
+            StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                { }
+
+          - SelectionPattern: "400"
+            StatusCode: 400
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                $input.body
+
+          - StatusCode: 500
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: !If
+                - DevModeIsEnabled
+                - "'*'"
+                - !Sub "'${CorsOrigin}'"
+            ResponseTemplates:
+              application/x-amz-json-1.1: |-
+                {
+                  "error": "Unexpected response from service."
+                }
+
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+        - StatusCode: 400
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+        - StatusCode: 500
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: false
+
+  - Resource: RestApiLogsEventsPOSTRequestModel
+    Type: AWS::ApiGateway::Model
+    Properties:
+      Description: CreateLogStream
+      ContentType: application/json
+      RestApiId: !Ref RestApi
+      Schema:
+        "$schema": http://json-schema.org/draft-04/schema#
+        type: object
+        properties:
+          Entries:
+            type: array
+            items:
+              - type: object
+                properties:
+                  Detail:
+                    type: string
+                  DetailType:
+                    type: string
+                  Resources:
+                    type: array
+                    items:
+                      - type: string
+                  Source:
+                    type: string
+                required:
+                  - Detail
+                  - DetailType
+                  - Source
+        required:
+          - Entries

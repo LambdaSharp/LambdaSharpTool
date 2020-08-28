@@ -22,7 +22,15 @@ echo $LAMBDASHARP_VERSION > $LAMBDASHARP/Docs/version.txt
 # clean-out current documentation folder
 echo "*** DELETING OLD DOCUMENTATION"
 cd $LAMBDASHARP/../Docs-LambdaSharpTool
+
+# restore original state
+git clean -fd
+git reset --hard origin/master
+
+# make sure latest changes are present
 git pull
+
+# remove all tracked files
 git ls-files -z | xargs -0 rm -f
 
 # restore CNAME file, which is required by github

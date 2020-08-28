@@ -82,6 +82,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
 
+            // package all apps
+            new ModelAppPackager(Settings, SourceFilename).Package(
+                module,
+                noCompile: noPackageBuild,
+                noAssemblyValidation: noAssemblyValidation,
+                gitSha: gitSha,
+                gitBranch: gitBranch,
+                buildConfiguration: buildConfiguration,
+                forceBuild: forceBuild
+            );
+
             // package all functions
             new ModelFunctionPackager(Settings, SourceFilename).Package(
                 module,

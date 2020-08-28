@@ -19,4 +19,9 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
+  <ItemGroup>
+
+    <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
 </Project>

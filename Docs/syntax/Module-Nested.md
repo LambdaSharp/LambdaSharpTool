@@ -5,9 +5,9 @@ keywords: nested, declaration, module, syntax, yaml, cloudformation
 ---
 # Nested Module
 
-The `Module` definition specifies the creation of a nested module. Nested modules inherit the same LambdaSharp configuration as their parent module, except for the `Secrets` parameter, which must be passed on explicitly.
+The `Module` declaration specifies the creation of a nested module. Nested modules inherit the same LambdaSharp configuration as their parent module, except for the `Secrets` parameter, which must be passed on explicitly.
 
-Nested module should **never** be updated directly. Instead, all updates must be triggered by their parent module. Updating a nested module directly can cause it to be in an unexpected state that will prevent the parent module from upating in the future.
+Nested module should **never** be updated directly. Instead, all updates must be triggered by their parent module. Updating a nested module directly can cause it to be in an unexpected state that will prevent the parent module from updating in the future.
 
 ## Syntax
 

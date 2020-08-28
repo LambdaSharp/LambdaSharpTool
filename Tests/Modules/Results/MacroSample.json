@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B0215605469B55FD78359C5AB66A2658"
+      "Default": "32A16FE6520B70C2D7DCB3053C6CEC47"
     }
   },
   "Resources": {
@@ -319,7 +319,7 @@
                     "events:PutEvents"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
                   }
                 },
                 {
@@ -329,7 +329,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Macro/.artifacts/*"
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Macro/.artifacts/*"
                   }
                 }
               ]
@@ -583,7 +583,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.6"
+      "Value": "1.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -813,9 +813,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Macro:1.0-DEV",
       "Description": "A sample module defining CloudFormation macros",
-      "TemplateChecksum": "B0215605469B55FD78359C5AB66A2658",
+      "TemplateChecksum": "32A16FE6520B70C2D7DCB3053C6CEC47",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

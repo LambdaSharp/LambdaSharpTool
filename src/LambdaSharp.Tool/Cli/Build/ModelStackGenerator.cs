@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Humidifier;
 using Humidifier.Json;
+using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -84,7 +85,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             var manifest = new ModuleManifest {
                 ModuleInfo = module.ModuleInfo,
                 Description = module.Description,
-                CoreServicesVersion = Settings.CoreServicesVersion,
+                CoreServicesVersion = Settings.CoreServicesReferenceVersion,
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
                     .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")
@@ -236,6 +237,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ["Name"] = Fn.Sub($"${{DeploymentPrefix}}{resourceTypeItem.CustomResourceType}")
                     }
                 });
+                break;
+            case AppItem _:
+
+                // nothing to do
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(item), item, "unknown parameter type");

@@ -2,3 +2,4 @@ Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
 Pragmas:
   - no-lambdasharp-dependencies
+  - no-module-registration

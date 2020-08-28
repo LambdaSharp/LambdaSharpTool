@@ -34,6 +34,7 @@ using Amazon.S3;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Amazon.SimpleSystemsManagement;
+using LambdaSharp.Build;
 using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
@@ -77,6 +78,21 @@ namespace LambdaSharp.Tool.Cli {
 
         //--- Fields ---
         private readonly Dictionary<CommandLineApplication, List<Action>> _commandOptions = new Dictionary<CommandLineApplication, List<Action>>();
+
+        //--- Constructors ---
+        protected ACliCommand() {
+
+            // setup configuration for catching build logging events
+            BuildEventsConfig = new BuildEventsConfig();
+            BuildEventsConfig.OnLogErrorEvent += (sender, args) => Settings.LogError(args.Message, args.Exception);
+            BuildEventsConfig.OnLogWarnEvent += (sender, args) => Settings.LogWarn(args.Message);
+            BuildEventsConfig.OnLogInfoEvent += (sender, args) => Settings.LogInfo(args.Message);
+            BuildEventsConfig.OnLogInfoVerboseEvent += (sender, args) => Settings.LogInfoVerbose(args.Message);
+            BuildEventsConfig.OnLogInfoPerformanceEvent += (sender, args) => Settings.LogInfoPerformance(args.Message, args.Duration);
+        }
+
+        //--- Properties ---
+        protected BuildEventsConfig BuildEventsConfig { get; }
 
         //--- Methods ---
         protected async Task<AwsAccountInfo> InitializeAwsProfile(
@@ -232,8 +248,14 @@ namespace LambdaSharp.Tool.Cli {
                     var tierVersion = tierVersionOption.Value();
                     var deploymentBucketName = deploymentBucketNameOption.Value();
 
+                    // initialize LambdaSharp testing values
+                    VersionInfo toolVersion = null;
+                    if(toolVersionOption.HasValue()) {
+                        toolVersion = VersionInfo.Parse(toolVersionOption.Value());
+                    }
+
                     // create a settings instance for each module filename
-                    return new Settings {
+                    return new Settings(toolVersion ?? Version) {
                         TierVersion = (tierVersion != null) ? VersionInfo.Parse(tierVersion) : null,
                         Tier = tier,
                         AwsRegion = awsAccount?.Region,
@@ -372,19 +394,21 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // check if tier and tool versions are compatible
-                    if(!optional && (tierModuleInfo != null) && requireVersionCheck) {
-                        var tierToToolVersionComparison = VersionInfo.CompareTierVersionToToolVersion(tierModuleInfo.Version, Settings.ToolVersion);
-                        if(tierToToolVersionComparison == 0) {
-
-                            // versions are identical; nothing to do
-                        } else if(tierToToolVersionComparison < 0) {
-                            LogError($"LambdaSharp tier is not up to date (tool: {Settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                    if(
+                        !optional
+                        && (tierModuleInfo != null)
+                        && requireVersionCheck
+                        && !VersionInfoCompatibility.IsTierVersionCompatibleWithToolVersion(tierModuleInfo.Version, settings.ToolVersion)
+                    ) {
+                        var tierToToolVersionComparison = VersionInfoCompatibility.CompareTierVersionToToolVersion(tierModuleInfo.Version, settings.ToolVersion);
+                        if(tierToToolVersionComparison < 0) {
+                            LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
                             result = false;
                         } else if(tierToToolVersionComparison > 0) {
 
                             // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
                         } else {
-                            LogError($"LambdaSharp tool is not compatible (tool: {Settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
+                            LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
                             result = false;
                         }
                     }

@@ -17,6 +17,8 @@
  */
 
 using System;
+using LambdaSharp.Logging.ErrorReports;
+using LambdaSharp.Logging.ErrorReports.Models;
 
 namespace LambdaSharp.Records.ErrorReports {
 
@@ -31,7 +33,7 @@ namespace LambdaSharp.Records.ErrorReports {
 
         //--- Methods ---
         public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object?[] args) {
-            var message = ILambdaErrorReportGenerator.FormatMessage(format, args) ?? exception?.Message;
+            var message = LambdaErrorReportGenerator.FormatMessage(format, args) ?? exception?.Message;
             if(message != null) {
                 _provider.Log($"*** {level.ToString().ToUpperInvariant()}: {message}\n{PrintException()}");
             }

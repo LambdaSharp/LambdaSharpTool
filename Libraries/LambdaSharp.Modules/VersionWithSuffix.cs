@@ -18,6 +18,7 @@
 
 
 using System;
+using System.Text;
 
 namespace LambdaSharp.Modules {
 
@@ -181,5 +182,6 @@ namespace LambdaSharp.Modules {
         public bool IsGreaterThanVersion(VersionWithSuffix other) => CompareToVersion(other) > 0;
         public bool IsGreaterOrEqualThanVersion(VersionWithSuffix other) => CompareToVersion(other) >= 0;
         public bool IsEqualToVersion(VersionWithSuffix other) => CompareToVersion(other) == 0;
+        public override string ToString() => Version.ToString() + Suffix;
     }
 }
