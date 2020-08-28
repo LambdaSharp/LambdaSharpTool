@@ -24,11 +24,6 @@ if [ -z "$1" ]; then
         exit $?
     fi
 
-    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp.Tool"
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
-
     # run SDK unit tests
     dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp"
     if [ $? -ne 0 ]; then
