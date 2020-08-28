@@ -45,7 +45,7 @@ namespace LambdaSharp.Logging.Metrics.Models {
         /// Embedded CloudWatch metrics metadata object.
         /// </summary>
         [JsonPropertyName("_aws")]
-        public EmbeddedCloudWatchMetrics Aws { get; set; }
+        public EmbeddedCloudWatchMetrics? Aws { get; set; }
 
         /// <summary>
         /// Dictionary for holding metric target members that are added at the root of the object serialization.

@@ -26,7 +26,7 @@ namespace LambdaSharp.Logging.Internal {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        private static void ParseModuleInfoString(string moduleInfo, out string moduleNamespace, out string moduleName, out string moduleVersion, out string moduleOrigin) {
+        private static void ParseModuleInfoString(string moduleInfo, out string? moduleNamespace, out string? moduleName, out string? moduleVersion, out string? moduleOrigin) {
 
             // try parsing module reference
             var match = ModuleKeyPattern.Match(moduleInfo);
@@ -43,34 +43,34 @@ namespace LambdaSharp.Logging.Internal {
             }
 
             // local function
-            string GetMatchValue(string groupName) {
+            string? GetMatchValue(string groupName) {
                 var group = match.Groups[groupName];
                 return group.Success ? group.Value : null;
             }
         }
 
         //--- Extension Methods ---
-        public static string GetModuleFullName(this ILambdaSharpInfo info) {
+        public static string? GetModuleFullName(this ILambdaSharpInfo info) {
             ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out var moduleName, out var _, out var _);
             return moduleNamespace + "." + moduleName;
         }
 
-        public static string GetModuleNamespace(this ILambdaSharpInfo info) {
+        public static string? GetModuleNamespace(this ILambdaSharpInfo info) {
             ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out var _, out var _, out var _);
             return moduleNamespace;
         }
 
-        public static string GetModuleName(this ILambdaSharpInfo info) {
+        public static string? GetModuleName(this ILambdaSharpInfo info) {
             ParseModuleInfoString(info.ModuleInfo, out var _, out var moduleName, out var _, out var _);
             return moduleName;
         }
 
-        public static string GetModuleVersion(this ILambdaSharpInfo info) {
+        public static string? GetModuleVersion(this ILambdaSharpInfo info) {
             ParseModuleInfoString(info.ModuleInfo, out var _, out var _, out var moduleVersion, out var _);
             return moduleVersion;
         }
 
-        public static string GetModuleOrigin(this ILambdaSharpInfo info) {
+        public static string? GetModuleOrigin(this ILambdaSharpInfo info) {
             ParseModuleInfoString(info.ModuleInfo, out var _, out var _, out var _, out var moduleOrigin);
             return moduleOrigin;
         }

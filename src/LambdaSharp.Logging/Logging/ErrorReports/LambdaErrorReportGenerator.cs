@@ -47,7 +47,7 @@ namespace LambdaSharp.Logging.ErrorReports {
             return string.Concat(hash.Select(x => x.ToString("X2")));
         }
 
-        private IEnumerable<Exception> FlattenExceptions(Exception exception) {
+        private IEnumerable<Exception>? FlattenExceptions(Exception? exception) {
             if(exception == null) {
                 return null;
             }
@@ -72,7 +72,7 @@ namespace LambdaSharp.Logging.ErrorReports {
         /// <param name="format">An optional message.</param>
         /// <param name="args">Optional arguments for the error message.</param>
         /// <returns>The formatted string.</returns>
-        public static string FormatMessage(string format, object[] args) {
+        public static string? FormatMessage(string? format, object?[] args) {
             if(format == null) {
                 return null;
             }
@@ -84,7 +84,7 @@ namespace LambdaSharp.Logging.ErrorReports {
             } catch {
                 return format + "(" + string.Join(", ", args.Select(arg => {
                     try {
-                        return arg.ToString();
+                        return arg?.ToString() ?? "<null>";
                     } catch {
                         return "<ERROR>";
                     }
@@ -159,7 +159,7 @@ namespace LambdaSharp.Logging.ErrorReports {
         /// <param name="format">An optional message.</param>
         /// <param name="args">Optional arguments for the error message.</param>
         /// <returns>A new <see cref="LambdaErrorReport"/> instance.</returns>
-        public LambdaErrorReport CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args) {
+        public LambdaErrorReport? CreateReport(string requestId, string level, Exception? exception, string? format = null, params object?[] args) {
             var message = FormatMessage(format, args) ?? exception?.Message;
             if(message == null) {
                 return null;
@@ -206,8 +206,8 @@ namespace LambdaSharp.Logging.ErrorReports {
                 Frames = stackFrames?.Select(frame => {
 
                     // capture information about invoked method
-                    string methodName = null;
-                    var method = frame.GetMethod();
+                    string? methodName = null;
+                    var method = frame?.GetMethod();
                     if(method != null) {
                         var methodParams = method.GetParameters();
 
@@ -220,13 +220,13 @@ namespace LambdaSharp.Logging.ErrorReports {
                     }
 
                     // try to figure out code line-number
-                    int? lineNumber = frame.GetFileLineNumber();
+                    int? lineNumber = frame?.GetFileLineNumber();
                     if(lineNumber <= 0) {
                         lineNumber = null;
                     }
 
                     // file names aren't always available, so use the type name instead, if possible
-                    var fileName = frame.GetFileName();
+                    var fileName = frame?.GetFileName();
                     if(string.IsNullOrEmpty(fileName) && (method?.ReflectedType != null)) {
                         fileName = method.ReflectedType.ToString();
                     }

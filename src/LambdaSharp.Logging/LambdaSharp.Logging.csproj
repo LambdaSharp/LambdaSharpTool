@@ -1,8 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <!-- Compile for netcoreapp3.1 to enable nullable warnings -->
+    <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>
+
     <Deterministic>true</Deterministic>
     <RootNamespace>LambdaSharp</RootNamespace>
+
+    <!-- Nullable requires C# 8.0 or later -->
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+
     <NoWarn>CS1998</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
@@ -23,6 +31,12 @@
     <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
+
+  <!-- Remove nullable warnings for netstandard2.0 compilation -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <NoWarn>$(NoWarn);8600;8601;8602;8603;8604</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="4.7.2"/>
   </ItemGroup>

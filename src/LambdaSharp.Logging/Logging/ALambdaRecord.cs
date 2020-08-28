@@ -30,12 +30,12 @@ namespace LambdaSharp.Logging {
         /// The <see cref="Type"/> property determines the type of the Lambda record.
         /// </summary>
         /// <value>The source of the Lambda record.</value>
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
         /// <summary>
         /// The <see cref="Version"/> property determines the format version of the Lambda record.
         /// </summary>
         /// <value>The format version.</value>
-        public string Version { get; set; }
+        public string? Version { get; set; }
     }
 }

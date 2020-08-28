@@ -48,7 +48,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample module name and version:
         /// <code>My.AcmeModule:1.0-Dev@origin</code>
         /// </example>
-        public string ModuleInfo { get; set; }
+        public string? ModuleInfo { get; set; }
 
         /// <summary>
         /// The <see cref="Module"/> property describes the LambdaSharp module name.
@@ -58,7 +58,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample module name:
         /// <code>My.AcmeModule</code>
         /// </example>
-        public string Module { get; set; }
+        public string? Module { get; set; }
 
         /// <summary>
         /// The <see cref="ModuleId"/> property describes the stack name of the deployed LambdaSharp module.
@@ -68,7 +68,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample module ID:
         /// <code>DevTier-MyAcmeModule</code>
         /// </example>
-        public string ModuleId { get; set; }
+        public string? ModuleId { get; set; }
 
         /// <summary>
         /// The <see cref="FunctionId"/> property describes the ID of the deployed Lambda function.
@@ -78,7 +78,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample function ID:
         /// <code>DevTier-MyAcmeModule-MyFunction-VDLETAGVFYT2</code>
         /// </example>
-        public string FunctionId { get; set; }
+        public string? FunctionId { get; set; }
 
         /// <summary>
         /// The <see cref="FunctionName"/> property describes the Lambda function name.
@@ -88,7 +88,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample function name:
         /// <code>MyFunction</code>
         /// </example>
-        public string FunctionName { get; set; }
+        public string? FunctionName { get; set; }
 
         /// <summary>
         /// The <see cref="AppId"/> property describes the application identifier.
@@ -98,7 +98,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample application identifier:
         /// <code>MyCloudFormationStack-MyApp</code>
         /// </example>
-        public string AppId { get; set; }
+        public string? AppId { get; set; }
 
         /// <summary>
         /// The <see cref="AppName"/> property describes the application name.
@@ -108,7 +108,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample application name:
         /// <code>MyApp</code>
         /// </example>
-        public string AppName { get; set; }
+        public string? AppName { get; set; }
 
         /// <summary>
         /// The <see cref="Platform"/> property describes the Lambda function or app execution platform.
@@ -118,7 +118,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample Lambda execution platform:
         /// <code>AWS Lambda (Unix 4.14.72.68)</code>
         /// </example>
-        public string Platform { get; set; }
+        public string? Platform { get; set; }
 
         /// <summary>
         /// The <see cref="Framework"/> property describes the Lambda function or app execution framework.
@@ -128,7 +128,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample Lambda execution framework:
         /// <code>dotnetcore2.2</code>
         /// </example>
-        public string Framework { get; set; }
+        public string? Framework { get; set; }
 
         /// <summary>
         /// The <see cref="Language"/> property describes the Lambda function or app implementation language.
@@ -138,19 +138,19 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// Sample Lambda implementation language:
         /// <code>csharp</code>
         /// </example>
-        public string Language { get; set; }
+        public string? Language { get; set; }
 
         /// <summary>
         /// The <see cref="GitSha"/> property holds the git SHA of the executing Lambda code or <c>null</c> if not provided.
         /// </summary>
         /// <value>The git SHA or <c>null</c>.</value>
-        public string GitSha { get; set; }
+        public string? GitSha { get; set; }
 
         /// <summary>
         /// The <see cref="GitBranch"/> property holds the git branch name of the executing Lambda code or <c>null</c> if not provided.
         /// </summary>
         /// <value>The git branch name or <c>null</c>.</value>
-        public string GitBranch { get; set; }
+        public string? GitBranch { get; set; }
 
         // Occurrence
 
@@ -158,20 +158,20 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// The <see cref="RequestId"/> property holds the AWS request ID during which the error log entry was generated.
         /// </summary>
         /// <value>The AWS request ID.</value>
-        public string RequestId { get; set; }
+        public string? RequestId { get; set; }
 
         /// <summary>
         /// The <see cref="Level"/> property describes the severity level of the error log entry.
         /// One of <c>WARNING</c>, <c>ERROR</c>, or <c>FATAL</c>.
         /// </summary>
         /// <value>The error severity level.</value>
-        public string Level { get; set; }
+        public string? Level { get; set; }
 
         /// <summary>
         /// The <see cref="Fingerprint"/> property holds a unique value by which to group related LambdaError records.
         /// </summary>
         /// <value>The log entry fingerprint.</value>
-        public string Fingerprint { get; set; }
+        public string? Fingerprint { get; set; }
 
         /// <summary>
         /// The <see cref="Timestamp"/> property holds the UNIX epoch in milliseconds when the error log entry was generated.
@@ -183,18 +183,18 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// The <see cref="Message"/> property holds the message of the error log entry.
         /// </summary>
         /// <value>The error log entry message.</value>
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         /// <summary>
         /// The <see cref="Raw"/> property holds the unprocessed error log entry.
         /// </summary>
         /// <value>The unprocessed error log entry.</value>
-        public string Raw { get; set; }
+        public string? Raw { get; set; }
 
         /// <summary>
         /// The <see cref="Traces"/> property describes the error stack traces or <c>null</c> if none are provided.
         /// </summary>
         /// <value>Enumeration of error stack traces.</value>
-        public IEnumerable<LambdaErrorReportStackTrace> Traces { get; set; }
+        public IEnumerable<LambdaErrorReportStackTrace>? Traces { get; set; }
     }
 }

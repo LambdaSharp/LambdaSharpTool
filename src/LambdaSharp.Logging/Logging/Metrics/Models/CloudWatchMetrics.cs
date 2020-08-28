@@ -31,7 +31,7 @@ namespace LambdaSharp.Logging.Metrics.Models {
         /// <summary>
         /// The namespace underwhich the metrics are aggregated.
         /// </summary>
-        public string Namespace { get; set; }
+        public string? Namespace { get; set; }
 
         /// <summary>
         /// The dimensions by which the metrics are partitioned.

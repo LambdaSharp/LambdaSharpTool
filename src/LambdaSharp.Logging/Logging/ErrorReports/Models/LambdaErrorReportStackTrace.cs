@@ -33,13 +33,13 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// The <see cref="Exception"/> property holds information about the exception.
         /// </summary>
         /// <value>The exception details.</value>
-        public LambdaErrorReportExceptionInfo Exception { get; set; }
+        public LambdaErrorReportExceptionInfo? Exception { get; set; }
 
         /// <summary>
         /// The <see cref="Frames"/> property holds the stack frames between where the exception
         /// was thrown and where it was caught.
         /// </summary>
         /// <value>The exception stack frames.</value>
-        public IEnumerable<LambdaErrorReportStackFrame> Frames { get; set; }
+        public IEnumerable<LambdaErrorReportStackFrame>? Frames { get; set; }
     }
 }

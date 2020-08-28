@@ -29,7 +29,7 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// The <see cref="FileName"/> property describes the source code file name of the stack trace.
         /// </summary>
         /// <value>Source code file name or <c>null</c> if missing..</value>
-        public string FileName { get; set; }
+        public string? FileName { get; set; }
 
         /// <summary>
         /// The <see cref="LineNumber"/> property describes the line number in the source code.
@@ -47,6 +47,6 @@ namespace LambdaSharp.Logging.ErrorReports.Models {
         /// The <see cref="MethodName"/> property describes the method name in which the stack frame is located.
         /// </summary>
         /// <value>Name of the method.</value>
-        public string MethodName { get; set; }
+        public string? MethodName { get; set; }
     }
 }

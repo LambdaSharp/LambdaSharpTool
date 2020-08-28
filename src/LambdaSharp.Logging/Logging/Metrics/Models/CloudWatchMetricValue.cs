@@ -28,11 +28,11 @@ namespace LambdaSharp.Logging.Metrics.Models {
         /// <summary>
         /// Metric name.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Metric unit.
         /// </summary>
-        public string Unit { get; set; }
+        public string? Unit { get; set; }
     }
 }
