@@ -38,9 +38,7 @@ using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool {
 
-    public class LambdaSharpException : Exception {
-
-    }
+    public class LambdaSharpException : Exception { }
 
     public class LambdaSharpDeploymentTierSetupException : LambdaSharpException {
 
@@ -81,6 +79,18 @@ namespace LambdaSharp.Tool {
         Disabled,
         Bootstrap,
         Enabled
+    }
+
+    public class BuildPolicy {
+
+        //--- Properties ---
+        public BuildModulesPolicy Modules { get; set; }
+    }
+
+    public class BuildModulesPolicy {
+
+        //--- Properties ---
+        public List<string> Allow { get; set; }
     }
 
     public class Settings {
@@ -227,6 +237,14 @@ namespace LambdaSharp.Tool {
 
         public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
+        //--- Constructors ---
+        public Settings(VersionInfo toolVersion) {
+            var now = DateTime.UtcNow;
+            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
+            UtcNow = now;
+            ToolVersion = toolVersion ?? throw new ArgumentNullException(nameof(toolVersion));
+        }
+
         //--- Properties ---
         public VersionInfo ToolVersion { get; }
 
@@ -258,14 +276,7 @@ namespace LambdaSharp.Tool {
         public bool NoDependencyValidation { get; set; }
         public bool PromptsAsErrors { get; set; }
         public DateTime UtcNow { get; set; }
-
-        //--- Constructors ---
-        public Settings(VersionInfo toolVersion) {
-            var now = DateTime.UtcNow;
-            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
-            UtcNow = now;
-            ToolVersion = toolVersion ?? throw new ArgumentNullException(nameof(toolVersion));
-        }
+        public BuildPolicy BuildPolicy { get; set; }
 
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)
