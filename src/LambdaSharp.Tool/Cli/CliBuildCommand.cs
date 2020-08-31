@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
@@ -74,6 +75,9 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddForceBuildOption(CommandLineApplication cmd)
             => cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
 
+        public static CommandOption AddBuildPolicyOption(CommandLineApplication cmd)
+            => cmd.Option("--build-policy <FILEPATH>", "(optional) Provide build policy document file path", CommandOptionType.SingleValue);
+
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename)
             => new ParameterFileReader(settings, filename).ReadInputParametersFiles();
 
@@ -101,6 +105,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
+                var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -146,6 +151,11 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                         settings.UtcNow = moduleBuildDate;
+                    }
+
+                    // check if a build policy is supplied
+                    if(!await LoadBuildPolicyAsync(buildPolicyOption, settings)) {
+                        return;
                     }
 
                     // run build step
@@ -205,6 +215,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
+                var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -250,6 +261,11 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                         settings.UtcNow = moduleBuildDate;
+                    }
+
+                    // check if a build policy is supplied
+                    if(!await LoadBuildPolicyAsync(buildPolicyOption, settings)) {
+                        return;
                     }
 
                     // run build & publish steps
@@ -349,6 +365,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
+                var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -403,6 +420,11 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                         settings.UtcNow = moduleBuildDate;
+                    }
+
+                    // check if a build policy is supplied
+                    if(!await LoadBuildPolicyAsync(buildPolicyOption, settings)) {
+                        return;
                     }
 
                     // read optional parameters file
@@ -584,7 +606,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public string GetOutputFilePath(Settings settings, CommandOption option, string moduleSource) {
+        private string GetOutputFilePath(Settings settings, CommandOption option, string moduleSource) {
             string result;
             if(option.HasValue()) {
                 var outputPath = Path.GetFullPath(option.Value());
@@ -601,6 +623,25 @@ namespace LambdaSharp.Tool.Cli {
                 result = Path.Combine(settings.OutputDirectory, "cloudformation.json");
         }
             return result;
+        }
+
+        private async Task<bool> LoadBuildPolicyAsync(CommandOption buildPolicyOption, Settings settings) {
+            if(buildPolicyOption.HasValue()) {
+                string buildPolicyText;
+                try {
+                    buildPolicyText = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), buildPolicyOption.Value()));
+                } catch(IOException) {
+                    LogError("could not open build policy document");
+                    return false;
+                }
+                try {
+                    settings.BuildPolicy = JsonSerializer.Deserialize<BuildPolicy>(buildPolicyText);
+                } catch(JsonException) {
+                    LogError("unable to parse build policy document");
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

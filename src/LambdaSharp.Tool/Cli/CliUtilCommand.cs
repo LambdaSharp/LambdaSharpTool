@@ -163,7 +163,7 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
-                // delete orphaned logs sub-command
+                // list lambda sub-command
                 cmd.Command("list-lambdas", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "List all Lambda functions by CloudFormation stack";
@@ -177,6 +177,43 @@ namespace LambdaSharp.Tool.Cli {
                         await ListLambdasAsync(
                             awsProfileOption.Value(),
                             awsRegionOption.Value()
+                        );
+                    });
+                });
+
+                // list modules
+                cmd.Command("list-modules", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "List all modules at origin";
+                    var bucketOption = subCmd.Option("--bucket <BUCKETNAME>", "(optional) List modules from this S3 bucket (default: match argument)", CommandOptionType.SingleValue);
+                    var originOption = subCmd.Option("--origin <ORIGIN>", "(optional) List modules from this origin (default: match argument)", CommandOptionType.SingleValue);
+                    var preReleaseOption = subCmd.Option("--include-prerelease", "(optional) Show pre-releases versions (default: omit pre-release versions)", CommandOptionType.NoValue);
+                    var originArgument = subCmd.Argument("<ORIGIN>", "origin S3 bucket name", multipleValues: false);
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    AddStandardCommandOptions(subCmd);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return;
+                        }
+                        if(
+                            !originOption.HasValue()
+                            && !bucketOption.HasValue()
+                            && string.IsNullOrEmpty(originArgument.Value)
+                        ) {
+                            Program.ShowHelp = true;
+                            Console.WriteLine(subCmd.GetHelpText());
+                            return;
+                        }
+                        await ListModulesAsync(
+                            settings,
+                            originArgument.Value,
+                            bucketOption.Value(),
+                            originOption.Value(),
+                            preReleaseOption.HasValue()
                         );
                     });
                 });
@@ -538,21 +575,20 @@ namespace LambdaSharp.Tool.Cli {
 
             // fetch most recent CloudWatch log stream for each Lambda function
             var logStreamsTask = Task.Run(async () => (await Task.WhenAll(globalFunctions.Select(async kv => {
-                    try {
-                        var response = await logsClient.DescribeLogStreamsAsync(new DescribeLogStreamsRequest {
-                            Descending = true,
-                            LogGroupName = $"/aws/lambda/{kv.Value.FunctionName}",
-                            OrderBy = OrderBy.LastEventTime,
-                            Limit = 1
-                        });
-                        return (Name: kv.Value.FunctionName, Streams: response.LogStreams.FirstOrDefault());
-                    } catch {
+                try {
+                    var response = await logsClient.DescribeLogStreamsAsync(new DescribeLogStreamsRequest {
+                        Descending = true,
+                        LogGroupName = $"/aws/lambda/{kv.Value.FunctionName}",
+                        OrderBy = OrderBy.LastEventTime,
+                        Limit = 1
+                    });
+                    return (Name: kv.Value.FunctionName, Streams: response.LogStreams.FirstOrDefault());
+                } catch {
 
-                        // log group doesn't exist
-                        return (Name: kv.Value.FunctionName, Streams: null);
-                    }
-                }))).ToDictionary(tuple => tuple.Name, tuple => tuple.Streams)
-            );
+                    // log group doesn't exist
+                    return (Name: kv.Value.FunctionName, Streams: null);
+                }
+            }))).ToDictionary(tuple => tuple.Name, tuple => tuple.Streams));
 
             // fetch all functions belonging to a CloudFormation stack
             var stacksWithFunctionsTask = Task.Run(async () => stacks.Zip(
@@ -675,7 +711,7 @@ namespace LambdaSharp.Tool.Cli {
                         var response = await cfnClient.ListStackResourcesAsync(request);
                         result.AddRange(
                             response.StackResourceSummaries
-                                .Where(resourceSummary => resourceSummary.ResourceType  == "AWS::Lambda::Function")
+                                .Where(resourceSummary => resourceSummary.ResourceType == "AWS::Lambda::Function")
                                 .Select(summary => {
                                     globalFunctions.TryGetValue(summary.PhysicalResourceId, out var configuration);
                                     return (Name: summary.LogicalResourceId, Configuration: configuration);
@@ -845,6 +881,37 @@ namespace LambdaSharp.Tool.Cli {
                     await decompressionStream.CopyToAsync(destinationStram);
                     return Encoding.UTF8.GetString(destinationStram.ToArray());
                 }
+            }
+        }
+
+        public async Task ListModulesAsync(Settings settings, string lookupValue, string bucketName, string origin, bool includePreRelease) {
+            Console.WriteLine();
+
+            // check if lookup value is a module reference
+            if(ModuleInfo.TryParse(lookupValue, out var moduleInfo)) {
+                bucketName ??= moduleInfo.Origin;
+                origin ??= moduleInfo.Origin;
+            } else {
+
+                // use lookup value a default for bucket and origin unless explicitly provided
+                bucketName ??= lookupValue;
+                origin ??= lookupValue;
+            }
+
+            // list all modules at bucket
+            var moduleLocations = await new ModelManifestLoader(settings, "cmd-line").ListManifestsAsync(bucketName, origin, includePreRelease);
+            if(moduleLocations.Any()) {
+                foreach(var moduleGroup in moduleLocations
+                    .Where(moduleLocation => (moduleInfo == null) || (moduleLocation.ModuleInfo.FullName == moduleInfo.FullName))
+                    .GroupBy(moduleLocation => moduleLocation.ModuleInfo.FullName)
+                    .OrderBy(group => group.Key)
+                ) {
+                    var versions = moduleGroup.Select(moduleLocation => moduleLocation.ModuleInfo.Version).ToList();
+                    versions.Sort(new VersionInfoComparer());
+                    Console.WriteLine($"{moduleGroup.Key}: {string.Join(", ", versions.Select(version => $"{Settings.InfoColor}{version}{Settings.ResetColor}"))}");
+                }
+            } else {
+                Console.WriteLine("no modules found");
             }
         }
     }
