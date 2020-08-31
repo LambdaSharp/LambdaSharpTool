@@ -72,6 +72,7 @@ namespace LambdaSharp.Tool.Cli {
 
         //--- Class Fields ---
         private static HttpClient _httpClient = new HttpClient();
+        private static readonly char[] SEPARATORS = new[] { '\r', '\n' };
 
         //--- Methods --
         public void Register(CommandLineApplication app) {
@@ -82,7 +83,7 @@ namespace LambdaSharp.Tool.Cli {
                 // delete orphaned logs sub-command
                 cmd.Command("delete-orphan-logs", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Delete orphaned Lambda and API Gateway V1/V2 CloudWatch logs";
+                    subCmd.Description = "Delete orphaned Lambda and API Gateway CloudWatch logs";
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -146,7 +147,7 @@ namespace LambdaSharp.Tool.Cli {
 
                         // validate options
                         if(directoryOption.Value() == null) {
-                            LogError("missing --assembly option");
+                            LogError("missing --directory option");
                             return;
                         }
                         if(!methodOption.Values.Any()) {
@@ -162,7 +163,7 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
-                // delete orphaned logs sub-command
+                // list lambda sub-command
                 cmd.Command("list-lambdas", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "List all Lambda functions by CloudFormation stack";
@@ -176,6 +177,43 @@ namespace LambdaSharp.Tool.Cli {
                         await ListLambdasAsync(
                             awsProfileOption.Value(),
                             awsRegionOption.Value()
+                        );
+                    });
+                });
+
+                // list modules
+                cmd.Command("list-modules", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "List all modules at origin";
+                    var bucketOption = subCmd.Option("--bucket <BUCKETNAME>", "(optional) List modules from this S3 bucket (default: match argument)", CommandOptionType.SingleValue);
+                    var originOption = subCmd.Option("--origin <ORIGIN>", "(optional) List modules from this origin (default: match argument)", CommandOptionType.SingleValue);
+                    var preReleaseOption = subCmd.Option("--include-prerelease", "(optional) Show pre-releases versions (default: omit pre-release versions)", CommandOptionType.NoValue);
+                    var originArgument = subCmd.Argument("<ORIGIN>", "origin S3 bucket name", multipleValues: false);
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    AddStandardCommandOptions(subCmd);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        ExecuteCommandActions(subCmd);
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return;
+                        }
+                        if(
+                            !originOption.HasValue()
+                            && !bucketOption.HasValue()
+                            && string.IsNullOrEmpty(originArgument.Value)
+                        ) {
+                            Program.ShowHelp = true;
+                            Console.WriteLine(subCmd.GetHelpText());
+                            return;
+                        }
+                        await ListModulesAsync(
+                            settings,
+                            originArgument.Value,
+                            bucketOption.Value(),
+                            originOption.Value(),
+                            preReleaseOption.HasValue()
                         );
                     });
                 });
@@ -656,7 +694,7 @@ namespace LambdaSharp.Tool.Cli {
                         RequestContentType = requestSchemaAndContentType?.Item2,
                         RequestSchema = requestSchemaAndContentType?.Item1,
                         RequestSchemaName = requestParameter?.ParameterType.FullName,
-                        UriParameters  = uriParameters.Any() ? new Dictionary<string, bool>(uriParameters) : null,
+                        UriParameters = uriParameters.Any() ? new Dictionary<string, bool>(uriParameters) : null,
                         ResponseContentType = responseSchemaAndContentType?.Item2,
                         ResponseSchema = responseSchemaAndContentType?.Item1,
                         ResponseSchemaName = responseType?.FullName
@@ -783,21 +821,20 @@ namespace LambdaSharp.Tool.Cli {
 
             // fetch most recent CloudWatch log stream for each Lambda function
             var logStreamsTask = Task.Run(async () => (await Task.WhenAll(globalFunctions.Select(async kv => {
-                    try {
-                        var response = await logsClient.DescribeLogStreamsAsync(new DescribeLogStreamsRequest {
-                            Descending = true,
-                            LogGroupName = $"/aws/lambda/{kv.Value.FunctionName}",
-                            OrderBy = OrderBy.LastEventTime,
-                            Limit = 1
-                        });
-                        return (Name: kv.Value.FunctionName, Streams: response.LogStreams.FirstOrDefault());
-                    } catch {
+                try {
+                    var response = await logsClient.DescribeLogStreamsAsync(new DescribeLogStreamsRequest {
+                        Descending = true,
+                        LogGroupName = $"/aws/lambda/{kv.Value.FunctionName}",
+                        OrderBy = OrderBy.LastEventTime,
+                        Limit = 1
+                    });
+                    return (Name: kv.Value.FunctionName, Streams: response.LogStreams.FirstOrDefault());
+                } catch {
 
-                        // log group doesn't exist
-                        return (Name: kv.Value.FunctionName, Streams: null);
-                    }
-                }))).ToDictionary(tuple => tuple.Name, tuple => tuple.Streams)
-            );
+                    // log group doesn't exist
+                    return (Name: kv.Value.FunctionName, Streams: null);
+                }
+            }))).ToDictionary(tuple => tuple.Name, tuple => tuple.Streams));
 
             // fetch all functions belonging to a CloudFormation stack
             var stacksWithFunctionsTask = Task.Run(async () => stacks.Zip(
@@ -920,7 +957,7 @@ namespace LambdaSharp.Tool.Cli {
                         var response = await cfnClient.ListStackResourcesAsync(request);
                         result.AddRange(
                             response.StackResourceSummaries
-                                .Where(resourceSummary => resourceSummary.ResourceType  == "AWS::Lambda::Function")
+                                .Where(resourceSummary => resourceSummary.ResourceType == "AWS::Lambda::Function")
                                 .Select(summary => {
                                     globalFunctions.TryGetValue(summary.PhysicalResourceId, out var configuration);
                                     return (Name: summary.LogicalResourceId, Configuration: configuration);
@@ -1075,8 +1112,8 @@ namespace LambdaSharp.Tool.Cli {
                     using(var destinationStream = new MemoryStream()) {
                         await decompressionStream.CopyToAsync(destinationStream);
                         return Encoding.UTF8.GetString(destinationStream.ToArray())
-                            .Split('\r', StringSplitOptions.RemoveEmptyEntries)
-                            .Select(json => JsonConvert.DeserializeObject<KinesisFailedLogRecord>(json));
+                            .Split(SEPARATORS, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(json => JsonConvert.DeserializeObject<KinesisFailedLogRecord>(json.Trim()));
                     }
                 } catch(AmazonS3Exception) {
                     return null;
@@ -1090,6 +1127,37 @@ namespace LambdaSharp.Tool.Cli {
                     await decompressionStream.CopyToAsync(destinationStram);
                     return Encoding.UTF8.GetString(destinationStram.ToArray());
                 }
+            }
+        }
+
+        public async Task ListModulesAsync(Settings settings, string lookupValue, string bucketName, string origin, bool includePreRelease) {
+            Console.WriteLine();
+
+            // check if lookup value is a module reference
+            if(ModuleInfo.TryParse(lookupValue, out var moduleInfo)) {
+                bucketName ??= moduleInfo.Origin;
+                origin ??= moduleInfo.Origin;
+            } else {
+
+                // use lookup value a default for bucket and origin unless explicitly provided
+                bucketName ??= lookupValue;
+                origin ??= lookupValue;
+            }
+
+            // list all modules at bucket
+            var moduleLocations = await new ModelManifestLoader(settings, "cmd-line").ListManifestsAsync(bucketName, origin, includePreRelease);
+            if(moduleLocations.Any()) {
+                foreach(var moduleGroup in moduleLocations
+                    .Where(moduleLocation => (moduleInfo == null) || (moduleLocation.ModuleInfo.FullName == moduleInfo.FullName))
+                    .GroupBy(moduleLocation => moduleLocation.ModuleInfo.FullName)
+                    .OrderBy(group => group.Key)
+                ) {
+                    var versions = moduleGroup.Select(moduleLocation => moduleLocation.ModuleInfo.Version).ToList();
+                    versions.Sort(new VersionInfoComparer());
+                    Console.WriteLine($"{moduleGroup.Key}: {string.Join(", ", versions.Select(version => $"{Settings.InfoColor}{version}{Settings.ResetColor}"))}");
+                }
+            } else {
+                Console.WriteLine("no modules found");
             }
         }
     }

@@ -242,27 +242,33 @@ namespace LambdaSharp.Tool {
                 //  module version constraint.
                 if((dependencyType == ModuleManifestDependencyType.Nested) && (moduleInfo.Version != null)) {
                     found = found.Where(version => {
-                        var result = version.MatchesConstraint(moduleInfo.Version);
-                        if(!result) {
+                        if(!version.MatchesConstraint(moduleInfo.Version)) {
                             LogInfoVerbose($"... rejected v{version}: does not match version constraint {moduleInfo.Version}");
+                            return false;
                         }
-                        return result;
+                        return true;
                     }).ToList();
                 }
 
                 // attempt to identify the newest module version compatible with the tool
                 ModuleManifest manifest = null;
-                var match = VersionInfo.FindLatestMatchingVersion(found, moduleInfo.Version, candidate => {
-                    var candidateModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, candidate, moduleInfo.Origin);
-                    var candidateManifestText = GetS3ObjectContentsAsync(bucketName, candidateModuleInfo.VersionPath).GetAwaiter().GetResult();
-                    manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
+                var match = VersionInfo.FindLatestMatchingVersion(found, moduleInfo.Version, candidateVersion => {
+                    var candidateModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, candidateVersion, moduleInfo.Origin);
+
+                    // check if the module version is allowed by the build policy
+                    if(!(Settings.BuildPolicy?.Modules?.Allow?.Contains(candidateModuleInfo.ToString()) ?? true)) {
+                        LogInfoVerbose($"... rejected v{candidateVersion}: not allowed by build policy");
+                        return false;
+                    }
 
                     // check if module is compatible with this tool
-                    var result = manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
-                    if(!result) {
-                        LogInfoVerbose($"... rejected v{candidate}: it not compatible with tool version {Settings.ToolVersion}");
+                    var candidateManifestText = GetS3ObjectContentsAsync(bucketName, candidateModuleInfo.VersionPath).GetAwaiter().GetResult();
+                    manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
+                    if(!manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion)) {
+                        LogInfoVerbose($"... rejected v{candidateVersion}: not compatible with tool version {Settings.ToolVersion}");
+                        return false;
                     }
-                    return result;
+                    return true;
                 });
                 return (Origin: bucketName, Version: match, Manifest: manifest);
             }
@@ -507,6 +513,54 @@ namespace LambdaSharp.Tool {
             return null;
         }
 
+        public async Task<IEnumerable<ModuleLocation>> ListManifestsAsync(string bucketName, string origin, bool includePreRelease = false) {
+            var stopwatch = Stopwatch.StartNew();
+            try {
+                var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
+                if(s3Client == null) {
+
+                    // nothing to do; GetS3ClientByBucketName already emitted an error
+                    return null;
+                }
+
+                // enumerate versions in bucket
+                var moduleLocations = new List<ModuleLocation>();
+                var request = new ListObjectsRequest {
+                    BucketName = bucketName,
+                    MaxKeys = 1_000,
+                    Prefix = $"{origin}/",
+                    RequestPayer = RequestPayer.Requester
+                };
+                do {
+                    try {
+                        var response = await s3Client.ListObjectsAsync(request);
+                        foreach(var entry in response.S3Objects) {
+
+                            // check if key has the right format
+                            var parts = entry.Key.Split('/');
+                            if(
+                                (parts.Length != 4)
+                                || (parts[0] != origin)
+                                || !VersionInfo.TryParse(parts[3], out var version)
+                                || (!includePreRelease && version.IsPreRelease)
+                            ) {
+                                continue;
+                            }
+
+                            // convert key to module info
+                            moduleLocations.Add(new ModuleLocation(bucketName, new ModuleInfo(parts[1], parts[2], version, origin), hash: "00000000000000000000000000000000"));
+                        }
+                        request.Marker = response.NextMarker;
+                    } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
+                        break;
+                    }
+                } while(request.Marker != null);
+                return moduleLocations;
+            } finally {
+                LogInfoPerformance($"ListManifests() for s3://{origin}", stopwatch.Elapsed);
+            }
+        }
+
         private async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
             var stopwatch = Stopwatch.StartNew();
             try {
@@ -565,6 +619,12 @@ namespace LambdaSharp.Tool {
             // check for region header of bucket
             if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
                 LogWarn($"could not detect region for '{bucketName}' bucket");
+
+                // TODO: the 'x-amz-bucket-region' header is missing sporadically; leaving this code here to make it easier to diagnose
+                LogInfoVerbose($"... (DEBUG) S3 bucket '{bucketName}' region check response status: {headResponse.StatusCode}");
+                foreach(var header in headResponse.Headers) {
+                    LogInfoVerbose($"... (DEBUG) S3 region check response header: {header.Key} = {string.Join(", ", header.Value)}");
+                }
                 return null;
             }
 

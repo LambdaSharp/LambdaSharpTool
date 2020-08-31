@@ -38,9 +38,7 @@ using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool {
 
-    public class LambdaSharpException : Exception {
-
-    }
+    public class LambdaSharpException : Exception { }
 
     public class LambdaSharpDeploymentTierSetupException : LambdaSharpException {
 
@@ -81,6 +79,18 @@ namespace LambdaSharp.Tool {
         Disabled,
         Bootstrap,
         Enabled
+    }
+
+    public class BuildPolicy {
+
+        //--- Properties ---
+        public BuildModulesPolicy Modules { get; set; }
+    }
+
+    public class BuildModulesPolicy {
+
+        //--- Properties ---
+        public List<string> Allow { get; set; }
     }
 
     public class Settings {
@@ -227,6 +237,13 @@ namespace LambdaSharp.Tool {
 
         public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
+        //--- Constructors ---
+        public Settings() {
+            var now = DateTime.UtcNow;
+            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
+            UtcNow = now;
+        }
+
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
 
@@ -258,13 +275,7 @@ namespace LambdaSharp.Tool {
         public bool NoDependencyValidation { get; set; }
         public bool PromptsAsErrors { get; set; }
         public DateTime UtcNow { get; set; }
-
-        //--- Constructors ---
-        public Settings() {
-            var now = DateTime.UtcNow;
-            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
-            UtcNow = now;
-        }
+        public BuildPolicy BuildPolicy { get; set; }
 
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)

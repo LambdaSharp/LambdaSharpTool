@@ -93,6 +93,12 @@ lash new function MyNewFunction
 (optional) Always build function packages
 </dd>
 
+<dt><code>--build-policy &lt;FILEPATH&gt;</code></dt>
+<dd>
+
+(optional) Provide build policy document file path
+</dd>
+
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>
 

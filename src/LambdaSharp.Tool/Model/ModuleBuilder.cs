@@ -230,7 +230,7 @@ namespace LambdaSharp.Tool.Model {
                 LogWarn("unable to validate dependency");
                 dependency = new ModuleBuilderDependency {
                     Type = dependencyType,
-                    ModuleLocation = new ModuleLocation(Settings.DeploymentBucketName, moduleInfo, "00000000000000000000000000000000")
+                    ModuleLocation = new ModuleLocation(Settings.DeploymentBucketName, moduleInfo, hash: "00000000000000000000000000000000")
                 };
             }
             _dependencies[moduleKey] = dependency;

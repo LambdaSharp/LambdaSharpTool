@@ -174,6 +174,16 @@ namespace LambdaSharp.Tool.Cli.Build {
                         .Select(item => FnIf(item.Condition, FnRef(item.LogicalId), FnRef("AWS::NoValue")))
                         .ToList();
                 }
+
+                // NOTE: for all parameters, we need to take a value dependency
+                var allParameters = builder.Items.OfType<ParameterItem>().ToList();
+                if(allParameters.Any()) {
+                    foreach(var parameterItem in allParameters) {
+                        finalizerCustomResource[$"Parameter_{parameterItem.LogicalId}"] = IsListParameterType(parameterItem)
+                            ? FnJoin(",", FnRef(parameterItem.FullName))
+                            : FnRef(parameterItem.FullName);
+                    }
+                }
             }
             return;
 
@@ -257,6 +267,34 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogError($"could not find '{missingName}'");
                 }
             }
+
+            bool IsListParameterType(ParameterItem parameterItem)
+                => parameterItem.Type switch {
+                    "List<Number>" => true,
+                    "CommaDelimitedList" => true,
+                    "List<AWS::EC2::AvailabilityZone::Name>" => true,
+                    "List<AWS::EC2::Image::Id>" => true,
+                    "List<AWS::EC2::Instance::Id>" => true,
+                    "List<AWS::EC2::SecurityGroup::GroupName>" => true,
+                    "List<AWS::EC2::SecurityGroup::Id>" => true,
+                    "List<AWS::EC2::Subnet::Id>" => true,
+                    "List<AWS::EC2::Volume::Id>" => true,
+                    "List<AWS::EC2::VPC::Id>" => true,
+                    "List<AWS::Route53::HostedZone::Id>" => true,
+                    "AWS::SSM::Parameter::Value<List<String>>" => true,
+                    "AWS::SSM::Parameter::Value<CommaDelimitedList>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::AvailabilityZone::Name>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::Image::Id>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::Instance::Id>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::SecurityGroup::GroupName>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::SecurityGroup::Id>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::Volume::Id>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::EC2::VPC::Id>>" => true,
+                    "AWS::SSM::Parameter::Value<List<AWS::Route53::HostedZone::Id>>" => true,
+                    _ => false
+                };
+
         }
 
         private object Substitute(AModuleItem item, object root, Action<string> missing = null) {

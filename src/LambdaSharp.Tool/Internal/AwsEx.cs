@@ -138,7 +138,8 @@ namespace LambdaSharp.Tool.Internal {
                 StackName = stackId ?? stackName
             };
             var eventList = new List<StackEvent>();
-            var resourceTimestamp = new Dictionary<string, DateTime>();
+            var resourceInitialTimestamp = new Dictionary<string, DateTime>();
+            var resourceFinalTimestamp = new Dictionary<string, DateTime>();
             var ansiLinesPrinted = 0;
 
             // iterate as long as the stack is being created/updated
@@ -245,11 +246,20 @@ namespace LambdaSharp.Tool.Internal {
                             // check if resource completed update
                             if(
                                 ((evt.ResourceStatus == "CREATE_COMPLETE") || (evt.ResourceStatus == "UPDATE_COMPLETE"))
-                                && resourceTimestamp.TryGetValue(evt.LogicalResourceId, out var firstTimestamp)
+                                && resourceInitialTimestamp.TryGetValue(evt.LogicalResourceId, out var initialTimestamp)
                             ) {
 
+                                // NOTE (2020-08-06, bjorg): there can be multiple UPDATE_COMPLETE complete messages for
+                                //  resources in sub-stacks; the first one is the actual completion of the update operation,
+                                //  then the root stack begins a UPDATE_COMPLETE_CLEANUP_IN_PROGRESS phase, which triggers
+                                //  UPDATE_COMPLETE again when it completes on the sub-stacks.
+                                if(!resourceFinalTimestamp.TryGetValue(evt.LogicalResourceId, out var finalTimestamp)) {
+                                    finalTimestamp = evt.Timestamp;
+                                    resourceFinalTimestamp[evt.LogicalResourceId] = finalTimestamp;
+                                }
+
                                 // show timing information
-                                var time = evt.Timestamp - firstTimestamp;
+                                var time = finalTimestamp - initialTimestamp;
                                 var totalMinutes = (int)time.TotalMinutes;
                                 if(totalMinutes > 0) {
                                     Console.Write($" {Settings.InfoColor}({totalMinutes}m {time.TotalSeconds - (60 * totalMinutes):0.##}s){Settings.ResetColor}");
@@ -272,7 +282,7 @@ namespace LambdaSharp.Tool.Internal {
                     var index = eventList.FindIndex(e => e.LogicalResourceId == evt.LogicalResourceId);
                     if(index < 0) {
                         eventList.Add(evt);
-                        resourceTimestamp[evt.LogicalResourceId] = evt.Timestamp;
+                        resourceInitialTimestamp[evt.LogicalResourceId] = evt.Timestamp;
                     } else {
                         eventList[index] = evt;
                     }

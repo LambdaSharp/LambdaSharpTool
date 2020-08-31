@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.0.8) - 2020-08-03
+# LambdaSharp "Hicetas" Release (v0.8.0.9) - 2020-08-31
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,12 +141,31 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
+### (v0.8.0.9) - 2020-08-31
+
+#### Features
+
+* CLI
+  * Added `util list-modules` command to list published modules and versions.
+  * Added `--build-policy` option for `build`, `publish`, and `deploy` commands to control which module dependencies are allowed during the build phase.
+
+#### Fixes
+
+* CLI
+  * Fixed an issue in `util show-kinesis-failed-logs` where logs with multiple entries were not parsed properly.
+  * Fixed an issue where a _Finalizer_ would not run when only stack parameters are changed.
+  * Fixed an issue with resource timings being updated twice.
+  * Fixed an issue where the single-quote character (') was incorrectly escaped by some API Gateway integrations.
+
 ### (v0.8.0.8) - 2020-08-03
 
 #### Fixes
 
 * CLI
-  * Fixed a regression in `lash init --quick-start` that failed to create the initial S3 bucket.
+  * Fixed an issue in `util show-kinesis-failed-logs` where logs with multiple entries were not parsed properly.
+  * Fixed an issue where a _Finalizer_ would not run when only stack parameters are changed.
+  * Fixed an issue with resource timings being updated twice.
+  * Fixed an issue where the single-quote character (') was incorrectly escaped by some API Gateway integrations.
 
 ### (v0.8.0.7) - 2020-07-28
 
