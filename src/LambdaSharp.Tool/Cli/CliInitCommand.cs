@@ -338,7 +338,8 @@ namespace LambdaSharp.Tool.Cli {
                         selector: null,
                         moduleSource: moduleSource,
                         moduleVersion: moduleVersion,
-                        forceBuild: true
+                        forceBuild: true,
+                        buildPolicy: null
                     )) {
                         return false;
                     }
