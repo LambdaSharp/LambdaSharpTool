@@ -14,7 +14,7 @@ The CI/CD pipeline made of two phases: _Build_ and _Deploy_. During the _Build_ 
 
 The _Build_ phase is responsible for building modules and publishing their CloudFormation templates and artifacts. Each _Build_ phase begins with the creation of a fresh S3 bucket. This ensures that each build is clean from previous builds. It also means that if a build is not completed successfully, it does not contaminate existing deployment tiers as their are isolated from the _Build_ phase.
 
-> NOTE: By default, an AWS account has a limit of 100 S3 buckets. However, support can increase this limit to 1,000 S3 buckets.
+> NOTE: By default, an AWS account has a limit of 100 S3 buckets. However, AWS support can increase this limit to 1,000 S3 buckets.
 
 ### Create an S3 bucket name
 
@@ -141,6 +141,18 @@ Done (finished: 7/28/2020 10:41:24 AM; duration: 00:01:46.5435267)
 
 Each module must now be built and published to the build deployment tier. The `--module-origin` option overwrites the origin identifier to the specified value.
 
+In addition, a build policy should specify which modules can be resolved during the build phase. The build policy ensures that no new dependencies are introduced by resolving module references only to specified versions. The following `build-policy.json` document specifies the modules and versions that are acceptable during the build phase. The build policy document is specified using the `--build-policy` command line option with a path to the JSON file.
+```json
+{
+    "Modules": {
+        "Allow": [
+            "LambdaSharp.Core:0.8.0.6@lambdasharp",
+            "LambdaSharp.S3.IO:0.8.0.6@lambdasharp"
+        ]
+    }
+}
+```
+
 > NOTE: `lash publish` can build and publish multiple modules at once.
 
 **Command:**
@@ -153,6 +165,7 @@ lash publish ${LASH_OPTIONS} \
     --tier ${BUILD_TIER} \
     --prompts-as-errors \
     --module-origin ${MODULE_ORIGIN} \
+    --build-policy build-policy.json \
     My.Module
 ```
 
