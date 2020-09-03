@@ -910,9 +910,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             case ".js":
                 DetermineJavascriptFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
                 break;
-            case ".sbt":
-                new ScalaPackager(Settings, functionName).DetermineFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
-                break;
             default:
                 LogError("could not determine the function language");
                 return;
