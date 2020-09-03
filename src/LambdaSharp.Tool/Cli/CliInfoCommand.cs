@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -27,6 +26,7 @@ using Amazon.APIGateway.Model;
 using Amazon.IdentityManagement.Model;
 using Amazon.Lambda.Model;
 using LambdaSharp.Build;
+using LambdaSharp.Build.CSharp;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
@@ -99,8 +99,8 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine($"    Lambda Reserved Executions: N/A");
             }
             Console.WriteLine($"Tools");
-            Console.WriteLine($"    .NET Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
-            Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    .NET Core CLI Version: {new DotNetTool(BuildEventsConfig).GetDotNetVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    Git CLI Version: {new GitTool(BuildEventsConfig).GetGitVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Amazon.Lambda.Tools: {GetAmazonLambdaToolVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    ReadyToRun Compilation: {(Settings.IsAmazonLinux2() ? "Yes" : "No")}");
 
@@ -110,74 +110,6 @@ namespace LambdaSharp.Tool.Cli {
                     return text;
                 }
                 return text.Replace(settings.AwsAccountId, new string('*', settings.AwsAccountId.Length));
-            }
-        }
-
-        private string GetDotNetVersion() {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            try {
-                var dotNetExe = ProcessLauncher.DotNetExe;
-                if(string.IsNullOrEmpty(dotNetExe)) {
-                    return null;
-                }
-
-                // read the dotnet version
-                var process = new Process {
-                    StartInfo = new ProcessStartInfo(dotNetExe, "--version") {
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        WorkingDirectory = Directory.GetCurrentDirectory()
-                    }
-                };
-                try {
-                    process.Start();
-                    var dotnetVersion = process.StandardOutput.ReadToEnd().Trim();
-                    process.WaitForExit();
-                    if(process.ExitCode != 0) {
-                        return null;
-                    }
-                    return dotnetVersion;
-                } catch {
-                    return null;
-                }
-            } finally {
-                Settings.LogInfoPerformance($"GetDotNetVersion()", stopwatch.Elapsed);
-            }
-        }
-
-        private string GetGitVersion() {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            try {
-
-                // constants
-                const string GIT_VERSION_PREFIX = "git version ";
-
-                // read the gitSha using 'git' directly
-                var process = new Process {
-                    StartInfo = new ProcessStartInfo("git", "--version") {
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        WorkingDirectory = Directory.GetCurrentDirectory()
-                    }
-                };
-                try {
-                    process.Start();
-                    var gitVersion = process.StandardOutput.ReadToEnd().Trim();
-                    process.WaitForExit();
-                    if(process.ExitCode != 0) {
-                        return null;
-                    }
-                    if(gitVersion.StartsWith(GIT_VERSION_PREFIX, StringComparison.Ordinal)) {
-                        gitVersion = gitVersion.Substring(GIT_VERSION_PREFIX.Length);
-                    }
-                    return gitVersion;
-                } catch {
-                    return null;
-                }
-            } finally {
-                Settings.LogInfoPerformance($"GetGitVersion()", stopwatch.Elapsed);
             }
         }
 

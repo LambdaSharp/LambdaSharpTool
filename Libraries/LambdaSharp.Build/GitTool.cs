@@ -18,6 +18,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Build {
@@ -131,6 +132,41 @@ namespace LambdaSharp.Build {
                 return gitBranch;
             } finally {
                 LogInfoPerformance($"GetGitBranch() for '{workingDirectory}'", stopwatch.Elapsed);
+            }
+        }
+
+        public string? GetGitVersion() {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            try {
+
+                // constants
+                const string GIT_VERSION_PREFIX = "git version ";
+
+                // read the gitSha using 'git' directly
+                var process = new Process {
+                    StartInfo = new ProcessStartInfo("git", "--version") {
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        WorkingDirectory = Directory.GetCurrentDirectory()
+                    }
+                };
+                try {
+                    process.Start();
+                    var gitVersion = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+                    if(process.ExitCode != 0) {
+                        return null;
+                    }
+                    if(gitVersion.StartsWith(GIT_VERSION_PREFIX, StringComparison.Ordinal)) {
+                        gitVersion = gitVersion.Substring(GIT_VERSION_PREFIX.Length);
+                    }
+                    return gitVersion;
+                } catch {
+                    return null;
+                }
+            } finally {
+                LogInfoPerformance($"GetGitVersion()", stopwatch.Elapsed);
             }
         }
     }
