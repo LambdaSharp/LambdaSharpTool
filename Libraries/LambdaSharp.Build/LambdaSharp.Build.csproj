@@ -25,6 +25,7 @@
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NJsonSchema" Version="9.14.1" />
+    <PackageReference Include="SharpZipLib" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.Modules\LambdaSharp.Modules.csproj" />

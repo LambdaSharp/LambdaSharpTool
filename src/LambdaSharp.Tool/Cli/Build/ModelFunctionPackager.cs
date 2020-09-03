@@ -225,18 +225,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // compress folder contents
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                using(var zipArchive = ZipFile.Open(zipTempPackage, ZipArchiveMode.Create)) {
-                    foreach(var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories)) {
-                        var filename = Path.GetRelativePath(folder, file);
-                        zipArchive.CreateEntryFromFile(file, filename);
-                    }
-                }
-            } else {
-                if(!new ZipTool(BuildEventsConfig).Zip(zipTempPackage, folder, showOutput: Settings.VerboseLevel >= VerboseLevel.Detailed)) {
-                    LogError("'zip' command failed");
-                    return;
-                }
+            if(!new ZipTool(BuildEventsConfig).ZipData(zipTempPackage, folder, showOutput: Settings.VerboseLevel >= VerboseLevel.Detailed)) {
+                return;
             }
             if(gitInfoFileCreated) {
                 try {
