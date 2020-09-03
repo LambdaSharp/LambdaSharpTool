@@ -101,7 +101,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"Tools");
             Console.WriteLine($"    .NET Core CLI Version: {new DotNetTool(BuildEventsConfig).GetDotNetVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Git CLI Version: {new GitTool(BuildEventsConfig).GetGitVersion() ?? "<NOT FOUND>"}");
-            Console.WriteLine($"    Amazon.Lambda.Tools: {GetAmazonLambdaToolVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    Amazon.Lambda.Tools: {new AmazonLambdaTool(BuildEventsConfig).GetAmazonLambdaToolVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    ReadyToRun Compilation: {(Settings.IsAmazonLinux2() ? "Yes" : "No")}");
 
             // local functions
@@ -111,32 +111,6 @@ namespace LambdaSharp.Tool.Cli {
                 }
                 return text.Replace(settings.AwsAccountId, new string('*', settings.AwsAccountId.Length));
             }
-        }
-
-        private string GetAmazonLambdaToolVersion() {
-
-            // check if dotnet executable can be found
-            var dotNetExe = ProcessLauncher.DotNetExe;
-            if(string.IsNullOrEmpty(dotNetExe)) {
-                return null;
-            }
-
-            // check if Amazon Lambda Tools extension is installed
-            var result = new ProcessLauncher(BuildEventsConfig).ExecuteWithOutputCapture(
-                dotNetExe,
-                new[] { "lambda", "tool", "help" },
-                workingFolder: null
-            );
-            if(result == null) {
-                return null;
-            }
-
-            // parse version from Amazon Lambda Tools
-            var match = Regex.Match(result, @"\((?<Version>.*)\)");
-            if(!match.Success) {
-                return null;
-            }
-            return match.Groups["Version"].Value;
         }
 
         private async Task<(string Arn, IEnumerable<string> MissingPolicies)> DetermineMissingApiGatewayRolePolicies(Settings settings) {

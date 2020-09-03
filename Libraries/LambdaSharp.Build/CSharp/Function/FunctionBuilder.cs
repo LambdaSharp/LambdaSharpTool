@@ -103,7 +103,7 @@ namespace LambdaSharp.Build.CSharp.Function {
         ) {
 
             // check if AWS Lambda Tools extension is installed
-            if(!new DotNetLambdaTool(BuildEventsConfig).CheckIsInstalled()) {
+            if(!new AmazonLambdaTool(BuildEventsConfig).CheckIsInstalled()) {
                 return;
             }
 
