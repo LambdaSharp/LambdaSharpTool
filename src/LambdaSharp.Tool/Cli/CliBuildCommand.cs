@@ -27,6 +27,7 @@ using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Cli.Deploy;
 using LambdaSharp.Tool.Cli.Publish;
 using LambdaSharp.Modules;
+using LambdaSharp.Build;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -179,8 +180,8 @@ namespace LambdaSharp.Tool.Cli {
                             GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
                             skipAssemblyValidationOption.HasValue(),
                             dryRun == DryRunLevel.CloudFormation,
-                            gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
-                            gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                            gitShaOption.Value() ?? new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory),
+                            gitBranchOption.Value() ?? new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                             buildConfigurationOption.Value() ?? "Release",
                             selectorOption.Value(),
                             moduleSource,
@@ -309,8 +310,8 @@ namespace LambdaSharp.Tool.Cli {
                                 GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
-                                gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
-                                gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                                gitShaOption.Value() ?? new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory),
+                                gitBranchOption.Value() ?? new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource,
@@ -474,8 +475,8 @@ namespace LambdaSharp.Tool.Cli {
                                 GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
-                                gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
-                                gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                                gitShaOption.Value() ?? new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory),
+                                gitBranchOption.Value() ?? new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource,

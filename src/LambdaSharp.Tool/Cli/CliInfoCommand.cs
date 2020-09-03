@@ -27,7 +27,6 @@ using Amazon.APIGateway.Model;
 using Amazon.IdentityManagement.Model;
 using Amazon.Lambda.Model;
 using LambdaSharp.Build;
-using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
@@ -52,8 +51,8 @@ namespace LambdaSharp.Tool.Cli {
                     }
                     await Info(
                         settings,
-                        GetGitShaValue(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
-                        GetGitBranch(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
+                        new GitTool(BuildEventsConfig).GetGitShaValue(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
+                        new GitTool(BuildEventsConfig).GetGitBranch(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
                         showSensitiveInformationOption.HasValue()
                     );
                 });
