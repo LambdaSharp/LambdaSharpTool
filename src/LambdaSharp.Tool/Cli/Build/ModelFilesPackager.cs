@@ -83,7 +83,6 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ProcessParameter(PackageItem parameter) {
             AtLocation("Package", () => {
-                var containsElfExecutable = false;
 
                 // check if a build command is present
                 if(parameter.Build != null) {
