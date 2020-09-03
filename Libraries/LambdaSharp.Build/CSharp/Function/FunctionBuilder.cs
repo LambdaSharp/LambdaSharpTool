@@ -380,28 +380,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             }
             var msBuildParameters = string.Join(" ", msBuildParametersList);
 
-            // TODO (2020-08-06, bjorg): the initial force build may not be required anymore now that the bin/obj folders are being deleted
-
-            // NOTE: with --force-build, we need to explicitly invoke `dotnet build` to pass in the `--no-incremental` and `--force` options;
-            //  we do this to ensure that `dotnet build` doesn't create an invalid executable when environment variables, such as LAMBDASHARP, change between builds.
-            if(forceBuild && !new ProcessLauncher(BuildEventsConfig).Execute(
-                dotNetExe,
-                new[] {
-                    "build",
-                    "--force",
-                    "--no-incremental",
-                    "--configuration", buildConfiguration,
-                    "--framework", targetFramework,
-                    "--runtime", isNetCore31OrLater ? "linux-x64" : "rhel.7.2-x64",
-                    msBuildParameters
-                },
-                projectDirectory,
-                Provider.DetailedOutput,
-                ColorizeOutput
-            )) {
-                LogError("'dotnet build' command failed");
-                return false;
-            }
+            // build lambda function
             if(!new ProcessLauncher(BuildEventsConfig).Execute(
                 dotNetExe,
                 new[] {
