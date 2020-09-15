@@ -180,38 +180,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     buildConfiguration
                 );
                 break;
-            case ".sbt":
-                new ScalaPackager(Settings, function.Name).ProcessScala(
-                    function,
-                    noCompile,
-                    noAssemblyValidation,
-                    gitSha,
-                    gitBranch,
-                    buildConfiguration,
-                    Settings.OutputDirectory,
-                    _existingPackages,
-                    GIT_INFO_FILE,
-                    _builder
-                );
-                break;
             default:
                 LogError("could not determine the function language");
                 return;
             }
-        }
-
-        private bool ZipWithTool(string zipArchivePath, string zipFolder) {
-            var zipTool = ProcessLauncher.ZipExe;
-            if(string.IsNullOrEmpty(zipTool)) {
-                LogError("failed to find the \"zip\" utility program in path. This program is required to maintain Linux file permissions in the zip archive.");
-                return false;
-            }
-            return new ProcessLauncher(BuildEventsConfig).Execute(
-                zipTool,
-                new[] { "-r", zipArchivePath, "." },
-                zipFolder,
-                Settings.VerboseLevel >= VerboseLevel.Detailed
-            );
         }
 
         private void ProcessJavascript(
@@ -253,18 +225,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // compress folder contents
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                using(var zipArchive = ZipFile.Open(zipTempPackage, ZipArchiveMode.Create)) {
-                    foreach(var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories)) {
-                        var filename = Path.GetRelativePath(folder, file);
-                        zipArchive.CreateEntryFromFile(file, filename);
-                    }
-                }
-            } else {
-                if(!ZipWithTool(zipTempPackage, folder)) {
-                    LogError("'zip' command failed");
-                    return;
-                }
+            if(!new ZipTool(BuildEventsConfig).ZipData(zipTempPackage, folder, showOutput: Settings.VerboseLevel >= VerboseLevel.Detailed)) {
+                return;
             }
             if(gitInfoFileCreated) {
                 try {

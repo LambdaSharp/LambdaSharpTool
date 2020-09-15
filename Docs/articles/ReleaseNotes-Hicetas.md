@@ -143,6 +143,11 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.1.2) - TBD
 
+#### BREAKING CHANGES
+
+* CLI
+  * Removed support for Scala-based Lambda functions.
+
 #### Fixes
 
 * CLI

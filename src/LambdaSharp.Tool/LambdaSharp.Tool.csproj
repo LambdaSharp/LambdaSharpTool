@@ -47,7 +47,6 @@
     <PackageReference Include="NJsonSchema" Version="9.14.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="6.1.2" />
-    <PackageReference Include="SharpZipLib" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\LambdaSharp.Build\LambdaSharp.Build.csproj" />

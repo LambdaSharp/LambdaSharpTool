@@ -31,31 +31,6 @@ namespace LambdaSharp.Tool.Cli.Build {
 
     public class ModelFilesPackager : AModelProcessor {
 
-        //--- Constants ---
-        private const int READ_AND_WRITE_PERMISSIONS = 0b1_000_000_110_110_110 << 16;
-        private const int READ_AND_EXECUTE_PERMISSIONS = 0b1_000_000_101_101_101 << 16;
-        private static byte[] ELF_HEADER = new byte[] { 0x7F, 0x45, 0x4C, 0x46 };
-
-        //--- Class Methods ---
-        private static bool IsElfExecutable(Stream stream) {
-            var fileHeader = new byte[4];
-            var isExecutable = (stream.Read(fileHeader, 0, fileHeader.Length) == fileHeader.Length)
-                && ELF_HEADER.SequenceEqual(fileHeader);
-            stream.Seek(0, SeekOrigin.Begin);
-            return isExecutable;
-        }
-
-        //--- Types ---
-        private class ForwardSlashEncoder : UTF8Encoding {
-
-            //--- Constructors ---
-            public ForwardSlashEncoder() : base(true) { }
-
-            //--- Methods ---
-            public override byte[] GetBytes(string text)
-                => base.GetBytes(text.Replace(@"\", "/"));
-        }
-
         //--- Fields ---
         private ModuleBuilder _builder;
         private HashSet<string> _existingPackages;
@@ -108,7 +83,6 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ProcessParameter(PackageItem parameter) {
             AtLocation("Package", () => {
-                var containsElfExecutable = false;
 
                 // check if a build command is present
                 if(parameter.Build != null) {
@@ -152,19 +126,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return;
                 }
 
-                // check if at least one file is an ELF executable
-                var bytes = new List<byte>();
-                foreach(var file in files) {
-
-                    // check if one of the files in the package is an ELF executable
-                    using(var stream = File.OpenRead(file.Value)) {
-                        if(IsElfExecutable(stream)) {
-                            containsElfExecutable = true;
-                            break;
-                        }
-                    }
-                }
-
                 // compute hash for all files
                 var fileValueToFileKey = files.ToDictionary(kv => kv.Value, kv => kv.Key);
                 var hash = files.Select(kv => kv.Value).ComputeHashForFiles(file => fileValueToFileKey[file]);
@@ -177,41 +138,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     if(parameter.Build == null) {
                         Console.WriteLine($"=> Building package {Settings.InfoColor}{parameter.FullName}{Settings.ResetColor}");
                     }
-                    if(containsElfExecutable) {
-
-                        // compress package contents with executable permissions
-                        using(var outputStream = File.OpenWrite(package))
-                        using(var outputZip = new ZipOutputStream(outputStream)) {
-                            foreach(var file in files) {
-                                if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                    Console.WriteLine($"... zipping: {file.Key}");
-                                }
-                                using(var entryStream = File.OpenRead(file.Value)) {
-                                    var entry = new ZipEntry(file.Key.Replace('\\', '/')) {
-                                        HostSystem = (int)HostSystemID.Unix
-                                    };
-                                    entry.ExternalFileAttributes = IsElfExecutable(entryStream)
-                                        ? READ_AND_EXECUTE_PERMISSIONS
-                                        : READ_AND_WRITE_PERMISSIONS;
-
-                                    // add entry to zip archive
-                                    outputZip.PutNextEntry(entry);
-                                    entryStream.CopyTo(outputZip);
-                                }
-                            }
-                        }
-                    } else {
-
-                        // package contents with built-in zip library, which is ~6x faster
-                        using(var zipArchive = System.IO.Compression.ZipFile.Open(package, ZipArchiveMode.Create, new ForwardSlashEncoder())) {
-                            foreach(var file in files) {
-                                if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                    Console.WriteLine($"... zipping: {file.Key}");
-                                }
-                                zipArchive.CreateEntryFromFile(file.Value, file.Key);
-                            }
-                        }
-                    }
+                    new ZipTool(BuildEventsConfig).ZipWithExecutable(package, files);
                 }
                 _builder.AddArtifact($"{parameter.FullName}::PackageName", package);
             });

@@ -25,6 +25,7 @@ using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
+using LambdaSharp.Build;
 using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
@@ -332,8 +333,8 @@ namespace LambdaSharp.Tool.Cli {
                         Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                         noAssemblyValidation: true,
                         noPackageBuild: false,
-                        gitSha: GetGitShaValue(settings.WorkingDirectory, showWarningOnFailure: false),
-                        gitBranch: GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                        gitSha: new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory, showWarningOnFailure: false),
+                        gitBranch: new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                         buildConfiguration: "Release",
                         selector: null,
                         moduleSource: moduleSource,
