@@ -263,6 +263,9 @@ namespace LambdaSharp.Compiler.Parser {
                 [typeof(AItemDeclaration)] = () => ParseSyntaxOfType<AItemDeclaration>(),
                 [typeof(AEventSourceDeclaration)] = () => ParseSyntaxOfType<AEventSourceDeclaration>(),
                 [typeof(ModuleDeclaration.CloudFormationSpecExpression)] = () => ParseSyntaxOfType<ModuleDeclaration.CloudFormationSpecExpression>(),
+                [typeof(AppDeclaration.ApiDeclaration)] = () => ParseSyntaxOfType<AppDeclaration.ApiDeclaration>(),
+                [typeof(AppDeclaration.BucketDeclaration)] = () => ParseSyntaxOfType<AppDeclaration.BucketDeclaration>(),
+                [typeof(AppDeclaration.ClientDeclaration)] = () => ParseSyntaxOfType<AppDeclaration.ClientDeclaration>(),
 
                 // lists
                 [typeof(SyntaxNodeCollection<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),

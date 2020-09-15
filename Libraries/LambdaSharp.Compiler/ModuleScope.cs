@@ -121,6 +121,7 @@ namespace LambdaSharp.Compiler {
             new VariableDeclarationProcessor(this).Process(moduleDeclaration);
             // TODO: NestedModuleDeclaration
             // TODO: ResourceTypeDeclaration
+            // TODO: AppDeclaration
             new SecretTypeDeclarationProcessor(this).Process(moduleDeclaration);
             // TODO: Finalizer declaration
 

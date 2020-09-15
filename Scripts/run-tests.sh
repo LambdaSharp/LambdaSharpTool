@@ -69,6 +69,7 @@ if [ -z "$1" ]; then
         --deployment-bucket-name lambdasharp-bucket-name \
         --no-dependency-validation \
         --module-build-date 20190809150000 \
+        $LAMBDASHARP/Tests/Modules/App.yml \
         $LAMBDASHARP/Tests/Modules/Empty.yml \
         $LAMBDASHARP/Tests/Modules/Empty-NoLambdaSharpDependencies.yml \
         $LAMBDASHARP/Tests/Modules/Empty-NoModuleRegistration.yml \
