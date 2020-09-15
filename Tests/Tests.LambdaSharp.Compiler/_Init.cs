@@ -33,6 +33,7 @@ using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Modules;
+using System.IO;
 
 namespace Tests.LambdaSharp.Compiler {
 
@@ -71,6 +72,7 @@ namespace Tests.LambdaSharp.Compiler {
         public class ParserDependencyProvider : ILambdaSharpParserDependencyProvider {
 
             //--- Fields ---
+            public Func<string, string?>? FindFile;
             private readonly InMemoryLogger _logger;
 
             //--- Constructors ---
@@ -82,7 +84,12 @@ namespace Tests.LambdaSharp.Compiler {
             public ILogger Logger => _logger;
 
             //--- Methods ---
-            public string ReadFile(string filePath) => Files[filePath];
+            public string ReadFile(string filePath) {
+                if(Files.TryGetValue(filePath, out var contents)) {
+                    return contents;
+                }
+                return FindFile?.Invoke(filePath) ?? throw new FileNotFoundException(filePath);
+            }
         }
 
         // TODO: reinstate or delete
@@ -185,6 +192,10 @@ namespace Tests.LambdaSharp.Compiler {
         public ILogger Logger { get; }
 
         //--- Methods ---
+        protected void Reset() {
+            Provider.Files.Clear();
+        }
+
         protected void AddSource(string filePath, string source) => Provider.Files.Add(filePath, source);
 
         protected LambdaSharpParser NewParser(string source) {
