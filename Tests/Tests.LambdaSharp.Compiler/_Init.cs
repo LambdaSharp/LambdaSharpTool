@@ -184,7 +184,6 @@ namespace Tests.LambdaSharp.Compiler {
         //--- Properties ---
         public ILogger Logger { get; }
 
-
         //--- Methods ---
         protected void AddSource(string filePath, string source) => Provider.Files.Add(filePath, source);
 
@@ -196,8 +195,8 @@ namespace Tests.LambdaSharp.Compiler {
             return new LambdaSharpParser(Provider, "Module.yml");
         }
 
-        protected LambdaSharpParser NewParser(string workdingDirectory, string filename) {
-            return new LambdaSharpParser(Provider, workdingDirectory, filename);
+        protected LambdaSharpParser NewParser(string workingDirectory, string filename) {
+            return new LambdaSharpParser(Provider, workingDirectory, filename);
         }
 
         protected void ExpectedMessages(params string[] expected) {
