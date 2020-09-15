@@ -154,7 +154,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = Adopt(value);
+            set => _pragmas = Adopt(value ?? throw new ArgumentNullException());
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
@@ -162,7 +162,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
-        public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+        public bool HasFunctionRegistration => !HasPragma("no-function-registration") && !HasPragma("no-registration");
         public override bool DiscardIfNotReachable => base.DiscardIfNotReachable || HasPragma("discard-if-not-used");
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionReferenceExpression?)If)?.ReferenceName!.Value;
