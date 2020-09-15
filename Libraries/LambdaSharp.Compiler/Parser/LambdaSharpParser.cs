@@ -258,8 +258,8 @@ namespace LambdaSharp.Compiler.Parser {
                 [typeof(ModuleDeclaration)] = () => ParseSyntaxOfType<ModuleDeclaration>(),
                 [typeof(UsingModuleDeclaration)] = () => ParseSyntaxOfType<UsingModuleDeclaration>(),
                 [typeof(FunctionDeclaration.VpcExpression)] = () => ParseSyntaxOfType<FunctionDeclaration.VpcExpression>(),
-                [typeof(ResourceTypeDeclaration.PropertyTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.PropertyTypeExpression>(),
-                [typeof(ResourceTypeDeclaration.AttributeTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.AttributeTypeExpression>(),
+                [typeof(ResourceTypeDeclaration.PropertyTypeDeclaration)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.PropertyTypeDeclaration>(),
+                [typeof(ResourceTypeDeclaration.AttributeTypeDeclaration)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.AttributeTypeDeclaration>(),
                 [typeof(AItemDeclaration)] = () => ParseSyntaxOfType<AItemDeclaration>(),
                 [typeof(AEventSourceDeclaration)] = () => ParseSyntaxOfType<AEventSourceDeclaration>(),
                 [typeof(ModuleDeclaration.CloudFormationSpecExpression)] = () => ParseSyntaxOfType<ModuleDeclaration.CloudFormationSpecExpression>(),
@@ -269,7 +269,9 @@ namespace LambdaSharp.Compiler.Parser {
                 [typeof(SyntaxNodeCollection<AExpression>)] = () => ParseList<AExpression>(),
                 [typeof(SyntaxNodeCollection<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
                 [typeof(SyntaxNodeCollection<UsingModuleDeclaration>)] = () => ParseList<UsingModuleDeclaration>(),
-                [typeof(SyntaxNodeCollection<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
+                [typeof(SyntaxNodeCollection<LiteralExpression>)] = () => ParseListOfLiteralExpressions(),
+                [typeof(SyntaxNodeCollection<ResourceTypeDeclaration.PropertyTypeDeclaration>)] = () => ParseList<ResourceTypeDeclaration.PropertyTypeDeclaration>(),
+                [typeof(SyntaxNodeCollection<ResourceTypeDeclaration.AttributeTypeDeclaration>)] = () => ParseList<ResourceTypeDeclaration.AttributeTypeDeclaration>(),
             };
         }
 

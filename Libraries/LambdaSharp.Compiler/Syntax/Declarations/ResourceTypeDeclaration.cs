@@ -26,7 +26,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
     public sealed class ResourceTypeDeclaration : AItemDeclaration {
 
         //--- Types ---
-        public class PropertyTypeExpression : ASyntaxNode {
+        public class PropertyTypeDeclaration : ASyntaxNode {
 
             //--- Fields ---
             private LiteralExpression? _name;
@@ -61,7 +61,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             }
         }
 
-        public class AttributeTypeExpression : ASyntaxNode {
+        public class AttributeTypeDeclaration : ASyntaxNode {
 
             //--- Fields ---
             private LiteralExpression? _name;
@@ -92,13 +92,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         //--- Fields ---
         private AExpression? _handler;
         private LiteralExpression? _documentation;
-        private SyntaxNodeCollection<PropertyTypeExpression> _properties;
-        private SyntaxNodeCollection<AttributeTypeExpression> _attributes;
+        private SyntaxNodeCollection<PropertyTypeDeclaration> _properties;
+        private SyntaxNodeCollection<AttributeTypeDeclaration> _attributes;
 
         //--- Constructors ---
         public ResourceTypeDeclaration(LiteralExpression itemName) : base(itemName) {
-            _properties = Adopt(new SyntaxNodeCollection<PropertyTypeExpression>());
-            _attributes = Adopt(new SyntaxNodeCollection<AttributeTypeExpression>());
+            _properties = Adopt(new SyntaxNodeCollection<PropertyTypeDeclaration>());
+            _attributes = Adopt(new SyntaxNodeCollection<AttributeTypeDeclaration>());
         }
 
         //--- Properties ---
@@ -116,13 +116,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         [SyntaxOptional]
-        public SyntaxNodeCollection<PropertyTypeExpression> Properties {
+        public SyntaxNodeCollection<PropertyTypeDeclaration> Properties {
             get => _properties;
             set => _properties = value;
         }
 
         [SyntaxOptional]
-        public SyntaxNodeCollection<AttributeTypeExpression> Attributes {
+        public SyntaxNodeCollection<AttributeTypeDeclaration> Attributes {
             get => _attributes;
             set => _attributes = value;
         }
