@@ -166,8 +166,8 @@ namespace Tests.LambdaSharp.Compiler {
         // }
 
         //--- Class Methods ---
-        protected static void ShouldNotBeNull([NotNull] object? value) {
-            value.Should().NotBeNull();
+        protected static void ShouldNotBeNull([NotNull] object? value, string? because = null) {
+            value.Should().NotBeNull(because);
             if(value == null) {
                 throw new ShouldNeverHappenException();
             }

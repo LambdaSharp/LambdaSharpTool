@@ -37,7 +37,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
 
             // arrange
             var lambdaSharpPath = Environment.GetEnvironmentVariable("LAMBDASHARP");
-            ShouldNotBeNull(lambdaSharpPath);
+            ShouldNotBeNull(lambdaSharpPath, "LAMBDASHARP environment variable is missing");
             Provider.FindFile = filePath => File.Exists(filePath)
                 ? File.ReadAllText(filePath)
                 : (string?)null;

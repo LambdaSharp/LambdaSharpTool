@@ -30,7 +30,7 @@ jobs:
       - name: Test LambdaSharp.Compiler
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp.Compiler
         env:
-          LAMBDASHARP: $HOME
+          LAMBDASHARP: ${{ env.HOME }}
 
       - name: Test LambdaSharp
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp
