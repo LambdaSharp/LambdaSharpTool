@@ -18,7 +18,6 @@
 
 using System;
 using System.Linq;
-using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
@@ -40,6 +39,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private ObjectExpression _properties;
         private LiteralExpression? _defaultAttribute;
         private ListExpression _pragmas;
+        private LiteralExpression? _deletionPolicy;
 
         //--- Constructors ---
         public ResourceDeclaration(LiteralExpression itemName) : base(itemName) {
@@ -103,7 +103,13 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = Adopt(value);
+            set => _pragmas = Adopt(value ?? throw new ArgumentNullException());
+        }
+
+        [SyntaxOptional]
+        public LiteralExpression? DeletionPolicy {
+            get => _deletionPolicy;
+            set => _deletionPolicy = Adopt(value);
         }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
