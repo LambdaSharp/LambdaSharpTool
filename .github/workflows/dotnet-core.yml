@@ -22,7 +22,7 @@ jobs:
           dotnet-version: 3.1.301
 
       - name: Set LambdaSharp environment variable
-        run: echo '::set-env LAMBDASHARP=$GITHUB_WORKSPACE'
+        run: echo '::set-env name=LAMBDASHARP::$GITHUB_WORKSPACE'
 
       - name: Test LambdaSharp.CloudFormation
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp.CloudFormation
