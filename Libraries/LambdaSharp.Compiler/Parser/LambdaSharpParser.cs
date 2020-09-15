@@ -291,6 +291,8 @@ namespace LambdaSharp.Compiler.Parser {
                 var peek = _parsingEvents.Peek();
                 var currentParsingEvent = peek.ParsingEnumerator.Current;
 
+                // TODO: consider making this a node type instead so that it can be resolved later rather than during the parsing operation
+
                 // check if next event is an !Include statement
                 if((currentParsingEvent is Scalar scalar) && (scalar.Tag == "!Include")) {
 
@@ -1392,7 +1394,7 @@ namespace LambdaSharp.Compiler.Parser {
                 result = parser();
                 return result != null;
             }
-            Log(Error.MissingParserDefinition(type.Name), Location());
+            Log(Error.MissingParserDefinition(type.FullName ?? type.Name), Location());
             result = null;
             SkipCurrent();
             return false;
