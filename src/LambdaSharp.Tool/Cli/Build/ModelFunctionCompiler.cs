@@ -122,7 +122,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
             string apiDeclarationsChecksum = string.Join("\n", apiDeclarations
                 .OrderBy(kv => kv.Key)
-                .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
+                .Select(kv => $"{kv.Key}={StringEx.GetJsonChecksum(JsonConvert.SerializeObject(kv.Value))}")
             ).ToMD5Hash();
 
             // add RestApi url

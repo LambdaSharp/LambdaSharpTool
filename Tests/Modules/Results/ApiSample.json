@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0DDA7E43E47C0256B50E859B94791848"
+      "Default": "790A275CC79DBB0FEE8958C10653576D"
     }
   },
   "Resources": {
@@ -693,11 +693,11 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment4CD68166913653232578E7820111D542": {
+    "ModuleRestApiDeployment681F2D090BB6971276934EE21543E3A0": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [4CD68166913653232578E7820111D542]"
+          "Fn::Sub": "${AWS::StackName} API [681F2D090BB6971276934EE21543E3A0]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
@@ -716,7 +716,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment4CD68166913653232578E7820111D542"
+          "Ref": "ModuleRestApiDeployment681F2D090BB6971276934EE21543E3A0"
         },
         "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
@@ -985,7 +985,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGateway:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "0DDA7E43E47C0256B50E859B94791848",
+      "TemplateChecksum": "790A275CC79DBB0FEE8958C10653576D",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -1082,7 +1082,7 @@
         "ModuleRestApiItemsResourceIdResourceGET": "Module::RestApi::ItemsResource::IdResource::GET",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment4CD68166913653232578E7820111D542": "Module::RestApi::Deployment4CD68166913653232578E7820111D542",
+        "ModuleRestApiDeployment681F2D090BB6971276934EE21543E3A0": "Module::RestApi::Deployment681F2D090BB6971276934EE21543E3A0",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

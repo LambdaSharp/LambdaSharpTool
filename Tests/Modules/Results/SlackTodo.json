@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1FE15BE837957ECF9F10C3D3A2E3AD6B"
+      "Default": "7E2BD632498EB6AC85CCE5841EFF3295"
     }
   },
   "Resources": {
@@ -726,11 +726,11 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment1AC06444A8537572B5ED7AE63707F2F4": {
+    "ModuleRestApiDeploymentF4D97F4B17C1A91B50BB308D78413D2A": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [1AC06444A8537572B5ED7AE63707F2F4]"
+          "Fn::Sub": "${AWS::StackName} API [F4D97F4B17C1A91B50BB308D78413D2A]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
@@ -745,7 +745,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment1AC06444A8537572B5ED7AE63707F2F4"
+          "Ref": "ModuleRestApiDeploymentF4D97F4B17C1A91B50BB308D78413D2A"
         },
         "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
@@ -1036,7 +1036,7 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "1FE15BE837957ECF9F10C3D3A2E3AD6B",
+      "TemplateChecksum": "7E2BD632498EB6AC85CCE5841EFF3295",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -1145,7 +1145,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "SlackCommandRestApiPermission": "SlackCommand::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment1AC06444A8537572B5ED7AE63707F2F4": "Module::RestApi::Deployment1AC06444A8537572B5ED7AE63707F2F4",
+        "ModuleRestApiDeploymentF4D97F4B17C1A91B50BB308D78413D2A": "Module::RestApi::DeploymentF4D97F4B17C1A91B50BB308D78413D2A",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

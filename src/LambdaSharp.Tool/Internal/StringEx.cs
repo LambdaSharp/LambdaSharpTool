@@ -23,6 +23,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using LambdaSharp.Modules;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Internal {
 
@@ -130,6 +132,27 @@ namespace LambdaSharp.Tool.Internal {
             className = parts.Skip(1).FirstOrDefault();
             assemblyName = parts.Skip(2).FirstOrDefault();
             return true;
+        }
+
+        public static string GetJsonChecksum(string json) {
+
+            // parse json into a generic object
+            var value = JObject.Parse(json);
+
+            // convert value to json, but sort the properties to achieve a stable hash
+            return OrderFields(value).ToString(Formatting.None).ToMD5Hash();
+
+            // local functions
+            JObject OrderFields(JObject value) {
+                var result = new JObject();
+                foreach(var property in value.Properties().ToList().OrderBy(property => property.Name)) {
+                    result.Add(property.Name, (property.Value is JObject propertyValue)
+                        ? OrderFields(propertyValue)
+                        : property.Value
+                    );
+                }
+                return result;
+            }
         }
     }
 }
