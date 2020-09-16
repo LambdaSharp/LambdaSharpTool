@@ -23,7 +23,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using LambdaSharp.ApiGateway;
 using LambdaSharp.Logging;
-using Newtonsoft.Json;
 
 namespace ApiInvokeSample.Shared {
 
