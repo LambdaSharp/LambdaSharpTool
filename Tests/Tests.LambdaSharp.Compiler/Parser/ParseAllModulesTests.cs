@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -27,32 +28,43 @@ namespace Tests.LambdaSharp.Compiler.Parser {
 
     public class ParseAllModulesTests : _Init {
 
+        //--- Fields ---
+        private readonly string _lambdaSharpPath;
+
         //--- Constructors ---
-        public ParseAllModulesTests(ITestOutputHelper output) : base(output) { }
+        public ParseAllModulesTests(ITestOutputHelper output) : base(output) {
+            var lambdaSharpPath = Environment.GetEnvironmentVariable("LAMBDASHARP");
+            ShouldNotBeNull(lambdaSharpPath, "LAMBDASHARP environment variable is missing");
+            _lambdaSharpPath = lambdaSharpPath;
+        }
 
         //--- Methods ---
 
         [Fact]
-        public void Test() {
+        public void ParseSampleModules( ) => ParseModules(Directory.GetFiles(Path.Combine(_lambdaSharpPath, "Samples"), "Module.yml", SearchOption.AllDirectories));
+
+        [Fact]
+        public void ParseAllTestModules( ) => ParseModules(Directory.GetFiles(Path.Combine(_lambdaSharpPath, "Tests", "Modules"), "*.yml", SearchOption.TopDirectoryOnly));
+
+        [Fact]
+        public void ParseDemoModules( ) => ParseModules(Directory.GetFiles(Path.Combine(_lambdaSharpPath, "Demos"), "Module.yml", SearchOption.AllDirectories));
+
+        [Fact]
+        public void ParseLambdaSharpModules( ) => ParseModules(Directory.GetFiles(Path.Combine(_lambdaSharpPath, "Modules"), "Module.yml", SearchOption.AllDirectories));
+
+        private void ParseModules(IEnumerable<string> modulePaths) {
+            modulePaths.Any().Should().BeTrue("modules found");
 
             // arrange
-            var lambdaSharpPath = Environment.GetEnvironmentVariable("LAMBDASHARP");
-            ShouldNotBeNull(lambdaSharpPath, "LAMBDASHARP environment variable is missing");
             Provider.FindFile = filePath => File.Exists(filePath)
                 ? File.ReadAllText(filePath)
                 : (string?)null;
 
             // act
-
-            // enumerate all 'Module.yml' files in LambdaSharp folder and all YAMl files in the test folder
-            foreach(var modulePath in Directory.GetFiles(lambdaSharpPath, "Module.yml", SearchOption.AllDirectories)
-                .Union(Directory.GetFiles(Path.Combine(lambdaSharpPath, "Tests", "Modules"), "*.yml", SearchOption.TopDirectoryOnly))
-                .Distinct()
-                .ToArray()
-            ) {
+            foreach(var modulePath in modulePaths) {
                 try {
                     Reset();
-                    NewParser(lambdaSharpPath, Path.GetRelativePath(lambdaSharpPath, modulePath)).ParseModule();
+                    NewParser(_lambdaSharpPath, Path.GetRelativePath(_lambdaSharpPath, modulePath)).ParseModule();
                     ExpectedMessages();
                 } catch {
                     Output.WriteLine($"FAILED MODULE: {modulePath}");
