@@ -24,12 +24,6 @@ jobs:
       - name: Set LambdaSharp environment variable
         run: echo "::set-env name=LAMBDASHARP::$GITHUB_WORKSPACE"
 
-      - name: Show folder
-        run: echo $LAMBDASHARP
-
-      - name: Show folder contents
-        run: find $LAMBDASHARP -name Module.yml
-
       - name: Test LambdaSharp.CloudFormation
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp.CloudFormation
 
