@@ -531,13 +531,13 @@ namespace LambdaSharp.Tool.Model {
                 name: macroName,
                 description: description,
                 scope: null,
-                resource: new Humidifier.CloudFormation.Macro {
+                resource: new Humidifier.CustomResource("AWS::CloudFormation::Macro") {
 
                     // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
 
-                    Name = FnSub($"${{DeploymentPrefix}}{macroName}"),
-                    Description = description,
-                    FunctionName = FnRef(handler)
+                    ["Name"] = FnSub($"${{DeploymentPrefix}}{macroName}"),
+                    ["Description"] = description,
+                    ["FunctionName"] = FnRef(handler)
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
@@ -981,11 +981,11 @@ namespace LambdaSharp.Tool.Model {
                 name: "LogGroup",
                 description: null,
                 scope: null,
-                resource: new Humidifier.Logs.LogGroup {
-                    LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
+                resource: new Humidifier.CustomResource("AWS::Logs::LogGroup") {
+                    ["LogGroupName"] = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
 
                     // TODO (2019-10-25, bjorg): allow 'LogRetentionInDays' attribute on 'Function' declaration
-                    RetentionInDays = FnRef("Module::LogRetentionInDays")
+                    ["RetentionInDays"] = FnRef("Module::LogRetentionInDays")
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
@@ -1102,8 +1102,8 @@ namespace LambdaSharp.Tool.Model {
                 name: "LogGroup",
                 description: null,
                 scope: null,
-                resource: new Humidifier.Logs.LogGroup {
-                    RetentionInDays = logRetentionInDays ?? FnRef("Module::LogRetentionInDays")
+                resource: new Humidifier.CustomResource("AWS::Logs::LogGroup") {
+                    ["RetentionInDays"] = logRetentionInDays ?? FnRef("Module::LogRetentionInDays")
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
