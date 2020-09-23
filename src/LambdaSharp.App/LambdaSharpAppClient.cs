@@ -428,8 +428,6 @@ namespace LambdaSharp.App {
             });
         }
 
-        //--- ILambdaLogLevelLogger Members ---
-
         //--- IAsyncDisposable Members ---
         async ValueTask IAsyncDisposable.DisposeAsync() {
 
