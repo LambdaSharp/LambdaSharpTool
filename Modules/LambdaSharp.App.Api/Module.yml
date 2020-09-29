@@ -73,6 +73,14 @@ Items:
   - Condition: DevModeIsEnabled
     Value: !Equals [ !Ref DevMode, "Enabled" ]
 
+  - Parameter: EventSource
+    Description: "'Source' property override for app events; when empty, the 'Source' property is set by the app request"
+    Type: String
+    Default: ""
+
+  - Condition: EventSourceIsEmpty
+    Value: !Equals [ !Ref EventSource, "" ]
+
   ###
   # Module Exports
   ###
@@ -602,14 +610,19 @@ Items:
                 "Entries": [
               #foreach($entry in $body.Entries)
                   {
-                    "Source": "$util.escapeJavaScript($entry.Source).replaceAll("\\'","'")",
+                    "Source": "${EventSourceValue}",
                     "Detail": "$util.escapeJavaScript($entry.Detail).replaceAll("\\'","'")",
                     "DetailType": "$util.escapeJavaScript($entry.DetailType).replaceAll("\\'","'")",
                     "EventBusName": "default"#if(($entry.Resources != $null)),
                     "Resources": [
               #foreach($resource in $entry.Resources)
-                      "$util.escapeJavaScript($resource).replaceAll("\\'","'")"#if($foreach.hasNext),#end
+                      "$util.escapeJavaScript($resource).replaceAll("\\'","'")",
               #end
+                      "lambdasharp:stack:${ParentModuleId}",
+                      "lambdasharp:module:${ParentModuleFullName}",
+                      "lambdasharp:tier:${DeploymentTier}",
+                      "lambdasharp:moduleinfo:${ParentModuleInfo}",
+                      "lambdasharp:origin:${ParentModuleOrigin}"
               #end
                     ]
                   }#if($foreach.hasNext),#end
@@ -620,6 +633,11 @@ Items:
               ParentModuleFullName: !Select [ 0, !Split [ ":", !Ref ParentModuleInfo ]]
               ParentModuleOrigin: !Select [ 1, !Split [ "@", !Ref ParentModuleInfo ]]
               DeploymentTier: !Ref Deployment::Tier
+              EventSourceValue: !If
+                - EventSourceIsEmpty
+                - |-
+                  $util.escapeJavaScript($entry.Source).replaceAll("\\'","'")
+                - !Ref EventSource
 
         IntegrationResponses:
           - SelectionPattern: "200"

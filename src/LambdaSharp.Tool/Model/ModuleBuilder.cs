@@ -1042,7 +1042,8 @@ namespace LambdaSharp.Tool.Model {
             object apiRateLimit,
             object bucketCloudFrontOriginAccessIdentity,
             object bucketContentEncoding,
-            object clientApiUrl
+            object clientApiUrl,
+            object eventSource
         ) {
             var app = new AppItem(
                 parent: parent,
@@ -1187,7 +1188,8 @@ namespace LambdaSharp.Tool.Model {
                     ["BurstLimit"] = apiBurstLimit ?? 200,
                     ["RateLimit"] = apiRateLimit ?? 100,
                     ["AppVersionId"] = FnRef(appVersionId.FullName),
-                    ["DevMode"] = FnRef(devModeParameter.FullName)
+                    ["DevMode"] = FnRef(devModeParameter.FullName),
+                    ["EventSource"] = eventSource ?? FnSub("Module:${Module::FullName}")
                 }
             );
 

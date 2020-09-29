@@ -29,6 +29,7 @@ Api:
   CorsOrigin: String or Expression
   BurstLimit: Number or Expression
   RateLimit: Number or Expression
+  EventSource: String or Expression
 Bucket:
   CloudFrontOriginAccessIdentity: String or Expression
   ContentEncoding: String or Expression
@@ -90,6 +91,16 @@ The <code>RateLimit</code> attribute specifies the maximum number of requests pe
 <i>Required</i>: No
 
 <i>Type</i>: Number
+</dd>
+
+<dt><code>EventSource</code></dt>
+<dd>
+
+The <code>EventSource</code> attribute specifies a 'Source' property override for app events. When empty, the 'Source' property is set by the app request. When omitted, the default value is <code>!Sub "Module:${Module::FullName}"</code>.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
 </dd>
 
 </dl>

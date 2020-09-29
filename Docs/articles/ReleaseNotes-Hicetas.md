@@ -148,6 +148,13 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * CLI
   * Removed support for Scala-based Lambda functions.
 
+#### Features
+
+* Modules
+  * _LambdaSharp.App.Api_
+    * Added `EventSource` parameter to override the CloudWatch event source specified by the app request.
+    * Enhanced CloudWatch event integration by explicitly populating the `Resources` section of the app request.
+
 #### Fixes
 
 * CLI

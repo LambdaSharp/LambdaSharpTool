@@ -682,7 +682,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         apiRateLimit: node.Api?.RateLimit,
                         bucketCloudFrontOriginAccessIdentity: node.Bucket?.CloudFrontOriginAccessIdentity,
                         bucketContentEncoding: node.Bucket?.ContentEncoding,
-                        clientApiUrl: node.Client?.ApiUrl
+                        clientApiUrl: node.Client?.ApiUrl,
+                        eventSource: node.Api?.EventSource
                     );
                 });
                 break;

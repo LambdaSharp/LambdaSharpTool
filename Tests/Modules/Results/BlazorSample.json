@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E6B032E04BD8A1796369AA1B5B77BC99"
+      "Default": "DD7274D902D9717230B7AE6E31B96718"
     }
   },
   "Resources": {
@@ -141,6 +141,7 @@
           "DevMode": {
             "Ref": "AppDeveloperMode"
           },
+          "EventSource": "Module:Sample.BlazorWebAssembly",
           "DeploymentBucketName": {
             "Ref": "DeploymentBucketName"
           },
@@ -576,7 +577,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.BlazorWebAssembly:1.0-DEV",
       "Description": "A sample module showing how to deploy a Blazor WebAssembly website",
-      "TemplateChecksum": "E6B032E04BD8A1796369AA1B5B77BC99",
+      "TemplateChecksum": "DD7274D902D9717230B7AE6E31B96718",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
