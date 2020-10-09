@@ -88,7 +88,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             AtLocation("Items", () => {
                 foreach(var function in builder.Items.OfType<FunctionItem>()) {
                     AtLocation(function.FullName, () => {
-                        var environment = function.Function.Environment.Variables;
+                        var environment = new Dictionary<string, dynamic>();
 
                         // set default environment variables
                         environment["DEBUG_LOGGING_ENABLED"] = "false";
@@ -121,6 +121,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             // add explicit environment variable as string value
                             var fullEnvName = "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant();
                             environment[fullEnvName] = (dynamic)kv.Value;
+                        }
+
+                        // add all explicitly listed environment variables in the function properties
+                        foreach(var kv in function.Function.Environment.Variables) {
+                            environment[kv.Key] = kv.Value;
                         }
                     });
                 }

@@ -159,7 +159,8 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Fixed an issue with `--build-policy` option affecting the _publish_ and _deploy_ phases.
-  * Detect `APIGatewayHttpApiV2ProxyResponse` as an API Gateway proxy request data type.
+  * Fixed an issue with detecting `APIGatewayHttpApiV2ProxyResponse` as an API Gateway proxy request data type.
+  * Fixed an issue with environment variables set in the Lambda function properties section being overwritten by the tool.
 
 ### (v0.8.1.1) - 2020-08-31
 
