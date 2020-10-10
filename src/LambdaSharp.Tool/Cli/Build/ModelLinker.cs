@@ -127,6 +127,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         foreach(var kv in function.Function.Environment.Variables) {
                             environment[kv.Key] = kv.Value;
                         }
+                        function.Function.Environment.Variables = environment;
                     });
                 }
             });
