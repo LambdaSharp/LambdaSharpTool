@@ -49,6 +49,12 @@ namespace LambdaSharp.Logging {
         string AppName { get; }
 
         /// <summary>
+        /// The <see cref="AppId"/> property holds the the app instance id.
+        /// </summary>
+        /// <value>Id of the app instance.</value>
+        string AppId { get; }
+
+        /// <summary>
         /// The deployment tier name.
         /// </summary>
         string DeploymentTier { get; }

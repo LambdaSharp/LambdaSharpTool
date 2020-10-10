@@ -57,6 +57,7 @@ namespace LambdaSharp.App {
             public string ModuleInfo => _client.Config.ModuleInfo;
             public string FunctionName => null;
             public string AppName => _client.Config.AppName;
+            public string AppId => _client.Config.AppId;
             public string DeploymentTier => _client.Config.DeploymentTier;
             public string GitSha => _client.Config.GitSha;
             public string GitBranch => _client.Config.GitBranch;

@@ -153,6 +153,7 @@ namespace LambdaSharp {
 
             //--- ILambdaSharpInfo Members ---
             string ILambdaSharpInfo.AppName => null;
+            string ILambdaSharpInfo.AppId => null;
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -25,10 +25,10 @@ using LambdaSharp.Logging.Internal;
 namespace LambdaSharp.Logging.Events {
 
     /// <summary>
-    /// <see cref="ILambdaLogLevelLoggerEx"/> adds logging functionality as extension methods to the <see cref="ILambdaSharpLogger"/> interface.
+    /// <see cref="ILambdaSharpLoggerEx"/> adds logging functionality as extension methods to the <see cref="ILambdaSharpLogger"/> interface.
     /// </summary>
     /// <seealso cref="LambdaLogLevel"/>
-    public static class ILambdaLogLevelLoggerEx {
+    public static class ILambdaSharpLoggerEx {
 
         //--- Class Fields ---
         private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
@@ -70,6 +70,9 @@ namespace LambdaSharp.Logging.Events {
             var moduleOrigin = logger.Info.GetModuleOrigin();
             if(moduleOrigin != null) {
                 lambdaResources.Add($"lambdasharp:origin:{moduleOrigin}");
+            }
+            if(logger.Info.AppId != null) {
+                lambdaResources.Add($"lambdasharp:app:{logger.Info.AppId}");
             }
 
             // create event record for logging
