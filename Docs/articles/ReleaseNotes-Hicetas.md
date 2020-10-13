@@ -157,6 +157,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * SDK
   * Enhanced emitted CloudWatch events to include app identifier in resources section.
+  * Added `ForceLambdaColdStart()` method in `ALambdaFunction` base class. This method forces the Lambda runtime to error out and restart the app domain, forcing the global environment to be reinitialized.
 
 #### Fixes
 

@@ -740,6 +740,17 @@ namespace LambdaSharp {
         /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
         protected void RunTask(Func<Task> function, CancellationToken cancellationToken = default)  => AddPendingTask(Task.Run(function, cancellationToken));
 
+        /// <summary>
+        /// The <see cref="ForceLambdaColdStart(System.String)"/> method causes the Lambda runtime to re-initialize as if a cold start had occurred. This methos is useful
+        /// when the global environment is corrupted and only a restart can fix it.
+        /// </summary>
+        protected void ForceLambdaColdStart(string reason) {
+            LogFatal(new ApplicationException(reason), "restart Lambda runtime");
+
+            // NOTE (2020-10-13, bjorg): the following line will cause an uncatchable exception that force the Lambda runtime to start over
+            System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
+        }
+
         private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
             var parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach(DictionaryEntry envVar in Environment.GetEnvironmentVariables()) {
