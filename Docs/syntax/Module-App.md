@@ -18,6 +18,7 @@ When `AppDeveloperMode` is `Enabled`, the app API key is only based on the Cloud
 ## Syntax
 
 > TODO: add docs about EventBus and app event sources
+> * `${app}::EventSource`
 
 ```yaml
 App: String

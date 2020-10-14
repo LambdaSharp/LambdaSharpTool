@@ -1173,6 +1173,18 @@ namespace LambdaSharp.Tool.Model {
                 );
             }
 
+            // add variable capturing the event source name
+            var appEventSource = AddVariable(
+                parent: app,
+                name: "EventSource",
+                description: null,
+                type: "String",
+                scope: null,
+                value: eventSource ?? FnSub($"${{Module::FullName}}::{app.FullName}"),
+                allow: null,
+                encryptionContext: null
+            );
+
             // add nested stack for the app API
             var appApi = AddNestedModule(
                 parent: app,
@@ -1191,7 +1203,7 @@ namespace LambdaSharp.Tool.Model {
                     ["RateLimit"] = apiRateLimit ?? 100,
                     ["AppVersionId"] = FnRef(appVersionId.FullName),
                     ["DevMode"] = FnRef(devModeParameter.FullName),
-                    ["EventSource"] = eventSource ?? FnSub($"${{Module::FullName}}::{app.FullName}")
+                    ["EventSource"] = FnRef(appEventSource.FullName)
                 }
             );
 
