@@ -17,6 +17,8 @@ When `AppDeveloperMode` is `Enabled`, the app API key is only based on the Cloud
 
 ## Syntax
 
+> TODO: add docs about EventBus and app event sources
+
 ```yaml
 App: String
 Description: String
@@ -35,8 +37,12 @@ Bucket:
   ContentEncoding: String or Expression
 Client:
   ApiUrl: String or Expression
+EventBus:
+  TODO
 AppSettings:
   String: Expression
+Sources:
+  - SourceDefinition
 ```
 
 ## Properties
@@ -252,6 +258,7 @@ The <code>Project</code> attribute specifies the relative path of the app projec
 The `App` declaration adds two nested resources:
 * `${AppName}::Bucket` is a CloudFormation stack using the [LambdaSharp.App.Bucket](~/Modules/LambdaSharp-App-Bucket.md) module.
 * `${AppName}::Api` is a nested CloudFormation stack using the [LambdaSharp.App.Api](~/Modules/LambdaSharp-App-Api.md) module.
+* `${AppName}::EventBus` is an optional nested CloudFormation stack using the [LambdaSharp.App.EventBus](~/Modules/LambdaSharp-App-Api.md) module. It is only created when the app has event sources.
 
 The nested stacks have output values that can be used to initialize other resources in the stack.
 

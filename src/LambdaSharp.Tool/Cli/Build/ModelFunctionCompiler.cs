@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // add functions
                 foreach(var function in functions) {
-                    AddFunctionSources(function);
+                    AddEventSources(function);
                 }
 
                 // check if a REST API gateway needs to be created
@@ -988,7 +988,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void AddFunctionSources(FunctionItem function) {
+        private void AddEventSources(FunctionItem function) {
 
             // add function sources
             for(var sourceIndex = 0; sourceIndex < function.Sources.Count; ++sourceIndex) {

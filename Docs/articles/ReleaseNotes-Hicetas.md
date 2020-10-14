@@ -154,6 +154,8 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * _LambdaSharp.App.Api_
     * Added `EventSource` parameter to override the CloudWatch event source specified by the app request.
     * Enhanced CloudWatch event integration by explicitly populating the `Resources` section of the app request.
+  * _LambdaSharp.App.EventBus_
+    * Added module for subscribing apps to CloudWatch events.
 
 * SDK
   * Enhanced emitted CloudWatch events to include app identifier in resources section.

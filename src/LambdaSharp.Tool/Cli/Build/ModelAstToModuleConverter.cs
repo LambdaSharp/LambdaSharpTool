@@ -649,6 +649,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             case "App":
                 AtLocation(node.App, () => {
 
+                    // validation
+                    ValidateAppSource(node.Sources ?? Array.Empty<FunctionSourceNode>());
+
                     // determine app project location
                     if(node.Project == null) {
 
@@ -668,6 +671,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                         LogError("could not locate the app project");
                         node.Project = "<MISSING>";
                     }
+
+                    // create app item
+                    var sources = AtLocation("Sources", () => node.Sources
+                        ?.Select((source, eventIndex) => ConvertFunctionSource(node, eventIndex, source))
+                        .Where(evt => evt != null)
+                        .ToList()
+                    );
                     _builder.AddApp(
                         parent: parent,
                         name: node.App,
@@ -683,7 +693,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         bucketCloudFrontOriginAccessIdentity: node.Bucket?.CloudFrontOriginAccessIdentity,
                         bucketContentEncoding: node.Bucket?.ContentEncoding,
                         clientApiUrl: node.Client?.ApiUrl,
-                        eventSource: node.Api?.EventSource
+                        eventSource: node.Api?.EventSource,
+                        sources: sources
                     );
                 });
                 break;
@@ -784,16 +795,34 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // TODO (2019-03-13, bjorg): validate WebSocket route expression
                     } else if(source.EventBus != null) {
-                        AtLocation("Pattern", () => {
-                            if(source.Pattern == null) {
-                                LogError("missing rule pattern");
-                            }
-                        });
+                        ValidateEventBusSource(source);
                     } else {
                         LogError("unknown source type");
                     }
                 });
             }
+        }
+
+        private void ValidateAppSource(IEnumerable<FunctionSourceNode> sources) {
+            var index = 0;
+            foreach(var source in sources) {
+                ++index;
+                AtLocation($"{index}", () => {
+                    if(source.EventBus != null) {
+                        ValidateEventBusSource(source);
+                    } else {
+                        LogError("unknown source type");
+                    }
+                });
+            }
+        }
+
+        private void ValidateEventBusSource(FunctionSourceNode source) {
+            AtLocation("Pattern", () => {
+                if(source.Pattern == null) {
+                    LogError("missing rule pattern");
+                }
+            });
         }
 
         private string DeterminNodeType(

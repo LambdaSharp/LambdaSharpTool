@@ -1,0 +1,186 @@
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2020
+# lambdasharp.net
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.App.EventBus
+Description: Connect LambdaSharp app to CloudWatch EventBridge
+Pragmas:
+  - Overrides:
+      Module::WebSocket.RouteSelectionExpression: $request.body.Action
+Items:
+
+  ###
+  # Module Parameters
+  ###
+
+  - Parameter: DevMode
+    Description: Developer mode relaxes WebSocket authentication
+    Type: String
+    AllowedValues:
+      - Enabled
+      - Disabled
+    Default: Disabled
+
+  ###
+  # Module Exports
+  ###
+
+  - Variable: EventTopicArn
+    Description: SNS topic ARN for broadcasting events to the app event bus
+    Scope: public
+    Value: !Ref EventTopic
+
+  - Variable: Url
+    Description: WebSocket URL for connecting to the app event bus
+    Scope: public
+    Value: !Ref Module::WebSocket::Url
+
+  ###
+  # WebSocket Connection Listening
+  ###
+
+  - Function: ListenerFunction
+    Description: Lambda function listening on the WebSocket connection
+    Memory: 256
+    Timeout: 30
+    Sources:
+      - WebSocket: $connect
+        Invoke: OpenConnection
+
+      - WebSocket: $disconnect
+        Invoke: CloseConnection
+
+      - WebSocket: Hello
+        Invoke: Hello
+
+      - WebSocket: Subscribe
+        Invoke: Subscribe
+
+      - WebSocket: Unsubscribe
+        Invoke: Unsubscribe
+
+  ###
+  # Event Broadcasting
+  ###
+
+  - Resource: EventTopic
+    Description: SNS topic for broadcast events to all open WebSocket connections
+    Scope:
+      - ListenerFunction
+      - BroadcastFunction
+    Type: AWS::SNS::Topic
+    Allow:
+      - sns:Subscribe
+      - sns:Unsubscribe
+
+  - Resource: EventTopicPolicy
+    Description: SNS topic policy to allow keep-alive schedule rule to invoke the event topic
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: EventsPublish
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref EventTopic
+            Condition:
+              StringEquals:
+                AWS:SourceOwner: !Ref AWS::AccountId
+      Topics:
+        - !Ref EventTopic
+
+  - Variable: HttpApiInvocationToken
+    Description: Token used to restrict invocations of the HTTP API
+    Scope:
+      - ListenerFunction
+      - BroadcastFunction
+    Value:
+      Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
+
+  - Resource: EventBroadcastApi
+    Description: HTTP API used for SNS topic subscriptions to broadcast across all open WebSocket connections
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub "${Module::Id}-HttpApi"
+      Description: Event Broadcast HTTP API
+      ProtocolType: HTTP
+      Target: !GetAtt  BroadcastFunction.Arn
+
+  - Function: BroadcastFunction
+    Description: Lambda function for broadcasting CloudWatch events to a WebSocket connection
+    Memory: 256
+    Timeout: 30
+
+  - Resource: BroadcastFunctionPermission
+    Description: Lambda permission to allow HTTP API to invoke broadcast function
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BroadcastFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${EventBroadcastApi}/*/$default"
+
+  - Variable: EventBroadcastApiUrl
+    Description: HTTP API endpoint for broadcasting events
+    Scope: ListenerFunction
+    Value: !Sub "${EventBroadcastApi.ApiEndpoint}/$default"
+
+  ###
+  # Connection Keep-Alive Event
+  ###
+
+  - Resource: KeepAliveRule
+    Description: CloudWatch schedule rule for regularly sending a keep-alive message on each open WebSocket connection
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(1 minute)
+      Targets:
+        - Id: EventTopic
+          Arn: !Ref EventTopic
+
+  - Variable: KeepAliveRuleArn
+    Description: ARN for CloudWatch schedule rule used to differentiate between keep-alive message and other scheduled events
+    Scope: BroadcastFunction
+    Value: !GetAtt KeepAliveRule.Arn
+
+  ###
+  # Subscription State Management
+  ###
+
+  - Resource: DataTable
+    Description: DynamoDB table for storing webSocket connection information and CloudWatch event rules
+    Scope:
+      - ListenerFunction
+      - BroadcastFunction
+    Type: AWS::DynamoDB::Table
+    Allow: ReadWrite
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+
+        - AttributeName: SK
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+
+        - AttributeName: SK
+          KeyType: RANGE

@@ -1043,14 +1043,16 @@ namespace LambdaSharp.Tool.Model {
             object bucketCloudFrontOriginAccessIdentity,
             object bucketContentEncoding,
             object clientApiUrl,
-            object eventSource
+            object eventSource,
+            IList<AFunctionSource> sources
         ) {
             var app = new AppItem(
                 parent: parent,
                 name: name,
                 description: description,
                 project: project,
-                pragmas: pragmas
+                pragmas: pragmas,
+                sources: sources ?? Array.Empty<AFunctionSource>()
             );
             AddItem(app);
             app.Reference = FnSub($"${{AWS::StackName}}-{name}");
@@ -1192,6 +1194,23 @@ namespace LambdaSharp.Tool.Model {
                     ["EventSource"] = eventSource ?? FnSub($"${{Module::FullName}}::{app.FullName}")
                 }
             );
+
+            // add nested stack for the app event bus
+            if(app.Sources.Any()) {
+                var appEventBus = AddNestedModule(
+                    parent: app,
+                    name: "EventBus",
+                    description: null,
+                    moduleInfo: new ModuleInfo("LambdaSharp", "App.EventBus", Settings.CoreServicesReferenceVersion, "lambdasharp"),
+                    scope: null,
+                    dependsOn: null,
+                    parameters: new Dictionary<string, object> {
+
+                        // TODO: authentication/authorization
+                        ["DevMode"] = FnRef(devModeParameter.FullName)
+                    }
+                );
+            }
 
             // add resource to generate `appsettings.Production.json` file
             AddDependencyAsync(new ModuleInfo("LambdaSharp", "S3.IO", Settings.CoreServicesReferenceVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();

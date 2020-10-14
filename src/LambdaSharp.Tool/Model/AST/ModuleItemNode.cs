@@ -154,7 +154,8 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Pragmas",
                 "Api",
                 "Bucket",
-                "Client"
+                "Client",
+                "Sources"
             },
 
             // nodes with optional nested items
@@ -358,6 +359,7 @@ namespace LambdaSharp.Tool.Model.AST {
          *   ContentEncoding: string -or- expression
          * Client:
          *   Url: string -or- expression
+         * Sources: list<function-source>
          */
          public string App { get; set; }
          public Dictionary<string, object> AppSettings { get; set; }

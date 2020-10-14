@@ -68,6 +68,11 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
+dotnet test "$LAMBDASHARP/Modules/LambdaSharp.App.EventBus/Test.LambdaSharp.App.EventBus"
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
 
 echo "************************"
 echo "*** Init LambdaSharp ***"
