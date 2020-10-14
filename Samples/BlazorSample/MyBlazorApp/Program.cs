@@ -23,7 +23,7 @@ using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
 
-namespace Sample.BlazorWebAssembly.MyBlazorApp {
+namespace Sample.BlazorSample.MyBlazorApp {
 
     public class Program {
 

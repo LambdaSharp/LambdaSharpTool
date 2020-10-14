@@ -3,7 +3,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Deterministic>true</Deterministic>
     <RazorLangVersion>3.0</RazorLangVersion>
-    <RootNamespace>Sample.BlazorWebAssembly.MyBlazorApp</RootNamespace>
+    <RootNamespace>Sample.BlazorSample.MyBlazorApp</RootNamespace>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
