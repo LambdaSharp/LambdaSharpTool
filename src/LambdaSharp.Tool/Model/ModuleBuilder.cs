@@ -1057,6 +1057,18 @@ namespace LambdaSharp.Tool.Model {
             AddItem(app);
             app.Reference = FnSub($"${{AWS::StackName}}-{name}");
 
+            // initialize appsettings.Production.json
+            var lambdaSharpSettings = new Dictionary<string, object>();
+            lambdaSharpSettings["ModuleId"] = FnRef("Module::Id");
+            lambdaSharpSettings["ModuleInfo"] = FnRef("Module::Info");
+            lambdaSharpSettings["DeploymentTier"] = FnRef("Deployment::Tier");
+            lambdaSharpSettings["AppId"] = FnRef(app.FullName);
+            lambdaSharpSettings["AppName"] = name;
+            if(appSettings == null) {
+                appSettings = new Dictionary<string, object>();
+            }
+            appSettings["LambdaSharp"] = lambdaSharpSettings;
+
             // create nested variable for tracking the package-name
             var appPackageName = AddVariable(
                 parent: app,
@@ -1088,6 +1100,7 @@ namespace LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
+            lambdaSharpSettings["AppFramework"] = FnRef(appFramework.FullName);
             var appLanguage = AddVariable(
                 parent: app,
                 name: "AppLanguage",
@@ -1172,6 +1185,7 @@ namespace LambdaSharp.Tool.Model {
                     deletionPolicy: null
                 );
             }
+            lambdaSharpSettings["DevMode"] = FnRef(devModeParameter.FullName);
 
             // add variable capturing the event source name
             var appEventSource = AddVariable(
@@ -1206,6 +1220,8 @@ namespace LambdaSharp.Tool.Model {
                     ["EventSource"] = FnRef(appEventSource.FullName)
                 }
             );
+            lambdaSharpSettings["ApiUrl"] = clientApiUrl ?? FnGetAtt(appApi.FullName, "Outputs.Url");
+            lambdaSharpSettings["ApiKey"] = FnGetAtt(appApi.FullName, "Outputs.ApiKey");
 
             // add nested stack for the app event bus
             if(app.Sources.Any()) {
@@ -1222,24 +1238,11 @@ namespace LambdaSharp.Tool.Model {
                         ["DevMode"] = FnRef(devModeParameter.FullName)
                     }
                 );
+                lambdaSharpSettings["EventBus"] = FnGetAtt(appEventBus.FullName, "Outputs.Url");
             }
 
             // add resource to generate `appsettings.Production.json` file
             AddDependencyAsync(new ModuleInfo("LambdaSharp", "S3.IO", Settings.CoreServicesReferenceVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
-            if(appSettings == null) {
-                appSettings = new Dictionary<string, object>();
-            }
-            appSettings["LambdaSharp"] = new Dictionary<string, object> {
-                ["ApiUrl"] = clientApiUrl ?? FnGetAtt(appApi.FullName, "Outputs.Url"),
-                ["ApiKey"] = FnGetAtt(appApi.FullName, "Outputs.ApiKey"),
-                ["ModuleId"] = FnRef("Module::Id"),
-                ["ModuleInfo"] = FnRef("Module::Info"),
-                ["DeploymentTier"] = FnRef("Deployment::Tier"),
-                ["AppId"] = FnRef(app.FullName),
-                ["AppName"] = name,
-                ["AppFramework"] = FnRef(appFramework.FullName),
-                ["DevMode"] = FnRef(devModeParameter.FullName)
-            };
             var appConfigJson = AddResource(
                 parent: app,
                 name: "AppSettingsJson",
