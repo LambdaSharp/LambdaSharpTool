@@ -1189,7 +1189,7 @@ namespace LambdaSharp.Tool.Model {
                     ["RateLimit"] = apiRateLimit ?? 100,
                     ["AppVersionId"] = FnRef(appVersionId.FullName),
                     ["DevMode"] = FnRef(devModeParameter.FullName),
-                    ["EventSource"] = eventSource ?? FnSub("Module:${Module::FullName}")
+                    ["EventSource"] = eventSource ?? FnSub($"${{Module::FullName}}::{app.FullName}")
                 }
             );
 

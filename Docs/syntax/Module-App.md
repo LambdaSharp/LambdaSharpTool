@@ -96,7 +96,7 @@ The <code>RateLimit</code> attribute specifies the maximum number of requests pe
 <dt><code>EventSource</code></dt>
 <dd>
 
-The <code>EventSource</code> attribute specifies a 'Source' property override for app events. When empty, the 'Source' property is set by the app request. When omitted, the default value is <code>!Sub "Module:${Module::FullName}"</code>.
+The <code>EventSource</code> attribute specifies a 'Source' property override for app events. When empty, the 'Source' property is set by the app request. When omitted, the default value is the full module name, followed by the logical ID of the app. For example, <code>My.Module::MyApp</code>.
 
 <i>Required</i>: No
 
