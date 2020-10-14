@@ -1,0 +1,75 @@
+@*
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2020
+ * lambdasharp.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@page "/"
+
+@inject ILogger<Index> Logger
+
+<Container Fluid="true">
+    <Row>
+        <Column>
+            <Card Margin="Margin.Is4.FromTop">
+                <CardHeader Padding="Padding.Is1.FromBottom">
+                    <Heading Size="HeadingSize.Is4">Blazor WebAssembly App</Heading>
+                </CardHeader>
+                <CardBody Padding="Padding.Is0.FromBottom">
+                    <CardText>Welcome to your new app.</CardText>
+                </CardBody>
+                <CardBody>
+                    <CardText>Current count: @_currentCount</CardText>
+                </CardBody>
+                <CardBody>
+                    <Button Color="Color.Primary" @onclick="OnIncrementClick">Increment Counter</Button>
+                    <Button Color="Color.Secondary" @onclick="OnResetClick">Reset Counter</Button>
+                    <Button Color="Color.Warning" @onclick="OnThrowException">Throw Exception</Button>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@code {
+
+    //--- Fields ---
+    private int _currentCount = 0;
+
+    //--- Methods ---
+    private void OnIncrementClick() {
+
+        // increment counter
+        _currentCount++;
+
+        // use standard logger to log to CloudWatch Logs
+        Logger.LogInformation($"increment clicked (count: {_currentCount})");
+    }
+
+    private void OnResetClick() {
+
+        // reset counter
+        _currentCount = 0;
+
+        // use standard logger to log to CloudWatch Logs
+        Logger.LogInformation($"reset clicked");
+    }
+
+    private void OnThrowException() {
+
+        // rely on ILogger to forward errors to CloudWatch Logs
+        throw new ApplicationException("Oh no, something went wrong!");
+    }
+}

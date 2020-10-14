@@ -29,5 +29,6 @@ Please refer to the [Folder Structure Documentation](https://lambdasharp.net/art
 ## Miscellaneous Examples
 1. [Lambda Function in VPC](VpcFunctionSample/)
 1. [Lambda Function with Lambda Layer](LambdaLayerSample/)
-1. [Blazor WebAssembly Website](BlazorSample/)
+1. [Blazor WebAssembly App](BlazorSample/)
+1. [Blazor WebAssembly App w/ CloudWatch Events](BlazorEventsSample/)
 1. [Debug Logging](DebugSample/)
