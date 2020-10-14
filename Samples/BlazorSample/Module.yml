@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: Sample.BlazorWebAssembly
+Module: Sample.BlazorSample
 Description: A sample module showing how to deploy a Blazor WebAssembly website
 Items:
 
