@@ -4,7 +4,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../LambdaSharp.App.EventBus/LambdaSharp.App.EventBus.csproj"/>
+    <ProjectReference Include="..\LambdaSharp.App.EventBus\LambdaSharp.App.EventBus.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
