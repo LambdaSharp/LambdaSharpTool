@@ -13,7 +13,7 @@
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../Common/Common.csproj" />
-    <ProjectReference Include="../../../src/LambdaSharp/LambdaSharp.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
   </ItemGroup>
 </Project>
