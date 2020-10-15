@@ -81,6 +81,10 @@ namespace LambdaSharp.App.EventBus {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        //--- Properties ---
+
+        // TODO: add `OnConnectionOpened` and `OnConnectionClosed` event handlers
+
         //--- Methods ---
         public async Task<ISubscription> SubscribeAsync<T>(string name, EventPattern eventPattern, Func<T, Task> callback) {
             if(name is null) {
