@@ -24,6 +24,6 @@ namespace LambdaSharp.App.EventBus.Actions {
 
         //--- Properties ---
         public string Action { get; set; }
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string RequestId { get; set; } = Guid.NewGuid().ToString();
     }
 }

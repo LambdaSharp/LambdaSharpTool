@@ -70,6 +70,15 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 return BadRequest();
             }
 
+            // validate request id
+            if(
+                !request.QueryStringParameters.TryGetValue("rid", out var requestId)
+                || string.IsNullOrEmpty(requestId)
+            ) {
+                LogInfo("Invalid request id");
+                return BadRequest();
+            }
+
             // check if request is a subscription confirmation
             var topicSubscription = LambdaSerializer.Deserialize<TopicSubscriptionPayload>(request.Body);
             if(topicSubscription.Type == "SubscriptionConfirmation") {
@@ -84,7 +93,9 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 await HttpClient.GetAsync(topicSubscription.SubscribeURL);
 
                 // send welcome action to websocket connection
-                await SendMessageToConnection(new WelcomeAction(), connectionId);
+                await SendMessageToConnection(new AcknowledgeAction {
+                    RequestId = requestId
+                }, connectionId);
                 return Success("Confirmed");
             }
 

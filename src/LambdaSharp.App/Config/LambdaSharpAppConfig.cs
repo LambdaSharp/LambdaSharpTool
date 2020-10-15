@@ -121,6 +121,12 @@ namespace LambdaSharp.App.Config {
         /// <value>The Git branch from the source code repository.</value>
         public string GitBranch { get; set; }
 
+        /// <summary>
+        /// The <see cref="EventBusUrl"/> property holds the URL for the app event bus.
+        /// </summary>
+        /// <value>The URL of the app API.</value>
+        public string EventBusUrl { get; set; }
+
         //--- Methods ---
 
         /// <summary>

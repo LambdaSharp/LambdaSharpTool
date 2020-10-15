@@ -126,7 +126,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             // subscribe websocket to SNS topic notifications
             connection.SubscriptionArn = (await _snsClient.SubscribeAsync(new SubscribeRequest {
                 Protocol = "https",
-                Endpoint = $"{_broadcastApiUrl}?ws={connectionId}&token={_httpApiToken}",
+                Endpoint = $"{_broadcastApiUrl}?ws={connectionId}&token={_httpApiToken}&rid={action.RequestId}",
                 ReturnSubscriptionArn = true,
                 TopicArn = _eventTopicArn
             })).SubscriptionArn;
@@ -143,6 +143,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             // validate request
             if(string.IsNullOrEmpty(action.Rule)) {
                 return new AcknowledgeAction {
+                    RequestId = action.RequestId,
                     Status = "Error",
                     Message = "Missing or invalid rule name"
                 };
@@ -153,6 +154,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             if(connection == null) {
                 LogInfo("Connection was removed");
                 return new AcknowledgeAction {
+                    RequestId = action.RequestId,
                     Rule = action.Rule,
                     Status = "Error",
                     Message = "Connection gone"
@@ -169,6 +171,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
             if(!validPattern) {
                 return new AcknowledgeAction {
+                    RequestId = action.RequestId,
                     Rule = action.Rule,
                     Status = "Error",
                     Message = "Invalid pattern"
@@ -182,6 +185,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 ConnectionId = connection.ConnectionId
             });
             return new AcknowledgeAction {
+                RequestId = action.RequestId,
                 Rule = action.Rule,
                 Status = "Ok"
             };
@@ -197,6 +201,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 await _dataTable.DeleteRuleAsync(connectionId, action.Rule);
             }
             return new AcknowledgeAction {
+                RequestId = action.RequestId,
                 Rule = action.Rule,
                 Status = "Ok"
             };

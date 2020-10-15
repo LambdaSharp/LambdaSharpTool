@@ -1238,7 +1238,7 @@ namespace LambdaSharp.Tool.Model {
                         ["DevMode"] = FnRef(devModeParameter.FullName)
                     }
                 );
-                lambdaSharpSettings["EventBus"] = FnGetAtt(appEventBus.FullName, "Outputs.Url");
+                lambdaSharpSettings["EventBusUrl"] = FnGetAtt(appEventBus.FullName, "Outputs.Url");
             }
 
             // add resource to generate `appsettings.Production.json` file
