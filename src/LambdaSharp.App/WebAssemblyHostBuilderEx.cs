@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using LambdaSharp.App.Config;
+using LambdaSharp.App.EventBus;
 using LambdaSharp.App.Logging;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -123,6 +124,9 @@ namespace LambdaSharp.App {
 
             // register LambdaSharp app API client
             builder.Services.AddSingleton<LambdaSharpAppClient>();
+
+            // register LambdaSharp app EventBus client
+            builder.Services.AddSingleton<LambdaSharpEventBusClient>();
 
             // register LambdaSharp logging provider
             builder.Services.AddSingleton<ILoggerProvider, LambdaSharpAppLoggerProvider>();

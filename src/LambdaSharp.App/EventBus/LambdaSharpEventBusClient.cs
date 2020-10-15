@@ -33,32 +33,133 @@ namespace LambdaSharp.App.EventBus {
 
     public interface ISubscription : IAsyncDisposable { }
 
-    public sealed class LambdaSharpEventBusClient {
+    public class SubscriptErrorEventArgs : EventArgs {
+
+        //--- Constructors ---
+        public SubscriptErrorEventArgs(ISubscription subscription, Exception exception) {
+            Subscription = subscription ?? throw new ArgumentNullException(nameof(subscription));
+            Exception = exception ?? throw new ArgumentNullException(nameof(exception));
+        }
+
+        //--- Properties ---
+        public ISubscription Subscription { get; }
+        public Exception Exception { get; }
+    }
+
+    internal class EventBusSubscription : ISubscription {
 
         //--- Types ---
-        private class Subscription : ISubscription {
+        private enum Status {
+            Disabled,
+            Enabled,
+            Disposed,
+            Error
+        }
 
-            //--- Fields ---
-            private LambdaSharpEventBusClient _client;
-            private bool _disposed;
+        //--- Fields ---
+        private LambdaSharpEventBusClient _client;
+        private Status _status = Status.Disabled;
 
-            //--- Constructors ---
-            public Subscription(LambdaSharpEventBusClient client)
-                => _client = client ?? throw new ArgumentNullException(nameof(client));
+        //--- Constructors ---
+        public EventBusSubscription(string name, string pattern, Action<string, string> callback, LambdaSharpEventBusClient client) {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
+            Callback = callback ?? throw new ArgumentNullException(nameof(callback));
+            _client = client ?? throw new ArgumentNullException(nameof(client));
 
-            //--- Properties ---
-            public string Name { get; set; }
-            public string Pattern { get; set; }
-            public Func<string, string, Task> Callback { get; set; }
+            // automatically re-subscribe when connection is opened
+            _client.ConnectionOpened += Resubscribe;
+        }
 
-            //--- Methods ---
-            public async ValueTask DisposeAsync() {
-                if(!_disposed) {
-                    _disposed = true;
-                    await _client.UnsubscribeAsync(Name);
+        //--- Properties ---
+        public string Name { get; }
+        public string Pattern { get; }
+        public Action<string, string> Callback { get; }
+        public bool IsEnabled => _status == Status.Enabled;
+
+        //--- Methods ---
+        public async Task EnableSubscriptionAsync() {
+            if(_status == Status.Disposed) {
+                throw new ObjectDisposedException(Name);
+            }
+
+            // send 'Subscribe' request and wait for acknowledge response
+            _status = Status.Enabled;
+            if(_client.IsConnectionOpen) {
+                try {
+                    await _client.SendMessageAndWaitForAcknowledgeAsync(new SubscribeAction {
+                        Rule = Name,
+                        Pattern = Pattern
+                    });
+                } catch(InvalidOperationException) {
+
+                    // websocket is not connected; ignore error
+                } catch(Exception e) {
+                    _status = Status.Error;
+
+                    // subscription failed
+                    _client.OnSubscriptionError(this, e);
                 }
             }
         }
+
+        public async Task DisableSubscriptionAsync() {
+            if(_status == Status.Disposed) {
+                throw new ObjectDisposedException(Name);
+            }
+            if(_status == Status.Error) {
+                throw new InvalidOperationException();
+            }
+
+            // send 'Unsubscribe' request without waiting for acknowledge response
+            _status = Status.Disabled;
+            _client.Remove(this);
+            if(_client.IsConnectionOpen) {
+                try {
+                    await _client.SendMessageAsync(new UnsubscribeAction {
+                        Rule = Name
+                    });
+                } catch(Exception) {
+
+                    // nothing to do
+                }
+            }
+        }
+
+        public void Dispatch(EventAction action) {
+            if(_status == Status.Enabled) {
+                Callback?.Invoke(Name, action.Event);
+            }
+        }
+
+        public async ValueTask DisposeAsync() {
+            if(_status == Status.Disposed) {
+
+                // nothing to do
+                return;
+            }
+
+            // check if event bus needs to be notified
+            if(
+                (_status == Status.Enabled)
+                && _client.IsConnectionOpen
+            ) {
+                await DisableSubscriptionAsync();
+            }
+            _status = Status.Disposed;
+        }
+
+        private async void Resubscribe(object sender, EventArgs args) {
+            if(_status == Status.Enabled) {
+                await EnableSubscriptionAsync();
+            }
+        }
+    }
+
+    public sealed class LambdaSharpEventBusClient : IDisposable {
+
+        //--- Class Fields ---
+        private static readonly TimeSpan Frequency = TimeSpan.FromSeconds(10);
 
         //--- Class Methods ---
         private static bool TryParseJsonDocument(byte[] bytes, out JsonDocument document) {
@@ -70,23 +171,29 @@ namespace LambdaSharp.App.EventBus {
         private readonly LambdaSharpAppConfig _config;
         private readonly ILogger _logger;
         private readonly ClientWebSocket _webSocket = new ClientWebSocket();
-        private readonly Dictionary<string, Subscription> _subscriptions = new Dictionary<string, Subscription>();
+        private readonly Dictionary<string, EventBusSubscription> _subscriptions = new Dictionary<string, EventBusSubscription>();
         private readonly CancellationTokenSource _disposalTokenSource = new CancellationTokenSource();
         private readonly MemoryStream _messageAccumulator = new MemoryStream();
         private readonly Dictionary<string, TaskCompletionSource<AcknowledgeAction>> _pendingRequests = new Dictionary<string, TaskCompletionSource<AcknowledgeAction>>();
+        private readonly Timer _timer;
 
         //--- Constructors ---
         public LambdaSharpEventBusClient(LambdaSharpAppConfig config, ILogger logger) {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _timer = new Timer(OnTimer, state: null, dueTime: Frequency, period: Frequency);
         }
 
-        //--- Properties ---
+        //--- Events ---
+        public event EventHandler ConnectionOpened;
+        public event EventHandler ConnectionClosed;
+        public event EventHandler<SubscriptErrorEventArgs> SubscriptionError;
 
-        // TODO: add `OnConnectionOpened` and `OnConnectionClosed` event handlers
+        //--- Properties ---
+        public bool IsConnectionOpen => _webSocket.State == WebSocketState.Open;
 
         //--- Methods ---
-        public async Task<ISubscription> SubscribeAsync<T>(string name, EventPattern eventPattern, Func<T, Task> callback) {
+        public async Task<ISubscription> SubscribeAsync<T>(string name, EventPattern eventPattern, Func<string, T, Task> callback) {
             if(name is null) {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -97,65 +204,45 @@ namespace LambdaSharp.App.EventBus {
                 throw new ArgumentNullException(nameof(callback));
             }
 
-            // TODO: open connection; handle missing 'EventBusUrl'
-
-            // TODO: should we just store the subscription if the connection is closed?
-
             // register subscription
-            var subscription = new Subscription(this) {
-                Name = name,
-                Pattern = JsonSerializer.Serialize(eventPattern)
-            };
+            var subscription = new EventBusSubscription(
+                name,
+                JsonSerializer.Serialize(eventPattern),
+                (name, json) => {
+                    try {
+                        callback?.Invoke(name, JsonSerializer.Deserialize<T>(json));
+                    } catch(Exception e) {
+                        _logger.LogError(e, "Callback for rule '{0}' failed", name);
+                    }
+                },
+                this
+            );
             _subscriptions[name] = subscription;
 
-            // send 'Subscribe' request and wait for acknowledge response
-            try {
-                await SendMessageAndWaitForAcknowledgeAsync(new SubscribeAction {
-                    Rule = name,
-                    Pattern = subscription.Pattern
-                });
-            } catch {
+            // ensure the connection is open
+            if(await OpenConnectionAsync()) {
 
-                // subscription failed; remove it
-                _subscriptions.Remove(name);
-                throw;
+                // kick off subscription, but don't wait for response
+                _ = subscription.EnableSubscriptionAsync();
             }
             return subscription;
         }
 
-        private async Task UnsubscribeAsync(string ruleName) {
-            if(_subscriptions.TryGetValue(ruleName, out var subscription)) {
-                _subscriptions.Remove(ruleName);
-
-                // only send 'Unsubscribe' request if connection is open
-                if(_webSocket.State == WebSocketState.Open) {
-                    await SendMessageAsync(new UnsubscribeAction {
-                        Rule = ruleName
-                    });
-                }
-            }
+        public void Dispose() {
+            _disposalTokenSource.Cancel();
+            _ = _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
         }
 
-        private async Task ReconnectWebSocketAsync() {
-            _logger.LogDebug("Connecting to: {0}", _config.EventBusUrl);
+        internal void Remove(EventBusSubscription subscription) => _subscriptions.Remove(subscription.Name);
 
-            // connect/reconnect to websocket
-            await _webSocket.ConnectAsync(new Uri(_config.EventBusUrl), _disposalTokenSource.Token);
-            _logger.LogDebug("Connected!");
-
-            // announce app
-            await SendMessageAndWaitForAcknowledgeAsync(new HelloAction());
-
-            // resubmit any subscritpion that may have been existing before
-            foreach(var subscription in _subscriptions.Values) {
-                await SendMessageAsync(new SubscribeAction {
-                    Rule = subscription.Name,
-                    Pattern = subscription.Pattern
-                });
-            }
+        internal async Task SendMessageAsync<T>(T message) where T : AnAction {
+            var json = JsonSerializer.Serialize(message);
+            _logger.LogDebug("Sending: {0}", json);
+            var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(json));
+            await _webSocket.SendAsync(buffer, WebSocketMessageType.Text, endOfMessage: true, _disposalTokenSource.Token);
         }
 
-        private async Task SendMessageAndWaitForAcknowledgeAsync<T>(T message) where T : AnAction {
+        internal async Task SendMessageAndWaitForAcknowledgeAsync<T>(T message) where T : AnAction {
 
             // register completion action
             var taskCompletionSource = new TaskCompletionSource<AcknowledgeAction>();
@@ -165,8 +252,9 @@ namespace LambdaSharp.App.EventBus {
             await SendMessageAsync(message);
 
             // wait for response or timeout
-            if(await Task.WhenAny(Task.Delay(TimeSpan.FromSeconds(10)), taskCompletionSource.Task) != taskCompletionSource.Task) {
-                _pendingRequests.Remove(message.RequestId);
+            var outcome = await Task.WhenAny(Task.Delay(TimeSpan.FromSeconds(10)), taskCompletionSource.Task);
+            _pendingRequests.Remove(message.RequestId);
+            if(outcome != taskCompletionSource.Task) {
                 throw new TimeoutException();
             }
 
@@ -188,31 +276,72 @@ namespace LambdaSharp.App.EventBus {
             }
         }
 
-        private async Task SendMessageAsync<T>(T message) where T : AnAction {
-            var json = JsonSerializer.Serialize(message);
-            _logger.LogDebug("Sending: {0}", json);
-            var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(json));
-            await _webSocket.SendAsync(buffer, WebSocketMessageType.Text, endOfMessage: true, _disposalTokenSource.Token);
+        internal void OnSubscriptionError(EventBusSubscription subscription, Exception exception)
+            => SubscriptionError?.Invoke(this, new SubscriptErrorEventArgs(subscription, exception));
+
+        private async Task<bool> OpenConnectionAsync() {
+            if(_config.EventBusUrl == null) {
+
+                // nothing to do
+                return false;
+            }
+            if(_webSocket.State == WebSocketState.Open) {
+
+                // nothing to do
+                return true;
+            }
+            if(_webSocket.State != WebSocketState.Closed) {
+
+                // websocket is in a transitional state; let the timer try to connect later
+                _logger.LogDebug("Cannot open WebSocket in current state: {0}", _webSocket.State);
+                return false;
+            }
+            _logger.LogDebug("Connecting to: {0}", _config.EventBusUrl);
+
+            // connect/reconnect to websocket
+            try {
+                await _webSocket.ConnectAsync(new Uri(_config.EventBusUrl), _disposalTokenSource.Token);
+            } catch(WebSocketException e) {
+                _logger.LogDebug("Unable to connect WebSocket: {0}", e);
+                return false;
+            }
+            _logger.LogDebug("Connected!");
+            _ = ReceiveMessageLoopAsync();
+
+            // register app with event bus
+            try {
+                await SendMessageAndWaitForAcknowledgeAsync(new HelloAction());
+                ConnectionOpened?.Invoke(this, new EventArgs());
+                return true;
+            } catch(InvalidOperationException) {
+
+                // this exception occurs when the send operation fails
+                return false;
+            } catch(TimeoutException) {
+
+                // this exception occurs when the ack confirmation takes too long
+                _ = _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Reset", CancellationToken.None);
+                return false;
+            }
         }
 
-        private async Task ReceiveLoop() {
+        private async Task ReceiveMessageLoopAsync() {
             var buffer = new ArraySegment<byte>(new byte[32 * 1024]);
             while(!_disposalTokenSource.IsCancellationRequested) {
                 var received = await _webSocket.ReceiveAsync(buffer, _disposalTokenSource.Token);
                 switch(received.MessageType) {
                 case WebSocketMessageType.Close:
-                    if(!_disposalTokenSource.IsCancellationRequested) {
 
-                        // TODO: dismiss all pending connections
-                        _pendingRequests.Clear();
+                    // dismiss all pending connections
+                    _pendingRequests.Clear();
+                    ConnectionClosed?.Invoke(this, new EventArgs());
 
-                        // re-open connection while the app is still running
-                        await ReconnectWebSocketAsync();
-                    }
-                    break;
+                    // NOTE (2020-10-15, bjorg): timer will trigger a reconnection attempt
+                    return;
                 case WebSocketMessageType.Binary:
 
                     // unsupported message type; ignore it
+                    _logger.LogDebug("Binary payload ignored");
                     break;
                 case WebSocketMessageType.Text:
 
@@ -225,6 +354,8 @@ namespace LambdaSharp.App.EventBus {
                         // convert accumulated messages into JSON string
                         var bytes = _messageAccumulator.ToArray();
                         var message = Encoding.UTF8.GetString(bytes);
+
+                        // reset message accumulator
                         _messageAccumulator.Position = 0;
                         _messageAccumulator.SetLength(0);
 
@@ -238,14 +369,14 @@ namespace LambdaSharp.App.EventBus {
                         } else {
                             var action = actionProperty.GetString();
                             switch(action) {
-                            case "KeepAlive":
-                                await Process(JsonSerializer.Deserialize<KeepAliveAction>(message));
+                            case "Ack":
+                                await ProcessAcknowledgeAsync(JsonSerializer.Deserialize<AcknowledgeAction>(message));
                                 break;
                             case "Event":
-                                await Process(JsonSerializer.Deserialize<EventAction>(message));
+                                await ProcessEventAsync(JsonSerializer.Deserialize<EventAction>(message));
                                 break;
-                            case "Ack":
-                                await Process(JsonSerializer.Deserialize<AcknowledgeAction>(message));
+                            case "KeepAlive":
+                                await ProcessKeepAliveAsync(JsonSerializer.Deserialize<KeepAliveAction>(message));
                                 break;
                             default:
                                 _logger.LogDebug($"Unknown message type: {action}");
@@ -256,31 +387,39 @@ namespace LambdaSharp.App.EventBus {
                     break;
                 }
             }
-        }
 
-        private async Task Process(EventAction action) {
-            _logger.LogDebug("Received event matching rules: {0}", string.Join(", ", action.Rules));
-            foreach(var rule in action.Rules) {
-                if(_subscriptions.TryGetValue(rule, out var subscription)) {
-                    try {
-                        await subscription.Callback(rule, action.Event);
-                    } catch(Exception e) {
-                        _logger.LogError(e, $"Error in handler for rule: {0}", rule);
+            // local functions
+            async Task ProcessEventAsync(EventAction action) {
+                _logger.LogDebug("Received event matching rules: {0}", string.Join(", ", action.Rules));
+                foreach(var rule in action.Rules) {
+                    if(_subscriptions.TryGetValue(rule, out var subscription)) {
+                        subscription.Dispatch(action);
                     }
                 }
             }
-        }
 
-        private async Task Process(AcknowledgeAction action) {
-            if(!_pendingRequests.TryGetValue(action.RequestId, out var pending)) {
-                _logger.LogInformation("Received stale acknowledgement");
-                return;
+            async Task ProcessAcknowledgeAsync(AcknowledgeAction action) {
+                if(!_pendingRequests.TryGetValue(action.RequestId, out var pending)) {
+                    _logger.LogInformation("Received stale acknowledgement");
+                    return;
+                }
+                _pendingRequests.Remove(action.RequestId);
+                pending.SetResult(action);
             }
-            _pendingRequests.Remove(action.RequestId);
-            pending.SetResult(action);
+
+            async Task ProcessKeepAliveAsync(KeepAliveAction action)
+                => _logger.LogDebug("Received Keep-Alive message");
         }
 
-        private async Task Process(KeepAliveAction action)
-            => _logger.LogDebug("Received Keep-Alive message");
+        private void OnTimer(object _) {
+
+            // attempt to re-open connection when there are enabled subscriptions
+            if(
+                _subscriptions.Values.Any(subscription => subscription.IsEnabled)
+                && !_disposalTokenSource.IsCancellationRequested
+            ) {
+                _ = OpenConnectionAsync();
+            }
+        }
     }
 }
