@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,14 +16,11 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace LambdaSharp.App.EventBus.Actions {
 
-    public abstract class AnAction {
+    internal sealed class KeepAliveAction : AnAction {
 
-        //--- Properties ---
-        public string Action { get; set; }
-        public string RequestId { get; set; } = Guid.NewGuid().ToString();
+        //--- Constructors ---
+        public KeepAliveAction() => Action = "KeepAlive";
     }
 }

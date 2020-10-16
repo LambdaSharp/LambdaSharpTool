@@ -56,17 +56,11 @@ namespace LambdaSharp.App {
         public static WebAssemblyHostBuilder UseLambdaSharp(this WebAssemblyHostBuilder builder, Type mainType) {
             var emptyLambdaSharpSection = !builder.Configuration.GetSection("LambdaSharp").GetChildren().Any();
 
-            // check if Blazor WebAssembly is running locally via localhost
-            if(builder.HostEnvironment.IsDevelopment()) {
-
-                // check if the LambdaSharp configuration section missing
-                if(emptyLambdaSharpSection) {
+            // check if the LambdaSharp configuration section missing
+            if(emptyLambdaSharpSection) {
+                if(builder.HostEnvironment.IsDevelopment()) {
                     Console.WriteLine($"*** INFO: LambdaSharp App => using localhost test configuration");
-                }
-            } else {
-
-                // check if the LambdaSharp configuration section missing
-                if(emptyLambdaSharpSection) {
+                } else {
                     Console.WriteLine($"*** WARN: LambdaSharp App => config missing; using localhost test configuration instead");
                 }
             }

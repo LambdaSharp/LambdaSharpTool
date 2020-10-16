@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,14 +16,19 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+
 namespace LambdaSharp.App.EventBus.Actions {
 
-    public sealed class SubscribeAction : ARuleAction {
+    internal sealed class EventAction : AnAction {
 
         //--- Constructors ---
-        public SubscribeAction() => Action = "Subscribe";
+        public EventAction() => Action = "Event";
 
         //--- Properties ---
-        public string Pattern { get; set; }
+        public List<string> Rules { get; set; }
+        public string Source { get; set; }
+        public string Type { get; set; }
+        public string Event { get; set; }
     }
 }

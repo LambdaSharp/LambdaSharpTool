@@ -38,7 +38,7 @@ namespace LambdaSharp.App.EventBus {
         public static object Numeric(string operation, double value)
             => new Dictionary<string, object> {
                 ["numeric"] = new object[] {
-                    ValidateNumericOperation(operation),
+                    operation,
                     value
                 }
             };
@@ -46,9 +46,9 @@ namespace LambdaSharp.App.EventBus {
         public static object Numeric(string firstOperation, double firstValue, string secondOperation, double secondValue)
             => new Dictionary<string, object> {
                 ["numeric"] = new object[] {
-                    ValidateNumericOperation(firstOperation),
+                    firstOperation,
                     firstValue,
-                    ValidateNumericOperation(secondOperation),
+                    secondOperation,
                     secondValue,
                 }
             };
@@ -62,21 +62,6 @@ namespace LambdaSharp.App.EventBus {
             => new Dictionary<string, object> {
                 ["exists"] = exists
             };
-
-        private static string ValidateNumericOperation(string operation) {
-            switch(operation) {
-            case "<":
-            case "<=":
-            case "=":
-            case ">=":
-            case ">":
-                return operation;
-            case null:
-                throw new ArgumentNullException(nameof(operation));
-            default:
-                throw new ArgumentException("invalid operation", nameof(operation));
-            }
-        }
 
         //--- Properties ---
 

@@ -31,7 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.Logging\LambdaSharp.Logging.csproj" />
-    <Compile Include="..\..\Modules\LambdaSharp.App.EventBus\LambdaSharp.App.EventBus\Actions\*.cs" />
+    <Compile Include="..\..\Modules\LambdaSharp.App.EventBus\Shared\Actions\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -18,9 +18,9 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    public sealed class KeepAliveAction : AnAction {
+    internal sealed class HelloAction : AnAction {
 
         //--- Constructors ---
-        public KeepAliveAction() => Action = "KeepAlive";
+        public HelloAction() => Action = "Hello";
     }
 }

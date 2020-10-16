@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace LambdaSharp.App.EventBus.Actions {
 
-    public sealed class AcknowledgeAction : ARuleAction {
-
-        //--- Constructors ---
-        public AcknowledgeAction() => Action = "Ack";
+    internal abstract class AnAction {
 
         //--- Properties ---
-        public string Status { get; set; }
-        public string Message { get; set; }
+        public string Action { get; set; }
+        public string RequestId { get; set; } = Guid.NewGuid().ToString();
     }
 }

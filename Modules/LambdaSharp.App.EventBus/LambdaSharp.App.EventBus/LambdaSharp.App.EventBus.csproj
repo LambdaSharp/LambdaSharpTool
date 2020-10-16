@@ -13,4 +13,7 @@
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.*"/>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\Actions\*.cs" />
+  </ItemGroup>
 </Project>

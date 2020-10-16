@@ -48,6 +48,9 @@ namespace LambdaSharp.App.EventBus {
 
     internal class EventBusSubscription : ISubscription {
 
+        // TODO: need to know when a subscription becomes active, because subscriber may have to request missed data
+        //  * event  StateChanged
+
         //--- Types ---
         private enum Status {
             Disabled,
@@ -82,6 +85,7 @@ namespace LambdaSharp.App.EventBus {
             if(_status == Status.Disposed) {
                 throw new ObjectDisposedException(Name);
             }
+            _client.Logger.LogDebug("Enabling subscription {0}", Name);
 
             // send 'Subscribe' request and wait for acknowledge response
             _status = Status.Enabled;
@@ -169,7 +173,6 @@ namespace LambdaSharp.App.EventBus {
 
         //--- Fields ---
         private readonly LambdaSharpAppConfig _config;
-        private readonly ILogger _logger;
         private readonly ClientWebSocket _webSocket = new ClientWebSocket();
         private readonly Dictionary<string, EventBusSubscription> _subscriptions = new Dictionary<string, EventBusSubscription>();
         private readonly CancellationTokenSource _disposalTokenSource = new CancellationTokenSource();
@@ -178,9 +181,11 @@ namespace LambdaSharp.App.EventBus {
         private readonly Timer _timer;
 
         //--- Constructors ---
-        public LambdaSharpEventBusClient(LambdaSharpAppConfig config, ILogger logger) {
+
+        // TODO: add AppClient to streamline sending events via EventBus
+        public LambdaSharpEventBusClient(LambdaSharpAppConfig config, ILogger<LambdaSharpEventBusClient> logger) {
             _config = config ?? throw new ArgumentNullException(nameof(config));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _timer = new Timer(OnTimer, state: null, dueTime: Frequency, period: Frequency);
         }
 
@@ -191,9 +196,27 @@ namespace LambdaSharp.App.EventBus {
 
         //--- Properties ---
         public bool IsConnectionOpen => _webSocket.State == WebSocketState.Open;
+        internal ILogger<LambdaSharpEventBusClient> Logger { get; }
 
         //--- Methods ---
-        public async Task<ISubscription> SubscribeAsync<T>(string name, EventPattern eventPattern, Func<string, T, Task> callback) {
+        public Task<ISubscription> SubscribeAsync<T>(string source, Action<string, T> callback)
+            => SubscribeAsync<T>(
+                typeof(T).FullName,
+                new EventPattern {
+                    Source = new[] {
+                        source ?? throw new ArgumentNullException(nameof(source))
+                    },
+                    DetailType = new[] {
+                        typeof(T).FullName
+                    },
+                    Resources = new[] {
+                        $"lambdasharp:tier:{_config.DeploymentTier}"
+                    }
+                },
+                callback
+            );
+
+        public async Task<ISubscription> SubscribeAsync<T>(string name, EventPattern eventPattern, Action<string, T> callback) {
             if(name is null) {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -203,6 +226,8 @@ namespace LambdaSharp.App.EventBus {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
+            Logger.LogInformation("I'm here!");
+            Logger.LogDebug("I'm here!");
 
             // register subscription
             var subscription = new EventBusSubscription(
@@ -212,7 +237,7 @@ namespace LambdaSharp.App.EventBus {
                     try {
                         callback?.Invoke(name, JsonSerializer.Deserialize<T>(json));
                     } catch(Exception e) {
-                        _logger.LogError(e, "Callback for rule '{0}' failed", name);
+                        Logger.LogError(e, "Callback for rule '{0}' failed", name);
                     }
                 },
                 this
@@ -237,7 +262,7 @@ namespace LambdaSharp.App.EventBus {
 
         internal async Task SendMessageAsync<T>(T message) where T : AnAction {
             var json = JsonSerializer.Serialize(message);
-            _logger.LogDebug("Sending: {0}", json);
+            Logger.LogDebug("Sending: {0}", json);
             var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(json));
             await _webSocket.SendAsync(buffer, WebSocketMessageType.Text, endOfMessage: true, _disposalTokenSource.Token);
         }
@@ -283,6 +308,7 @@ namespace LambdaSharp.App.EventBus {
             if(_config.EventBusUrl == null) {
 
                 // nothing to do
+                Logger.LogDebug("Cannot open WebSocket without event bus URL");
                 return false;
             }
             if(_webSocket.State == WebSocketState.Open) {
@@ -293,19 +319,19 @@ namespace LambdaSharp.App.EventBus {
             if(_webSocket.State != WebSocketState.Closed) {
 
                 // websocket is in a transitional state; let the timer try to connect later
-                _logger.LogDebug("Cannot open WebSocket in current state: {0}", _webSocket.State);
+                Logger.LogDebug("Cannot open WebSocket in current state: {0}", _webSocket.State);
                 return false;
             }
-            _logger.LogDebug("Connecting to: {0}", _config.EventBusUrl);
+            Logger.LogDebug("Connecting to: {0}", _config.EventBusUrl);
 
             // connect/reconnect to websocket
             try {
                 await _webSocket.ConnectAsync(new Uri(_config.EventBusUrl), _disposalTokenSource.Token);
             } catch(WebSocketException e) {
-                _logger.LogDebug("Unable to connect WebSocket: {0}", e);
+                Logger.LogDebug("Unable to connect WebSocket: {0}", e);
                 return false;
             }
-            _logger.LogDebug("Connected!");
+            Logger.LogDebug("Connected!");
             _ = ReceiveMessageLoopAsync();
 
             // register app with event bus
@@ -341,7 +367,7 @@ namespace LambdaSharp.App.EventBus {
                 case WebSocketMessageType.Binary:
 
                     // unsupported message type; ignore it
-                    _logger.LogDebug("Binary payload ignored");
+                    Logger.LogDebug("Binary payload ignored");
                     break;
                 case WebSocketMessageType.Text:
 
@@ -361,11 +387,11 @@ namespace LambdaSharp.App.EventBus {
 
                         // deserialize into a generic JSON document
                         if(!TryParseJsonDocument(bytes, out var response)) {
-                            _logger.LogDebug($"Unabled to parse message as JSON document: {message}");
+                            Logger.LogDebug($"Unabled to parse message as JSON document: {message}");
                         } else if(!response.RootElement.TryGetProperty("Action", out var actionProperty)) {
-                            _logger.LogDebug($"Missing 'Action' property in message: {message}");
+                            Logger.LogDebug($"Missing 'Action' property in message: {message}");
                         } else if(actionProperty.ValueKind != JsonValueKind.String) {
-                            _logger.LogDebug($"Wrong type for 'Action' property in message: {message}");
+                            Logger.LogDebug($"Wrong type for 'Action' property in message: {message}");
                         } else {
                             var action = actionProperty.GetString();
                             switch(action) {
@@ -379,7 +405,7 @@ namespace LambdaSharp.App.EventBus {
                                 await ProcessKeepAliveAsync(JsonSerializer.Deserialize<KeepAliveAction>(message));
                                 break;
                             default:
-                                _logger.LogDebug($"Unknown message type: {action}");
+                                Logger.LogDebug($"Unknown message type: {action}");
                                 break;
                             }
                         }
@@ -390,7 +416,7 @@ namespace LambdaSharp.App.EventBus {
 
             // local functions
             async Task ProcessEventAsync(EventAction action) {
-                _logger.LogDebug("Received event matching rules: {0}", string.Join(", ", action.Rules));
+                Logger.LogDebug("Received event matching rules: {0}", string.Join(", ", action.Rules));
                 foreach(var rule in action.Rules) {
                     if(_subscriptions.TryGetValue(rule, out var subscription)) {
                         subscription.Dispatch(action);
@@ -400,7 +426,7 @@ namespace LambdaSharp.App.EventBus {
 
             async Task ProcessAcknowledgeAsync(AcknowledgeAction action) {
                 if(!_pendingRequests.TryGetValue(action.RequestId, out var pending)) {
-                    _logger.LogInformation("Received stale acknowledgement");
+                    Logger.LogInformation("Received stale acknowledgement");
                     return;
                 }
                 _pendingRequests.Remove(action.RequestId);
@@ -408,7 +434,7 @@ namespace LambdaSharp.App.EventBus {
             }
 
             async Task ProcessKeepAliveAsync(KeepAliveAction action)
-                => _logger.LogDebug("Received Keep-Alive message");
+                => Logger.LogDebug("Received Keep-Alive message");
         }
 
         private void OnTimer(object _) {
