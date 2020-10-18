@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal sealed class AcknowledgeAction : ARuleAction {
+    public sealed class AcknowledgeAction : ARuleAction {
 
         //--- Constructors ---
         public AcknowledgeAction() => Action = "Ack";

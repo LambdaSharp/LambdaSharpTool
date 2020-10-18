@@ -94,7 +94,8 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
 
                 // send welcome action to websocket connection
                 await SendMessageToConnection(new AcknowledgeAction {
-                    RequestId = requestId
+                    RequestId = requestId,
+                    Status = "Ok"
                 }, connectionId);
                 return Success("Confirmed");
             }
@@ -183,14 +184,17 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 };
         }
 
-        private Task SendMessageToConnection(AnAction action, string connectionId)
-            => SendMessageToConnection(Encoding.UTF8.GetBytes(LambdaSerializer.Serialize<object>(action)), connectionId);
-
-        private async Task SendMessageToConnection(byte[] messageBytes, string connectionId) {
+        private async Task SendMessageToConnection(AnAction action, string connectionId) {
+            var json = LambdaSerializer.Serialize<object>(action);
+            if(DebugLoggingEnabled) {
+                LogDebug($"Post to connection: {connectionId}\n{{0}}", json);
+            } else {
+                LogInfo($"Post to connection: {connectionId}");
+            }
 
             // attempt to send serialized message to connection
+            var messageBytes = Encoding.UTF8.GetBytes(json);
             try {
-                LogInfo($"Post to connection: {connectionId}");
                 await _amaClient.PostToConnectionAsync(new PostToConnectionRequest {
                     ConnectionId = connectionId,
                     Data = new MemoryStream(messageBytes)

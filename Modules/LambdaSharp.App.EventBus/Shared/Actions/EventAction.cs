@@ -20,7 +20,7 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal sealed class EventAction : AnAction {
+    public sealed class EventAction : AnAction {
 
         //--- Constructors ---
         public EventAction() => Action = "Event";

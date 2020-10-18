@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal sealed class KeepAliveAction : AnAction {
+    public sealed class KeepAliveAction : AnAction {
 
         //--- Constructors ---
         public KeepAliveAction() => Action = "KeepAlive";

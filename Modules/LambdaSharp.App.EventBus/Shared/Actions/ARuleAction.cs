@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal abstract class ARuleAction : AnAction {
+    public abstract class ARuleAction : AnAction {
 
         //--- Properties ---
         public string Rule { get; set; }

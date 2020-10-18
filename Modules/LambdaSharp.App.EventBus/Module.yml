@@ -98,9 +98,6 @@ Items:
               Service: events.amazonaws.com
             Action: sns:Publish
             Resource: !Ref EventTopic
-            Condition:
-              StringEquals:
-                AWS:SourceOwner: !Ref AWS::AccountId
       Topics:
         - !Ref EventTopic
 

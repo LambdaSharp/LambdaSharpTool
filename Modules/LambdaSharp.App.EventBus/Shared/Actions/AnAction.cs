@@ -20,7 +20,7 @@ using System;
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal abstract class AnAction {
+    public abstract class AnAction {
 
         //--- Properties ---
         public string Action { get; set; }

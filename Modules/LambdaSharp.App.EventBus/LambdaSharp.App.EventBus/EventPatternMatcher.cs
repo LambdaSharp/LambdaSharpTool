@@ -114,10 +114,12 @@ namespace LambdaSharp.App.EventBus {
                         return false;
                     }
                     break;
-                case JValue _:
+                case JValue valuePattern:
 
                     // event pattern contains invalid value (can only be a nonempty array or nonempty object)
-                    return false;
+
+                    // NOTE (2020-10-18, bjorg): we allow 'null' because it can be an artifact from JSON serialization
+                    return valuePattern.Type == JTokenType.Null;
                 default:
                     throw new ArgumentException($"invalid pattern type: {kv.Value?.GetType().FullName ?? "<null>"}");
                 }
@@ -276,6 +278,10 @@ namespace LambdaSharp.App.EventBus {
                     ) {
                         return false;
                     }
+                    break;
+                case JValue valuePattern when valuePattern.Type == JTokenType.Null:
+
+                    // JSON serialization artifact; nothing to do
                     break;
                 default:
                     throw new ArgumentException($"unexpected pattern type: {patternProperty.Value?.GetType().FullName ?? "<null>"}");

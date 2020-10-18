@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal sealed class SubscribeAction : ARuleAction {
+    public sealed class SubscribeAction : ARuleAction {
 
         //--- Constructors ---
         public SubscribeAction() => Action = "Subscribe";

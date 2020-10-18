@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal sealed class UnsubscribeAction : ARuleAction {
+    public sealed class UnsubscribeAction : ARuleAction {
 
         //--- Constructors ---
         public UnsubscribeAction() => Action = "Unsubscribe";

@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
-    internal sealed class HelloAction : AnAction {
+    public sealed class HelloAction : AnAction {
 
         //--- Constructors ---
         public HelloAction() => Action = "Hello";

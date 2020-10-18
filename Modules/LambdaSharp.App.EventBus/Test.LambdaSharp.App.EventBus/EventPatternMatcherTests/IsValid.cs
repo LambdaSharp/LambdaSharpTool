@@ -381,5 +381,18 @@ namespace Test.LambdaSharp.App.EventBus.EventPatternMatcherTests {
             // assert
             isValid.Should().BeFalse();
         }
+
+        [Fact]
+        public void Pattern_with_null_serialized_is_valid() {
+
+            // arrange
+            var pattern = JObject.Parse("{\"source\":[\"Sample.BlazorEventsSample:1.0-DEV@stevebv7-lambdasharp-cor-deploymentbucketresource-9h53iqcat7uj::MyBlazorApp\"],\"detail-type\":[\"Sample.BlazorEventsSample.MyBlazorApp.Shared.TodoItem\"],\"resources\":[\"lambdasharp:tier:SteveBv7\"],\"detail\":null}");
+
+            // act
+            var isValid = EventPatternMatcher.IsValid(pattern);
+
+            // assert
+            isValid.Should().BeTrue();
+        }
     }
 }
