@@ -19,8 +19,11 @@
 @page "/todo"
 
 @using LambdaSharp.Logging.Metrics
+@using LambdaSharp.App.EventBus
 
 @inherits ALambdaComponent
+
+@inject LambdaSharp.App.EventBus.LambdaSharpEventBusClient EventBus
 
 <Container Fluid="true">
     <Row>
@@ -91,15 +94,19 @@
     private Validations _validations;
     private string _description;
     private Filter _filter = Filter.All;
+    private LambdaSharp.App.EventBus.ISubscription _subscription;
 
     private List<TodoItem> _todos = new List<TodoItem> {
         new TodoItem {
+            Id = "faaf03af-efd1-4708-bde5-ebe062c6d7b6",
             Description = "Buy milk"
         },
         new TodoItem {
+            Id = "e656283f-85a0-4733-bbb9-454f5ef2ec3c",
             Description = "Call John regarding the meeting"
         },
         new TodoItem {
+            Id = "9e0f5d82-dca8-4d3d-a2a7-6ff4ce26ca67",
             Description = "Walk a dog"
         }
     };
@@ -113,6 +120,25 @@
         };
 
     //--- Methods ---
+    protected override async Task OnInitializedAsync() {
+        base.OnInitialized();
+
+        // TODO: guessing this source name is impossible
+        var source = $"Sample.BlazorEventsSample::MyBlazorApp";
+
+        // create subscription
+        _subscription = EventBus.Subscribe<TodoItem>(source, TodoAddItemEvent);
+    }
+
+    private void TodoAddItemEvent(TodoItem todoEvent) {
+        if(!_todos.Any(todo => todo.Id == todoEvent.Id)) {
+            _todos.Add(todoEvent);
+
+            // update user interface
+            StateHasChanged();
+        }
+    }
+
     private void SetFilter(Filter filter) {
 
         // filter Todo list by state
@@ -130,18 +156,23 @@
 
             // create new todo item and add it to the list
             var todo = new TodoItem {
+                Id = Guid.NewGuid().ToString(),
                 Description = _description
             };
             _todos.Add(todo);
 
             // send event about added Todo item to CloudWatch EventBridge
+
+            // TODO: consider moving this method to EventBus instead
             LogEvent(
 
+                // TODO: by default 'Source' is set by CloudFormation deployment
                 // identify the application source the event is part of
-                source: "TodoApp",
+                source: $"{Info.ModuleInfo.Split(":")[0]}::{Info.AppName}",
 
+                // TODO: detail-type should be set to full type name
                 // identify the type of event
-                detailType: "TodoAdded",
+                detailType: todo.GetType().FullName,
 
                 // specify the event details
                 detail: todo

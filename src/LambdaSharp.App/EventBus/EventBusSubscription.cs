@@ -19,123 +19,89 @@
 using System;
 using System.Threading.Tasks;
 using LambdaSharp.App.EventBus.Actions;
-using Microsoft.Extensions.Logging;
 
 namespace LambdaSharp.App.EventBus {
 
+    internal enum EventBusSubscriptionStatus {
+        Disabled,
+        Enabled,
+        Disposed,
+        Error
+    }
+
     internal class EventBusSubscription : ISubscription {
 
-        // TODO: need to know when a subscription becomes active, because subscriber may have to request missed data
-        //  * event  StateChanged
-
         //--- Types ---
-        private enum Status {
-            Disabled,
-            Enabled,
-            Disposed,
-            Error
-        }
 
         //--- Fields ---
         private LambdaSharpEventBusClient _client;
-        private Status _status = Status.Disabled;
 
         //--- Constructors ---
-        public EventBusSubscription(string name, string pattern, Action<string, string> callback, LambdaSharpEventBusClient client) {
+        public EventBusSubscription(string name, string pattern, Action<ISubscription, string> callback, LambdaSharpEventBusClient client) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
             Callback = callback ?? throw new ArgumentNullException(nameof(callback));
             _client = client ?? throw new ArgumentNullException(nameof(client));
-
-            // automatically re-subscribe when connection is opened
-            _client.ConnectionOpened += Resubscribe;
         }
 
         //--- Properties ---
         public string Name { get; }
         public string Pattern { get; }
-        public Action<string, string> Callback { get; }
-        public bool IsEnabled => _status == Status.Enabled;
+        public Action<ISubscription, string> Callback { get; }
+        public bool IsEnabled => Status == EventBusSubscriptionStatus.Enabled;
+        public EventBusSubscriptionStatus Status { get; set; }
 
         //--- Methods ---
         public async Task EnableSubscriptionAsync() {
-            if(_status == Status.Disposed) {
+            switch(Status) {
+            case EventBusSubscriptionStatus.Enabled:
+
+                // nothing to do
+                break;
+            case EventBusSubscriptionStatus.Disabled:
+                await _client.OpenConnectionAsync();
+
+                // update state and notify event bus
+                Status = EventBusSubscriptionStatus.Enabled;
+                await _client.EnableSubscriptionAsync(this);
+                break;
+            case EventBusSubscriptionStatus.Disposed:
                 throw new ObjectDisposedException(Name);
-            }
-            _client.Logger.LogDebug("Enabling subscription {0}", Name);
-
-            // send 'Subscribe' request and wait for acknowledge response
-            _status = Status.Enabled;
-            if(_client.IsConnectionOpen) {
-                try {
-                    await _client.SendMessageAndWaitForAcknowledgeAsync(new SubscribeAction {
-                        Rule = Name,
-                        Pattern = Pattern
-                    });
-                } catch(InvalidOperationException) {
-
-                    // websocket is not connected; ignore error
-                } catch(Exception e) {
-                    _client.Logger.LogDebug("Error activating subscription for: {0}", Name);
-                    _status = Status.Error;
-
-                    // subscription failed
-                    _client.OnSubscriptionError(this, e);
-                }
+            case EventBusSubscriptionStatus.Error:
+                throw new InvalidOperationException("EventBus subscription is in Error state");
+            default:
+                throw new InvalidOperationException($"Unexpected status: {Status}");
             }
         }
 
         public async Task DisableSubscriptionAsync() {
-            if(_status == Status.Disposed) {
-                throw new ObjectDisposedException(Name);
-            }
-            if(_status == Status.Error) {
-                throw new InvalidOperationException();
-            }
+            switch(Status) {
+            case EventBusSubscriptionStatus.Enabled:
 
-            // send 'Unsubscribe' request without waiting for acknowledge response
-            _status = Status.Disabled;
-            _client.Remove(this);
-            if(_client.IsConnectionOpen) {
-                try {
-                    await _client.SendMessageAsync(new UnsubscribeAction {
-                        Rule = Name
-                    });
-                } catch(Exception) {
+                // update state and notify event bus
+                Status = EventBusSubscriptionStatus.Disabled;
+                await _client.DisableSubscriptionAsync(this);
+                break;
+            case EventBusSubscriptionStatus.Disabled:
+            case EventBusSubscriptionStatus.Disposed:
+            case EventBusSubscriptionStatus.Error:
 
-                    // nothing to do
-                }
+                // nothing to do
+                return;
+            default:
+                throw new InvalidOperationException($"Unexpected status: {Status}");
             }
         }
 
         public void Dispatch(EventAction action) {
-            _client.Logger.LogDebug("Dispatching event for: {0}", Name);
-            if(_status == Status.Enabled) {
-                Callback?.Invoke(Name, action.Event);
+            if(Status == EventBusSubscriptionStatus.Enabled) {
+                Callback?.Invoke(this, action.Event);
             }
         }
 
         public async ValueTask DisposeAsync() {
-            if(_status == Status.Disposed) {
-
-                // nothing to do
-                return;
-            }
-
-            // check if event bus needs to be notified
-            if(
-                (_status == Status.Enabled)
-                && _client.IsConnectionOpen
-            ) {
-                await DisableSubscriptionAsync();
-            }
-            _status = Status.Disposed;
-        }
-
-        private async void Resubscribe(object sender, EventArgs args) {
-            if(_status == Status.Enabled) {
-                await EnableSubscriptionAsync();
-            }
+            await DisableSubscriptionAsync();
+            Status = EventBusSubscriptionStatus.Disposed;
         }
     }
 }
