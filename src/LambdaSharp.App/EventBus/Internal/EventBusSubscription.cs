@@ -87,7 +87,7 @@ namespace LambdaSharp.App.EventBus.Internal {
         }
 
         public void Dispatch(EventAction action) {
-            if(Status == EventBusSubscriptionStatus.Enabled) {
+            if(IsEnabled) {
                 Callback?.Invoke(this, action.Event);
             }
         }

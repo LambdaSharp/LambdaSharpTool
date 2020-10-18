@@ -32,8 +32,6 @@ using LambdaSharp.App.EventBus.Actions;
 using LambdaSharp.App.EventBus.Internal;
 using Microsoft.Extensions.Logging;
 
-// TODO: review all LogDebug statements
-
 namespace LambdaSharp.App {
 
     public sealed class LambdaSharpEventBusClient : IAsyncDisposable {
@@ -67,7 +65,7 @@ namespace LambdaSharp.App {
 
             // issue a warning if the EventBus client is being initialized, but there is no URL for the websocket
             if(_config.EventBusUrl == null) {
-                _logger.LogWarning("EventBus URL missing. Check app is subscribed to at least one event source.");
+                _logger.LogWarning("EventBus URL missing. Ensure app is subscribed to at least one event source.");
             }
         }
 
@@ -204,6 +202,8 @@ namespace LambdaSharp.App {
                 JsonSerializer.Serialize(eventPattern),
                 (callbackSubscription, cloudWatchEventJson) => {
                     try {
+
+                        // deserialize received event
                         callback?.Invoke(callbackSubscription, JsonSerializer.Deserialize<CloudWatchEvent<T>>(cloudWatchEventJson));
                     } catch(Exception e) {
                         _logger.LogError(e, "Callback for rule '{0}' failed", name);
@@ -273,7 +273,7 @@ namespace LambdaSharp.App {
         }
 
         internal async Task EnableSubscriptionAsync(EventBusSubscription subscription) {
-            _logger.LogDebug("Enabling subscription {0}", subscription.Name);
+            _logger.LogDebug("Enabling subscription: {0}", subscription.Name);
             if(IsConnectionOpen) {
                 try {
                     await SendMessageAndWaitForAcknowledgeAsync(new SubscribeAction {
@@ -284,7 +284,7 @@ namespace LambdaSharp.App {
 
                     // websocket is not connected; ignore error
                 } catch(Exception e) {
-                    _logger.LogDebug("Error activating subscription for: {0}\n{1}", subscription.Name, e);
+                    _logger.LogDebug("Activating subscription FAILED: {0}\n{1}", subscription.Name, e);
                     subscription.Status = EventBusSubscriptionStatus.Error;
 
                     // subscription failed
@@ -294,7 +294,7 @@ namespace LambdaSharp.App {
         }
 
         internal async Task DisableSubscriptionAsync(EventBusSubscription subscription) {
-            _logger.LogDebug("Disabling subscription {0}", subscription.Name);
+            _logger.LogDebug("Disabling subscription: {0}", subscription.Name);
             if(_subscriptions.Remove(subscription.Name) && IsConnectionOpen) {
                 try {
                     await SendMessageAsync(new UnsubscribeAction {
@@ -306,7 +306,7 @@ namespace LambdaSharp.App {
                 } catch(Exception e) {
 
                     // nothing to do
-                    _logger.LogDebug("Error deactivating subscription for: {0}\n{1}", subscription.Name, e);
+                    _logger.LogDebug("Deactivating subscription FAILED: {0}\n{1}", subscription.Name, e);
                 }
             }
         }
@@ -322,7 +322,6 @@ namespace LambdaSharp.App {
                 // nothing to do
                 return;
             }
-            _logger.LogDebug("WebSocketState: {0}", _webSocket.State);
             if(
                 (_webSocket.State != WebSocketState.Closed)
                 && (_webSocket.State != WebSocketState.None)
@@ -363,8 +362,7 @@ namespace LambdaSharp.App {
                 StateChanged?.Invoke(this, new EventBusStateChangedEventArgs(EventBusState.Open));
             } catch(InvalidOperationException e) {
 
-                // this exception occurs when the send operation fails
-                _logger.LogDebug("Error sending message: {0}", e);
+                // this exception occurs when the send operation fails because the socket is closed; nothing to do
             } catch(TimeoutException) {
 
                 // this exception occurs when the ack confirmation takes too long
@@ -376,7 +374,7 @@ namespace LambdaSharp.App {
             var buffer = new ArraySegment<byte>(new byte[32 * 1024]);
             while(!_disposalTokenSource.IsCancellationRequested) {
                 try {
-                    _logger.LogDebug("Waiting on connection data");
+                    _logger.LogDebug("Waiting for websocket data");
                     var received = await _webSocket.ReceiveAsync(buffer, _disposalTokenSource.Token);
                     _logger.LogDebug("Received: {0}", received.MessageType);
                     switch(received.MessageType) {
@@ -431,21 +429,27 @@ namespace LambdaSharp.App {
                                     await ProcessKeepAliveAsync(JsonSerializer.Deserialize<KeepAliveAction>(message));
                                     break;
                                 default:
-                                    _logger.LogDebug($"Unknown message type: {action}");
+                                    _logger.LogDebug($"Received unknown message type: {action ?? "<null>"}");
                                     break;
                                 }
                             }
+                        } else {
+                            _logger.LogDebug("Buffering incomplete message ({0:N0} bytes received, {1:N0} total bytes accumulated)", received.Count, _messageAccumulator.Position);
                         }
                         break;
                     }
                 } catch(Exception e) {
-                    _logger.LogError(e, "Error receiving data on websocket");
+                    _logger.LogError(e, "Receiving data on websocket FAILED");
                 }
             }
 
             // local functions
             async Task ProcessEventAsync(EventAction action) {
-                _logger.LogDebug("Received event matching rules: {0}", string.Join(", ", action.Rules));
+                if(action.Rules.Count == 1) {
+                    _logger.LogDebug("Received event matching rules: ['{0}']", action.Rules[0]);
+                } else {
+                    _logger.LogDebug("Received event matching rules: [{0}]", string.Join(", ", action.Rules.Select(rule => $"'{rule}'")));
+                }
                 foreach(var rule in action.Rules) {
                     if(_subscriptions.TryGetValue(rule, out var subscription)) {
                         _logger.LogDebug("Dispatching event for: {0}", rule);
@@ -455,13 +459,17 @@ namespace LambdaSharp.App {
             }
 
             async Task ProcessAcknowledgeAsync(AcknowledgeAction action) {
-                if(!_pendingRequests.TryGetValue(action.RequestId, out var pending)) {
-                    _logger.LogDebug("Received stale acknowledgement");
-                    return;
+                if(action.RequestId != null) {
+                    if(!_pendingRequests.TryGetValue(action.RequestId, out var pending)) {
+                        _logger.LogDebug("Received stale acknowledgement");
+                        return;
+                    }
+                    _logger.LogDebug("Received acknowledgement for: {0}", action.RequestId);
+                    _pendingRequests.Remove(action.RequestId);
+                    pending.SetResult(action);
+                } else {
+                    _logger.LogDebug("Received acknowledgement without RequestId: Status='{0}', Message='{1}'", action.Status ?? "<null>", action.Message ?? "<null>");
                 }
-                _logger.LogDebug("Received acknowledgement for: {0}", action.RequestId);
-                _pendingRequests.Remove(action.RequestId);
-                pending.SetResult(action);
             }
 
             async Task ProcessKeepAliveAsync(KeepAliveAction action)
