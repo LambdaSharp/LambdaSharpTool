@@ -12,7 +12,8 @@
     <Compile Include="..\Shared\Actions\*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../LambdaSharp.App.EventBus/LambdaSharp.App.EventBus.csproj"/>
+    <ProjectReference Include="..\LambdaSharp.App.EventBus\LambdaSharp.App.EventBus.csproj"/>
+    <ProjectReference Include="..\LambdaSharp.App.EventBus.Actions\LambdaSharp.App.EventBus.Actions.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="0.8.1.*"/>
