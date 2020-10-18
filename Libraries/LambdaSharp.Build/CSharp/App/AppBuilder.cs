@@ -385,7 +385,8 @@ namespace LambdaSharp.Build.CSharp {
                     "util", "extract-assembly-metadata",
                     "--assembly", assemblyFilepath,
                     "--out", appMetadataFilepath,
-                    "--quiet"
+                    "--quiet",
+                    "--no-ansi"
                 },
                 Provider.DetailedOutput
             );
