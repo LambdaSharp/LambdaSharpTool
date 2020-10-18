@@ -20,16 +20,9 @@ using System;
 using System.Threading.Tasks;
 using LambdaSharp.App.EventBus.Actions;
 
-namespace LambdaSharp.App.EventBus {
+namespace LambdaSharp.App.EventBus.Internal {
 
-    internal enum EventBusSubscriptionStatus {
-        Disabled,
-        Enabled,
-        Disposed,
-        Error
-    }
-
-    internal class EventBusSubscription : ISubscription {
+    internal class EventBusSubscription : IEventBusSubscription {
 
         //--- Types ---
 
@@ -37,7 +30,7 @@ namespace LambdaSharp.App.EventBus {
         private LambdaSharpEventBusClient _client;
 
         //--- Constructors ---
-        public EventBusSubscription(string name, string pattern, Action<ISubscription, string> callback, LambdaSharpEventBusClient client) {
+        public EventBusSubscription(string name, string pattern, Action<IEventBusSubscription, string> callback, LambdaSharpEventBusClient client) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
             Callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -47,7 +40,7 @@ namespace LambdaSharp.App.EventBus {
         //--- Properties ---
         public string Name { get; }
         public string Pattern { get; }
-        public Action<ISubscription, string> Callback { get; }
+        public Action<IEventBusSubscription, string> Callback { get; }
         public bool IsEnabled => Status == EventBusSubscriptionStatus.Enabled;
         public EventBusSubscriptionStatus Status { get; set; }
 

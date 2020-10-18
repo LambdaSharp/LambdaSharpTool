@@ -19,11 +19,10 @@
 @page "/todo"
 
 @using LambdaSharp.Logging.Metrics
-@using LambdaSharp.App.EventBus
 
 @inherits ALambdaComponent
 
-@inject LambdaSharp.App.EventBus.LambdaSharpEventBusClient EventBus
+@inject LambdaSharp.App.LambdaSharpEventBusClient EventBus
 
 <Container Fluid="true">
     <Row>
@@ -94,7 +93,6 @@
     private Validations _validations;
     private string _description;
     private Filter _filter = Filter.All;
-    private LambdaSharp.App.EventBus.ISubscription _subscription;
 
     private List<TodoItem> _todos = new List<TodoItem> {
         new TodoItem {
@@ -127,7 +125,7 @@
         var source = $"Sample.BlazorEventsSample::MyBlazorApp";
 
         // create subscription
-        _subscription = EventBus.Subscribe<TodoItem>(source, TodoAddItemEvent);
+        EventBus.SubscribeTo<TodoItem>(source, TodoAddItemEvent);
     }
 
     private void TodoAddItemEvent(TodoItem todoEvent) {

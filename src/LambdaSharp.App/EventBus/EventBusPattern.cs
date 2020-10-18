@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -22,7 +22,7 @@ using System.Text.Json.Serialization;
 
 namespace LambdaSharp.App.EventBus {
 
-    public sealed class EventPattern {
+    public sealed class EventBusPattern {
 
         //--- Class Methods ---
         public static object AnythingBut(object pattern)

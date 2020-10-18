@@ -27,42 +27,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.CloudWatchEvents;
 using LambdaSharp.App.Config;
+using LambdaSharp.App.EventBus;
 using LambdaSharp.App.EventBus.Actions;
+using LambdaSharp.App.EventBus.Internal;
 using Microsoft.Extensions.Logging;
 
 // TODO: review all LogDebug statements
 
-namespace LambdaSharp.App.EventBus {
-
-    public interface ISubscription : IAsyncDisposable { }
-
-    public class EventBusSubscriptErrorEventArgs : EventArgs {
-
-        //--- Constructors ---
-        public EventBusSubscriptErrorEventArgs(ISubscription subscription, Exception exception) {
-            Subscription = subscription ?? throw new ArgumentNullException(nameof(subscription));
-            Exception = exception ?? throw new ArgumentNullException(nameof(exception));
-        }
-
-        //--- Properties ---
-        public ISubscription Subscription { get; }
-        public Exception Exception { get; }
-    }
-
-    public enum EventBusState {
-        Closed,
-        Open
-    }
-
-    public class EventBusStateChangedEventArgs : EventArgs {
-
-        public EventBusStateChangedEventArgs(EventBusState state) => State = state;
-
-        //--- Properties ---
-        public EventBusState State { get; }
-        public bool IsOpen => State == EventBusState.Open;
-
-    }
+namespace LambdaSharp.App {
 
     public sealed class LambdaSharpEventBusClient : IAsyncDisposable {
 
@@ -107,115 +79,115 @@ namespace LambdaSharp.App.EventBus {
         public bool IsConnectionOpen => _webSocket.State == WebSocketState.Open;
 
         //--- Methods ---
-        public ISubscription Subscribe<T>(string source, Func<CloudWatchEvent<T>, Task> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Func<CloudWatchEvent<T>, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 Callback
             );
 
             // local functions
-            void Callback(ISubscription subscription, CloudWatchEvent<T> @event) {
+            void Callback(IEventBusSubscription subscription, CloudWatchEvent<T> @event) {
                 _ = callback(@event);
             }
         }
 
-        public ISubscription Subscribe<T>(string source, Func<T, Task> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Func<T, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 Callback
             );
 
             // local functions
-            void Callback(ISubscription subscription, CloudWatchEvent<T> @event) {
+            void Callback(IEventBusSubscription subscription, CloudWatchEvent<T> @event) {
                 _ = callback(@event.Detail);
             }
         }
 
-        public ISubscription Subscribe<T>(string source, Action<CloudWatchEvent<T>> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Action<CloudWatchEvent<T>> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 (_, @event) => callback(@event)
             );
         }
 
-        public ISubscription Subscribe<T>(string source, Action<T> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Action<T> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 (_, @event) => callback(@event.Detail)
             );
         }
 
-        public ISubscription Subscribe<T>(string source, Func<ISubscription, CloudWatchEvent<T>, Task> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Func<IEventBusSubscription, CloudWatchEvent<T>, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 Callback
             );
 
             // local functions
-            void Callback(ISubscription subscription, CloudWatchEvent<T> @event) {
+            void Callback(IEventBusSubscription subscription, CloudWatchEvent<T> @event) {
                 _ = callback(subscription, @event);
             }
         }
 
-        public ISubscription Subscribe<T>(string source, Func<ISubscription, T, Task> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Func<IEventBusSubscription, T, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 Callback
             );
 
             // local functions
-            void Callback(ISubscription subscription, CloudWatchEvent<T> @event) {
+            void Callback(IEventBusSubscription subscription, CloudWatchEvent<T> @event) {
                 _ = callback(subscription, @event.Detail);
             }
         }
 
-        public ISubscription Subscribe<T>(string source, Action<ISubscription, CloudWatchEvent<T>> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Action<IEventBusSubscription, CloudWatchEvent<T>> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 callback
             );
         }
 
-        public ISubscription Subscribe<T>(string source, Action<ISubscription, T> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string source, Action<IEventBusSubscription, T> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
             }
-            return Subscribe<T>(
+            return SubscribeTo<T>(
                 typeof(T).FullName,
                 FromEventPatternFrom(source, typeof(T)),
                 (subscription, @event) => callback(subscription, @event.Detail)
             );
         }
 
-        public ISubscription Subscribe<T>(string name, EventPattern eventPattern, Action<ISubscription, CloudWatchEvent<T>> callback) {
+        public IEventBusSubscription SubscribeTo<T>(string name, EventBusPattern eventPattern, Action<IEventBusSubscription, CloudWatchEvent<T>> callback) {
             if(name is null) {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -507,8 +479,8 @@ namespace LambdaSharp.App.EventBus {
             }
         }
 
-        private EventPattern FromEventPatternFrom(string source, Type type)
-            => new EventPattern {
+        private EventBusPattern FromEventPatternFrom(string source, Type type)
+            => new EventBusPattern {
                 Source = new[] {
                     source ?? throw new ArgumentNullException(nameof(source))
                 },
