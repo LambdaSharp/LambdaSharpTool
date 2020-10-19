@@ -53,7 +53,7 @@ namespace LambdaSharp {
         ILambdaSerializer JsonSerializer { get; }
 
         /// <summary>
-        /// The <see cref="DebugLoggingEnabled"/> property indicates if the the requests received and responses emitted
+        /// The <see cref="DebugLoggingEnabled"/> property indicates if the requests received and responses emitted
         /// by this Lambda function should be shown in the CloudWatch logs. This can be useful to determine check for
         /// issues caused by inconsistencies in serialization or deserialization.
         /// </summary>

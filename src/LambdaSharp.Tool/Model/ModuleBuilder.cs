@@ -1222,6 +1222,7 @@ namespace LambdaSharp.Tool.Model {
             );
             lambdaSharpSettings["ApiUrl"] = clientApiUrl ?? FnGetAtt(appApi.FullName, "Outputs.Url");
             lambdaSharpSettings["ApiKey"] = FnGetAtt(appApi.FullName, "Outputs.ApiKey");
+            lambdaSharpSettings["AppEventSource"] = FnRef(appEventSource.FullName);
 
             // add nested stack for the app event bus
             if(app.Sources.Any()) {

@@ -127,6 +127,12 @@ namespace LambdaSharp.App.Config {
         /// <value>The URL of the app API.</value>
         public string EventBusUrl { get; set; }
 
+        /// <summary>
+        /// The <see cref="AppEventSource"/> property holds the configured event source value, or null when not set.
+        /// </summary>
+        /// <value>Configured event source name for the app instance, or null.</value>
+        public string AppEventSource { get; }
+
         //--- Methods ---
 
         /// <summary>

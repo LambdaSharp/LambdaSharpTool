@@ -55,11 +55,11 @@ namespace LambdaSharp.Build.CSharp {
         public const string AppSettingsJsonFileName = "appsettings.json";
 
         // NOTE (2020-08-09, bjorg): "appsettings.Production.json" is automatically loaded on boot
-        //  by the the Blazor application and injected into the app's configuration.
+        //  by the Blazor application and injected into the app's configuration.
         public const string AppSettingsProductionJsonFileName = "appsettings.Production.json";
 
         // NOTE (2020-08-09, bjorg): "appsettings.Production.json" is automatically loaded on boot
-        //  by the the Blazor application and injected into the app's configuration.
+        //  by the Blazor application and injected into the app's configuration.
         public const string AppSettingsDevelopmentJsonFileName = "appsettings.Development.json";
 
         //--- Types ---
