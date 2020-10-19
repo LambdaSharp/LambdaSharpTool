@@ -153,6 +153,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * CLI
   * Enhanced the `EventBus` pattern parsing to insert a default LambdaSharp tier constraint for `resources` when not specified. Use `resources: null` to omit the default constraint.
   * Enhanced the `EventBus` pattern parsing to convert `Source` to `source`, `DetailType` to `detail-type`, `Detail` to `detail`, and `Resources` to `resources` for better consistency with the SDK. Note the key renaming is only applied to top-level properties.
+  * Added audible cue when `lash` command finishes after running for more than 10s. The audible cue can be suppressed with `--no-beep` option.
 
 * Modules
   * _LambdaSharp.App.Api_

@@ -55,6 +55,12 @@ The `--min-version` option is used to compare the specified version against the 
 (optional) Don't show banner or execution time
 </dd>
 
+<dt><code>--no-beep</code></dt>
+<dd>
+
+(optional) Don't emit beep when finished
+</dd>
+
 </dl>
 
 ## Examples

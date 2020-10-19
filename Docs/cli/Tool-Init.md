@@ -127,6 +127,12 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 (optional) Don't show banner or execution time
 </dd>
 
+<dt><code>--no-beep</code></dt>
+<dd>
+
+(optional) Don't emit beep when finished
+</dd>
+
 <dt><code>--prompts-as-errors</code></dt>
 <dd>
 
