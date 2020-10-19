@@ -18,8 +18,6 @@
 
 using System;
 
-// TODO: review all LogDebug statements
-
 namespace LambdaSharp.App.EventBus {
 
     public enum EventBusSubscriptionStatus {

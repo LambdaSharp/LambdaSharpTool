@@ -29,6 +29,7 @@ using Amazon.Lambda.CloudWatchEvents;
 using LambdaSharp.App.Config;
 using LambdaSharp.App.EventBus;
 using LambdaSharp.App.EventBus.Actions;
+using LambdaSharp.App.EventBus.Exceptions;
 using LambdaSharp.App.EventBus.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -56,8 +57,6 @@ namespace LambdaSharp.App {
         private ILogger<LambdaSharpEventBusClient> _logger;
 
         //--- Constructors ---
-
-        // TODO: add AppClient to streamline sending events via EventBus
         public LambdaSharpEventBusClient(LambdaSharpAppConfig config, ILogger<LambdaSharpEventBusClient> logger) {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -262,13 +261,9 @@ namespace LambdaSharp.App {
                 // all good; nothing to do
                 return;
             case "Error":
-
-                // TODO: better exception
-                throw new Exception(acknowledgeAction.Message);
+                throw new AcknowledgeEventBusException(acknowledgeAction.Message);
             default:
-
-                // TODO: better exception
-                throw new Exception($"unrecognized status message: {acknowledgeAction.Status}");
+                throw new UnexpectedEventBusException($"Unrecognized status message: {acknowledgeAction.Status}");
             }
         }
 

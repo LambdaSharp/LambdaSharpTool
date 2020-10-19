@@ -18,18 +18,12 @@
 
 using System;
 
-namespace LambdaSharp.App.EventBus {
+namespace LambdaSharp.App.EventBus.Exceptions {
 
-    public class EventBusSubscriptErrorEventArgs : EventArgs {
+    public abstract class AnEventBusException : Exception {
 
         //--- Constructors ---
-        public EventBusSubscriptErrorEventArgs(IEventBusSubscription subscription, Exception exception) {
-            Subscription = subscription ?? throw new ArgumentNullException(nameof(subscription));
-            Exception = exception ?? throw new ArgumentNullException(nameof(exception));
-        }
-
-        //--- Properties ---
-        public IEventBusSubscription Subscription { get; }
-        public Exception Exception { get; }
+        protected AnEventBusException(string message) : base(message) { }
+        protected AnEventBusException(string message, Exception innerException) : base(message, innerException) { }
     }
 }
