@@ -20,18 +20,24 @@ using System;
 
 namespace LambdaSharp.App.EventBus {
 
-    public enum EventBusState {
-        Closed,
-        Open
-    }
-
+    /// <summary>
+    /// The <see cref="EventBusStateChangedEventArgs"/> class defines the event arguments when
+    /// the LambdaSharp App EventBus changes its connection state.
+    /// </summary>
     public class EventBusStateChangedEventArgs : EventArgs {
 
-        public EventBusStateChangedEventArgs(EventBusState state) => State = state;
+        internal EventBusStateChangedEventArgs(bool open) => IsOpen = open;
 
         //--- Properties ---
-        public EventBusState State { get; }
-        public bool IsOpen => State == EventBusState.Open;
-        public bool IsClosed => State == EventBusState.Closed;
+
+        /// <summary>
+        /// The <see cref="IsOpen"/> property indicates if the LambdaSharp App EventBus connection is open.
+        /// </summary>
+        public bool IsOpen { get; }
+
+        /// <summary>
+        /// The <see cref="IsClosed"/> property indicates if the LambdaSharp App EventBus connection is closed.
+        /// </summary>
+        public bool IsClosed => !IsOpen;
     }
 }

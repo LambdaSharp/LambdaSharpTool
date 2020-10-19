@@ -20,16 +20,28 @@ using System;
 
 namespace LambdaSharp.App.EventBus {
 
+    /// <summary>
+    /// The <see cref="EventBusSubscriptErrorEventArgs"/> class defines the event arguments when
+    /// the LambdaSharp App EventBus receives a subscription error message.
+    /// </summary>
     public class EventBusSubscriptErrorEventArgs : EventArgs {
 
         //--- Constructors ---
-        public EventBusSubscriptErrorEventArgs(IEventBusSubscription subscription, Exception exception) {
+        internal EventBusSubscriptErrorEventArgs(IEventBusSubscription subscription, Exception exception) {
             Subscription = subscription ?? throw new ArgumentNullException(nameof(subscription));
             Exception = exception ?? throw new ArgumentNullException(nameof(exception));
         }
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="Subscription"/> property holds the subscription instance that triggered the event.
+        /// </summary>
         public IEventBusSubscription Subscription { get; }
+
+        /// <summary>
+        /// The <see cref="Exception"/> property holds the exception that triggered the event.
+        /// </summary>
         public Exception Exception { get; }
     }
 }

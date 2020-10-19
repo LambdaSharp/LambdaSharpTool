@@ -354,7 +354,7 @@ namespace LambdaSharp.App {
                 }
 
                 // notify event handler on connection state change
-                StateChanged?.Invoke(this, new EventBusStateChangedEventArgs(EventBusState.Open));
+                StateChanged?.Invoke(this, new EventBusStateChangedEventArgs(open: true));
             } catch(InvalidOperationException e) {
 
                 // this exception occurs when the send operation fails because the socket is closed; nothing to do
@@ -378,7 +378,7 @@ namespace LambdaSharp.App {
 
                         // dismiss all pending connections
                         _pendingRequests.Clear();
-                        StateChanged?.Invoke(this, new EventBusStateChangedEventArgs(EventBusState.Closed));
+                        StateChanged?.Invoke(this, new EventBusStateChangedEventArgs(open: false));
 
                         // NOTE (2020-10-15, bjorg): timer will trigger a reconnection attempt
                         return;
