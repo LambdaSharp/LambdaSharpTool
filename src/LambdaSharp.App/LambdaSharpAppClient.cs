@@ -38,7 +38,7 @@ using Microsoft.Extensions.Logging;
 namespace LambdaSharp.App {
 
     /// <summary>
-    /// The <see cref="LambdaSharpAppClient"/> class is used to sending logs, metrics, and events to the app API.
+    /// The <see cref="LambdaSharpAppClient"/> class is used to sending logs, metrics, and events to the Lambdasharp App API.
     /// </summary>
     public sealed class LambdaSharpAppClient : ILambdaSharpLogger, IAsyncDisposable {
 

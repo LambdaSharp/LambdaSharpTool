@@ -35,6 +35,9 @@ using Microsoft.Extensions.Logging;
 
 namespace LambdaSharp.App {
 
+    /// <summary>
+    /// The <see cref="LambdaSharpEventBusClient"/> class is used to subscribing to events on the LambdaSharp App EventBus.
+    /// </summary>
     public sealed class LambdaSharpEventBusClient : IAsyncDisposable {
 
         //--- Class Fields ---
@@ -57,6 +60,12 @@ namespace LambdaSharp.App {
         private ILogger<LambdaSharpEventBusClient> _logger;
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Initializes a new <see cref="LambdaSharpEventBusClient"/> instance.
+        /// </summary>
+        /// <param name="config">A <see cref="LambdaSharpAppConfig"/> instance.</param>
+        /// <param name="logger">A <see cref="Microsoft.Extensions.Logging.ILogger"/> instance.</param>
         public LambdaSharpEventBusClient(LambdaSharpAppConfig config, ILogger<LambdaSharpEventBusClient> logger) {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -69,13 +78,29 @@ namespace LambdaSharp.App {
         }
 
         //--- Events ---
+
+        /// <summary>
+        /// The <see cref="StateChanged"/> event is raised when the connection state of the LambdaSharp App EventBus changes.
+        /// </summary>
         public event EventHandler<EventBusStateChangedEventArgs> StateChanged;
+
+        /// <summary>
+        /// The <see cref="SubscriptionError"/> event is raised when the LambdaSharp App EventBus receives a subscription error message.
+        /// </summary>
         public event EventHandler<EventBusSubscriptErrorEventArgs> SubscriptionError;
 
         //--- Properties ---
-        public bool IsConnectionOpen => _webSocket.State == WebSocketState.Open;
+        private bool IsConnectionOpen => _webSocket.State == WebSocketState.Open;
 
         //--- Methods ---
+
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Func{Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T},System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Func<CloudWatchEvent<T>, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -92,6 +117,13 @@ namespace LambdaSharp.App {
             }
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Func{T,System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Func<T, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -108,6 +140,13 @@ namespace LambdaSharp.App {
             }
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Action{Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Action<CloudWatchEvent<T>> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -119,6 +158,13 @@ namespace LambdaSharp.App {
             );
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Action{T})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Action<T> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -130,6 +176,13 @@ namespace LambdaSharp.App {
             );
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Func{LambdaSharp.App.EventBus.IEventBusSubscription,Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T},System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Func<IEventBusSubscription, CloudWatchEvent<T>, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -146,6 +199,13 @@ namespace LambdaSharp.App {
             }
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Func{LambdaSharp.App.EventBus.IEventBusSubscription,T,System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Func<IEventBusSubscription, T, Task> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -162,6 +222,13 @@ namespace LambdaSharp.App {
             }
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Action{LambdaSharp.App.EventBus.IEventBusSubscription,Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Action<IEventBusSubscription, CloudWatchEvent<T>> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -173,6 +240,13 @@ namespace LambdaSharp.App {
             );
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,System.Action{LambdaSharp.App.EventBus.IEventBusSubscription,T})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="source">The name of the event source.</param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string source, Action<IEventBusSubscription, T> callback) {
             if(callback is null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -184,6 +258,14 @@ namespace LambdaSharp.App {
             );
         }
 
+        /// <summary>
+        /// The <see cref="SubscribeTo{T}(System.String,LambdaSharp.App.EventBus.EventBusPattern,System.Action{LambdaSharp.App.EventBus.IEventBusSubscription,Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
+        /// </summary>
+        /// <param name="name">The name of the LambdaSharp App EventBus subscription.</param>
+        /// <param name="eventPattern"></param>
+        /// <param name="callback">The callback to invoke when a matching event is received.</param>
+        /// <typeparam name="T">The event payload type.</typeparam>
+        /// <returns>The subscription instance.</returns>
         public IEventBusSubscription SubscribeTo<T>(string name, EventBusPattern eventPattern, Action<IEventBusSubscription, CloudWatchEvent<T>> callback) {
             if(name is null) {
                 throw new ArgumentNullException(nameof(name));
@@ -355,7 +437,7 @@ namespace LambdaSharp.App {
 
                 // notify event handler on connection state change
                 StateChanged?.Invoke(this, new EventBusStateChangedEventArgs(open: true));
-            } catch(InvalidOperationException e) {
+            } catch(InvalidOperationException) {
 
                 // this exception occurs when the send operation fails because the socket is closed; nothing to do
             } catch(TimeoutException) {
