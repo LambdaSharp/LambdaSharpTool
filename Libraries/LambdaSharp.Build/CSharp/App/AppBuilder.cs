@@ -146,6 +146,8 @@ namespace LambdaSharp.Build.CSharp {
 
                             // ignore exception and continue
                         }
+                    } else {
+                        LogInfoVerbose($"... found newer file: {file}");
                     }
                 }
             } else {
@@ -360,6 +362,10 @@ namespace LambdaSharp.Build.CSharp {
                         }
                     }
                 }
+            } else {
+
+                // update last write time on file
+                File.SetLastWriteTimeUtc(package, DateTime.UtcNow);
             }
             Provider.AddArtifact($"{app.FullName}::PackageName", package);
 
