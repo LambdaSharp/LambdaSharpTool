@@ -21,7 +21,7 @@ using System;
 namespace LambdaSharp.App.EventBus.Exceptions {
 
     /// <summary>
-    /// The <see cref="AcknowledgeEventBusException"/> exception is thrown when the EventBus receives an acknowledge response with an error message.
+    /// The <see cref="AcknowledgeEventBusException"/> exception is thrown when the LambdaSharp App EventBus receives an acknowledge response with an error message.
     /// </summary>
     public class AcknowledgeEventBusException : AnEventBusException {
 

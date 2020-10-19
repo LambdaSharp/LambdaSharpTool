@@ -21,7 +21,7 @@ using System;
 namespace LambdaSharp.App.EventBus.Exceptions {
 
     /// <summary>
-    /// The <see cref="UnexpectedEventBusException"/> exception is thrown when the EventBus encounters an unexpected situation.
+    /// The <see cref="UnexpectedEventBusException"/> exception is thrown when the LambdaSharp App EventBus encounters an unexpected situation.
     /// </summary>
 
     public class UnexpectedEventBusException : AnEventBusException {

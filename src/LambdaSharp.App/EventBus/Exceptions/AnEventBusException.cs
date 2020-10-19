@@ -21,7 +21,7 @@ using System;
 namespace LambdaSharp.App.EventBus.Exceptions {
 
     /// <summary>
-    /// All EventBus exceptions are derived from the <see cref="AnEventBusException"/> abstract base class.
+    /// All LambdaSharp App EventBus exceptions are derived from the <see cref="AnEventBusException"/> abstract base class.
     /// </summary>
     public abstract class AnEventBusException : Exception {
 
