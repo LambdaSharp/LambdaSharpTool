@@ -154,6 +154,7 @@ namespace LambdaSharp {
             //--- ILambdaSharpInfo Members ---
             string ILambdaSharpInfo.AppName => null;
             string ILambdaSharpInfo.AppId => null;
+            string ILambdaSharpInfo.AppInstanceId => null;
         }
 
         /// <summary>

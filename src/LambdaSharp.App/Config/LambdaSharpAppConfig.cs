@@ -131,7 +131,7 @@ namespace LambdaSharp.App.Config {
         /// The <see cref="AppEventSource"/> property holds the configured event source value, or null when not set.
         /// </summary>
         /// <value>Configured event source name for the app instance, or null.</value>
-        public string AppEventSource { get; }
+        public string AppEventSource { get; set; }
 
         //--- Methods ---
 

@@ -58,6 +58,7 @@ namespace LambdaSharp.App {
             public string FunctionName => null;
             public string AppName => _client.Config.AppName;
             public string AppId => _client.Config.AppId;
+            public string AppInstanceId => _client.Config.AppInstanceId;
             public string AppEventSource => string.IsNullOrEmpty(_client.Config.AppEventSource) ? (string)null : _client.Config.AppEventSource;
             public string DeploymentTier => _client.Config.DeploymentTier;
             public string GitSha => _client.Config.GitSha;
