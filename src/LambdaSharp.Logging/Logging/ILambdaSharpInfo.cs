@@ -70,11 +70,5 @@ namespace LambdaSharp.Logging {
         /// </summary>
         /// <value>Git branch name or null.</value>
         string GitBranch { get; }
-
-        /// <summary>
-        /// The <see cref="AppEventSource"/> property holds the configured event source value, or null when not set.
-        /// </summary>
-        /// <value>Configured event source name for the app instance, or null.</value>
-        string AppEventSource { get; }
     }
 }

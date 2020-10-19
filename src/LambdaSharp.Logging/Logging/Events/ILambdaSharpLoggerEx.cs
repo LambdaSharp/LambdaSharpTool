@@ -40,7 +40,7 @@ namespace LambdaSharp.Logging.Events {
         //--- Extension Methods ---
 
         /// <summary>
-        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
         /// </summary>
         /// <param name="logger">The <see cref="ILambdaSharpLogger"/> instance to use.</param>
         /// <param name="source">Name of the event source.</param>
@@ -50,7 +50,7 @@ namespace LambdaSharp.Logging.Events {
             => LogEvent<T>(logger, source, typeof(T).FullName, detail, resources);
 
         /// <summary>
-        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the configured EventBridge.
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge.
         /// </summary>
         /// <param name="logger">The <see cref="ILambdaSharpLogger"/> instance to use.</param>
         /// <param name="source">Name of the event source.</param>

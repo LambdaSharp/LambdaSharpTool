@@ -187,15 +187,15 @@ namespace LambdaSharp.App {
         ) => AppClient.LogMetric(metrics, dimensionNames, dimensionValues);
 
         /// <summary>
-        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
         /// </summary>
         /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
         protected void LogEvent<T>(T detail, IEnumerable<string> resources = null)
-            => AppClient.LogEvent(AppClient.Info.AppEventSource ?? throw new InvalidOperationException("AppEventSource is not configured"), detail, resources);
+            => AppClient.LogEvent(detail, resources);
 
         /// <summary>
-        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
         /// </summary>
         /// <param name="source">Name of the event source.</param>
         /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
@@ -204,7 +204,7 @@ namespace LambdaSharp.App {
             => AppClient.LogEvent(source, detail, resources);
 
         /// <summary>
-        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the configured EventBridge.
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge.
         /// </summary>
         /// <param name="source">Name of the event source.</param>
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>

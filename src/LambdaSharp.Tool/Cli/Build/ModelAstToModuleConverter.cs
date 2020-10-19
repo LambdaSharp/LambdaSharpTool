@@ -234,10 +234,57 @@ namespace LambdaSharp.Tool.Cli.Build {
             case "EventBus":
                 return AtLocation("EventBus", () => new CloudWatchEventSource {
                     EventBus = source.EventBus,
-                    Pattern = source.Pattern
+                    Pattern = CopyRenamePatternProperties(source.Pattern)
                 });
             }
             return null;
+
+            // local functions
+            object CopyRenamePatternProperties(object pattern) {
+                if(pattern is Dictionary<object, object> patternDictionary) {
+
+                    // convert CloudWatch event properties from pascal-case to camel-case.
+                    var newPattern = new Dictionary<object, object>();
+                    foreach(var (key, value) in patternDictionary) {
+                        switch(key) {
+                        case "Source":
+                            newPattern["source"] = value;
+                            break;
+                        case "Detail":
+                            newPattern["detail"] = value;
+                            break;
+                        case "DetailType":
+                            newPattern["detail-type"] = value;
+                            break;
+                        case "Resources":
+                            newPattern["resources"] = value;
+                            break;
+                        default:
+                            newPattern[key] = value;
+                            break;
+                        }
+                    }
+
+                    // check if event pattern contains 'resources' constraint
+                    if(!newPattern.TryGetValue("resources", out var resourcesPattern)) {
+
+                        // add default resources contraint: !Sub "lambdasharp:tier:${Deployment::Tier}"
+                        newPattern["resources"] = new List<object> {
+                            new Dictionary<string, object> {
+                                ["Fn::Sub"] = "lambdasharp:tier:${Deployment::Tier}"
+                            }
+                        };
+                    } else if(resourcesPattern == null) {
+
+                        // a 'resources' constraint with value 'null' indicates no constraint, but also not the default tier constraint
+                        newPattern.Remove("resources");
+                    }
+                    return newPattern;
+                } else {
+System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<null>"}");
+                }
+                return pattern;
+            }
         }
 
         private void ConvertItem(int index, ModuleItemNode node)

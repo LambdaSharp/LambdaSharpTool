@@ -150,6 +150,10 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Features
 
+* CLI
+  * Enhanced the `EventBus` pattern parsing to insert a default LambdaSharp tier constraint for `resources` when not specified. Use `resources: null` to omit the default constraint.
+  * Enhanced the `EventBus` pattern parsing to convert `Source` to `source`, `DetailType` to `detail-type`, `Detail` to `detail`, and `Resources` to `resources` for better consistency with the SDK. Note the key renaming is only applied to top-level properties.
+
 * Modules
   * _LambdaSharp.App.Api_
     * Added `EventSource` parameter to override the CloudWatch event source specified by the app request.
@@ -160,6 +164,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * SDK
   * Enhanced emitted CloudWatch events to include app identifier in resources section.
   * Added `ForceLambdaColdStart()` method in `ALambdaFunction` base class. This method forces the Lambda runtime to error out and restart the app domain, forcing the global environment to be reinitialized.
+  * Added `LogEvent<T>(T, IEnumerable<string>)` that omits the source name by default to `${Module::FullName}::${AppOrFunctionName}`
 
 #### Fixes
 
