@@ -20,9 +20,12 @@ using System;
 
 namespace LambdaSharp.App.EventBus.Exceptions {
 
-    public class UnexpectedEventBusException : AnEventBusException {
+    /// <summary>
+    /// The <see cref="AcknowledgeEventBusException"/> exception is thrown when the EventBus receives an acknowledge response with an error message.
+    /// </summary>
+    public class AcknowledgeEventBusException : AnEventBusException {
 
         //--- Constructors ---
-        public UnexpectedEventBusException(string message) : base(message ?? throw new ArgumentNullException(nameof(message))) { }
+        internal AcknowledgeEventBusException(string message) : base(message ?? throw new ArgumentNullException(nameof(message))) { }
     }
 }
