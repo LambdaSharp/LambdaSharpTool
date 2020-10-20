@@ -40,6 +40,14 @@ namespace LambdaSharp.App {
     /// </summary>
     public sealed class LambdaSharpEventBusClient : IAsyncDisposable {
 
+        //--- Types ---
+        private class ConnectionHeader {
+
+            //--- Properties ---
+            public string Host { get; set; }
+            public string ApiKey { get; set; }
+        }
+
         //--- Class Fields ---
         private static readonly TimeSpan Frequency = TimeSpan.FromSeconds(10);
 
@@ -408,7 +416,12 @@ namespace LambdaSharp.App {
                 _logger.LogDebug("Cannot open WebSocket in current state: {0}", _webSocket.State);
                 return;
             }
-            var eventBusUri = new Uri($"{_config.EventBusUrl}?app={_config.AppInstanceId}");
+            var header = new ConnectionHeader {
+                Host = new Uri(_config.EventBusUrl).Host,
+                ApiKey = _config.GetEventBusApiKey()
+            };
+            var headerBase64Json = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(header)));
+            var eventBusUri = new Uri($"{_config.EventBusUrl}?app={_config.AppInstanceId}&header={headerBase64Json}");
             _logger.LogDebug("Connecting to: {0}", eventBusUri);
 
             // connect/reconnect to websocket

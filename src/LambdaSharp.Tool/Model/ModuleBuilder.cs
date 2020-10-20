@@ -1234,12 +1234,12 @@ namespace LambdaSharp.Tool.Model {
                     scope: null,
                     dependsOn: null,
                     parameters: new Dictionary<string, object> {
-
-                        // TODO: authentication/authorization
+                        ["AppVersionId"] = FnRef(appVersionId.FullName),
                         ["DevMode"] = FnRef(devModeParameter.FullName)
                     }
                 );
                 lambdaSharpSettings["EventBusUrl"] = FnGetAtt(appEventBus.FullName, "Outputs.Url");
+                lambdaSharpSettings["EventBusApiKey"] = FnGetAtt(appEventBus.FullName, "Outputs.ApiKey");
             }
 
             // add resource to generate `appsettings.Production.json` file

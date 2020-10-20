@@ -25,6 +25,11 @@ Items:
   # Module Parameters
   ###
 
+  - Parameter: AppVersionId
+    Description: App version identifier
+    Type: String
+    NoEcho: true
+
   - Parameter: DevMode
     Description: Developer mode relaxes WebSocket authentication
     Type: String
@@ -32,6 +37,9 @@ Items:
       - Enabled
       - Disabled
     Default: Disabled
+
+  - Condition: DevModeIsEnabled
+    Value: !Equals [ !Ref DevMode, "Enabled" ]
 
   ###
   # Module Exports
@@ -46,6 +54,12 @@ Items:
     Description: WebSocket URL for connecting to the app event bus
     Scope: public
     Value: !Ref Module::WebSocket::Url
+
+  - Variable: ApiKey
+    Description: App event bus API Key
+    Scope: public
+    Value:
+      Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
 
   ###
   # WebSocket Connection Listening
@@ -70,6 +84,16 @@ Items:
 
       - WebSocket: Unsubscribe
         Invoke: Unsubscribe
+
+  - Variable: ClientApiKey
+    Scope: ListenerFunction
+    Value: !If
+      - DevModeIsEnabled
+      - Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
+      - Fn::Base64: !Sub
+        - "${Prefix}:${Suffix}"
+        - Prefix: !Ref AppVersionId
+          Suffix: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
 
   ###
   # Event Broadcasting

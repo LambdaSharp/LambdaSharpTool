@@ -18,6 +18,14 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
 
     public sealed class Function : ALambdaApiGatewayFunction {
 
+        //--- Types ---
+        private class ConnectionHeader {
+
+            //--- Properties ---
+            public string Host { get; set; }
+            public string ApiKey { get; set; }
+        }
+
         //--- Class Methods ---
         private static string ComputeMD5Hash(string text) {
             using var md5 = MD5.Create();
@@ -30,6 +38,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         private string _eventTopicArn;
         private string _broadcastApiUrl;
         private string _httpApiToken;
+        private string _clientApiKey;
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -39,6 +48,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             _eventTopicArn = config.ReadText("EventTopic");
             _broadcastApiUrl = config.ReadText("EventBroadcastApiUrl");
             _httpApiToken = config.ReadText("HttpApiInvocationToken");
+            _clientApiKey = config.ReadText("ClientApiKey");
 
             // initialize AWS clients
             _snsClient = new AmazonSimpleNotificationServiceClient();
@@ -59,6 +69,37 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 // reject connection request
                 return new APIGatewayProxyResponse {
                     StatusCode = (int)HttpStatusCode.BadRequest
+                };
+            }
+
+            // verify client authorization
+            string headerBase64Json = null;
+            if(!(request.QueryStringParameters?.TryGetValue("header", out headerBase64Json) ?? false)) {
+
+                // reject connection request
+                return new APIGatewayProxyResponse {
+                    StatusCode = (int)HttpStatusCode.Unauthorized
+                };
+            }
+            ConnectionHeader header;
+            try {
+                var headerJson = Encoding.UTF8.GetString(Convert.FromBase64String(headerBase64Json));
+                header = LambdaSerializer.Deserialize<ConnectionHeader>(headerJson);
+            } catch {
+
+                // reject connection request
+                return new APIGatewayProxyResponse {
+                    StatusCode = (int)HttpStatusCode.BadRequest
+                };
+            }
+            if(
+                (header.Host != request.RequestContext.DomainName)
+                || (header.ApiKey != _clientApiKey)
+            ) {
+
+                // reject connection request
+                return new APIGatewayProxyResponse {
+                    StatusCode = (int)HttpStatusCode.Forbidden
                 };
             }
 
