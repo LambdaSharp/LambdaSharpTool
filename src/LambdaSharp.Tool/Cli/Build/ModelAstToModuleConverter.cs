@@ -247,8 +247,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var newPattern = new Dictionary<object, object>();
                     foreach(var (key, value) in patternDictionary) {
                         switch(key) {
-                        case "Source":
-                            newPattern["source"] = value;
+                        case "Account":
+                            newPattern["account"] = value;
                             break;
                         case "Detail":
                             newPattern["detail"] = value;
@@ -256,8 +256,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                         case "DetailType":
                             newPattern["detail-type"] = value;
                             break;
+                        case "Region":
+                            newPattern["region"] = value;
+                            break;
                         case "Resources":
                             newPattern["resources"] = value;
+                            break;
+                        case "Source":
+                            newPattern["source"] = value;
+                            break;
+                        case "Version":
+                            newPattern["version"] = value;
                             break;
                         default:
                             newPattern[key] = value;
