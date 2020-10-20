@@ -11,6 +11,7 @@ if [ -z "$1" ]; then
     # run everything
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
         --verbose:exceptions \
+        --no-beep \
         --tier Test \
         --aws-region us-east-1 \
         --aws-account-id 123456789012 \
@@ -26,6 +27,7 @@ if [ -z "$1" ]; then
     rm $LAMBDASHARP/Tests/Modules/Results/*.json > /dev/null 2>&1
     dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp3.1/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
+        --no-beep \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/ \
         --dryrun:cloudformation \
@@ -129,6 +131,7 @@ else
     rm $LAMBDASHARP/Tests/Modules/Results/$testfile.json > /dev/null 2>&1
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- deploy \
         --verbose:exceptions \
+        --no-beep \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/$testfile.json \
         --dryrun:cloudformation \
