@@ -46,6 +46,7 @@ namespace LambdaSharp.App {
             //--- Properties ---
             public string Host { get; set; }
             public string ApiKey { get; set; }
+            public string Id { get; set; }
         }
 
         //--- Class Fields ---
@@ -418,10 +419,11 @@ namespace LambdaSharp.App {
             }
             var header = new ConnectionHeader {
                 Host = new Uri(_config.EventBusUrl).Host,
-                ApiKey = _config.GetEventBusApiKey()
+                ApiKey = _config.GetEventBusApiKey(),
+                Id = _config.AppInstanceId
             };
             var headerBase64Json = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(header)));
-            var eventBusUri = new Uri($"{_config.EventBusUrl}?app={_config.AppInstanceId}&header={headerBase64Json}");
+            var eventBusUri = new Uri($"{_config.EventBusUrl}?header={headerBase64Json}");
             _logger.LogDebug("Connecting to: {0}", eventBusUri);
 
             // connect/reconnect to websocket

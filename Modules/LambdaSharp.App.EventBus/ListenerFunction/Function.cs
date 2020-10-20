@@ -24,6 +24,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             //--- Properties ---
             public string Host { get; set; }
             public string ApiKey { get; set; }
+            public string Id { get; set; }
         }
 
         //--- Class Methods ---
@@ -59,19 +60,6 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         public async Task<APIGatewayProxyResponse> OpenConnectionAsync(APIGatewayProxyRequest request) {
             LogInfo($"Connected: {request.RequestContext.ConnectionId}");
 
-            // verify presence of application ID query parameter
-            string appId = null;
-            if(
-                !(request.QueryStringParameters?.TryGetValue("app", out appId) ?? false)
-                || !Guid.TryParse(appId, out _)
-            ) {
-
-                // reject connection request
-                return new APIGatewayProxyResponse {
-                    StatusCode = (int)HttpStatusCode.BadRequest
-                };
-            }
-
             // verify client authorization
             string headerBase64Json = null;
             if(!(request.QueryStringParameters?.TryGetValue("header", out headerBase64Json) ?? false)) {
@@ -95,6 +83,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             if(
                 (header.Host != request.RequestContext.DomainName)
                 || (header.ApiKey != _clientApiKey)
+                || !Guid.TryParse(header.Id, out _)
             ) {
 
                 // reject connection request
@@ -106,7 +95,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             // create new connection record
             await _dataTable.CreateConnectionAsync(new ConnectionRecord {
                 ConnectionId = request.RequestContext.ConnectionId,
-                ApplicationId = appId,
+                ApplicationId = header.Id,
                 Bearer = request.RequestContext.Authorizer?.Claims
             });
             return new APIGatewayProxyResponse {
