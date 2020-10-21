@@ -17,16 +17,6 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "XRayTracing": {
-      "Type": "String",
-      "Description": "AWS X-Ray Tracing",
-      "AllowedValues": [
-        "Disabled",
-        "RootModule",
-        "AllModules"
-      ],
-      "Default": "Disabled"
-    },
     "LambdaSharpCoreServices": {
       "Type": "String",
       "Description": "Use LambdaSharp.Core Services",
@@ -35,13 +25,6 @@
         "Enabled"
       ],
       "Default": "Disabled"
-    },
-    "LambdaSharpCoreDeadLetterQueue": {
-      "Type": "String",
-      "Description": "Cross-module reference for LambdaSharp.Core::DeadLetterQueue",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
-      "Default": "$LambdaSharp-Core::DeadLetterQueue"
     },
     "LambdaSharpCoreLoggingStream": {
       "Type": "String",
@@ -77,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CB8EA835685ADCAB075F5468EE00A6C0"
+      "Default": "D03ECAEFE9F0C3E2FFE02A1F2A9E94B2"
     }
   },
   "Resources": {
@@ -310,352 +293,6 @@
         }
       }
     },
-    "EventFunction": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "DeploymentBucketName"
-          },
-          "S3Key": "<%MODULE_ORIGIN%>/Sample/BlazorEventsSample/.artifacts/EventFunction-DRYRUN.zip"
-        },
-        "DeadLetterConfig": {
-          "TargetArn": {
-            "Fn::If": [
-              "UseCoreServices",
-              {
-                "Fn::If": [
-                  "LambdaSharpCoreDeadLetterQueueIsImported",
-                  {
-                    "Fn::ImportValue": {
-                      "Fn::Sub": [
-                        "${DeploymentPrefix}${Import}",
-                        {
-                          "Import": {
-                            "Fn::Select": [
-                              "1",
-                              {
-                                "Fn::Split": [
-                                  "$",
-                                  {
-                                    "Ref": "LambdaSharpCoreDeadLetterQueue"
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "Ref": "LambdaSharpCoreDeadLetterQueue"
-                  }
-                ]
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          }
-        },
-        "Environment": {
-          "Variables": {
-            "DEBUG_LOGGING_ENABLED": "false",
-            "MODULE_ID": {
-              "Ref": "AWS::StackName"
-            },
-            "MODULE_INFO": "Sample.BlazorEventsSample:1.0-DEV@<%MODULE_ORIGIN%>",
-            "LAMBDA_NAME": "EventFunction",
-            "LAMBDA_RUNTIME": "dotnetcore3.1",
-            "DEPLOYMENT_TIER": {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "-",
-                    {
-                      "Ref": "DeploymentPrefix"
-                    }
-                  ]
-                }
-              ]
-            },
-            "DEPLOYMENTBUCKETNAME": {
-              "Ref": "DeploymentBucketName"
-            },
-            "DEADLETTERQUEUE": {
-              "Fn::If": [
-                "UseCoreServices",
-                {
-                  "Fn::If": [
-                    "LambdaSharpCoreDeadLetterQueueIsImported",
-                    {
-                      "Fn::ImportValue": {
-                        "Fn::Sub": [
-                          "${DeploymentPrefix}${Import}",
-                          {
-                            "Import": {
-                              "Fn::Select": [
-                                "1",
-                                {
-                                  "Fn::Split": [
-                                    "$",
-                                    {
-                                      "Ref": "LambdaSharpCoreDeadLetterQueue"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "Ref": "LambdaSharpCoreDeadLetterQueue"
-                    }
-                  ]
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            },
-            "STR_MODULE_ROLE_DEADLETTERQUEUEPOLICY": {
-              "Fn::If": [
-                "UseCoreServices",
-                {
-                  "Ref": "ModuleRoleDeadLetterQueuePolicy"
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            },
-            "STR_MODULE_ROLE_SECRETSPOLICY": {
-              "Fn::If": [
-                "ModuleRoleSecretsPolicyCondition",
-                {
-                  "Ref": "ModuleRoleSecretsPolicy"
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            }
-          }
-        },
-        "Handler": "EventFunction::Sample.BlazorEventsSample.EventFunction.Function::FunctionHandlerAsync",
-        "MemorySize": "256",
-        "Role": {
-          "Fn::GetAtt": [
-            "ModuleRole",
-            "Arn"
-          ]
-        },
-        "Runtime": "dotnetcore3.1",
-        "Timeout": "30",
-        "TracingConfig": {
-          "Mode": {
-            "Fn::If": [
-              "XRayIsEnabled",
-              "Active",
-              "PassThrough"
-            ]
-          }
-        }
-      }
-    },
-    "EventFunctionLogGroup": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${EventFunction}"
-        },
-        "RetentionInDays": 30
-      }
-    },
-    "ModuleRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "ModuleLambdaPrincipal",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com"
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Sid": "LogStream",
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents"
-                  ],
-                  "Resource": "arn:aws:logs:*:*:*"
-                },
-                {
-                  "Sid": "CloudFormation",
-                  "Effect": "Allow",
-                  "Action": [
-                    "cloudformation:DescribeStacks"
-                  ],
-                  "Resource": {
-                    "Ref": "AWS::StackId"
-                  }
-                },
-                {
-                  "Sid": "AWSXRay",
-                  "Effect": "Allow",
-                  "Action": [
-                    "xray:GetSamplingRules",
-                    "xray:GetSamplingStatisticSummaries",
-                    "xray:GetSamplingTargets",
-                    "xray:PutTelemetryRecords",
-                    "xray:PutTraceSegments"
-                  ],
-                  "Resource": "*"
-                },
-                {
-                  "Sid": "EventBus",
-                  "Effect": "Allow",
-                  "Action": [
-                    "events:PutEvents"
-                  ],
-                  "Resource": {
-                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
-                  }
-                },
-                {
-                  "Sid": "DeploymentBucketReadOnly",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:GetObject"
-                  ],
-                  "Resource": {
-                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/BlazorEventsSample/.artifacts/*"
-                  }
-                }
-              ]
-            },
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModulePolicy"
-            }
-          }
-        ]
-      }
-    },
-    "ModuleRoleDeadLetterQueuePolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Condition": "UseCoreServices",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "DeadLetterQueue",
-              "Effect": "Allow",
-              "Action": [
-                "sqs:SendMessage"
-              ],
-              "Resource": {
-                "Fn::If": [
-                  "UseCoreServices",
-                  {
-                    "Fn::If": [
-                      "LambdaSharpCoreDeadLetterQueueIsImported",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpCoreDeadLetterQueue"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpCoreDeadLetterQueue"
-                      }
-                    ]
-                  },
-                  {
-                    "Ref": "AWS::NoValue"
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "PolicyName": {
-          "Fn::Sub": "${AWS::StackName}ModuleRoleDeadLetterQueue"
-        },
-        "Roles": [
-          {
-            "Ref": "ModuleRole"
-          }
-        ]
-      }
-    },
-    "ModuleRoleSecretsPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Condition": "ModuleRoleSecretsPolicyCondition",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "Secrets",
-              "Effect": "Allow",
-              "Action": [
-                "kms:Decrypt",
-                "kms:Encrypt"
-              ],
-              "Resource": {
-                "Fn::Split": [
-                  ",",
-                  {
-                    "Ref": "Secrets"
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "PolicyName": {
-          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
-        },
-        "Roles": [
-          {
-            "Ref": "ModuleRole"
-          }
-        ]
-      }
-    },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegistrationModule",
       "Condition": "UseCoreServices",
@@ -669,122 +306,6 @@
         "ModuleInfo": "Sample.BlazorEventsSample:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
-        }
-      }
-    },
-    "EventFunctionRegistration": {
-      "Type": "Custom::LambdaSharpRegistrationFunction",
-      "Condition": "UseCoreServices",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
-          }
-        },
-        "ResourceType": "LambdaSharp::Registration::Function",
-        "ModuleId": {
-          "Ref": "AWS::StackName"
-        },
-        "FunctionId": {
-          "Ref": "EventFunction"
-        },
-        "FunctionName": "EventFunction",
-        "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${EventFunction}"
-        },
-        "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore3.1",
-        "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "256",
-        "FunctionMaxDuration": "30"
-      },
-      "DependsOn": [
-        "ModuleRegistration"
-      ]
-    },
-    "EventFunctionLogGroupSubscription": {
-      "Type": "AWS::Logs::SubscriptionFilter",
-      "Condition": "UseCoreServices",
-      "Properties": {
-        "DestinationArn": {
-          "Fn::If": [
-            "UseCoreServices",
-            {
-              "Fn::If": [
-                "LambdaSharpCoreLoggingStreamIsImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpCoreLoggingStream"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpCoreLoggingStream"
-                }
-              ]
-            },
-            {
-              "Ref": "AWS::NoValue"
-            }
-          ]
-        },
-        "FilterPattern": "-\"*** \"",
-        "LogGroupName": {
-          "Ref": "EventFunctionLogGroup"
-        },
-        "RoleArn": {
-          "Fn::If": [
-            "UseCoreServices",
-            {
-              "Fn::If": [
-                "LambdaSharpCoreLoggingStreamRoleIsImported",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpCoreLoggingStreamRole"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpCoreLoggingStreamRole"
-                }
-              ]
-            },
-            {
-              "Ref": "AWS::NoValue"
-            }
-          ]
         }
       }
     },
@@ -902,77 +423,15 @@
         "ModuleRegistration"
       ]
     },
-    "EventFunctionSource1Event": {
-      "Type": "AWS::Events::Rule",
-      "Properties": {
-        "EventBusName": "default",
-        "EventPattern": {
-          "source": [
-            "Sample.BlazorEventsSample::MyBlazorApp"
-          ],
-          "resources": [
-            {
-              "Fn::Sub": [
-                "lambdasharp:tier:${P0}",
-                {
-                  "P0": {
-                    "Fn::Select": [
-                      "0",
-                      {
-                        "Fn::Split": [
-                          "-",
-                          {
-                            "Ref": "DeploymentPrefix"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        "Targets": [
-          {
-            "Arn": {
-              "Fn::GetAtt": [
-                "EventFunction",
-                "Arn"
-              ]
-            },
-            "Id": "EventFunction-1"
-          }
-        ]
-      }
-    },
-    "EventFunctionSource1Permission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Ref": "EventFunction"
-        },
-        "Principal": "events.amazonaws.com",
-        "SourceArn": {
-          "Fn::GetAtt": [
-            "EventFunctionSource1Event",
-            "Arn"
-          ]
-        }
-      }
-    },
     "MyBlazorAppSource1Event": {
       "Type": "AWS::Events::Rule",
       "Properties": {
         "EventBusName": "default",
         "EventPattern": {
           "source": [
-            "MySample",
             "Sample.BlazorEventsSample::MyBlazorApp"
           ],
           "detail-type": [
-            "MyEvent",
             "Sample.BlazorEventsSample.MyBlazorApp.Shared.TodoItem"
           ],
           "resources": [
@@ -1067,58 +526,12 @@
         }
       ]
     },
-    "XRayIsEnabled": {
-      "Fn::Not": [
-        {
-          "Fn::Equals": [
-            {
-              "Ref": "XRayTracing"
-            },
-            "Disabled"
-          ]
-        }
-      ]
-    },
     "UseCoreServices": {
       "Fn::Equals": [
         {
           "Ref": "LambdaSharpCoreServices"
         },
         "Enabled"
-      ]
-    },
-    "LambdaSharpCoreDeadLetterQueueIsImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "LambdaSharpCoreDeadLetterQueue"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "LambdaSharpCoreDeadLetterQueue"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
       ]
     },
     "LambdaSharpCoreLoggingStreamIsImported": {
@@ -1188,18 +601,6 @@
           ]
         }
       ]
-    },
-    "ModuleRoleSecretsPolicyCondition": {
-      "Fn::Not": [
-        {
-          "Fn::Equals": [
-            {
-              "Ref": "Secrets"
-            },
-            ""
-          ]
-        }
-      ]
     }
   },
   "Metadata": {
@@ -1211,14 +612,8 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "XRayTracing": {
-          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
-        },
         "LambdaSharpCoreServices": {
           "default": "Integrate with LambdaSharp.Core services [String]"
-        },
-        "LambdaSharpCoreDeadLetterQueue": {
-          "default": "DeadLetterQueue [String]"
         },
         "LambdaSharpCoreLoggingStream": {
           "default": "LoggingStream [String]"
@@ -1257,7 +652,6 @@
           },
           "Parameters": [
             "Secrets",
-            "XRayTracing",
             "LambdaSharpCoreServices"
           ]
         },
@@ -1266,7 +660,6 @@
             "default": "LambdaSharp.Core Imports"
           },
           "Parameters": [
-            "LambdaSharpCoreDeadLetterQueue",
             "LambdaSharpCoreLoggingStream",
             "LambdaSharpCoreLoggingStreamRole"
           ]
@@ -1289,7 +682,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.BlazorEventsSample:1.0-DEV",
       "Description": "A sample module showing how to deploy a Blazor WebAssembly website",
-      "TemplateChecksum": "CB8EA835685ADCAB075F5468EE00A6C0",
+      "TemplateChecksum": "D03ECAEFE9F0C3E2FFE02A1F2A9E94B2",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -1318,17 +711,6 @@
               "Default": ""
             },
             {
-              "Name": "XRayTracing",
-              "Type": "String",
-              "Label": "Enable AWS X-Ray tracing mode for module resources",
-              "Default": "Disabled",
-              "AllowedValues": [
-                "Disabled",
-                "RootModule",
-                "AllModules"
-              ]
-            },
-            {
               "Name": "LambdaSharpCoreServices",
               "Type": "String",
               "Label": "Integrate with LambdaSharp.Core services",
@@ -1343,15 +725,6 @@
         {
           "Title": "LambdaSharp.Core Imports",
           "Parameters": [
-            {
-              "Name": "LambdaSharpCoreDeadLetterQueue",
-              "Type": "String",
-              "Label": "DeadLetterQueue",
-              "Default": "$LambdaSharp-Core::DeadLetterQueue",
-              "Import": "LambdaSharp.Core::DeadLetterQueue",
-              "AllowedPattern": "^.+$",
-              "ConstraintDescription": "must either be a cross-module reference or a non-empty value"
-            },
             {
               "Name": "LambdaSharpCoreLoggingStream",
               "Type": "String",
@@ -1413,23 +786,14 @@
         "MyBlazorAppApi": "MyBlazorApp::Api",
         "MyBlazorAppEventBus": "MyBlazorApp::EventBus",
         "MyBlazorAppAppSettingsJson": "MyBlazorApp::AppSettingsJson",
-        "EventFunctionLogGroup": "EventFunction::LogGroup",
-        "ModuleRole": "Module::Role",
-        "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
-        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ModuleRegistration": "Module::Registration",
-        "EventFunctionRegistration": "EventFunction::Registration",
-        "EventFunctionLogGroupSubscription": "EventFunction::LogGroupSubscription",
         "MyBlazorAppLogGroupSubscription": "MyBlazorApp::LogGroupSubscription",
         "MyBlazorAppRegistration": "MyBlazorApp::Registration",
-        "EventFunctionSource1Event": "EventFunction::Source1Event",
-        "EventFunctionSource1Permission": "EventFunction::Source1Permission",
         "MyBlazorAppSource1Event": "MyBlazorApp::Source1Event"
       },
       "TypeNameMappings": {
         "Custom::LambdaSharpS3WriteJson": "LambdaSharp::S3::WriteJson",
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
-        "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function",
         "Custom::LambdaSharpRegistrationApp": "LambdaSharp::Registration::App"
       }
     }

@@ -27,26 +27,13 @@ Items:
     Sources:
       - EventBus: default
         Pattern:
-          source:
-            - MySample
-          detail-type:
-            - MyEvent
-          resources:
-            - !Sub "lambdasharp:tier:${Deployment::Tier}"
+          Source:
+            - !Ref MyBlazorApp::EventSource
+          DetailType:
+            - Sample.BlazorEventsSample.MyBlazorApp.Shared.TodoItem
 
   - Variable: MyBlazorAppWebsiteUrl
     Description: MyBlazorApp Website URL
     Scope: public
     Value: !GetAtt MyBlazorApp::Bucket.Outputs.WebsiteUrl
-
-  - Function: EventFunction
-    Memory: 256
-    Timeout: 30
-    Sources:
-      - EventBus: default
-        Pattern:
-          source:
-            - !Ref MyBlazorApp::EventSource
-          resources:
-            - !Sub "lambdasharp:tier:${Deployment::Tier}"
 ```

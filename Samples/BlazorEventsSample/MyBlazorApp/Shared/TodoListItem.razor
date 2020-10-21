@@ -31,11 +31,11 @@
 
     //--- Properties ---
     [Parameter] public TodoItem Todo { get; set; }
-    [Parameter] public Action<bool> StatusChanged { get; set; }
+    [Parameter] public Action<TodoItem> StatusChanged { get; set; }
 
     //--- Methods ---
     private void OnCheckedChanged(bool isChecked) {
         Todo.Completed = isChecked;
-        StatusChanged?.Invoke(isChecked);
+        StatusChanged?.Invoke(Todo);
     }
 }
