@@ -20,15 +20,38 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.App.EventBus.Actions {
 
+    /// <summary>
+    /// The <see cref="EventAction"/> class describes a LambdaSharp App EventBus event.
+    /// </summary>
     public sealed class EventAction : AnAction {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Create new instance of <see cref="EventAction"/>.
+        /// </summary>
         public EventAction() => Action = "Event";
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="Rules"/> property holds the names of all matching subscription rules.
+        /// </summary>
         public List<string> Rules { get; set; }
+
+        /// <summary>
+        /// The <see cref="Source"/> property holds the name of the event source.
+        /// </summary>
         public string Source { get; set; }
+
+        /// <summary>
+        /// The <see cref="Type"/> property holds the name of the event type.
+        /// </summary>
         public string Type { get; set; }
+
+        /// <summary>
+        /// The <see cref="Event"/> property holds the JSON serialization of the CloudWatch event data structure.
+        /// </summary>
         public string Event { get; set; }
     }
 }

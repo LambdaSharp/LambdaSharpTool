@@ -18,9 +18,17 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
+    /// <summary>
+    /// The <see cref="UnsubscribeAction"/> class is used to unsubscribe from
+    /// a previous subscription on the LambdaSharp App EventBus.
+    /// </summary>
     public sealed class UnsubscribeAction : ARuleAction {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Create new instance of <see cref="UnsubscribeAction"/>.
+        /// </summary>
         public UnsubscribeAction() => Action = "Unsubscribe";
     }
 }

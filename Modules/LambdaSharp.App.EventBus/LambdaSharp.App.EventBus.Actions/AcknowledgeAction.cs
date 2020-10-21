@@ -18,13 +18,31 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
+    /// <summary>
+    /// The <see cref="AcknowledgeAction"/> class is used to respond to a
+    /// LambdaSharp App EventBus action.
+    /// </summary>
     public sealed class AcknowledgeAction : ARuleAction {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Create new instance of <see cref="AcknowledgeAction"/>.
+        /// </summary>
         public AcknowledgeAction() => Action = "Ack";
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="Status"/> property describes the outcome of the action. It's value
+        /// is either <code>"Ok"</code> or <code>"Error"</code>.
+        /// </summary>
         public string Status { get; set; }
+
+        /// <summary>
+        /// The <see cref="Message"/> property optionally includes a message describing why the status
+        /// was not successful.
+        /// </summary>
         public string Message { get; set; }
     }
 }

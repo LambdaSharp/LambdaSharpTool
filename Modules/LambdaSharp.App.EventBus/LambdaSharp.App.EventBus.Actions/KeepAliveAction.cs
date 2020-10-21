@@ -18,9 +18,17 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
+    /// <summary>
+    /// The <see cref="KeepAliveAction"/> class describes a recurring action
+    /// that is emitted by the WebSocket server to keep the connection open.
+    /// </summary>
     public sealed class KeepAliveAction : AnAction {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Create new instance of <see cref="KeepAliveAction"/>.
+        /// </summary>
         public KeepAliveAction() => Action = "KeepAlive";
     }
 }
