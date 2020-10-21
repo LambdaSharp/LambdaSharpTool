@@ -30,7 +30,7 @@ namespace LambdaSharp.App.EventBus {
         //--- Class Methods ---
 
         /// <summary>
-        /// The <see cref="AnythingBut(System.Object)"/> method creates an event pattern clause that matches everything that does not
+        /// The <see cref="AnythingBut(object)"/> method creates an event pattern clause that matches everything that does not
         /// match the nested event pattern clause.
         /// </summary>
         /// <param name="pattern">A nested event pattern clause.</param>
@@ -41,7 +41,7 @@ namespace LambdaSharp.App.EventBus {
             };
 
         /// <summary>
-        /// The <see cref="Prefix(System.String)"/> method creates an event pattern clause that matches the prefix of a literal string value.
+        /// The <see cref="Prefix(string)"/> method creates an event pattern clause that matches the prefix of a literal string value.
         /// </summary>
         /// <param name="prefix">The string prefix to match.</param>
         /// <returns>An event pattern clause.</returns>
@@ -51,7 +51,7 @@ namespace LambdaSharp.App.EventBus {
             };
 
         /// <summary>
-        /// The <see cref="Numeric(System.String,System.Double)"/> method creates an event pattern clauses that matches a numeric condition.
+        /// The <see cref="Numeric(string,double)"/> method creates an event pattern clauses that matches a numeric condition.
         /// </summary>
         /// <param name="operation">The numeric compare operation.</param>
         /// <param name="value">The numeric value to compare to.</param>
@@ -65,7 +65,7 @@ namespace LambdaSharp.App.EventBus {
             };
 
         /// <summary>
-        /// The <see cref="Numeric(System.String,System.Double,System.String,System.Double)"/> method creates an event pattern clauses that matches both numeric conditions.
+        /// The <see cref="Numeric(string,double,string,double)"/> method creates an event pattern clauses that matches both numeric conditions.
         /// </summary>
         /// <param name="firstOperation">The first numeric compare operation.</param>
         /// <param name="firstValue">The first numeric value to compare to.</param>
@@ -83,7 +83,7 @@ namespace LambdaSharp.App.EventBus {
             };
 
         /// <summary>
-        /// The <see cref="Cidr(System.String)"/> method creates an event pattern clause that checks if an IP address falls within the specified CIDR mask.
+        /// The <see cref="Cidr(string)"/> method creates an event pattern clause that checks if an IP address falls within the specified CIDR mask.
         /// </summary>
         /// <param name="mask">The CIDR mask to match against.</param>
         /// <returns>An event pattern clause.</returns>
@@ -93,7 +93,7 @@ namespace LambdaSharp.App.EventBus {
             };
 
         /// <summary>
-        /// The <see cref="Exists"/> method creates an event pattern clauses that matches if a JSON property exists or not.
+        /// The <see cref="Exists(bool)"/> method creates an event pattern clauses that matches if a JSON property exists or not.
         /// </summary>
         /// <param name="exists">Boolean determining when the event pattern clause should match.</param>
         /// <returns>An event pattern clause.</returns>

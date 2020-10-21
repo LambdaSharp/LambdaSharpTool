@@ -20,6 +20,7 @@
 
 - name: App
   href: Module-App.md
+  items:
 
     - name: Sources
       href: Module-App-Sources.md
@@ -39,7 +40,6 @@
 
 - name: Function
   href: Module-Function.md
-  items:
   items:
 
     - name: Pragmas

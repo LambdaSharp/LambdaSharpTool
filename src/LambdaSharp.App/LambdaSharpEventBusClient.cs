@@ -104,7 +104,7 @@ namespace LambdaSharp.App {
         //--- Methods ---
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Func{Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T},System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Func{CloudWatchEvent{T},Task})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -127,7 +127,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Func{T,System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Func{T,Task})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -150,7 +150,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Action{Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Action{CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -168,7 +168,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Action{T})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Action{T})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -186,7 +186,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Func{LambdaSharp.App.EventBus.IEventBusSubscription,Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T},System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Func{IEventBusSubscription,CloudWatchEvent{T},Task})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -209,7 +209,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Func{LambdaSharp.App.EventBus.IEventBusSubscription,T,System.Threading.Tasks.Task})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Func{IEventBusSubscription,T,Task})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -232,7 +232,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Action{LambdaSharp.App.EventBus.IEventBusSubscription,Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Action{IEventBusSubscription,CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -250,7 +250,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,System.Action{LambdaSharp.App.EventBus.IEventBusSubscription,T})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,Action{IEventBusSubscription,T})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="source">The name of the event source.</param>
         /// <param name="callback">The callback to invoke when a matching event is received.</param>
@@ -268,7 +268,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// The <see cref="SubscribeTo{T}(System.String,LambdaSharp.App.EventBus.EventBusPattern,System.Action{LambdaSharp.App.EventBus.IEventBusSubscription,Amazon.Lambda.CloudWatchEvents.CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
+        /// The <see cref="SubscribeTo{T}(string,LambdaSharp.App.EventBus.EventBusPattern,Action{IEventBusSubscription,CloudWatchEvent{T}})"/> method creates a subscription for the specified source and type.
         /// </summary>
         /// <param name="name">The name of the LambdaSharp App EventBus subscription.</param>
         /// <param name="eventPattern"></param>
