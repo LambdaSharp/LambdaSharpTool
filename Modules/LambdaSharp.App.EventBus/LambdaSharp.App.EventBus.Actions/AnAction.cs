@@ -20,10 +20,23 @@ using System;
 
 namespace LambdaSharp.App.EventBus.Actions {
 
+    /// <summary>
+    /// The abstract <see cref="AnAction"/> class is the used by all
+    /// LambdaSharp App EventBus actions.
+    /// </summary>
     public abstract class AnAction {
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="Action"/> property holds the name of the action.
+        /// </summary>
         public string Action { get; set; }
+
+        /// <summary>
+        /// The <see cref="RequestId"/> property holds a unique identifier
+        /// used to reference the action in an acknowledgment.
+        /// </summary>
         public string RequestId { get; set; } = Guid.NewGuid().ToString();
     }
 }
