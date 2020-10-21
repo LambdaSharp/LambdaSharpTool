@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace Sample.BlazorWebAssembly.MyBlazorApp.Shared {
+namespace Sample.BlazorSample.MyBlazorApp.Shared {
 
     /// <summary>
     /// Todo list item for sample Todo App

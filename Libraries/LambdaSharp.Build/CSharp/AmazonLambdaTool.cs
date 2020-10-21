@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -19,19 +19,19 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace LambdaSharp.Build.CSharp.Internal {
+namespace LambdaSharp.Build.CSharp {
 
-    internal class DotNetLambdaTool : ABuildEventsSource {
+    public class AmazonLambdaTool : ABuildEventsSource {
 
         //--- Constants ---
-        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
+        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.1.0";
 
         //--- Class Fields ---
         private static bool _dotnetLambdaToolVersionChecked;
         private static bool _dotnetLambdaToolVersionIsValid;
 
         //--- Constructors ---
-        public DotNetLambdaTool(BuildEventsConfig? buildEventsConfig = null) : base(buildEventsConfig) { }
+        public AmazonLambdaTool(BuildEventsConfig? buildEventsConfig = null) : base(buildEventsConfig) { }
 
         //--- Class Methods ---
         public bool CheckIsInstalled() {
@@ -92,6 +92,32 @@ namespace LambdaSharp.Build.CSharp.Internal {
             }
             _dotnetLambdaToolVersionIsValid = true;
             return true;
+        }
+
+        public string? GetAmazonLambdaToolVersion() {
+
+            // check if dotnet executable can be found
+            var dotNetExe = ProcessLauncher.DotNetExe;
+            if(string.IsNullOrEmpty(dotNetExe)) {
+                return null;
+            }
+
+            // check if Amazon Lambda Tools extension is installed
+            var result = new ProcessLauncher(BuildEventsConfig).ExecuteWithOutputCapture(
+                dotNetExe,
+                new[] { "lambda", "help" },
+                workingFolder: null
+            );
+            if(result == null) {
+                return null;
+            }
+
+            // parse version from Amazon Lambda Tools
+            var match = Regex.Match(result, @"\((?<Version>.*)\)");
+            if(!match.Success) {
+                return null;
+            }
+            return match.Groups["Version"].Value;
         }
     }
 }

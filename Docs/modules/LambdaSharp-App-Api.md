@@ -101,10 +101,20 @@ The <code>RateLimit</code> parameter specifies the maximum number of requests pe
 <i>Value Constraints:</i> Minimum value of 10.
 </dd>
 
+<dt><code>EventSource</code></dt>
+<dd>
+
+The <code>EventSource</code> parameter specifies the 'Source' property override for app events. When empty, the 'Source' property is set by the app request.
+
+<i>Required</i>: Yes
+
+<i>Type:</i> String
+</dd>
+
 <dt><code>AppVersionId</code></dt>
 <dd>
 
-The <code>AppVersionId</code> parameter specifies the app version identifier. This value is used to construct the complete API key when <code>DevMode</code> is <code>Disabled</code>.
+The <code>AppVersionId</code> parameter specifies the app version identifier. This value is used to construct the complete API key.
 
 <i>Required</i>: Yes
 
@@ -142,8 +152,6 @@ The API key is based on teh CloudFormation stack identifier and the app version 
 
 
 ## Output Values
-stApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${RestApiStage}"
-
 
 <dl>
 
@@ -155,10 +163,10 @@ The <code>ApiKey</code> output contains the CloudFormation stack identifier port
 <i>Type:</i> String
 </dd>
 
-<dt><code>ApiUrl</code></dt>
+<dt><code>Url</code></dt>
 <dd>
 
-The <code>ApiUrl</code> output contains the URL of the api endpoint used by the <code>LambdaSharpAppClient</code>.
+The <code>Url</code> output contains the URL of the api endpoint used by the <code>LambdaSharpAppClient</code>.
 
 <i>Type:</i> String
 </dd>

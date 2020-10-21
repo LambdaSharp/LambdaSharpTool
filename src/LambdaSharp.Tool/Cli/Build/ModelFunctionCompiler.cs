@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // add functions
                 foreach(var function in functions) {
-                    AddFunctionSources(function);
+                    AddEventSources(function);
                 }
 
                 // check if a REST API gateway needs to be created
@@ -122,7 +122,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
             string apiDeclarationsChecksum = string.Join("\n", apiDeclarations
                 .OrderBy(kv => kv.Key)
-                .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
+                .Select(kv => $"{kv.Key}={StringEx.GetJsonChecksum(JsonConvert.SerializeObject(kv.Value))}")
             ).ToMD5Hash();
 
             // add RestApi url
@@ -988,7 +988,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void AddFunctionSources(FunctionItem function) {
+        private void AddEventSources(FunctionItem function) {
 
             // add function sources
             for(var sourceIndex = 0; sourceIndex < function.Sources.Count; ++sourceIndex) {

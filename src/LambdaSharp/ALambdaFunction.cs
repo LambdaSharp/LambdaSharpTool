@@ -153,6 +153,8 @@ namespace LambdaSharp {
 
             //--- ILambdaSharpInfo Members ---
             string ILambdaSharpInfo.AppName => null;
+            string ILambdaSharpInfo.AppId => null;
+            string ILambdaSharpInfo.AppInstanceId => null;
         }
 
         /// <summary>
@@ -328,7 +330,7 @@ namespace LambdaSharp {
         protected HttpClient HttpClient { get; set; }
 
         /// <summary>
-        /// The <see cref="DebugLoggingEnabled"/> property indicates if the the requests received and responses emitted
+        /// The <see cref="DebugLoggingEnabled"/> property indicates if the requests received and responses emitted
         /// by this Lambda function should be shown in the CloudWatch logs. This can be useful to determine check for
         /// issues caused by inconsistencies in serialization or deserialization.
         /// </summary>
@@ -739,6 +741,17 @@ namespace LambdaSharp {
         /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
         protected void RunTask(Func<Task> function, CancellationToken cancellationToken = default)  => AddPendingTask(Task.Run(function, cancellationToken));
 
+        /// <summary>
+        /// The <see cref="ForceLambdaColdStart(System.String)"/> method causes the Lambda runtime to re-initialize as if a cold start had occurred. This methos is useful
+        /// when the global environment is corrupted and only a restart can fix it.
+        /// </summary>
+        protected void ForceLambdaColdStart(string reason) {
+            LogFatal(new ApplicationException(reason), "restart Lambda runtime");
+
+            // NOTE (2020-10-13, bjorg): the following line will cause an uncatchable exception that force the Lambda runtime to start over
+            System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
+        }
+
         private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
             var parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach(DictionaryEntry envVar in Environment.GetEnvironmentVariables()) {
@@ -926,7 +939,24 @@ namespace LambdaSharp {
         ) => Logger.LogMetric(metrics, dimensionNames, dimensionValues);
 
         /// <summary>
-        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
+        /// </summary>
+        /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        protected void LogEvent<T>(T detail, IEnumerable<string> resources = null)
+            => Logger.LogEvent($"{Info.ModuleFullName}::{Info.FunctionName}", detail, resources);
+
+        /// <summary>
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
+        /// </summary>
+        /// <param name="source">Name of the event source.</param>
+        /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        protected void LogEvent<T>(string source, T detail, IEnumerable<string> resources = null)
+            => Logger.LogEvent(source, detail, resources);
+
+        /// <summary>
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge.
         /// </summary>
         /// <param name="source">Name of the event source.</param>
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>

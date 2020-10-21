@@ -14,7 +14,7 @@ The CI/CD pipeline made of two phases: _Build_ and _Deploy_. During the _Build_ 
 
 The _Build_ phase is responsible for building modules and publishing their CloudFormation templates and artifacts. Each _Build_ phase begins with the creation of a fresh S3 bucket. This ensures that each build is clean from previous builds. It also means that if a build is not completed successfully, it does not contaminate existing deployment tiers as their are isolated from the _Build_ phase.
 
-> NOTE: By default, an AWS account has a limit of 100 S3 buckets. However, support can increase this limit to 1,000 S3 buckets.
+> NOTE: By default, an AWS account has a limit of 100 S3 buckets. However, AWS support can increase this limit to 1,000 S3 buckets.
 
 ### Create an S3 bucket name
 

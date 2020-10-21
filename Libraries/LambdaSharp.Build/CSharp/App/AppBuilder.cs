@@ -55,8 +55,12 @@ namespace LambdaSharp.Build.CSharp {
         public const string AppSettingsJsonFileName = "appsettings.json";
 
         // NOTE (2020-08-09, bjorg): "appsettings.Production.json" is automatically loaded on boot
-        //  by the the Blazor application and injected into the app's configuration.
+        //  by the Blazor application and injected into the app's configuration.
         public const string AppSettingsProductionJsonFileName = "appsettings.Production.json";
+
+        // NOTE (2020-08-09, bjorg): "appsettings.Production.json" is automatically loaded on boot
+        //  by the Blazor application and injected into the app's configuration.
+        public const string AppSettingsDevelopmentJsonFileName = "appsettings.Development.json";
 
         //--- Types ---
         private class ForwardSlashEncoder : UTF8Encoding {
@@ -142,6 +146,8 @@ namespace LambdaSharp.Build.CSharp {
 
                             // ignore exception and continue
                         }
+                    } else {
+                        LogInfoVerbose($"... found newer file: {file}");
                     }
                 }
             } else {
@@ -283,6 +289,11 @@ namespace LambdaSharp.Build.CSharp {
             if(Directory.Exists(folder)) {
                 foreach(var filePath in Directory.GetFiles(folder, "*", SearchOption.AllDirectories)) {
                     var relativeFilePathName = Path.GetRelativePath(folder, filePath);
+
+                    // NOTE (2020-10-18, bjorg): skip 'appsettings.Development.json' file; since it's only useful for running locally and might contain sensitive information
+                    if(relativeFilePathName == AppSettingsDevelopmentJsonFileName) {
+                        continue;
+                    }
                     files.Add(new KeyValuePair<string, string>(relativeFilePathName, filePath));
                 }
                 files = files.OrderBy(file => file.Key).ToList();
@@ -308,7 +319,7 @@ namespace LambdaSharp.Build.CSharp {
                     files.Add(new KeyValuePair<string, string>(AppSettingsJsonFileName, appSettingsFilepath));
                 }
 
-                // package contents with built-in zip library, which is ~6x faster
+                // package contents with built-in zip library
                 using(var zipArchive = System.IO.Compression.ZipFile.Open(package, ZipArchiveMode.Create, new ForwardSlashEncoder())) {
                     foreach(var file in files) {
                         if(Provider.DetailedOutput) {
@@ -351,6 +362,10 @@ namespace LambdaSharp.Build.CSharp {
                         }
                     }
                 }
+            } else {
+
+                // update last write time on file
+                File.SetLastWriteTimeUtc(package, DateTime.UtcNow);
             }
             Provider.AddArtifact($"{app.FullName}::PackageName", package);
 
@@ -376,7 +391,8 @@ namespace LambdaSharp.Build.CSharp {
                     "util", "extract-assembly-metadata",
                     "--assembly", assemblyFilepath,
                     "--out", appMetadataFilepath,
-                    "--quiet"
+                    "--quiet",
+                    "--no-ansi"
                 },
                 Provider.DetailedOutput
             );

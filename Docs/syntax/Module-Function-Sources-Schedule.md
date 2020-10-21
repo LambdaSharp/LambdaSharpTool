@@ -42,14 +42,14 @@ The <code>Schedule</code> attribute specifies a <code>cron</code> or <code>rate<
 
 ## Examples
 
-Define a schedule event to invokes an associated Lambda function using a `cron` expression.
+Define a schedule event source to invokes an associated Lambda function using a `cron` expression.
 
 ```yaml
 Sources:
   - Schedule: cron(0 12 * * ? *)
 ```
 
-Define a named schedule event using a `rate` expression.
+Define a named schedule event source using a `rate` expression.
 
 ```yaml
 Sources:

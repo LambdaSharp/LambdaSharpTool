@@ -103,7 +103,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             _existingPackages = new HashSet<string>(Directory.GetFiles(Settings.OutputDirectory, "app*.*"));
 
-            // build each function
+            // build each app
             foreach(var app in apps) {
                 AtLocation(app.FullName, () => {
                     switch(Path.GetExtension(app.Project).ToLowerInvariant()) {

@@ -71,7 +71,7 @@ The <code>Function</code> attribute specifies the item name for the Lambda funct
 
 The <code>Handler</code> attribute specifies the fully qualified method reference to the Lambda function handler.
 
-<i>Required</i>: Conditional. By default, the .NET Core method reference is expected to be <code>${Module::Name}.${FunctionName}::${Namespace}.Function::FunctionHandlerAsync</code> where <code>${Namespace}</code> is determined by inspecting the <code>&lt;RootNamespace&gt;</code> element of the .NET Core project file. If the Lambda function handler is not called <code>FunctionHandlerAsync</code>, or the class implemented it is not called <code>Function</code>, or the <code>&lt;RootNamespace&gt;</code> is not specified in the .NET Core project file, the the <code>Handler</code> attribute must be specified. Otherwise, it can be omitted. For javascript functions, the <code>Handler</code> is set to <code>index.handler</code> by default.
+<i>Required</i>: Conditional. By default, the .NET Core method reference is expected to be <code>${Module::Name}.${FunctionName}::${Namespace}.Function::FunctionHandlerAsync</code> where <code>${Namespace}</code> is determined by inspecting the <code>&lt;RootNamespace&gt;</code> element of the .NET Core project file. If the Lambda function handler is not called <code>FunctionHandlerAsync</code>, or the class implemented it is not called <code>Function</code>, or the <code>&lt;RootNamespace&gt;</code> is not specified in the .NET Core project file, the <code>Handler</code> attribute must be specified. Otherwise, it can be omitted. For javascript functions, the <code>Handler</code> is set to <code>index.handler</code> by default.
 
 <i>Type</i>: String
 </dd>

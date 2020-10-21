@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E6B032E04BD8A1796369AA1B5B77BC99"
+      "Default": "9E86222F5CF66E612B31F929A43B5D2C"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
         },
         "Parameters": {
           "CloudFrontOriginAccessIdentity": "",
-          "Package": "<%MODULE_ORIGIN%>/Sample/BlazorWebAssembly/.artifacts/MyBlazorApp-DRYRUN.zip",
+          "Package": "<%MODULE_ORIGIN%>/Sample/BlazorSample/.artifacts/MyBlazorApp-DRYRUN.zip",
           "ContentEncoding": "DEFAULT",
           "DeploymentBucketName": {
             "Ref": "DeploymentBucketName"
@@ -124,7 +124,7 @@
           "ParentModuleId": {
             "Ref": "AWS::StackName"
           },
-          "ParentModuleInfo": "Sample.BlazorWebAssembly:1.0-DEV@<%MODULE_ORIGIN%>",
+          "ParentModuleInfo": "Sample.BlazorSample:1.0-DEV@<%MODULE_ORIGIN%>",
           "LogGroupName": {
             "Ref": "MyBlazorAppLogGroup"
           },
@@ -141,6 +141,7 @@
           "DevMode": {
             "Ref": "AppDeveloperMode"
           },
+          "EventSource": "Sample.BlazorSample::MyBlazorApp",
           "DeploymentBucketName": {
             "Ref": "DeploymentBucketName"
           },
@@ -193,22 +194,10 @@
         "Key": "appsettings.Production.json",
         "Contents": {
           "LambdaSharp": {
-            "ApiUrl": {
-              "Fn::GetAtt": [
-                "MyBlazorAppApi",
-                "Outputs.Url"
-              ]
-            },
-            "ApiKey": {
-              "Fn::GetAtt": [
-                "MyBlazorAppApi",
-                "Outputs.ApiKey"
-              ]
-            },
             "ModuleId": {
               "Ref": "AWS::StackName"
             },
-            "ModuleInfo": "Sample.BlazorWebAssembly:1.0-DEV@<%MODULE_ORIGIN%>",
+            "ModuleInfo": "Sample.BlazorSample:1.0-DEV@<%MODULE_ORIGIN%>",
             "DeploymentTier": {
               "Fn::Select": [
                 "0",
@@ -229,7 +218,20 @@
             "AppFramework": "<MISSING>",
             "DevMode": {
               "Ref": "AppDeveloperMode"
-            }
+            },
+            "ApiUrl": {
+              "Fn::GetAtt": [
+                "MyBlazorAppApi",
+                "Outputs.Url"
+              ]
+            },
+            "ApiKey": {
+              "Fn::GetAtt": [
+                "MyBlazorAppApi",
+                "Outputs.ApiKey"
+              ]
+            },
+            "AppEventSource": "Sample.BlazorSample::MyBlazorApp"
           }
         }
       }
@@ -244,7 +246,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "ModuleInfo": "Sample.BlazorWebAssembly:1.0-DEV@<%MODULE_ORIGIN%>",
+        "ModuleInfo": "Sample.BlazorSample:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -381,7 +383,7 @@
       "Description": "MyBlazorApp Website URL"
     },
     "ModuleInfo": {
-      "Value": "Sample.BlazorWebAssembly:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.BlazorSample:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
       "Value": {
@@ -574,9 +576,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "Sample.BlazorWebAssembly:1.0-DEV",
+      "Module": "Sample.BlazorSample:1.0-DEV",
       "Description": "A sample module showing how to deploy a Blazor WebAssembly website",
-      "TemplateChecksum": "E6B032E04BD8A1796369AA1B5B77BC99",
+      "TemplateChecksum": "9E86222F5CF66E612B31F929A43B5D2C",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [

@@ -51,6 +51,7 @@ namespace LambdaSharp.Tool {
         //--- Class Fields ---
         public static bool Quiet;
         public static bool ShowHelp;
+        public static TimeSpan BeepThreshold = TimeSpan.FromSeconds(10);
 
         //--- Class Methods ---
         public static int Main(string[] args) {
@@ -108,7 +109,13 @@ namespace LambdaSharp.Tool {
                 } finally {
                     if(!ShowHelp && !Quiet) {
                         Console.WriteLine();
-                        Console.WriteLine($"Done (finished: {DateTime.Now}; duration: {stopwatch.Elapsed:c})");
+                        var elapsed = stopwatch.Elapsed;
+                        Console.WriteLine($"Done (finished: {DateTime.Now}; duration: {elapsed:c})");
+
+                        // check execution was long enough to emit a sound
+                        if(elapsed >= BeepThreshold) {
+                            Console.Beep();
+                        }
                     }
                 }
             }

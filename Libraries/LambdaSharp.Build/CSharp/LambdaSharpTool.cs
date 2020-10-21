@@ -167,10 +167,12 @@ namespace LambdaSharp.Build.CSharp {
                         }
 
                         // check if parameter is a proxy request
-                        var isProxyRequest = parameter.ParameterType.FullName == "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest";
+                        var isProxyRequest =
+                            (parameter.ParameterType.FullName == "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest")
+                            || (parameter.ParameterType.FullName == "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest");
                         if(isProxyRequest) {
                             if(hasFromUriAttribute || hasFromBodyAttribute) {
-                                throw new ProcessTargetInvocationException($"{resolvedMethodReference} parameter '{parameter.Name}' of type 'APIGatewayProxyRequest' cannot have [FromUri] or [FromBody] attribute");
+                                throw new ProcessTargetInvocationException($"{resolvedMethodReference} parameter '{parameter.Name}' of type 'APIGatewayProxyRequest' or 'APIGatewayHttpApiV2ProxyRequest' cannot have [FromUri] or [FromBody] attribute");
                             }
                             if(proxyRequestParameter != null) {
                                 throw new ProcessTargetInvocationException($"{resolvedMethodReference} parameters '{proxyRequestParameter.Name}' and '{parameter.Name}' conflict on proxy request");
@@ -340,6 +342,8 @@ namespace LambdaSharp.Build.CSharp {
                 if(
                     (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest")
                     && (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
+                    && (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest")
+                    && (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyResponse")
                 ) {
                     var schema = await JsonSchema4.FromTypeAsync(messageType, new JsonSchemaGeneratorSettings {
                         FlattenInheritanceHierarchy = true,

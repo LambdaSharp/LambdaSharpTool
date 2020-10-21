@@ -1,0 +1,1964 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp app API for CloudWatch Logs, Metrics, and Events (v1.0-DEV)",
+  "Parameters": {
+    "ParentModuleId": {
+      "Type": "String",
+      "Description": "Module ID of the parent stack"
+    },
+    "ParentModuleInfo": {
+      "Type": "String",
+      "Description": "ModuleInfo of the parent stack"
+    },
+    "LogGroupName": {
+      "Type": "String",
+      "Description": "CloudWatch LogGroup name for app"
+    },
+    "RootPath": {
+      "Type": "String",
+      "Description": "Name of root resource for app API",
+      "AllowedPattern": "^[a-zA-Z0-9\\._\\-]+$",
+      "ConstraintDescription": "Must be non-empty sequence of alphanumeric characters, periods ('.'), underscores ('_'), or dashes ('-')."
+    },
+    "CorsOrigin": {
+      "Type": "String",
+      "Description": "Source URL allowed to invoke the API",
+      "AllowedPattern": "^\\*|https?:\\/\\/((?!-)[a-z0-9-]{1,63}(?<!-)\\.)+[a-z]{2,6}$",
+      "ConstraintDescription": "Must be 'http://' or 'https://' followed by a valid domain name in lowercase letters, or '*' to allow any domain."
+    },
+    "BurstLimit": {
+      "Type": "Number",
+      "Description": "Maximum number of requests per second over a short period of time",
+      "MinValue": 10
+    },
+    "RateLimit": {
+      "Type": "Number",
+      "Description": "Maximum number of request per second over a long period of time",
+      "MinValue": 10
+    },
+    "AppVersionId": {
+      "Type": "String",
+      "Description": "App version identifier",
+      "NoEcho": true
+    },
+    "DevMode": {
+      "Type": "String",
+      "Description": "Developer mode relaxes API key constraints and enables debug logging",
+      "AllowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "Default": "Disabled"
+    },
+    "EventSource": {
+      "Type": "String",
+      "Description": "'Source' property override for app events; when empty, the 'Source' property is set by the app request",
+      "Default": ""
+    },
+    "Secrets": {
+      "Type": "String",
+      "Description": "Secret Keys (ARNs)",
+      "Default": ""
+    },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing",
+      "AllowedValues": [
+        "Disabled",
+        "RootModule",
+        "AllModules"
+      ],
+      "Default": "Disabled"
+    },
+    "LambdaSharpCoreServices": {
+      "Type": "String",
+      "Description": "Use LambdaSharp.Core Services",
+      "AllowedValues": [
+        "Disabled",
+        "Enabled"
+      ],
+      "Default": "Disabled"
+    },
+    "LambdaSharpCoreDeadLetterQueue": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::DeadLetterQueue",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::DeadLetterQueue"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Deployment S3 Bucket Name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix (lowercase)"
+    },
+    "DeploymentRoot": {
+      "Type": "String",
+      "Description": "Root Stack Name",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "Deployment Checksum",
+      "Default": "D893A4FD1ECAE9F3D20FB5A71589F75F"
+    }
+  },
+  "Resources": {
+    "RestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName} LambdaSharp App API"
+        }
+      }
+    },
+    "RestApiAppResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": {
+          "Ref": "RootPath"
+        }
+      }
+    },
+    "RestApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "RestApiDeployment"
+        },
+        "Description": "LambdaSharp App API LATEST Stage",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "StageName": "LATEST"
+      }
+    },
+    "RestApiDeployment": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} LambdaSharp App API"
+        },
+        "RestApiId": {
+          "Ref": "RestApi"
+        }
+      },
+      "DependsOn": [
+        "RestApiAppLogsResource",
+        "RestApiAppLogsResourcePOST",
+        "RestApiAppLogsResourcePOSTRequestModel",
+        "RestApiAppLogsResourcePUT",
+        "RestApiAppLogsResourcePUTRequestModel"
+      ]
+    },
+    "RestApiKey": {
+      "Type": "AWS::ApiGateway::ApiKey",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} LambdaSharp App API Key"
+        },
+        "Enabled": "true",
+        "StageKeys": [
+          {
+            "RestApiId": {
+              "Ref": "RestApi"
+            },
+            "StageName": {
+              "Ref": "RestApiStage"
+            }
+          }
+        ],
+        "Value": {
+          "Fn::If": [
+            "DevModeIsEnabled",
+            {
+              "Fn::Base64": {
+                "Fn::Select": [
+                  "2",
+                  {
+                    "Fn::Split": [
+                      "/",
+                      {
+                        "Ref": "AWS::StackId"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "Fn::Base64": {
+                "Fn::Sub": [
+                  "${Prefix}:${Suffix}",
+                  {
+                    "Prefix": {
+                      "Ref": "AppVersionId"
+                    },
+                    "Suffix": {
+                      "Fn::Select": [
+                        "2",
+                        {
+                          "Fn::Split": [
+                            "/",
+                            {
+                              "Ref": "AWS::StackId"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "RestApiUsagePlan": {
+      "Type": "AWS::ApiGateway::UsagePlan",
+      "Properties": {
+        "ApiStages": [
+          {
+            "ApiId": {
+              "Ref": "RestApi"
+            },
+            "Stage": {
+              "Ref": "RestApiStage"
+            }
+          }
+        ],
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} LambdaSharp App API Usage Plan"
+        },
+        "Throttle": {
+          "BurstLimit": {
+            "Ref": "BurstLimit"
+          },
+          "RateLimit": {
+            "Ref": "RateLimit"
+          }
+        }
+      }
+    },
+    "RestApiUsagePlanKey": {
+      "Type": "AWS::ApiGateway::UsagePlanKey",
+      "Properties": {
+        "KeyId": {
+          "Ref": "RestApiKey"
+        },
+        "KeyType": "API_KEY",
+        "UsagePlanId": {
+          "Ref": "RestApiUsagePlan"
+        }
+      }
+    },
+    "RestApiValidator": {
+      "Type": "AWS::ApiGateway::RequestValidator",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ValidateRequestBody": "true",
+        "ValidateRequestParameters": "true"
+      }
+    },
+    "RestApiRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ApiGatewayPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ApiLogsPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "LogGroupPermission",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*"
+                    }
+                  ]
+                },
+                {
+                  "Sid": "EventBridgePermission",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Finalizer": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/App.Api/.artifacts/Finalizer-DRYRUN.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "LambdaSharp.App.Api:1.0-DEV@<%MODULE_ORIGIN%>",
+            "LAMBDA_NAME": "Finalizer",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
+            "STR_RESTAPI": {
+              "Ref": "RestApi"
+            },
+            "STR_RESTAPISTAGE": {
+              "Ref": "RestApiStage"
+            },
+            "STR_MODULE_ROLE_DEADLETTERQUEUEPOLICY": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Ref": "ModuleRoleDeadLetterQueuePolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          }
+        },
+        "Handler": "Finalizer::LambdaSharp.AppHosting.Finalizer.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore3.1",
+        "Timeout": 900,
+        "TracingConfig": {
+          "Mode": {
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
+          }
+        }
+      }
+    },
+    "FinalizerLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Finalizer}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "FinalizerInvocation": {
+      "Type": "Custom::ModuleFinalizer",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "Finalizer",
+            "Arn"
+          ]
+        },
+        "ResourceType": "Module::Finalizer",
+        "DeploymentChecksum": {
+          "Ref": "DeploymentChecksum"
+        },
+        "ModuleVersion": "1.0-DEV",
+        "DependsOn": [
+          {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Ref": "ModuleRoleDeadLetterQueuePolicy"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "ModuleRoleSecretsPolicyCondition",
+              {
+                "Ref": "ModuleRoleSecretsPolicy"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Ref": "ModuleRegistration"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "Parameter_ParentModuleId": {
+          "Ref": "ParentModuleId"
+        },
+        "Parameter_ParentModuleInfo": {
+          "Ref": "ParentModuleInfo"
+        },
+        "Parameter_LogGroupName": {
+          "Ref": "LogGroupName"
+        },
+        "Parameter_RootPath": {
+          "Ref": "RootPath"
+        },
+        "Parameter_CorsOrigin": {
+          "Ref": "CorsOrigin"
+        },
+        "Parameter_BurstLimit": {
+          "Ref": "BurstLimit"
+        },
+        "Parameter_RateLimit": {
+          "Ref": "RateLimit"
+        },
+        "Parameter_AppVersionId": {
+          "Ref": "AppVersionId"
+        },
+        "Parameter_DevMode": {
+          "Ref": "DevMode"
+        },
+        "Parameter_EventSource": {
+          "Ref": "EventSource"
+        },
+        "Parameter_Secrets": {
+          "Ref": "Secrets"
+        },
+        "Parameter_XRayTracing": {
+          "Ref": "XRayTracing"
+        },
+        "Parameter_LambdaSharpCoreServices": {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Parameter_LambdaSharpCoreDeadLetterQueue": {
+          "Ref": "LambdaSharpCoreDeadLetterQueue"
+        },
+        "Parameter_DeploymentBucketName": {
+          "Ref": "DeploymentBucketName"
+        },
+        "Parameter_DeploymentPrefix": {
+          "Ref": "DeploymentPrefix"
+        },
+        "Parameter_DeploymentPrefixLowercase": {
+          "Ref": "DeploymentPrefixLowercase"
+        },
+        "Parameter_DeploymentRoot": {
+          "Ref": "DeploymentRoot"
+        },
+        "Parameter_DeploymentChecksum": {
+          "Ref": "DeploymentChecksum"
+        }
+      },
+      "DependsOn": [
+        "Finalizer",
+        "FinalizerLogGroup",
+        "ModuleRole",
+        "RestApi",
+        "RestApiAppEventsResource",
+        "RestApiAppEventsResourceOPTIONS",
+        "RestApiAppEventsResourcePOST",
+        "RestApiAppLogsResource",
+        "RestApiAppLogsResourceOPTIONS",
+        "RestApiAppLogsResourcePOST",
+        "RestApiAppLogsResourcePOSTRequestModel",
+        "RestApiAppLogsResourcePUT",
+        "RestApiAppLogsResourcePUTRequestModel",
+        "RestApiAppResource",
+        "RestApiDeployment",
+        "RestApiKey",
+        "RestApiLogsEventsPOSTRequestModel",
+        "RestApiRole",
+        "RestApiStage",
+        "RestApiUsagePlan",
+        "RestApiUsagePlanKey",
+        "RestApiValidator"
+      ]
+    },
+    "RestApiAppLogsResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ParentId": {
+          "Ref": "RestApiAppResource"
+        },
+        "PathPart": "logs"
+      }
+    },
+    "RestApiAppLogsResourceOPTIONS": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ResourceId": {
+          "Ref": "RestApiAppLogsResource"
+        },
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "StatusCode": "204",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST,PUT'",
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                },
+                "method.response.header.Access-Control-Max-Age": "'600'"
+              },
+              "ResponseTemplates": {
+                "application/json": ""
+              }
+            }
+          ],
+          "PassthroughBehavior": "WHEN_NO_MATCH",
+          "RequestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "204",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": "false",
+              "method.response.header.Access-Control-Allow-Methods": "false",
+              "method.response.header.Access-Control-Allow-Origin": "false",
+              "method.response.header.Access-Control-Max-Age": "false"
+            }
+          }
+        ]
+      }
+    },
+    "RestApiAppLogsResourcePOST": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "OperationName": "CreateLogStream",
+        "ApiKeyRequired": "true",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ResourceId": {
+          "Ref": "RestApiAppLogsResource"
+        },
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "RequestModels": {
+          "application/json": {
+            "Ref": "RestApiAppLogsResourcePOSTRequestModel"
+          }
+        },
+        "RequestValidatorId": {
+          "Ref": "RestApiValidator"
+        },
+        "Integration": {
+          "Type": "AWS",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:logs:action/CreateLogStream"
+          },
+          "Credentials": {
+            "Fn::GetAtt": [
+              "RestApiRole",
+              "Arn"
+            ]
+          },
+          "PassthroughBehavior": "WHEN_NO_TEMPLATES",
+          "RequestParameters": {
+            "integration.request.header.Content-Type": "'application/x-amz-json-1.1'",
+            "integration.request.header.X-Amz-Target": "'Logs_20140328.CreateLogStream'"
+          },
+          "RequestTemplates": {
+            "application/json": {
+              "Fn::Sub": "#set($body = $input.path('$'))\n{\n  \"logGroupName\": \"${LogGroupName}\",\n  \"logStreamName\": \"$body.logStreamName\"\n}"
+            }
+          },
+          "IntegrationResponses": [
+            {
+              "SelectionPattern": "200",
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "{ }"
+              }
+            },
+            {
+              "SelectionPattern": "400",
+              "StatusCode": "400",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "#set($body = $input.path('$'))\n{\n#if($body.message.isEmpty())\n  \"error\": \"Unknown error\"\n#else\n  \"error\": \"$util.escapeJavaScript($body.message).replaceAll(\"\\\\'\",\"'\")\"\n#end\n}"
+              }
+            },
+            {
+              "StatusCode": "500",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "{\n  \"error\": \"Unexpected response from service.\"\n}"
+              }
+            }
+          ]
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          },
+          {
+            "StatusCode": "400",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          },
+          {
+            "StatusCode": "500",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          }
+        ]
+      }
+    },
+    "RestApiAppLogsResourcePOSTRequestModel": {
+      "Type": "AWS::ApiGateway::Model",
+      "Properties": {
+        "Description": "CreateLogStream",
+        "ContentType": "application/json",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "Schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object",
+          "properties": {
+            "logStreamName": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "logStreamName"
+          ]
+        }
+      }
+    },
+    "RestApiAppLogsResourcePUT": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "OperationName": "PutLogEvents",
+        "ApiKeyRequired": "true",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ResourceId": {
+          "Ref": "RestApiAppLogsResource"
+        },
+        "AuthorizationType": "NONE",
+        "HttpMethod": "PUT",
+        "RequestModels": {
+          "application/json": {
+            "Ref": "RestApiAppLogsResourcePUTRequestModel"
+          }
+        },
+        "RequestValidatorId": {
+          "Ref": "RestApiValidator"
+        },
+        "Integration": {
+          "Type": "AWS",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:logs:action/PutLogEvents"
+          },
+          "Credentials": {
+            "Fn::GetAtt": [
+              "RestApiRole",
+              "Arn"
+            ]
+          },
+          "PassthroughBehavior": "WHEN_NO_TEMPLATES",
+          "RequestParameters": {
+            "integration.request.header.Content-Type": "'application/x-amz-json-1.1'",
+            "integration.request.header.X-Amz-Target": "'Logs_20140328.PutLogEvents'",
+            "integration.request.header.X-Amzn-Logs-Format": "'json/emf'"
+          },
+          "RequestTemplates": {
+            "application/json": {
+              "Fn::Sub": "#set($body = $input.path('$'))\n{\n  \"logEvents\": [\n#foreach($logEvent in $body.logEvents)\n      {\n        \"message\": \"$util.escapeJavaScript($logEvent.message).replaceAll(\"\\\\'\",\"'\")\",\n        \"timestamp\": $logEvent.timestamp\n      }#if($foreach.hasNext),#end\n#end\n  ],\n  \"logGroupName\": \"${LogGroupName}\",\n  \"logStreamName\": \"$body.logStreamName\",\n  \"sequenceToken\": #if($body.sequenceToken.isEmpty()) null#else \"$body.sequenceToken\"#end\n}"
+            }
+          },
+          "IntegrationResponses": [
+            {
+              "SelectionPattern": "200",
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "{\n  \"nextSequenceToken\": \"$input.path('$.nextSequenceToken')\"\n}"
+              }
+            },
+            {
+              "SelectionPattern": "400",
+              "StatusCode": "400",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "#set($body = $input.path('$'))\n#if($body.expectedSequenceToken.isEmpty())\n{\n#if($body.message.isEmpty())\n  \"error\": \"Unknown error\"\n#else\n  \"error\": \"$util.escapeJavaScript($body.message).replaceAll(\"\\\\'\",\"'\")\"\n#end\n}\n#else\n{\n#if($body.message.isEmpty())\n  \"error\": \"unknown error\",\n#else\n  \"error\": \"$util.escapeJavaScript($body.message).replaceAll(\"\\\\'\",\"'\")\",\n#end\n  \"nextSequenceToken\": \"$body.expectedSequenceToken\"\n}\n#end"
+              }
+            },
+            {
+              "StatusCode": "500",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "{\n  \"error\": \"Unexpected response from service.\"\n}"
+              }
+            }
+          ]
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          },
+          {
+            "StatusCode": "400",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          },
+          {
+            "StatusCode": "500",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          }
+        ]
+      }
+    },
+    "RestApiAppLogsResourcePUTRequestModel": {
+      "Type": "AWS::ApiGateway::Model",
+      "Properties": {
+        "Description": "PutLogEvents",
+        "ContentType": "application/json",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "Schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object",
+          "properties": {
+            "logEvents": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "timestamp"
+                  ]
+                }
+              ]
+            },
+            "logStreamName": {
+              "type": "string"
+            },
+            "sequenceToken": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "logEvents",
+            "logStreamName"
+          ]
+        }
+      }
+    },
+    "RestApiAppEventsResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ParentId": {
+          "Ref": "RestApiAppResource"
+        },
+        "PathPart": "events"
+      }
+    },
+    "RestApiAppEventsResourceOPTIONS": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ResourceId": {
+          "Ref": "RestApiAppEventsResource"
+        },
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "StatusCode": "204",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                },
+                "method.response.header.Access-Control-Max-Age": "'600'"
+              },
+              "ResponseTemplates": {
+                "application/json": ""
+              }
+            }
+          ],
+          "PassthroughBehavior": "WHEN_NO_MATCH",
+          "RequestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "204",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": "false",
+              "method.response.header.Access-Control-Allow-Methods": "false",
+              "method.response.header.Access-Control-Allow-Origin": "false",
+              "method.response.header.Access-Control-Max-Age": "false"
+            }
+          }
+        ]
+      }
+    },
+    "RestApiAppEventsResourcePOST": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "OperationName": "PutEvents",
+        "ApiKeyRequired": "true",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "ResourceId": {
+          "Ref": "RestApiAppEventsResource"
+        },
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "RequestModels": {
+          "application/json": {
+            "Ref": "RestApiLogsEventsPOSTRequestModel"
+          }
+        },
+        "RequestValidatorId": {
+          "Ref": "RestApiValidator"
+        },
+        "Integration": {
+          "Type": "AWS",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:events:action/PutEvents"
+          },
+          "Credentials": {
+            "Fn::GetAtt": [
+              "RestApiRole",
+              "Arn"
+            ]
+          },
+          "PassthroughBehavior": "WHEN_NO_TEMPLATES",
+          "RequestParameters": {
+            "integration.request.header.Content-Type": "'application/x-amz-json-1.1'",
+            "integration.request.header.X-Amz-Target": "'AWSEvents.PutEvents'"
+          },
+          "RequestTemplates": {
+            "application/json": {
+              "Fn::Sub": [
+                "#set($body = $input.path('$'))\n{\n  \"Entries\": [\n#foreach($entry in $body.Entries)\n    {\n      \"Source\": \"${EventSourceValue}\",\n      \"Detail\": \"$util.escapeJavaScript($entry.Detail).replaceAll(\"\\\\'\",\"'\")\",\n      \"DetailType\": \"$util.escapeJavaScript($entry.DetailType).replaceAll(\"\\\\'\",\"'\")\",\n      \"EventBusName\": \"default\"#if(($entry.Resources != $null)),\n      \"Resources\": [\n#foreach($resource in $entry.Resources)\n        \"$util.escapeJavaScript($resource).replaceAll(\"\\\\'\",\"'\")\",\n#end\n        \"lambdasharp:stack:${ParentModuleId}\",\n        \"lambdasharp:module:${ParentModuleFullName}\",\n        \"lambdasharp:tier:${DeploymentTier}\",\n        \"lambdasharp:moduleinfo:${ParentModuleInfo}\",\n        \"lambdasharp:origin:${ParentModuleOrigin}\"\n#end\n      ]\n    }#if($foreach.hasNext),#end\n#end\n  ]\n}",
+                {
+                  "ParentModuleId": {
+                    "Ref": "ParentModuleId"
+                  },
+                  "ParentModuleFullName": {
+                    "Fn::Select": [
+                      "0",
+                      {
+                        "Fn::Split": [
+                          ":",
+                          {
+                            "Ref": "ParentModuleInfo"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "ParentModuleOrigin": {
+                    "Fn::Select": [
+                      "1",
+                      {
+                        "Fn::Split": [
+                          "@",
+                          {
+                            "Ref": "ParentModuleInfo"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "DeploymentTier": {
+                    "Fn::Select": [
+                      "0",
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Ref": "DeploymentPrefix"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "EventSourceValue": {
+                    "Fn::If": [
+                      "EventSourceIsEmpty",
+                      "$util.escapeJavaScript($entry.Source).replaceAll(\"\\\\'\",\"'\")",
+                      {
+                        "Ref": "EventSource"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "IntegrationResponses": [
+            {
+              "SelectionPattern": "200",
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "{ }"
+              }
+            },
+            {
+              "SelectionPattern": "400",
+              "StatusCode": "400",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "$input.body"
+              }
+            },
+            {
+              "StatusCode": "500",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": {
+                  "Fn::If": [
+                    "DevModeIsEnabled",
+                    "'*'",
+                    {
+                      "Fn::Sub": "'${CorsOrigin}'"
+                    }
+                  ]
+                }
+              },
+              "ResponseTemplates": {
+                "application/x-amz-json-1.1": "{\n  \"error\": \"Unexpected response from service.\"\n}"
+              }
+            }
+          ]
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          },
+          {
+            "StatusCode": "400",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          },
+          {
+            "StatusCode": "500",
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": "false"
+            }
+          }
+        ]
+      }
+    },
+    "RestApiLogsEventsPOSTRequestModel": {
+      "Type": "AWS::ApiGateway::Model",
+      "Properties": {
+        "Description": "CreateLogStream",
+        "ContentType": "application/json",
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "Schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object",
+          "properties": {
+            "Entries": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "Detail": {
+                      "type": "string"
+                    },
+                    "DetailType": {
+                      "type": "string"
+                    },
+                    "Resources": {
+                      "type": "array",
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "Source": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "Detail",
+                    "DetailType",
+                    "Source"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "Entries"
+          ]
+        }
+      }
+    },
+    "ModuleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ModuleLambdaPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "RestApiDeploymentsPermissions",
+                  "Effect": "Allow",
+                  "Action": [
+                    "apigateway:GET",
+                    "apigateway:POST"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${RestApi}/deployments"
+                  }
+                },
+                {
+                  "Sid": "RestApiDeploymentPermissions",
+                  "Effect": "Allow",
+                  "Action": [
+                    "apigateway:DELETE"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${RestApi}/deployments/*"
+                  }
+                },
+                {
+                  "Sid": "RestApiStagePermissions",
+                  "Effect": "Allow",
+                  "Action": [
+                    "apigateway:PATCH"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${RestApi}/stages/${RestApiStage}"
+                  }
+                },
+                {
+                  "Sid": "LogStream",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
+                },
+                {
+                  "Sid": "AWSXRay",
+                  "Effect": "Allow",
+                  "Action": [
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingStatisticSummaries",
+                    "xray:GetSamplingTargets",
+                    "xray:PutTelemetryRecords",
+                    "xray:PutTraceSegments"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
+                  "Sid": "DeploymentBucketReadOnly",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/App.Api/.artifacts/*"
+                  }
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ModuleRoleDeadLetterQueuePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DeadLetterQueue",
+              "Effect": "Allow",
+              "Action": [
+                "sqs:SendMessage"
+              ],
+              "Resource": {
+                "Fn::If": [
+                  "UseCoreServices",
+                  {
+                    "Fn::If": [
+                      "LambdaSharpCoreDeadLetterQueueIsImported",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${DeploymentPrefix}${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "$",
+                                      {
+                                        "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "LambdaSharpCoreDeadLetterQueue"
+                      }
+                    ]
+                  },
+                  {
+                    "Ref": "AWS::NoValue"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleDeadLetterQueue"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
+      }
+    },
+    "ModuleRoleSecretsPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "ModuleRoleSecretsPolicyCondition",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Secrets",
+              "Effect": "Allow",
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt"
+              ],
+              "Resource": {
+                "Fn::Split": [
+                  ",",
+                  {
+                    "Ref": "Secrets"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
+      }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationModule",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "ModuleInfo": "LambdaSharp.App.Api:1.0-DEV@<%MODULE_ORIGIN%>",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "RootPath": {
+      "Value": {
+        "Ref": "RootPath"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::RootPath"
+        }
+      },
+      "Description": "Name of root resource for app API"
+    },
+    "DomainName": {
+      "Value": {
+        "Fn::Sub": "${RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::DomainName"
+        }
+      },
+      "Description": "App API domain name"
+    },
+    "CloudFrontOriginPath": {
+      "Value": {
+        "Fn::Sub": "/${RestApiStage}"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::CloudFrontOriginPath"
+        }
+      },
+      "Description": "App API origin path for CloudFront"
+    },
+    "CloudFrontPathPattern": {
+      "Value": {
+        "Fn::Sub": "${RootPath}/*"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::CloudFrontPathPattern"
+        }
+      },
+      "Description": "App API path pattern for CloudFront"
+    },
+    "Url": {
+      "Value": {
+        "Fn::Sub": "https://${RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${RestApiStage}/${RootPath}"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::Url"
+        }
+      },
+      "Description": "App API URL"
+    },
+    "ApiKey": {
+      "Value": {
+        "Fn::Base64": {
+          "Fn::Select": [
+            "2",
+            {
+              "Fn::Split": [
+                "/",
+                {
+                  "Ref": "AWS::StackId"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::ApiKey"
+        }
+      },
+      "Description": "App API Key"
+    },
+    "ModuleInfo": {
+      "Value": "LambdaSharp.App.Api:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
+    },
+    "LambdaSharpTool": {
+      "Value": "1.0.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "Conditions": {
+    "DevModeIsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "DevMode"
+        },
+        "Enabled"
+      ]
+    },
+    "EventSourceIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "EventSource"
+        },
+        ""
+      ]
+    },
+    "XRayIsEnabled": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "XRayTracing"
+            },
+            "Disabled"
+          ]
+        }
+      ]
+    },
+    "UseCoreServices": {
+      "Fn::Equals": [
+        {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Enabled"
+      ]
+    },
+    "LambdaSharpCoreDeadLetterQueueIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreDeadLetterQueue"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "ModuleRoleSecretsPolicyCondition": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Secrets"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "ParentModuleId": {
+          "default": "Module ID of the parent stack [String]"
+        },
+        "ParentModuleInfo": {
+          "default": "ModuleInfo of the parent stack [String]"
+        },
+        "LogGroupName": {
+          "default": "CloudWatch LogGroup name for app [String]"
+        },
+        "RootPath": {
+          "default": "Name of root resource for app API [String]"
+        },
+        "CorsOrigin": {
+          "default": "Source URL allowed to invoke the API [String]"
+        },
+        "BurstLimit": {
+          "default": "Maximum number of requests per second over a short period of time [Number]"
+        },
+        "RateLimit": {
+          "default": "Maximum number of request per second over a long period of time [Number]"
+        },
+        "AppVersionId": {
+          "default": "App version identifier [String]"
+        },
+        "DevMode": {
+          "default": "Developer mode relaxes API key constraints and enables debug logging [String]"
+        },
+        "EventSource": {
+          "default": "'Source' property override for app events; when empty, the 'Source' property is set by the app request [String]"
+        },
+        "Secrets": {
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
+        },
+        "LambdaSharpCoreServices": {
+          "default": "Integrate with LambdaSharp.Core services [String]"
+        },
+        "LambdaSharpCoreDeadLetterQueue": {
+          "default": "DeadLetterQueue [String]"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 bucket name [String]"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment tier prefix [String]"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment tier prefix (lowercase) [String]"
+        },
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
+        },
+        "DeploymentChecksum": {
+          "default": "CloudFormation template MD5 checksum [String]"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "ParentModuleId",
+            "ParentModuleInfo",
+            "LogGroupName",
+            "RootPath",
+            "CorsOrigin",
+            "BurstLimit",
+            "RateLimit",
+            "AppVersionId",
+            "DevMode",
+            "EventSource"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets",
+            "XRayTracing",
+            "LambdaSharpCoreServices"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp.Core Imports"
+          },
+          "Parameters": [
+            "LambdaSharpCoreDeadLetterQueue"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentRoot",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2019-07-04",
+      "Module": "LambdaSharp.App.Api:1.0-DEV",
+      "Description": "LambdaSharp app API for CloudWatch Logs, Metrics, and Events",
+      "TemplateChecksum": "D893A4FD1ECAE9F3D20FB5A71589F75F",
+      "Date": "2019-08-09T15:00:00Z",
+      "CoreServicesVersion": "1",
+      "ParameterSections": [
+        {
+          "Title": "Module Settings",
+          "Parameters": [
+            {
+              "Name": "ParentModuleId",
+              "Type": "String"
+            },
+            {
+              "Name": "ParentModuleInfo",
+              "Type": "String"
+            },
+            {
+              "Name": "LogGroupName",
+              "Type": "String"
+            },
+            {
+              "Name": "RootPath",
+              "Type": "String",
+              "AllowedPattern": "^[a-zA-Z0-9\\._\\-]+$",
+              "ConstraintDescription": "Must be non-empty sequence of alphanumeric characters, periods ('.'), underscores ('_'), or dashes ('-')."
+            },
+            {
+              "Name": "CorsOrigin",
+              "Type": "String",
+              "AllowedPattern": "^\\*|https?:\\/\\/((?!-)[a-z0-9-]{1,63}(?<!-)\\.)+[a-z]{2,6}$",
+              "ConstraintDescription": "Must be 'http://' or 'https://' followed by a valid domain name in lowercase letters, or '*' to allow any domain."
+            },
+            {
+              "Name": "BurstLimit",
+              "Type": "Number",
+              "MinValue": 10
+            },
+            {
+              "Name": "RateLimit",
+              "Type": "Number",
+              "MinValue": 10
+            },
+            {
+              "Name": "AppVersionId",
+              "Type": "String"
+            },
+            {
+              "Name": "DevMode",
+              "Type": "String",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Enabled",
+                "Disabled"
+              ]
+            },
+            {
+              "Name": "EventSource",
+              "Type": "String",
+              "Default": ""
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Label": "Comma-separated list of additional KMS secret keys",
+              "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "Enable AWS X-Ray tracing mode for module resources",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "RootModule",
+                "AllModules"
+              ]
+            },
+            {
+              "Name": "LambdaSharpCoreServices",
+              "Type": "String",
+              "Label": "Integrate with LambdaSharp.Core services",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp.Core Imports",
+          "Parameters": [
+            {
+              "Name": "LambdaSharpCoreDeadLetterQueue",
+              "Type": "String",
+              "Label": "DeadLetterQueue",
+              "Default": "$LambdaSharp-Core::DeadLetterQueue",
+              "Import": "LambdaSharp.Core::DeadLetterQueue",
+              "AllowedPattern": "^.+$",
+              "ConstraintDescription": "must either be a cross-module reference or a non-empty value"
+            }
+          ]
+        }
+      ],
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
+      "Artifacts": [],
+      "Dependencies": [],
+      "ResourceTypes": [],
+      "Outputs": [
+        {
+          "Name": "ApiKey",
+          "Description": "App API Key",
+          "Type": "String"
+        },
+        {
+          "Name": "CloudFrontOriginPath",
+          "Description": "App API origin path for CloudFront",
+          "Type": "String"
+        },
+        {
+          "Name": "CloudFrontPathPattern",
+          "Description": "App API path pattern for CloudFront",
+          "Type": "String"
+        },
+        {
+          "Name": "DomainName",
+          "Description": "App API domain name",
+          "Type": "String"
+        },
+        {
+          "Name": "RootPath",
+          "Description": "Name of root resource for app API",
+          "Type": "String"
+        },
+        {
+          "Name": "Url",
+          "Description": "App API URL",
+          "Type": "String"
+        }
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
+      "ResourceNameMappings": {
+        "FinalizerLogGroup": "Finalizer::LogGroup",
+        "FinalizerInvocation": "Finalizer::Invocation",
+        "ModuleRole": "Module::Role",
+        "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
+        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
+        "ModuleRegistration": "Module::Registration"
+      },
+      "TypeNameMappings": {
+        "Custom::ModuleFinalizer": "Module::Finalizer",
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
+      }
+    }
+  }
+}
