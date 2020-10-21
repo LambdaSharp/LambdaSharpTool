@@ -864,7 +864,10 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
             foreach(var source in sources) {
                 ++index;
                 AtLocation($"{index}", () => {
-                    if(source.EventBus != null) {
+                    if(source.Schedule != null) {
+
+                        // TODO (2018-06-27, bjorg): add cron/rate expression validation
+                    } else if(source.EventBus != null) {
                         ValidateEventBusSource(source);
                     } else {
                         LogError("unknown source type");

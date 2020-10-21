@@ -1,11 +1,11 @@
 ---
-title: CloudWatch Scheduled Events Event Source Declaration - Function
+title: CloudWatch Scheduled Events Event Source Declaration - App
 description: LambdaSharp YAML syntax for Amazon CloudWatch Scheduled Events event source
-keywords: amazon, cloudwatch, schedule, events, event source, declaration, lambda, syntax, yaml, cloudformation
+keywords: amazon, cloudwatch, schedule, events, event source, declaration, app, syntax, yaml, cloudformation
 ---
 # Schedule Source
 
-See [CloudWatch Schedule Event sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ScheduleSample/) for an example of how to use the CloudWatch Schedule Event source.
+See [Blazor Event sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/BlazorEventSample/) for an example of how to use the CloudWatch Event source with a LambdaSharp app.
 
 ## Syntax
 
@@ -42,7 +42,7 @@ The <code>Schedule</code> attribute specifies a <code>cron</code> or <code>rate<
 
 ## Examples
 
-Define a schedule event source to invokes an associated Lambda function using a `cron` expression.
+Define a schedule event source to publish a recurring event to the LambdaSharp App EventBus using a `cron` expression.
 
 ```yaml
 Sources:

@@ -38,8 +38,6 @@ Bucket:
   ContentEncoding: String or Expression
 Client:
   ApiUrl: String or Expression
-EventBus:
-  TODO
 AppSettings:
   String: Expression
 Sources:
@@ -229,6 +227,16 @@ The <code>LogRetentionInDays</code> attribute specifies the number of days Cloud
 <i>Required</i>: No
 
 <i>Type</i>: Number
+</dd>
+
+<dt><code>Sources</code></dt>
+<dd>
+
+The <code>Sources</code> section specifies zero or more source definitions for events to publish to the LambdaSharp App EventBus.
+
+<i>Required</i>: No
+
+<i>Type</i>: List of [Source Definition](Module-App-Sources.md)
 </dd>
 
 <dt><code>Pragmas</code></dt>
