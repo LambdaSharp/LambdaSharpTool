@@ -18,9 +18,17 @@
 
 namespace LambdaSharp.App.EventBus.Actions {
 
+    /// <summary>
+    /// The abstract <see cref="ARuleAction"/> class is used by LambdaSharp
+    /// App EventBus actions that reference a subscription.
+    /// </summary>
     public abstract class ARuleAction : AnAction {
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="Rule"/> property holds the subscription rule name.
+        /// </summary>
         public string Rule { get; set; }
     }
 }
