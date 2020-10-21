@@ -22,12 +22,10 @@ Items:
     Sources:
       - EventBus: default
         Pattern:
-          source:
+          Source:
             - MySample
-          detail-type:
+          DetailType:
             - MyEvent
-          resources:
-            - !Sub "lambdasharp:tier:${Deployment::Tier}"
 ```
 
 ## Function Code
