@@ -56,19 +56,16 @@ namespace LambdaSharp.App.EventBus {
         /// <summary>
         /// The <see cref="Name"/> property holds the name of the LambdaSharp App EventBus subscription.
         /// </summary>
-        /// <value></value>
         string Name { get; }
 
         /// <summary>
         /// The <see cref="Pattern"/> property holds the event pattern of the LambdaSharp App EventBus subscription.
         /// </summary>
-        /// <value></value>
         string Pattern { get; }
 
         /// <summary>
         /// The <see cref="Status"/> property holds the status of the LambdaSharp App EventBus subscription.
         /// </summary>
-        /// <value></value>
         EventBusSubscriptionStatus Status { get; }
     }
 }
