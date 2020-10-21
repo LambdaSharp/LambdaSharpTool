@@ -155,6 +155,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Enhanced the `EventBus` pattern parsing to convert `Source` to `source`, `DetailType` to `detail-type`, `Detail` to `detail`, and so on for better consistency with the SDK. Note the renaming is only applied to top-level properties.
   * Added audible cue when `lash` command finishes after running for more than 10s. The audible cue can be suppressed with `--no-beep` option.
   * Enhanced `lash init --quick-start` to work with the `--core-services enabled` option to allow creating a deployment tier without interactive prompts.
+  * Added support for recognizing `APIGatewayHttpApiV2ProxyRequest` request parameter in API Gateway proxy functions.
 
 * Modules
   * _LambdaSharp.App.Api_
@@ -167,6 +168,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Enhanced emitted CloudWatch events to include app identifier in resources section.
   * Added `ForceLambdaColdStart()` method in `ALambdaFunction` base class. This method forces the Lambda runtime to error out and restart the app domain, forcing the global environment to be reinitialized.
   * Added `LogEvent<T>(T, IEnumerable<string>)` that omits the source name by default to `${Module::FullName}::${AppOrFunctionName}`
+  * Added `LambdaSharpEventBusClient` for Blazor apps to connect to the LambdaSharp App EventBus.
 
 #### Fixes
 
@@ -175,6 +177,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Fixed an issue with detecting `APIGatewayHttpApiV2ProxyResponse` as an API Gateway proxy request data type.
   * Fixed an issue with environment variables set in the Lambda function properties section being overwritten by the tool.
   * Fixed an issue with built-in WebSocket routes being reported as asynchronous API Gateway invocations when they are not.
+
+* SDK
+  * Fixed an issue where `Logging:LogLevel` was not properly recognized for Blazor apps in `appsettings.json` file.
 
 ### (v0.8.1.1) - 2020-08-31
 
