@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "FFDC1634FFE71F9FF2F0D552BA23619F"
+      "Default": "FF45DE5B3F12B4D14E91D79BB0F5256F"
     }
   },
   "Resources": {
@@ -716,11 +716,11 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment3CE5669276675234BD61E12B8CA149BA": {
+    "ModuleRestApiDeploymentBC8CA9BE45D2145D51F8073D021D042C": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [3CE5669276675234BD61E12B8CA149BA]"
+          "Fn::Sub": "${AWS::StackName} API [BC8CA9BE45D2145D51F8073D021D042C]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
@@ -740,7 +740,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment3CE5669276675234BD61E12B8CA149BA"
+          "Ref": "ModuleRestApiDeploymentBC8CA9BE45D2145D51F8073D021D042C"
         },
         "Description": "Module REST API LATEST Stage",
         "MethodSettings": [
@@ -1009,7 +1009,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "FFDC1634FFE71F9FF2F0D552BA23619F",
+      "TemplateChecksum": "FF45DE5B3F12B4D14E91D79BB0F5256F",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -1107,7 +1107,7 @@
         "ModuleRestApiItemsResourceIdResourcePUT": "Module::RestApi::ItemsResource::IdResource::PUT",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment3CE5669276675234BD61E12B8CA149BA": "Module::RestApi::Deployment3CE5669276675234BD61E12B8CA149BA",
+        "ModuleRestApiDeploymentBC8CA9BE45D2145D51F8073D021D042C": "Module::RestApi::DeploymentBC8CA9BE45D2145D51F8073D021D042C",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

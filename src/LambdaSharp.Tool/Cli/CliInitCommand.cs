@@ -25,6 +25,7 @@ using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
+using LambdaSharp.Build;
 using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
@@ -117,7 +118,9 @@ namespace LambdaSharp.Tool.Cli {
                     // set initialization parameters
                     var existingS3BucketName = existingS3BucketNameOption.Value();
                     if(quickStartOption.HasValue()) {
-                        coreServices = CoreServices.Disabled;
+                        coreServices = coreServicesOption.HasValue()
+                            ? coreServices
+                            : CoreServices.Disabled;
                         existingS3BucketName = "";
                     }
 
@@ -137,7 +140,8 @@ namespace LambdaSharp.Tool.Cli {
                         coreServices,
                         existingS3BucketName,
                         allowUpgradeOption.HasValue(),
-                        skipApiGatewayCheckOption.HasValue()
+                        skipApiGatewayCheckOption.HasValue(),
+                        quickStartOption.HasValue()
                     );
                 });
             });
@@ -156,7 +160,8 @@ namespace LambdaSharp.Tool.Cli {
             CoreServices coreServices,
             string existingS3BucketName,
             bool allowUpgrade,
-            bool skipApiGatewayCheck
+            bool skipApiGatewayCheck,
+            bool quickStart
         ) {
 
             // NOTE (2019-08-15, bjorg): the deployment tier initialization must support the following scenarios:
@@ -332,13 +337,14 @@ namespace LambdaSharp.Tool.Cli {
                         Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                         noAssemblyValidation: true,
                         noPackageBuild: false,
-                        gitSha: GetGitShaValue(settings.WorkingDirectory, showWarningOnFailure: false),
-                        gitBranch: GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                        gitSha: new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory, showWarningOnFailure: false),
+                        gitBranch: new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                         buildConfiguration: "Release",
                         selector: null,
                         moduleSource: moduleSource,
                         moduleVersion: moduleVersion,
-                        forceBuild: true
+                        forceBuild: true,
+                        buildPolicy: null
                     )) {
                         return false;
                     }
@@ -377,11 +383,32 @@ namespace LambdaSharp.Tool.Cli {
 
             // read parameters if they haven't been read yet
             if(parameters == null) {
-                parameters = (parametersFilename != null)
-                    ? CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFilename)
-                    : new Dictionary<string, string>();
-                if(HasErrors) {
-                    return false;
+                if(parametersFilename != null) {
+                    parameters = CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFilename);
+                    if(HasErrors) {
+                        return false;
+                    }
+                } else {
+                    parameters = new Dictionary<string, string>();
+                }
+            }
+            if(quickStart) {
+
+                // set all LambdaSharp.Core parameters to their default input values
+                if(!parameters.ContainsKey("DeadLetterQueue")) {
+                    parameters["DeadLetterQueue"] = "";
+                }
+                if(!parameters.ContainsKey("LoggingFirehoseStream")) {
+                    parameters["LoggingFirehoseStream"] = "";
+                }
+                if(!parameters.ContainsKey("CoreSecretsKey")) {
+                    parameters["CoreSecretsKey"] = "";
+                }
+                if(!parameters.ContainsKey("LoggingStreamRole")) {
+                    parameters["LoggingStreamRole"] = "";
+                }
+                if(!parameters.ContainsKey("LoggingBucket")) {
+                    parameters["LoggingBucket"] = "";
                 }
             }
 
@@ -477,7 +504,8 @@ namespace LambdaSharp.Tool.Cli {
                     settings,
                     stackName,
                     bootstrapParameters,
-                    template
+                    template,
+                    quickStart
                 );
                 if(coreServices == CoreServices.Undefined) {
 
@@ -553,7 +581,8 @@ namespace LambdaSharp.Tool.Cli {
             Settings settings,
             string stackName,
             IDictionary<string, string> providedParameters,
-            string templateBody
+            string templateBody,
+            bool quickStart
         ) {
 
             // get summary of new template
@@ -604,29 +633,38 @@ namespace LambdaSharp.Tool.Cli {
 
             // ask user for missing values
             if(missingParameters.Any()) {
-                Console.WriteLine();
-                Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
-                foreach(var missingParameter in missingParameters) {
-                    if(missingParameter.ParameterConstraints?.AllowedValues.Any() ?? false) {
-                        var enteredValue = settings.PromptChoice(
-                            $"{missingParameter.Description ?? missingParameter.ParameterKey}",
-                            missingParameter.ParameterConstraints.AllowedValues
-                        );
+                if(quickStart) {
+                    foreach(var missingParameter in missingParameters) {
                         result.Add(new Parameter {
                             ParameterKey = missingParameter.ParameterKey,
-                            ParameterValue = enteredValue
-                        });
-                    } else {
-
-                        // TODO (2019-08-09, bjorg): add pattern and constraint description
-                        var enteredValue = settings.PromptString($"{missingParameter.Description ?? missingParameter.ParameterKey}", missingParameter.DefaultValue) ?? "";
-                        result.Add(new Parameter {
-                            ParameterKey = missingParameter.ParameterKey,
-                            ParameterValue = enteredValue
+                            ParameterValue = ""
                         });
                     }
+                } else {
+                    Console.WriteLine();
+                    Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
+                    foreach(var missingParameter in missingParameters) {
+                        if(missingParameter.ParameterConstraints?.AllowedValues.Any() ?? false) {
+                            var enteredValue = settings.PromptChoice(
+                                $"{missingParameter.Description ?? missingParameter.ParameterKey}",
+                                missingParameter.ParameterConstraints.AllowedValues
+                            );
+                            result.Add(new Parameter {
+                                ParameterKey = missingParameter.ParameterKey,
+                                ParameterValue = enteredValue
+                            });
+                        } else {
+
+                            // TODO (2019-08-09, bjorg): add pattern and constraint description
+                            var enteredValue = settings.PromptString($"{missingParameter.Description ?? missingParameter.ParameterKey}", missingParameter.DefaultValue) ?? "";
+                            result.Add(new Parameter {
+                                ParameterKey = missingParameter.ParameterKey,
+                                ParameterValue = enteredValue
+                            });
+                        }
+                    }
+                    Console.WriteLine();
                 }
-                Console.WriteLine();
             }
 
             // NOTE (2019-06-06, bjorg): extraneous parameters are ignored as they might be relevant to the LambdaSharp.Core initialization

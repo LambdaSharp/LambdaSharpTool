@@ -21,10 +21,10 @@ using System;
 namespace LambdaSharp.Logging {
 
     /// <summary>
-    /// <see cref="ILambdaLogLevelLoggerEx"/> adds logging functionality as extension methods to the <see cref="ILambdaSharpLogger"/> interface.
+    /// <see cref="ILambdaSharpLoggerEx"/> adds logging functionality as extension methods to the <see cref="ILambdaSharpLogger"/> interface.
     /// </summary>
     /// <seealso cref="LambdaLogLevel"/>
-    public static class ILambdaLogLevelLoggerEx {
+    public static class ILambdaSharpLoggerEx {
 
         //--- Extension Methods ---
 

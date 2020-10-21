@@ -172,7 +172,9 @@ namespace LambdaSharp.ApiGateway.Internal {
 
             // add invocation delegate
             var methodDelegate = CreateMethodDelegate(target, method, out var isAsync);
-            _mappings.Add(key, (methodDelegate, isAsync));
+
+            // NOTE (2020-10-09, bjorg): WebSocket routes starting with '$' are never treated as async
+            _mappings.Add(key, (methodDelegate, isAsync && !key.StartsWith("$", StringComparison.Ordinal)));
         }
 
         public bool TryGetInvocationTarget(string key, out InvocationTargetDelegate invocationTarget, out bool isAsync) {

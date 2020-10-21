@@ -279,27 +279,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private string GenerateCloudFormationTemplateChecksum() {
-
-            // convert stack to string using the Humidifier serializer
-            var json = new JsonStackSerializer().Serialize(_stack);
-
-            // parse json into a generic object
-            var value = JObject.Parse(json);
-
-            // convert value to json, but sort the properties to achieve a stable hash
-            return OrderFields(value).ToString(Formatting.None).ToMD5Hash();
-        }
-
-        private JObject OrderFields(JObject value) {
-            var result = new JObject();
-            foreach(var property in value.Properties().ToList().OrderBy(property => property.Name)) {
-                result.Add(property.Name, (property.Value is JObject propertyValue)
-                    ? OrderFields(propertyValue)
-                    : property.Value
-                );
-            }
-            return result;
-        }
+        private string GenerateCloudFormationTemplateChecksum() => StringEx.GetJsonChecksum(new JsonStackSerializer().Serialize(_stack));
     }
 }

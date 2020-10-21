@@ -59,6 +59,12 @@ The `tier coreservices` command is used to show and updates the LambdaSharp Core
 (optional) Don't show banner or execution time
 </dd>
 
+<dt><code>--no-beep</code></dt>
+<dd>
+
+(optional) Don't emit beep when finished
+</dd>
+
 </dl>
 
 ## Examples

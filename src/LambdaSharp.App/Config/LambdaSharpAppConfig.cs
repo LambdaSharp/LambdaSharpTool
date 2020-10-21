@@ -28,6 +28,7 @@ namespace LambdaSharp.App.Config {
 
         //--- Fields ---
         private string _effectiveApiKey;
+        private string _effectiveEventBusApiKey;
 
         //--- Properties ---
 
@@ -121,6 +122,24 @@ namespace LambdaSharp.App.Config {
         /// <value>The Git branch from the source code repository.</value>
         public string GitBranch { get; set; }
 
+        /// <summary>
+        /// The <see cref="EventBusUrl"/> property holds the URL for the app event bus.
+        /// </summary>
+        /// <value>The URL of the app API.</value>
+        public string EventBusUrl { get; set; }
+
+        /// <summary>
+        /// The <see cref="EventBusApiKey"/> property holds the API key for the event bus API.
+        /// </summary>
+        /// <value>The URL of the app API.</value>
+        public string EventBusApiKey { get; set; }
+
+        /// <summary>
+        /// The <see cref="AppEventSource"/> property holds the configured event source value, or null when not set.
+        /// </summary>
+        /// <value>Configured event source name for the app instance, or null.</value>
+        public string AppEventSource { get; set; }
+
         //--- Methods ---
 
         /// <summary>
@@ -155,6 +174,24 @@ namespace LambdaSharp.App.Config {
                 _effectiveApiKey = Convert.ToBase64String(Encoding.UTF8.GetBytes(prefix + ":" + suffix));
             }
             return _effectiveApiKey;
+        }
+
+        /// <summary>
+        /// The <see cref="GetEventBusApiKey()"/> method return the API key for the event bus API depending on the status of dev mode.
+        /// </summary>
+        /// <returns>The event bus API key.</returns>
+        public string GetEventBusApiKey() {
+            if(IsDevModeEnabled()) {
+                return EventBusApiKey;
+            }
+            if(_effectiveEventBusApiKey == null) {
+
+                // generate API key by combining the provided API key as a prefix and the app assembly version GUID as a suffix
+                var prefix = AppVersionId;
+                var suffix = Encoding.UTF8.GetString(Convert.FromBase64String(EventBusApiKey));
+                _effectiveEventBusApiKey = Convert.ToBase64String(Encoding.UTF8.GetBytes(prefix + ":" + suffix));
+            }
+            return _effectiveEventBusApiKey;
         }
     }
 }

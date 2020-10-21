@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -26,10 +26,10 @@ using LambdaSharp.Logging.Metrics.Models;
 namespace LambdaSharp.Logging.Metrics {
 
     /// <summary>
-    /// <see cref="ILambdaLogLevelLoggerEx"/> adds logging functionality as extension methods to the <see cref="ILambdaSharpLogger"/> interface.
+    /// <see cref="ILambdaSharpLoggerEx"/> adds logging functionality as extension methods to the <see cref="ILambdaSharpLogger"/> interface.
     /// </summary>
     /// <seealso cref="LambdaLogLevel"/>
-    public static class ILambdaLogLevelLoggerEx {
+    public static class ILambdaSharpLoggerEx {
 
         //--- Extension Methods ---
 

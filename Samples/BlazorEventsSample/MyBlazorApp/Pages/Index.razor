@@ -1,0 +1,214 @@
+@*
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2020
+ * lambdasharp.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@page "/"
+
+@using LambdaSharp.Logging.Metrics
+
+@inherits ALambdaComponent
+
+@inject LambdaSharp.App.LambdaSharpEventBusClient EventBus
+
+<Container Fluid="true">
+    <Row>
+        <Column>
+            <Card Margin="Margin.Is4.FromTop">
+                <CardHeader Padding="Padding.Is1.FromBottom">
+                    <Heading Size="HeadingSize.Is4">Todo List</Heading>
+                </CardHeader>
+                <CardBody Padding="Padding.Is0.FromBottom">
+                    <Fields>
+                        <Column ColumnSize="ColumnSize.Is1">
+                            <Check TValue="bool" Checked="@Todos.All(x=>x.Completed)" CheckedChanged="@OnCheckAll">All</Check>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is11">
+                            <Addons>
+                                <Addon AddonType="AddonType.Body">
+                                    <Validations @ref="_validations" Mode="ValidationMode.Manual">
+                                        <Validation Validator="@ValidationRule.IsNotEmpty">
+                                            <TextEdit @bind-Text="@_description" Placeholder="What needs to be done?"></TextEdit>
+                                        </Validation>
+                                    </Validations>
+                                </Addon>
+                                <Addon AddonType="AddonType.End">
+                                    <Button Color="Color.Primary" Clicked="@OnAddTodo">
+                                        <Icon Name="IconName.Add" />Add
+                                    </Button>
+                                </Addon>
+                            </Addons>
+                        </Column>
+                    </Fields>
+                </CardBody>
+                <CardBody Padding="Padding.Is0.OnY">
+                    <ListGroup Flush="true">
+                        @foreach(var todo in Todos) {
+                            <TodoListItem Todo="@todo" StatusChanged="@OnTodoStatusChanged" />
+                        }
+                    </ListGroup>
+                </CardBody>
+                <CardFooter Padding="Padding.Is3.FromBottom">
+                    <Field Horizontal="true">
+                        <FieldBody ColumnSize="ColumnSize.Is10">
+                            <Buttons Role="ButtonsRole.Addons">
+                                <Button Color="Color.Info" Clicked="@(() => SetFilter(Filter.All))" Active="@(_filter == Filter.All)">All</Button>
+                                <Button Color="Color.Info" Clicked="@(() => SetFilter(Filter.Active))" Active="@(_filter == Filter.Active)">Active</Button>
+                                <Button Color="Color.Info" Clicked="@(() => SetFilter(Filter.Completed))" Active="@(_filter == Filter.Completed)">Completed</Button>
+                            </Buttons>
+                        </FieldBody>
+                        <FieldBody ColumnSize="ColumnSize.Is2">
+                            <Button Color="Color.Warning" Float="Float.Right" Clicked="@OnClearCompleted" Display="@(_todos.Any(x=>x.Completed) ? Display.Always : Display.None)">Clear Completed</Button>
+                        </FieldBody>
+                    </Field>
+                </CardFooter>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@code {
+
+    //--- Types ---
+    private enum Filter {
+        All,
+        Active,
+        Completed,
+    }
+
+    //--- Fields ---
+    private Validations _validations;
+    private string _description;
+    private Filter _filter = Filter.All;
+
+    private List<TodoItem> _todos = new List<TodoItem> {
+        new TodoItem {
+            Id = "faaf03af-efd1-4708-bde5-ebe062c6d7b6",
+            Description = "Buy milk"
+        },
+        new TodoItem {
+            Id = "e656283f-85a0-4733-bbb9-454f5ef2ec3c",
+            Description = "Call John regarding the meeting"
+        },
+        new TodoItem {
+            Id = "9e0f5d82-dca8-4d3d-a2a7-6ff4ce26ca67",
+            Description = "Walk a dog"
+        }
+    };
+
+    //--- Properties ---
+    private IEnumerable<TodoItem> Todos
+        => _filter switch {
+            Filter.Active => _todos.Where(todo => !todo.Completed),
+            Filter.Completed => _todos.Where(todo => todo.Completed),
+            _ => _todos
+        };
+
+    //--- Methods ---
+    protected override async Task OnInitializedAsync() {
+        base.OnInitialized();
+
+        // create subscription
+        EventBus.SubscribeTo<TodoItem>("Sample.BlazorEventsSample::MyBlazorApp", TodoItemEvent);
+    }
+
+    private void TodoItemEvent(TodoItem todoEvent) {
+        var index = _todos.FindIndex(todo => todo.Id == todoEvent.Id);
+
+        // check if item already exists
+        if(index >= 0) {
+            if(todoEvent.Description != null) {
+
+                // update existing item
+                var existingEvent = _todos[index];
+                existingEvent.Completed = todoEvent.Completed;
+                existingEvent.Description = todoEvent.Description;
+            } else {
+                _todos.RemoveAt(index);
+            }
+        } else if(todoEvent.Description != null) {
+
+            // add new todo item
+            _todos.Add(todoEvent);
+        }
+
+        // update user interface
+        StateHasChanged();
+    }
+
+    private void SetFilter(Filter filter) {
+
+        // filter Todo list by state
+        _filter = filter;
+
+        // record user action in CloudWatch Logs
+        LogInfo($"filter changed to {filter}");
+    }
+
+    private void OnCheckAll(bool isChecked) => _todos.ForEach(x => x.Completed = isChecked);
+
+    private void OnTodoStatusChanged(TodoItem todo) {
+
+        // send updated event
+        LogEvent(todo);
+    }
+
+    private void OnAddTodo() {
+        if(_validations.ValidateAll()) {
+
+            // create new todo item and add it to the list
+            var todo = new TodoItem {
+                Id = Guid.NewGuid().ToString(),
+                Description = _description
+            };
+            _todos.Add(todo);
+
+            // NOTE: the `LogEvent<T>(T event)` shorthand automatically sets the event `source` attribute
+            //  to `${Module::FullName}::${FunctionName}` and the `detail-type` attribute to
+            //  `typeof(T).FullName`.
+
+            // send event about added Todo item to CloudWatch EventBridge
+            LogEvent(todo);
+
+            // record number of created Todo items in CloudWatch Metrics
+            LogMetric("TodoItems.Created", 1.0, LambdaMetricUnit.Count);
+
+            // reset UI state
+            _description = null;
+            _validations.ClearAll();
+        } else {
+
+            // could not add Todo item, because validation failed
+            LogInfo("input validation failed");
+        }
+    }
+
+    private void OnClearCompleted() {
+        foreach(var todo in _todos.Where(todo => todo.Completed)) {
+            todo.Description = null;
+            LogEvent(todo);
+        }
+
+        // remove all cleared items from Todo list
+        var todoItemsCleared = _todos.RemoveAll(todo => todo.Completed);
+
+        // reset filter to show all items
+        _filter = Filter.All;
+
+        // record number of cleared Todo items in CloudWatch Metrics
+        LogMetric("TodoItems.Cleared", todoItemsCleared, LambdaMetricUnit.Count);
+    }
+}

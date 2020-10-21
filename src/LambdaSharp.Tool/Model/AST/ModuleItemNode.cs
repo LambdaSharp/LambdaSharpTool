@@ -30,6 +30,7 @@ namespace LambdaSharp.Tool.Model.AST {
             public object CorsOrigin { get; set; }
             public object BurstLimit { get; set; }
             public object RateLimit { get; set; }
+            public object EventSource { get; set; }
         }
 
         public class AppBucket {
@@ -153,7 +154,8 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Pragmas",
                 "Api",
                 "Bucket",
-                "Client"
+                "Client",
+                "Sources"
             },
 
             // nodes with optional nested items
@@ -351,11 +353,13 @@ namespace LambdaSharp.Tool.Model.AST {
          *   CorsOrigin: string -or- expression
          *   BurstLimit: string -or- expression
          *   RateLimit: string -or- expression
+         *   EventSource: string -or- expression
          * Bucket:
          *   CloudFrontOriginAccessIdentity: string -or- expression
          *   ContentEncoding: string -or- expression
          * Client:
          *   Url: string -or- expression
+         * Sources: list<function-source>
          */
          public string App { get; set; }
          public Dictionary<string, object> AppSettings { get; set; }

@@ -87,7 +87,7 @@ The <code>Scope</code> attribute specifies which functions need to have access t
 <dt><code>Type</code></dt>
 <dd>
 
-The <code>Type</code> attribute identifies the AWS resource type that is being imported. For example, <code>AWS::SNS::Topic</code> declares an SNS topic. For a list of all resource types, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html">AWS Resource Types Reference</a>. When omitted, the type is <code>String</code>. Encrypted values must have type <code>Secret</code> and can optionally specify an <code>EncryptionContext</code> section. These values can be shared as is, or decrypted, when using the <code>::Plaintext</code> suffix on the their full name.
+The <code>Type</code> attribute identifies the AWS resource type that is being imported. For example, <code>AWS::SNS::Topic</code> declares an SNS topic. For a list of all resource types, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html">AWS Resource Types Reference</a>. When omitted, the type is <code>String</code>. Encrypted values must have type <code>Secret</code> and can optionally specify an <code>EncryptionContext</code> section. These values can be shared as is, or decrypted, when using the <code>::Plaintext</code> suffix on the full name.
 
 For example, the decrypted value of a variable called <code>Password</code> with type <code>Secret</code> can be accessed by using <code>!Ref Password::Plaintext</code>.
 

@@ -27,6 +27,7 @@ using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Cli.Deploy;
 using LambdaSharp.Tool.Cli.Publish;
 using LambdaSharp.Modules;
+using LambdaSharp.Build;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -154,7 +155,8 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // check if a build policy is supplied
-                    if(!await LoadBuildPolicyAsync(buildPolicyOption, settings)) {
+                    var (buildPolicySuccess, buildPolicy) = await LoadBuildPolicyAsync(buildPolicyOption);
+                    if(!buildPolicySuccess) {
                         return;
                     }
 
@@ -178,13 +180,14 @@ namespace LambdaSharp.Tool.Cli {
                             GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
                             skipAssemblyValidationOption.HasValue(),
                             dryRun == DryRunLevel.CloudFormation,
-                            gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
-                            gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                            gitShaOption.Value() ?? new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory),
+                            gitBranchOption.Value() ?? new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                             buildConfigurationOption.Value() ?? "Release",
                             selectorOption.Value(),
                             moduleSource,
                             moduleVersion,
-                            forceBuildOption.HasValue()
+                            forceBuildOption.HasValue(),
+                            buildPolicy
                         )) {
                             break;
                         }
@@ -264,7 +267,8 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // check if a build policy is supplied
-                    if(!await LoadBuildPolicyAsync(buildPolicyOption, settings)) {
+                    var (buildPolicySuccess, buildPolicy) = await LoadBuildPolicyAsync(buildPolicyOption);
+                    if(!buildPolicySuccess) {
                         return;
                     }
 
@@ -306,13 +310,14 @@ namespace LambdaSharp.Tool.Cli {
                                 GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
-                                gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
-                                gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                                gitShaOption.Value() ?? new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory),
+                                gitBranchOption.Value() ?? new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource,
                                 moduleVersion,
-                                forceBuildOption.HasValue()
+                                forceBuildOption.HasValue(),
+                                buildPolicy
                             )) {
                                 break;
                             }
@@ -423,7 +428,8 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // check if a build policy is supplied
-                    if(!await LoadBuildPolicyAsync(buildPolicyOption, settings)) {
+                    var (buildPolicySuccess, buildPolicy) = await LoadBuildPolicyAsync(buildPolicyOption);
+                    if(!buildPolicySuccess) {
                         return;
                     }
 
@@ -469,13 +475,14 @@ namespace LambdaSharp.Tool.Cli {
                                 GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
                                 skipAssemblyValidationOption.HasValue(),
                                 dryRun == DryRunLevel.CloudFormation,
-                                gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
-                                gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
+                                gitShaOption.Value() ?? new GitTool(BuildEventsConfig).GetGitShaValue(settings.WorkingDirectory),
+                                gitBranchOption.Value() ?? new GitTool(BuildEventsConfig).GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource,
                                 moduleVersion,
-                                forceBuildOption.HasValue()
+                                forceBuildOption.HasValue(),
+                                buildPolicy
                             )) {
                                 break;
                             }
@@ -526,12 +533,16 @@ namespace LambdaSharp.Tool.Cli {
             string selector,
             string moduleSource,
             VersionInfo moduleVersion,
-            bool forceBuild
+            bool forceBuild,
+            BuildPolicy buildPolicy
         ) {
             try {
                 if(!await PopulateDeploymentTierSettingsAsync(settings, allowCaching: true)) {
                     return false;
                 }
+
+                // set build policy
+                settings.BuildPolicy = buildPolicy;
                 return await new BuildStep(settings, moduleSource).DoAsync(
                     outputCloudFormationFilePath,
                     noAssemblyValidation,
@@ -546,6 +557,10 @@ namespace LambdaSharp.Tool.Cli {
             } catch(Exception e) {
                 LogError(e);
                 return false;
+            } finally {
+
+                // always make sure to remove build policy
+                settings.BuildPolicy = null;
             }
         }
 
@@ -625,23 +640,24 @@ namespace LambdaSharp.Tool.Cli {
             return result;
         }
 
-        private async Task<bool> LoadBuildPolicyAsync(CommandOption buildPolicyOption, Settings settings) {
+        private async Task<(bool Success, BuildPolicy BuildPolicy)> LoadBuildPolicyAsync(CommandOption buildPolicyOption) {
+            BuildPolicy buildPolicy = null;
             if(buildPolicyOption.HasValue()) {
                 string buildPolicyText;
                 try {
                     buildPolicyText = await File.ReadAllTextAsync(Path.Combine(Directory.GetCurrentDirectory(), buildPolicyOption.Value()));
                 } catch(IOException) {
                     LogError("could not open build policy document");
-                    return false;
+                    return (Success: false, BuildPolicy: null);
                 }
                 try {
-                    settings.BuildPolicy = JsonSerializer.Deserialize<BuildPolicy>(buildPolicyText);
+                    buildPolicy = JsonSerializer.Deserialize<BuildPolicy>(buildPolicyText);
                 } catch(JsonException) {
                     LogError("unable to parse build policy document");
-                    return false;
+                    return (Success: false, BuildPolicy: null);
                 }
             }
-            return true;
+            return (Success: true, BuildPolicy: buildPolicy);
         }
     }
 }
