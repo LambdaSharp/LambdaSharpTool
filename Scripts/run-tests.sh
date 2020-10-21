@@ -103,6 +103,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Samples/ApiSample \
         $LAMBDASHARP/Samples/ApiInvokeSample \
         $LAMBDASHARP/Samples/BlazorSample \
+        $LAMBDASHARP/Samples/BlazorEventsSample \
         $LAMBDASHARP/Samples/CustomResourceTypeSample \
         $LAMBDASHARP/Samples/DynamoDBSample \
         $LAMBDASHARP/Samples/EventSample \
