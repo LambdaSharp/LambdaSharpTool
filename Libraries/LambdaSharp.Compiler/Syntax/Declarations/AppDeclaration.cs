@@ -18,6 +18,7 @@
 
 using System;
 using System.Linq;
+using LambdaSharp.Compiler.Syntax.EventSources;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
@@ -104,10 +105,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private BucketDeclaration? _bucket;
         private ClientDeclaration? _client;
         private ObjectExpression? _appSettings;
+        private SyntaxNodeCollection<AEventSourceDeclaration> _sources;
 
         //--- Constructors ---
         public AppDeclaration(LiteralExpression itemName) : base(itemName) {
             _pragmas = Adopt(new ListExpression());
+            _sources = Adopt(new SyntaxNodeCollection<AEventSourceDeclaration>());
         }
 
         //--- Properties ---
@@ -152,6 +155,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public ObjectExpression? AppSettings {
             get => _appSettings;
             set => _appSettings = Adopt(value);
+        }
+
+        [SyntaxOptional]
+        public SyntaxNodeCollection<AEventSourceDeclaration> Sources {
+            get => _sources;
+            set => _sources = Adopt(value);
         }
 
         //--- Methods ---

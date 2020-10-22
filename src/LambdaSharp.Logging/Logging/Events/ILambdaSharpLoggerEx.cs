@@ -46,8 +46,8 @@ namespace LambdaSharp.Logging.Events {
         /// <param name="source">Name of the event source.</param>
         /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        public static void LogEvent<T>(this ILambdaSharpLogger logger, string source, T detail, IEnumerable<string> resources = null)
-            => LogEvent<T>(logger, source, typeof(T).FullName, detail, resources);
+        public static void LogEvent<T>(this ILambdaSharpLogger logger, string source, T detail, IEnumerable<string>? resources = null)
+            => LogEvent<T>(logger, source, typeof(T).FullName ?? throw new ArgumentException("missing type name"), detail, resources);
 
         /// <summary>
         /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge.

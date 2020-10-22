@@ -72,7 +72,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             _scope = Adopt(new SyntaxNodeCollection<LiteralExpression>());
             _environment = Adopt(new ObjectExpression());
             _properties = Adopt(new ObjectExpression());
-            _sources = new SyntaxNodeCollection<AEventSourceDeclaration>();
+            _sources = Adopt(new SyntaxNodeCollection<AEventSourceDeclaration>());
             _pragmas = Adopt(new ListExpression());
         }
 

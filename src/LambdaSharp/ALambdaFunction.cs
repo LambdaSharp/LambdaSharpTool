@@ -912,7 +912,7 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        protected void LogEvent<T>(T detail, IEnumerable<string> resources = null)
+        protected void LogEvent<T>(T detail, IEnumerable<string>? resources = null)
             => Logger.LogEvent($"{Info.ModuleFullName}::{Info.FunctionName}", detail, resources);
 
         /// <summary>
@@ -921,7 +921,7 @@ namespace LambdaSharp {
         /// <param name="source">Name of the event source.</param>
         /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        protected void LogEvent<T>(string source, T detail, IEnumerable<string> resources = null)
+        protected void LogEvent<T>(string source, T detail, IEnumerable<string>? resources = null)
             => Logger.LogEvent(source, detail, resources);
 
         /// <summary>
