@@ -143,6 +143,10 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.1.4) - TBD
 
+#### Fixes
+
+* CLI
+  * Fixed an issue where the `nuke` command did not delete all stacks as expected.
 
 ### (v0.8.1.3) - 2020-10-21
 
