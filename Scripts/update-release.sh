@@ -37,4 +37,7 @@ lash publish \
     $LAMBDASHARP/Modules/LambdaSharp.Core \
     $LAMBDASHARP/Modules/LambdaSharp.S3.IO \
     $LAMBDASHARP/Modules/LambdaSharp.S3.Subscriber \
-    $LAMBDASHARP/Modules/LambdaSharp.Twitter.Query
+    $LAMBDASHARP/Modules/LambdaSharp.Twitter.Query \
+    $LAMBDASHARP/Modules/LambdaSharp.App.Bucket \
+    $LAMBDASHARP/Modules/LambdaSharp.App.Api \
+    $LAMBDASHARP/Modules/LambdaSharp.App.EventBus

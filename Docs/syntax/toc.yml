@@ -20,6 +20,17 @@
 
 - name: App
   href: Module-App.md
+  items:
+
+    - name: Sources
+      href: Module-App-Sources.md
+      items:
+
+        - name: EventBus
+          href: Module-App-Sources-EventBus.md
+
+        - name: Schedule
+          href: Module-App-Sources-Schedule.md
 
 - name: Condition
   href: Module-Condition.md
@@ -29,7 +40,6 @@
 
 - name: Function
   href: Module-Function.md
-  items:
   items:
 
     - name: Pragmas

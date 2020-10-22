@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using LambdaSharp.App.Config;
+using LambdaSharp.App.EventBus;
 using LambdaSharp.App.Logging;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -55,17 +56,11 @@ namespace LambdaSharp.App {
         public static WebAssemblyHostBuilder UseLambdaSharp(this WebAssemblyHostBuilder builder, Type mainType) {
             var emptyLambdaSharpSection = !builder.Configuration.GetSection("LambdaSharp").GetChildren().Any();
 
-            // check if Blazor WebAssembly is running locally via localhost
-            if(builder.HostEnvironment.IsDevelopment()) {
-
-                // check if the LambdaSharp configuration section missing
-                if(emptyLambdaSharpSection) {
+            // check if the LambdaSharp configuration section missing
+            if(emptyLambdaSharpSection) {
+                if(builder.HostEnvironment.IsDevelopment()) {
                     Console.WriteLine($"*** INFO: LambdaSharp App => using localhost test configuration");
-                }
-            } else {
-
-                // check if the LambdaSharp configuration section missing
-                if(emptyLambdaSharpSection) {
+                } else {
                     Console.WriteLine($"*** WARN: LambdaSharp App => config missing; using localhost test configuration instead");
                 }
             }
@@ -123,6 +118,9 @@ namespace LambdaSharp.App {
 
             // register LambdaSharp app API client
             builder.Services.AddSingleton<LambdaSharpAppClient>();
+
+            // register LambdaSharp app EventBus client
+            builder.Services.AddSingleton<LambdaSharpEventBusClient>();
 
             // register LambdaSharp logging provider
             builder.Services.AddSingleton<ILoggerProvider, LambdaSharpAppLoggerProvider>();

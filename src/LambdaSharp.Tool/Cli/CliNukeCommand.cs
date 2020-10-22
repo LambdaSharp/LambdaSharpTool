@@ -76,15 +76,15 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"=> Inspecting deployment tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
             var tierManager = new TierManager(settings);
 
-            // continue until all stacks are deleted or too many attempts occurred
+            // enumerate all non-nested (root) stack that in a completed update state
             var moduleDetails = (await tierManager.GetModuleDetailsAsync(includeCoreModule: true))
-                .Where(module => module.IsRoot && module.StackStatus.EndsWith("_COMPLETE") && (module.StackStatus != "DELETE_COMPLETE"))
+                .Where(module => module.StackStatus.EndsWith("_COMPLETE") && (module.StackStatus != "DELETE_COMPLETE"))
                 .ToList();
             if(!moduleDetails.Any()) {
                 Console.WriteLine($"=> Found no modules to delete");
                 return;
             }
-            var count = moduleDetails.Count();
+            var count = moduleDetails.Count(module => module.IsRoot);
             if(count == 1) {
                 Console.WriteLine($"=> Found 1 CloudFormation stack to delete");
             } else {
@@ -96,7 +96,10 @@ namespace LambdaSharp.Tool.Cli {
 
                 // list what is about to be deleted
                 Console.WriteLine();
-                foreach(var module in moduleDetails.OrderBy(module => module.ModuleDeploymentName)) {
+                foreach(var module in moduleDetails
+                    .Where(module => module.IsRoot)
+                    .OrderBy(module => module.ModuleDeploymentName)
+                ) {
                     Console.WriteLine($"  {Settings.InfoColor}{module.ModuleDeploymentName}{Settings.ResetColor}");
                 }
 
@@ -142,14 +145,15 @@ namespace LambdaSharp.Tool.Cli {
             // iteratively delete the stacks
             var bucketsToDelete = new List<string>();
             for(var i = 0; moduleDetails.Any() && (i < MAX_ITERATIONS); ++i) {
-                foreach(var module in new List<TierModuleDetails>(moduleDetails)) {
+                foreach(var module in moduleDetails.Where(module => module.IsRoot).ToList()) {
                     var stackName = module.StackName;
 
                     // skip stacks that still have dependents
                     if(dependencies[stackName].Any()) {
+                        Settings.LogInfoVerbose($"... skipping due to active dependencies: {stackName}");
                         continue;
                     }
-                    if(!dryRun && (module.DeploymentBucketArn != null) && (moduleDetails.Count > 1)) {
+                    if((module.DeploymentBucketArn != null) && (moduleDetails.Count > 1)) {
 
                         // don't delete the LambdaSharp.Core stack until all other modules have been deleted
                         continue;
@@ -206,13 +210,8 @@ namespace LambdaSharp.Tool.Cli {
                         Console.WriteLine("=> Stack delete finished");
                     }
 
-                    // remove this stack as a dependent from all dependencies
-                    foreach(var dependency in dependencies) {
-                        dependency.Value.Remove(stackName);
-                    }
-
-                    // remove this stack from the list of stacks to delete
-                    moduleDetails.RemoveAll(moduleDetail => moduleDetail.StackName == stackName);
+                    // remove this stack and its children from the list of stacks to delete
+                    RecursiveRemoveFromModuleDetails(module);
                 }
             }
 
@@ -229,6 +228,23 @@ namespace LambdaSharp.Tool.Cli {
                         }
                     }
                 }
+            }
+
+            // local functions
+            void RecursiveRemoveFromModuleDetails(TierModuleDetails moduleToRemove) {
+
+                // remove this stack as a dependent from all dependencies
+                foreach(var dependency in dependencies) {
+                    dependency.Value.Remove(moduleToRemove.StackName);
+                }
+
+                // find all child modules of the module to remove
+                foreach(var childModule in moduleDetails.Where(module => module.Stack.RootId == moduleToRemove.Stack.StackId).ToList()) {
+                    RecursiveRemoveFromModuleDetails(childModule);
+                }
+
+                // remove module from list
+                moduleDetails.RemoveAll(moduleDetail => moduleDetail.StackName == moduleToRemove.StackName);
             }
         }
 

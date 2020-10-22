@@ -325,7 +325,7 @@ Another benefit of analyzing expressions during the _build_ phase is the ability
   Value: !Sub "My list: ${AListOfValues}"
 ```
 
-The the introduction of `Condition` definitions also requires more careful validation of `!Ref` and `!GetAtt` expressions since these could refer to resources that may not exist during the _deploy_ phase. The LambdaSharp CLI now provides very basic support for validating conditional references. However, because the support is basic, it can lead to false negatives. Consequently, detected violations are shown as warnings instead of errors.
+The introduction of `Condition` definitions also requires more careful validation of `!Ref` and `!GetAtt` expressions since these could refer to resources that may not exist during the _deploy_ phase. The LambdaSharp CLI now provides very basic support for validating conditional references. However, because the support is basic, it can lead to false negatives. Consequently, detected violations are shown as warnings instead of errors.
 
 Finally, the entry point for .NET Core Lambda functions is now validated after compilation of the assembly. This avoids deploying a Lambda function that immediately fails, because the Lambda runtime was unable to located the entry point. This error usually occurs after refactoring code and forgetting to update the project file with the new namespace information. Although not a common error, it is extremely time consuming, because it occurs so late in the development process. Entry point validation can be skipped by using the `--no-assembly-validation` [CLI option](~/cli/Tool-Build.md) or the `no-assembly-validation` [function pragma](~/syntax/Module-Pragmas.md).
 

@@ -47,6 +47,12 @@ The `util show-parameters` command is used to process a YAML parameters file and
 (optional) Don't show banner or execution time
 </dd>
 
+<dt><code>--no-beep</code></dt>
+<dd>
+
+(optional) Don't emit beep when finished
+</dd>
+
 </dl>
 
 ## Examples

@@ -141,6 +141,12 @@ lash new function MyNewFunction
 (optional) Don't show banner or execution time
 </dd>
 
+<dt><code>--no-beep</code></dt>
+<dd>
+
+(optional) Don't emit beep when finished
+</dd>
+
 </dl>
 
 ## Examples

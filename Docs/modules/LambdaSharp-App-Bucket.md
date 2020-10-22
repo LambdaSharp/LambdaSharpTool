@@ -111,7 +111,7 @@ The <code>DomainName</code> output contains the IPv4 DNS name of the S3 bucket.
 <dt><code>WebsiteUrl</code></dt>
 <dd>
 
-The <code>WebsiteUrl</code> output contains the the Amazon S3 website endpoint of the S3 bucket.
+The <code>WebsiteUrl</code> output contains the Amazon S3 website endpoint of the S3 bucket.
 
 <i>Type:</i> String
 </dd>

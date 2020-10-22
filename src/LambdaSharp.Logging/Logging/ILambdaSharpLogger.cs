@@ -23,7 +23,7 @@ namespace LambdaSharp.Logging {
 
     /// <summary>
     /// <see cref="ILambdaSharpLogger"/> provides the fundamental logging capabilities. Additional logging methods are provide
-    /// as extension methods by <see cref="ILambdaLogLevelLoggerEx"/>.
+    /// as extension methods by <see cref="ILambdaSharpLoggerEx"/>.
     /// </summary>
     public interface ILambdaSharpLogger {
 

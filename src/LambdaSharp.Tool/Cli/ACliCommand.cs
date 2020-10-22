@@ -488,6 +488,19 @@ namespace LambdaSharp.Tool.Cli {
                     }
                 }
             );
+
+            // add --no-beep command line option
+            AddToolOption(
+                cmd,
+                "--no-beep",
+                "(optional) Don't emit beep when finished",
+                CommandOptionType.NoValue,
+                option => {
+                    if(option.HasValue()) {
+                        Program.BeepThreshold = TimeSpan.MaxValue;
+                    }
+                }
+            );
         }
 
         protected void AddToolOption(CommandLineApplication cmd, string template, string description, CommandOptionType optionType, Action<CommandOption> action) {

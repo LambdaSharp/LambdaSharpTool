@@ -35,7 +35,7 @@ namespace LambdaSharp.App.Logging {
             // find the longest key that matches the category as a prefix in the logging section
             var children = section.GetChildren();
             foreach(var child in children.OrderByDescending(child => child.Key.Length)) {
-                if(category.StartsWith(child.Key) && Enum.TryParse<LogLevel>(child.Value, ignoreCase: true, out var childLogLevel)) {
+                if(category.StartsWith(child.Key, StringComparison.Ordinal) && Enum.TryParse<LogLevel>(child.Value, ignoreCase: true, out var childLogLevel)) {
                     logLevel = childLogLevel;
                     return true;
                 }
@@ -84,12 +84,12 @@ namespace LambdaSharp.App.Logging {
                 // search for logging level configuration in this order:
                 // 1) Logging:LambdaSharp:LogLevel:{category}*
                 // 2) Logging:LambdaSharp:LogLevel:Default
-                // 3) Logging:{category}*
-                // 4) Logging:Default
+                // 3) Logging:LogLevel:{category}*
+                // 4) Logging:LogLevel:Default
                 // if no configuration is found, default to 'Information' level
                 if(
                     !TryGetLogLevel(_configuration.GetSection("Logging:LambdaSharp:LogLevel"), category, out logLevel)
-                    && !TryGetLogLevel(_configuration.GetSection("Logging"), category, out logLevel)
+                    && !TryGetLogLevel(_configuration.GetSection("Logging:LogLevel"), category, out logLevel)
                 ) {
 
                     // could not find a logging configuration, use 'Information' as default level

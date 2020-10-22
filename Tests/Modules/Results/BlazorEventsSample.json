@@ -1,0 +1,801 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "A sample module showing how to deploy a Blazor WebAssembly website (v1.0-DEV)",
+  "Parameters": {
+    "AppDeveloperMode": {
+      "Type": "String",
+      "Description": "Developer mode relaxes API key constraints and enables debug logging",
+      "AllowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "Default": "Disabled",
+      "NoEcho": false
+    },
+    "Secrets": {
+      "Type": "String",
+      "Description": "Secret Keys (ARNs)",
+      "Default": ""
+    },
+    "LambdaSharpCoreServices": {
+      "Type": "String",
+      "Description": "Use LambdaSharp.Core Services",
+      "AllowedValues": [
+        "Disabled",
+        "Enabled"
+      ],
+      "Default": "Disabled"
+    },
+    "LambdaSharpCoreLoggingStream": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::LoggingStream",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::LoggingStream"
+    },
+    "LambdaSharpCoreLoggingStreamRole": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::LoggingStreamRole",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::LoggingStreamRole"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Deployment S3 Bucket Name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix (lowercase)"
+    },
+    "DeploymentRoot": {
+      "Type": "String",
+      "Description": "Root Stack Name",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "Deployment Checksum",
+      "Default": "D03ECAEFE9F0C3E2FFE02A1F2A9E94B2"
+    }
+  },
+  "Resources": {
+    "MyBlazorAppLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": 30
+      }
+    },
+    "MyBlazorAppBucket": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "NotificationARNs": {
+          "Ref": "AWS::NotificationARNs"
+        },
+        "Parameters": {
+          "CloudFrontOriginAccessIdentity": "",
+          "Package": "<%MODULE_ORIGIN%>/Sample/BlazorEventsSample/.artifacts/MyBlazorApp-DRYRUN.zip",
+          "ContentEncoding": "DEFAULT",
+          "DeploymentBucketName": {
+            "Ref": "DeploymentBucketName"
+          },
+          "DeploymentPrefix": {
+            "Ref": "DeploymentPrefix"
+          },
+          "DeploymentPrefixLowercase": {
+            "Ref": "DeploymentPrefixLowercase"
+          },
+          "DeploymentRoot": {
+            "Fn::If": [
+              "ModuleIsNested",
+              {
+                "Ref": "DeploymentRoot"
+              },
+              {
+                "Ref": "AWS::StackName"
+              }
+            ]
+          },
+          "LambdaSharpCoreServices": {
+            "Ref": "LambdaSharpCoreServices"
+          }
+        },
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "LambdaSharp.App.Bucket"
+          }
+        ],
+        "TemplateURL": "<BAD>",
+        "TimeoutInMinutes": 15
+      }
+    },
+    "MyBlazorAppApi": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "NotificationARNs": {
+          "Ref": "AWS::NotificationARNs"
+        },
+        "Parameters": {
+          "ParentModuleId": {
+            "Ref": "AWS::StackName"
+          },
+          "ParentModuleInfo": "Sample.BlazorEventsSample:1.0-DEV@<%MODULE_ORIGIN%>",
+          "LogGroupName": {
+            "Ref": "MyBlazorAppLogGroup"
+          },
+          "RootPath": ".app",
+          "CorsOrigin": {
+            "Fn::GetAtt": [
+              "MyBlazorAppBucket",
+              "Outputs.WebsiteUrl"
+            ]
+          },
+          "BurstLimit": 200,
+          "RateLimit": 100,
+          "AppVersionId": "<MISSING>",
+          "DevMode": {
+            "Ref": "AppDeveloperMode"
+          },
+          "EventSource": "Sample.BlazorEventsSample::MyBlazorApp",
+          "DeploymentBucketName": {
+            "Ref": "DeploymentBucketName"
+          },
+          "DeploymentPrefix": {
+            "Ref": "DeploymentPrefix"
+          },
+          "DeploymentPrefixLowercase": {
+            "Ref": "DeploymentPrefixLowercase"
+          },
+          "DeploymentRoot": {
+            "Fn::If": [
+              "ModuleIsNested",
+              {
+                "Ref": "DeploymentRoot"
+              },
+              {
+                "Ref": "AWS::StackName"
+              }
+            ]
+          },
+          "LambdaSharpCoreServices": {
+            "Ref": "LambdaSharpCoreServices"
+          }
+        },
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "LambdaSharp.App.Api"
+          }
+        ],
+        "TemplateURL": "<BAD>",
+        "TimeoutInMinutes": 15
+      }
+    },
+    "MyBlazorAppEventBus": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "NotificationARNs": {
+          "Ref": "AWS::NotificationARNs"
+        },
+        "Parameters": {
+          "AppVersionId": "<MISSING>",
+          "DevMode": {
+            "Ref": "AppDeveloperMode"
+          },
+          "DeploymentBucketName": {
+            "Ref": "DeploymentBucketName"
+          },
+          "DeploymentPrefix": {
+            "Ref": "DeploymentPrefix"
+          },
+          "DeploymentPrefixLowercase": {
+            "Ref": "DeploymentPrefixLowercase"
+          },
+          "DeploymentRoot": {
+            "Fn::If": [
+              "ModuleIsNested",
+              {
+                "Ref": "DeploymentRoot"
+              },
+              {
+                "Ref": "AWS::StackName"
+              }
+            ]
+          },
+          "LambdaSharpCoreServices": {
+            "Ref": "LambdaSharpCoreServices"
+          }
+        },
+        "Tags": [
+          {
+            "Key": "LambdaSharp:Module",
+            "Value": "LambdaSharp.App.EventBus"
+          }
+        ],
+        "TemplateURL": "<BAD>",
+        "TimeoutInMinutes": 15
+      }
+    },
+    "MyBlazorAppAppSettingsJson": {
+      "Type": "Custom::LambdaSharpS3WriteJson",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::WriteJson"
+          }
+        },
+        "ResourceType": "LambdaSharp::S3::WriteJson",
+        "Bucket": {
+          "Fn::GetAtt": [
+            "MyBlazorAppBucket",
+            "Outputs.Arn"
+          ]
+        },
+        "Key": "appsettings.Production.json",
+        "Contents": {
+          "LambdaSharp": {
+            "ModuleId": {
+              "Ref": "AWS::StackName"
+            },
+            "ModuleInfo": "Sample.BlazorEventsSample:1.0-DEV@<%MODULE_ORIGIN%>",
+            "DeploymentTier": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
+            "AppId": {
+              "Fn::Sub": "${AWS::StackName}-MyBlazorApp"
+            },
+            "AppName": "MyBlazorApp",
+            "AppFramework": "<MISSING>",
+            "DevMode": {
+              "Ref": "AppDeveloperMode"
+            },
+            "ApiUrl": {
+              "Fn::GetAtt": [
+                "MyBlazorAppApi",
+                "Outputs.Url"
+              ]
+            },
+            "ApiKey": {
+              "Fn::GetAtt": [
+                "MyBlazorAppApi",
+                "Outputs.ApiKey"
+              ]
+            },
+            "AppEventSource": "Sample.BlazorEventsSample::MyBlazorApp",
+            "EventBusUrl": {
+              "Fn::GetAtt": [
+                "MyBlazorAppEventBus",
+                "Outputs.Url"
+              ]
+            },
+            "EventBusApiKey": {
+              "Fn::GetAtt": [
+                "MyBlazorAppEventBus",
+                "Outputs.ApiKey"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationModule",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "ModuleInfo": "Sample.BlazorEventsSample:1.0-DEV@<%MODULE_ORIGIN%>",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        }
+      }
+    },
+    "MyBlazorAppLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStream"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStream"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "MyBlazorAppLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamRoleIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "MyBlazorAppRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationApp",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::App"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::App",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "AppLogGroup": {
+          "Ref": "MyBlazorAppLogGroup"
+        },
+        "AppId": {
+          "Fn::Sub": "${AWS::StackName}-MyBlazorApp"
+        },
+        "AppName": "MyBlazorApp",
+        "AppPlatform": "<MISSING>",
+        "AppFramework": "<MISSING>",
+        "AppLanguage": "<MISSING>"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "MyBlazorAppSource1Event": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "EventBusName": "default",
+        "EventPattern": {
+          "source": [
+            "Sample.BlazorEventsSample::MyBlazorApp"
+          ],
+          "detail-type": [
+            "Sample.BlazorEventsSample.MyBlazorApp.Shared.TodoItem"
+          ],
+          "resources": [
+            {
+              "Fn::Sub": [
+                "lambdasharp:tier:${P0}",
+                {
+                  "P0": {
+                    "Fn::Select": [
+                      "0",
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Ref": "DeploymentPrefix"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "MyBlazorAppEventBus",
+                "Outputs.EventTopicArn"
+              ]
+            },
+            "Id": "MyBlazorApp-1"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "MyBlazorAppWebsiteUrl": {
+      "Value": {
+        "Fn::GetAtt": [
+          "MyBlazorAppBucket",
+          "Outputs.WebsiteUrl"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::MyBlazorAppWebsiteUrl"
+        }
+      },
+      "Description": "MyBlazorApp Website URL"
+    },
+    "ModuleInfo": {
+      "Value": "Sample.BlazorEventsSample:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
+    },
+    "LambdaSharpTool": {
+      "Value": "1.0.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "Conditions": {
+    "ModuleIsNested": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeploymentRoot"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "UseCoreServices": {
+      "Fn::Equals": [
+        {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Enabled"
+      ]
+    },
+    "LambdaSharpCoreLoggingStreamIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreLoggingStream"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreLoggingStream"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "LambdaSharpCoreLoggingStreamRoleIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreLoggingStreamRole"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "AppDeveloperMode": {
+          "default": "App Developer Mode [String]"
+        },
+        "Secrets": {
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "LambdaSharpCoreServices": {
+          "default": "Integrate with LambdaSharp.Core services [String]"
+        },
+        "LambdaSharpCoreLoggingStream": {
+          "default": "LoggingStream [String]"
+        },
+        "LambdaSharpCoreLoggingStreamRole": {
+          "default": "LoggingStreamRole [String]"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 bucket name [String]"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment tier prefix [String]"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment tier prefix (lowercase) [String]"
+        },
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
+        },
+        "DeploymentChecksum": {
+          "default": "CloudFormation template MD5 checksum [String]"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "LambdaSharp App Options"
+          },
+          "Parameters": [
+            "AppDeveloperMode"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets",
+            "LambdaSharpCoreServices"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp.Core Imports"
+          },
+          "Parameters": [
+            "LambdaSharpCoreLoggingStream",
+            "LambdaSharpCoreLoggingStreamRole"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentRoot",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2019-07-04",
+      "Module": "Sample.BlazorEventsSample:1.0-DEV",
+      "Description": "A sample module showing how to deploy a Blazor WebAssembly website",
+      "TemplateChecksum": "D03ECAEFE9F0C3E2FFE02A1F2A9E94B2",
+      "Date": "2019-08-09T15:00:00Z",
+      "CoreServicesVersion": "1",
+      "ParameterSections": [
+        {
+          "Title": "LambdaSharp App Options",
+          "Parameters": [
+            {
+              "Name": "AppDeveloperMode",
+              "Type": "String",
+              "Label": "App Developer Mode",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Enabled",
+                "Disabled"
+              ]
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Label": "Comma-separated list of additional KMS secret keys",
+              "Default": ""
+            },
+            {
+              "Name": "LambdaSharpCoreServices",
+              "Type": "String",
+              "Label": "Integrate with LambdaSharp.Core services",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp.Core Imports",
+          "Parameters": [
+            {
+              "Name": "LambdaSharpCoreLoggingStream",
+              "Type": "String",
+              "Label": "LoggingStream",
+              "Default": "$LambdaSharp-Core::LoggingStream",
+              "Import": "LambdaSharp.Core::LoggingStream",
+              "AllowedPattern": "^.+$",
+              "ConstraintDescription": "must either be a cross-module reference or a non-empty value"
+            },
+            {
+              "Name": "LambdaSharpCoreLoggingStreamRole",
+              "Type": "String",
+              "Label": "LoggingStreamRole",
+              "Default": "$LambdaSharp-Core::LoggingStreamRole",
+              "Import": "LambdaSharp.Core::LoggingStreamRole",
+              "AllowedPattern": "^.+$",
+              "ConstraintDescription": "must either be a cross-module reference or a non-empty value"
+            }
+          ]
+        }
+      ],
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
+      "Artifacts": [],
+      "Dependencies": [
+        {
+          "ModuleInfo": "LambdaSharp.App.Api:1@lambdasharp",
+          "Type": "Nested"
+        },
+        {
+          "ModuleInfo": "LambdaSharp.App.Bucket:1@lambdasharp",
+          "Type": "Nested"
+        },
+        {
+          "ModuleInfo": "LambdaSharp.App.EventBus:1@lambdasharp",
+          "Type": "Nested"
+        },
+        {
+          "ModuleInfo": "LambdaSharp.S3.IO:1@lambdasharp",
+          "Type": "Shared"
+        }
+      ],
+      "ResourceTypes": [],
+      "Outputs": [
+        {
+          "Name": "MyBlazorAppWebsiteUrl",
+          "Description": "MyBlazorApp Website URL",
+          "Type": "String"
+        }
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
+      "ResourceNameMappings": {
+        "MyBlazorAppLogGroup": "MyBlazorApp::LogGroup",
+        "MyBlazorAppBucket": "MyBlazorApp::Bucket",
+        "MyBlazorAppApi": "MyBlazorApp::Api",
+        "MyBlazorAppEventBus": "MyBlazorApp::EventBus",
+        "MyBlazorAppAppSettingsJson": "MyBlazorApp::AppSettingsJson",
+        "ModuleRegistration": "Module::Registration",
+        "MyBlazorAppLogGroupSubscription": "MyBlazorApp::LogGroupSubscription",
+        "MyBlazorAppRegistration": "MyBlazorApp::Registration",
+        "MyBlazorAppSource1Event": "MyBlazorApp::Source1Event"
+      },
+      "TypeNameMappings": {
+        "Custom::LambdaSharpS3WriteJson": "LambdaSharp::S3::WriteJson",
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
+        "Custom::LambdaSharpRegistrationApp": "LambdaSharp::Registration::App"
+      }
+    }
+  }
+}

@@ -38,7 +38,7 @@ using Microsoft.Extensions.Logging;
 namespace LambdaSharp.App {
 
     /// <summary>
-    /// The <see cref="LambdaSharpAppClient"/> class is used to sending logs, metrics, and events to the app API.
+    /// The <see cref="LambdaSharpAppClient"/> class is used to sending logs, metrics, and events to the Lambdasharp App API.
     /// </summary>
     public sealed class LambdaSharpAppClient : ILambdaSharpLogger, IAsyncDisposable {
 
@@ -57,6 +57,9 @@ namespace LambdaSharp.App {
             public string ModuleInfo => _client.Config.ModuleInfo;
             public string FunctionName => null;
             public string AppName => _client.Config.AppName;
+            public string AppId => _client.Config.AppId;
+            public string AppInstanceId => _client.Config.AppInstanceId;
+            public string AppEventSource => string.IsNullOrEmpty(_client.Config.AppEventSource) ? (string)null : _client.Config.AppEventSource;
             public string DeploymentTier => _client.Config.DeploymentTier;
             public string GitSha => _client.Config.GitSha;
             public string GitBranch => _client.Config.GitBranch;
@@ -273,6 +276,20 @@ namespace LambdaSharp.App {
             }
         }
 
+        /// <summary>
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
+        /// </summary>
+        /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        public void LogEvent<T>(T detail, IEnumerable<string> resources = null)
+            => LambdaSharp.Logging.Events.ILambdaSharpLoggerEx.LogEvent<T>(
+                this,
+                _info.AppEventSource ?? throw new InvalidOperationException("AppEventSource is not configured"),
+                typeof(T).FullName,
+                detail,
+                resources
+            );
+
         private void OnTimer(object _) {
             if(!(_previousOperationTask?.IsCompleted ?? true)) {
 
@@ -427,8 +444,6 @@ namespace LambdaSharp.App {
                 Message = message ?? throw new ArgumentNullException(nameof(message))
             });
         }
-
-        //--- ILambdaLogLevelLogger Members ---
 
         //--- IAsyncDisposable Members ---
         async ValueTask IAsyncDisposable.DisposeAsync() {

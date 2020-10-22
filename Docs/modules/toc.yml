@@ -39,3 +39,6 @@
 
 - name: LambdaSharp.App.Bucket
   href: LambdaSharp-App-Bucket.md
+
+- name: LambdaSharp.App.EventBus
+  href: LambdaSharp-App-EventBus.md

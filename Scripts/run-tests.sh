@@ -30,6 +30,11 @@ if [ -z "$1" ]; then
         exit $?
     fi
 
+    dotnet test "$LAMBDASHARP/Modules/LambdaSharp.App.EventBus/Test.LambdaSharp.App.EventBus"
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+
     # run Module unit tests
     dotnet test --configuration Release "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
     if [ $? -ne 0 ]; then
@@ -39,6 +44,7 @@ if [ -z "$1" ]; then
     # run lash once with force compile to make sure we're testing the latest code
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
         --verbose:exceptions \
+        --no-beep \
         --tier Test \
         --aws-region us-east-1 \
         --aws-account-id 123456789012 \
@@ -56,6 +62,7 @@ if [ -z "$1" ]; then
     # run everything
     dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp3.1/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
+        --no-beep \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/ \
         --dryrun:cloudformation \
@@ -128,10 +135,14 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Modules/LambdaSharp.S3.IO \
         $LAMBDASHARP/Modules/LambdaSharp.S3.Subscriber \
         $LAMBDASHARP/Modules/LambdaSharp.Twitter.Query \
+        $LAMBDASHARP/Modules/LambdaSharp.App.Bucket \
+        $LAMBDASHARP/Modules/LambdaSharp.App.Api \
+        $LAMBDASHARP/Modules/LambdaSharp.App.EventBus \
         $LAMBDASHARP/Samples/AlexaSample \
         $LAMBDASHARP/Samples/ApiSample \
         $LAMBDASHARP/Samples/ApiInvokeSample \
         $LAMBDASHARP/Samples/BlazorSample \
+        $LAMBDASHARP/Samples/BlazorEventsSample \
         $LAMBDASHARP/Samples/CustomResourceTypeSample \
         $LAMBDASHARP/Samples/DynamoDBSample \
         $LAMBDASHARP/Samples/EventSample \
@@ -163,6 +174,7 @@ else
     rm $LAMBDASHARP/Tests/Modules/Results/$testfile.json > /dev/null 2>&1
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- deploy \
         --verbose:exceptions \
+        --no-beep \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/$testfile.json \
         --dryrun:cloudformation \

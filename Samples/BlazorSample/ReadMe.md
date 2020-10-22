@@ -18,7 +18,7 @@ The following module definition does the following:
 1. It shows the Blazor WebAssembly application website URL after the stack has been created.
 
 ```yaml
-Module: Sample.BlazorWebAssembly
+Module: Sample.BlazorSample
 Description: A sample module showing how to deploy a Blazor WebAssembly website
 Items:
 

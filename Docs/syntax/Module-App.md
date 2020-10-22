@@ -29,6 +29,7 @@ Api:
   CorsOrigin: String or Expression
   BurstLimit: Number or Expression
   RateLimit: Number or Expression
+  EventSource: String or Expression
 Bucket:
   CloudFrontOriginAccessIdentity: String or Expression
   ContentEncoding: String or Expression
@@ -36,6 +37,8 @@ Client:
   ApiUrl: String or Expression
 AppSettings:
   String: Expression
+Sources:
+  - SourceDefinition
 ```
 
 ## Properties
@@ -90,6 +93,16 @@ The <code>RateLimit</code> attribute specifies the maximum number of requests pe
 <i>Required</i>: No
 
 <i>Type</i>: Number
+</dd>
+
+<dt><code>EventSource</code></dt>
+<dd>
+
+The <code>EventSource</code> attribute specifies a 'Source' property override for app events. When empty, the 'Source' property is set by the app request. When omitted, the default value is the full module name, followed by the logical ID of the app. For example, <code>My.Module::MyApp</code>.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
 </dd>
 
 </dl>
@@ -213,6 +226,16 @@ The <code>LogRetentionInDays</code> attribute specifies the number of days Cloud
 <i>Type</i>: Number
 </dd>
 
+<dt><code>Sources</code></dt>
+<dd>
+
+The <code>Sources</code> section specifies zero or more source definitions for events to publish to the LambdaSharp App EventBus.
+
+<i>Required</i>: No
+
+<i>Type</i>: List of [Source Definition](Module-App-Sources.md)
+</dd>
+
 <dt><code>Pragmas</code></dt>
 <dd>
 
@@ -241,6 +264,7 @@ The <code>Project</code> attribute specifies the relative path of the app projec
 The `App` declaration adds two nested resources:
 * `${AppName}::Bucket` is a CloudFormation stack using the [LambdaSharp.App.Bucket](~/Modules/LambdaSharp-App-Bucket.md) module.
 * `${AppName}::Api` is a nested CloudFormation stack using the [LambdaSharp.App.Api](~/Modules/LambdaSharp-App-Api.md) module.
+* `${AppName}::EventBus` is an optional nested CloudFormation stack using the [LambdaSharp.App.EventBus](~/Modules/LambdaSharp-App-Api.md) module. It is only created when the app has event sources.
 
 The nested stacks have output values that can be used to initialize other resources in the stack.
 

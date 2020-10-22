@@ -109,6 +109,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // augment module definitions
             new ModelFunctionProcessor(Settings, SourceFilename).Process(module);
+            new ModelAppProcessor(Settings, SourceFilename).Process(module);
             if(HasErrors) {
                 return false;
             }

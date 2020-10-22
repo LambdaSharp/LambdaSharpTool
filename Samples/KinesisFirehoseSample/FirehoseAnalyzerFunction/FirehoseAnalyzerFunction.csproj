@@ -12,6 +12,6 @@
     <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="1.1.0"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(LAMBDASHARP)/src/LambdaSharp/LambdaSharp.csproj"/>
+    <ProjectReference Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj"/>
   </ItemGroup>
 </Project>

@@ -53,6 +53,12 @@ The `info` command is used to show information about the current CLI profile, La
 (optional) Don't show banner or execution time
 </dd>
 
+<dt><code>--no-beep</code></dt>
+<dd>
+
+(optional) Don't emit beep when finished
+</dd>
+
 </dl>
 
 ## Examples

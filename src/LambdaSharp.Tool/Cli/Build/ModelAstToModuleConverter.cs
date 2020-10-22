@@ -233,10 +233,66 @@ namespace LambdaSharp.Tool.Cli.Build {
             case "EventBus":
                 return AtLocation("EventBus", () => new CloudWatchEventSource {
                     EventBus = source.EventBus,
-                    Pattern = source.Pattern
+                    Pattern = CopyRenamePatternProperties(source.Pattern)
                 });
             }
             return null;
+
+            // local functions
+            object CopyRenamePatternProperties(object pattern) {
+                if(pattern is Dictionary<object, object> patternDictionary) {
+
+                    // convert CloudWatch event properties from pascal-case to camel-case.
+                    var newPattern = new Dictionary<object, object>();
+                    foreach(var (key, value) in patternDictionary) {
+                        switch(key) {
+                        case "Account":
+                            newPattern["account"] = value;
+                            break;
+                        case "Detail":
+                            newPattern["detail"] = value;
+                            break;
+                        case "DetailType":
+                            newPattern["detail-type"] = value;
+                            break;
+                        case "Region":
+                            newPattern["region"] = value;
+                            break;
+                        case "Resources":
+                            newPattern["resources"] = value;
+                            break;
+                        case "Source":
+                            newPattern["source"] = value;
+                            break;
+                        case "Version":
+                            newPattern["version"] = value;
+                            break;
+                        default:
+                            newPattern[key] = value;
+                            break;
+                        }
+                    }
+
+                    // check if event pattern contains 'resources' constraint
+                    if(!newPattern.TryGetValue("resources", out var resourcesPattern)) {
+
+                        // add default resources contraint: !Sub "lambdasharp:tier:${Deployment::Tier}"
+                        newPattern["resources"] = new List<object> {
+                            new Dictionary<string, object> {
+                                ["Fn::Sub"] = "lambdasharp:tier:${Deployment::Tier}"
+                            }
+                        };
+                    } else if(resourcesPattern == null) {
+
+                        // a 'resources' constraint with value 'null' indicates no constraint, but also not the default tier constraint
+                        newPattern.Remove("resources");
+                    }
+                    return newPattern;
+                } else {
+System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<null>"}");
+                }
+                return pattern;
+            }
         }
 
         private void ConvertItem(int index, ModuleItemNode node)
@@ -648,6 +704,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             case "App":
                 AtLocation(node.App, () => {
 
+                    // validation
+                    ValidateAppSource(node.Sources ?? Array.Empty<FunctionSourceNode>());
+
                     // determine app project location
                     if(node.Project == null) {
 
@@ -667,6 +726,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                         LogError("could not locate the app project");
                         node.Project = "<MISSING>";
                     }
+
+                    // create app item
+                    var sources = AtLocation("Sources", () => node.Sources
+                        ?.Select((source, eventIndex) => ConvertFunctionSource(node, eventIndex, source))
+                        .Where(evt => evt != null)
+                        .ToList()
+                    );
                     _builder.AddApp(
                         parent: parent,
                         name: node.App,
@@ -681,7 +747,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                         apiRateLimit: node.Api?.RateLimit,
                         bucketCloudFrontOriginAccessIdentity: node.Bucket?.CloudFrontOriginAccessIdentity,
                         bucketContentEncoding: node.Bucket?.ContentEncoding,
-                        clientApiUrl: node.Client?.ApiUrl
+                        clientApiUrl: node.Client?.ApiUrl,
+                        eventSource: node.Api?.EventSource,
+                        sources: sources
                     );
                 });
                 break;
@@ -782,16 +850,37 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // TODO (2019-03-13, bjorg): validate WebSocket route expression
                     } else if(source.EventBus != null) {
-                        AtLocation("Pattern", () => {
-                            if(source.Pattern == null) {
-                                LogError("missing rule pattern");
-                            }
-                        });
+                        ValidateEventBusSource(source);
                     } else {
                         LogError("unknown source type");
                     }
                 });
             }
+        }
+
+        private void ValidateAppSource(IEnumerable<FunctionSourceNode> sources) {
+            var index = 0;
+            foreach(var source in sources) {
+                ++index;
+                AtLocation($"{index}", () => {
+                    if(source.Schedule != null) {
+
+                        // TODO (2018-06-27, bjorg): add cron/rate expression validation
+                    } else if(source.EventBus != null) {
+                        ValidateEventBusSource(source);
+                    } else {
+                        LogError("unknown source type");
+                    }
+                });
+            }
+        }
+
+        private void ValidateEventBusSource(FunctionSourceNode source) {
+            AtLocation("Pattern", () => {
+                if(source.Pattern == null) {
+                    LogError("missing rule pattern");
+                }
+            });
         }
 
         private string DeterminNodeType(

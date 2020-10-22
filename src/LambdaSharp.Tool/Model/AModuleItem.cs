@@ -347,14 +347,17 @@ namespace LambdaSharp.Tool.Model {
             string name,
             string description,
             string project,
-            IList<object> pragmas
+            IList<object> pragmas,
+            IList<AFunctionSource> sources
         ) : base(parent, name, description, "String", scope: null, reference: name) {
             Project = project ?? throw new ArgumentNullException(nameof(project));
+            Sources = sources ?? Array.Empty<AFunctionSource>();
         }
 
         //--- Properties ---
         public bool HasAppRegistration => !HasPragma("no-registration");
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public string Project { get; }
+        public IList<AFunctionSource> Sources { get; set; }
     }
 }

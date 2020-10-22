@@ -530,7 +530,8 @@ namespace LambdaSharp.Build.CSharp.Function {
                 "--directory", buildFolder,
                 "--default-namespace", rootNamespace,
                 "--out", schemaFile,
-                "--quiet"
+                "--quiet",
+                "--no-ansi"
             }
                 .Union(mappings.Select(mapping => $"--method={mapping.Method}"))
                 .ToList();
