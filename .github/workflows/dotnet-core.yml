@@ -24,6 +24,7 @@ jobs:
       - name: Set LambdaSharp environment variable
         run: echo "::set-env name=LAMBDASHARP::$GITHUB_WORKSPACE"
 
+      # CLI Tests
       - name: Test LambdaSharp.CloudFormation
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp.CloudFormation
 
@@ -33,11 +34,13 @@ jobs:
       - name: Test LambdaSharp.Compiler
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp.Compiler
 
+      # SDK Tests
       - name: Test LambdaSharp
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp
 
-      - name: Test LambdaSharp.Core
-        run: dotnet test --configuration Release Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests
-
       - name: Test LambdaSharp.App.EventBus
         run: dotnet test --configuration Release Modules/LambdaSharp.App.EventBus/Test.LambdaSharp.App.EventBus
+
+      # Module Tests
+      - name: Test LambdaSharp.Core
+        run: dotnet test --configuration Release Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests
