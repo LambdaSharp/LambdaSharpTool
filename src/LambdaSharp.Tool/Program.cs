@@ -52,6 +52,7 @@ namespace LambdaSharp.Tool {
         public static bool Quiet;
         public static bool ShowHelp;
         public static TimeSpan BeepThreshold = TimeSpan.FromSeconds(10);
+        private readonly static Stopwatch _beepStopwatch = Stopwatch.StartNew();
 
         //--- Class Methods ---
         public static int Main(string[] args) {
@@ -81,6 +82,7 @@ namespace LambdaSharp.Tool {
 
             // execute command line options and report any errors
             var stopwatch = Stopwatch.StartNew();
+            ResetBeepTimer();
             using(Settings.AnsiTerminal = new AnsiTerminal()) {
                 try {
                     int exitCode = 0;
@@ -109,16 +111,17 @@ namespace LambdaSharp.Tool {
                 } finally {
                     if(!ShowHelp && !Quiet) {
                         Console.WriteLine();
-                        var elapsed = stopwatch.Elapsed;
-                        Console.WriteLine($"Done (finished: {DateTime.Now}; duration: {elapsed:c})");
+                        Console.WriteLine($"Done (finished: {DateTime.Now}; duration: {stopwatch.Elapsed:c})");
 
                         // check execution was long enough to emit a sound
-                        if(elapsed >= BeepThreshold) {
+                        if(_beepStopwatch.Elapsed >= BeepThreshold) {
                             Console.Beep();
                         }
                     }
                 }
             }
         }
+
+        public static void ResetBeepTimer() => _beepStopwatch.Reset();
     }
 }
