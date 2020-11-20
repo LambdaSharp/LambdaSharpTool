@@ -157,7 +157,6 @@ namespace LambdaSharp.Tool.Cli.Tier {
                     ?.ParameterValue;
             }
             return new TierModuleDetails {
-                StackName = stack.StackName,
                 ModuleDeploymentName = stack.StackName.Substring(tierPrefix.Length),
                 StackStatus = stack.StackStatus.ToString(),
                 DeploymentDate = (stack.LastUpdatedTime > stack.CreationTime) ? stack.LastUpdatedTime : stack.CreationTime,
@@ -165,7 +164,6 @@ namespace LambdaSharp.Tool.Cli.Tier {
                 ModuleReference = GetShortModuleReference(stack),
                 CoreServices = coreServices,
                 HasDefaultSecretKeyParameter = stack.Parameters.Any(parameter => parameter.ParameterKey == "LambdaSharpCoreDefaultSecretKey"),
-                IsRoot = stack.RootId == null,
                 DeploymentBucketArn = stack.Outputs.FirstOrDefault(output => output.OutputKey == "DeploymentBucket")?.OutputValue,
                 DeploymentTierName = (tierPrefix.Length > 0)
                     ? tierPrefix.Substring(0, tierPrefix.Length - 1)

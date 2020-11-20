@@ -25,16 +25,16 @@ namespace LambdaSharp.Tool.Cli.Tier {
     internal class TierModuleDetails {
 
         //--- Properties ---
-        public string StackName { get; set; }
         public string ModuleDeploymentName { get; set; }
         public string StackStatus { get; set; }
         public DateTime DeploymentDate { get; set; }
         public Stack Stack { get; set; }
         public string ModuleReference { get; set; }
         public string CoreServices { get; set; }
-        public bool IsRoot { get; set; }
         public bool HasDefaultSecretKeyParameter { get; set; }
         public string DeploymentBucketArn { get; set; }
         public string DeploymentTierName { get; set; }
+        public string StackName => Stack.StackName;
+        public bool IsRoot => Stack.RootId == null;
     }
 }
