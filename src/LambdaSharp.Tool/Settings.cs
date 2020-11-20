@@ -323,6 +323,7 @@ namespace LambdaSharp.Tool {
                 Console.WriteLine($"{PromptColor}{constraintDescription ?? $"Value must match regular expression pattern: {pattern}"}{ResetColor}");
                 goto again;
             }
+            Program.ResetBeepTimer();
             return string.IsNullOrEmpty(result)
                 ? defaultValue
                 : result;
@@ -360,7 +361,9 @@ namespace LambdaSharp.Tool {
                 LogError($"prompt was attempted for \"{message}\"");
                 return defaultAnswer;
             }
-            return Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
+            var result = Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
+            Program.ResetBeepTimer();
+            return result;
         }
 
         public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
