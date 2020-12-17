@@ -208,11 +208,21 @@ namespace LambdaSharp.Tool.Cli {
                             Console.WriteLine(subCmd.GetHelpText());
                             return;
                         }
+                        var bucketName = bucketOption.Value();
+                        var originName = originOption.Value();
+                        if(string.IsNullOrEmpty(originArgument.Value)) {
+                            if(originOption.HasValue() && !bucketOption.HasValue()) {
+                                bucketName = originName;
+                            } else if(!originOption.HasValue() && bucketOption.HasValue()) {
+                                LogError("missing --origin <ORIGIN> option");
+                                return;
+                            }
+                        }
                         await ListModulesAsync(
                             settings,
                             originArgument.Value,
-                            bucketOption.Value(),
-                            originOption.Value(),
+                            bucketName,
+                            originName,
                             preReleaseOption.HasValue()
                         );
                     });
