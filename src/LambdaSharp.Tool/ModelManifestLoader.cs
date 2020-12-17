@@ -518,14 +518,14 @@ namespace LambdaSharp.Tool {
             return null;
         }
 
-        public async Task<IEnumerable<ModuleLocation>> ListManifestsAsync(string bucketName, string origin, bool includePreRelease = false) {
+        public async Task<(IEnumerable<ModuleLocation> ModuleLocations, int PrereleaseModuleCount)> ListManifestsAsync(string bucketName, string origin, bool includePreRelease = false) {
             var stopwatch = Stopwatch.StartNew();
             try {
                 var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
                 if(s3Client == null) {
 
                     // nothing to do; GetS3ClientByBucketName already emitted an error
-                    return null;
+                    return (ModuleLocations: Enumerable.Empty<ModuleLocation>(), 0);
                 }
 
                 // enumerate versions in bucket
@@ -536,6 +536,7 @@ namespace LambdaSharp.Tool {
                     Prefix = $"{origin}/",
                     RequestPayer = RequestPayer.Requester
                 };
+                var prereleaseModuleCount = 0;
                 do {
                     try {
                         var response = await s3Client.ListObjectsAsync(request);
@@ -547,8 +548,11 @@ namespace LambdaSharp.Tool {
                                 (parts.Length != 4)
                                 || (parts[0] != origin)
                                 || !VersionInfo.TryParse(parts[3], out var version)
-                                || (!includePreRelease && version.IsPreRelease())
                             ) {
+                                continue;
+                            }
+                            if(!includePreRelease && version.IsPreRelease()) {
+                                ++prereleaseModuleCount;
                                 continue;
                             }
 
@@ -560,7 +564,7 @@ namespace LambdaSharp.Tool {
                         break;
                     }
                 } while(request.Marker != null);
-                return moduleLocations;
+                return (ModuleLocations: moduleLocations, PrereleaseModuleCount: prereleaseModuleCount);
             } finally {
                 LogInfoPerformance($"ListManifests() for s3://{origin}", stopwatch.Elapsed);
             }

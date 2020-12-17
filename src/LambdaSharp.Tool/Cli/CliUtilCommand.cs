@@ -909,7 +909,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // list all modules at bucket
-            var moduleLocations = await new ModelManifestLoader(settings, "cmd-line").ListManifestsAsync(bucketName, origin, includePreRelease);
+            var (moduleLocations, prereleaseModuleCount) = await new ModelManifestLoader(settings, "cmd-line").ListManifestsAsync(bucketName, origin, includePreRelease);
             if(moduleLocations.Any()) {
                 foreach(var moduleGroup in moduleLocations
                     .Where(moduleLocation => (moduleInfo == null) || (moduleLocation.ModuleInfo.FullName == moduleInfo.FullName))
@@ -922,6 +922,10 @@ namespace LambdaSharp.Tool.Cli {
                 }
             } else {
                 Console.WriteLine("no modules found");
+            }
+            if(prereleaseModuleCount > 0) {
+                Console.WriteLine();
+                Console.WriteLine($"{Settings.HighContrastColor}{prereleaseModuleCount:N0} module(s) omitted; use --include-prerelease option to show omitted modules{Settings.ResetColor}");
             }
         }
     }
