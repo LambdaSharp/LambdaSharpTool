@@ -274,6 +274,9 @@ namespace LambdaSharp.CustomResource {
                 var messageBody = snsEvent.Records.First().Sns.Message;
 
                 // deserialize message into a cloudformation request
+
+                // TODO (2020-12-23, bjorg): use LambdaSharp-specific deserializer since it should not be affected by a customized serializer;
+                //  however, the nested properties MUST also be defined using the same LambdaSharp-specific deserializer since they are serialized by the same structure!
                 return LambdaSerializer.Deserialize<CloudFormationResourceRequest<TProperties>>(messageBody);
             } else {
 

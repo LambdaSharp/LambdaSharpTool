@@ -113,6 +113,8 @@ namespace LambdaSharp.SimpleNotificationService {
                 // sns event deserialization
                 LogInfo("deserializing SNS event");
                 try {
+
+                    // TODO (2020-12-23, bjorg): use LambdaSharp-specific deserializer since it should not be affected by a customized serializer
                     var snsEvent = LambdaSerializer.Deserialize<SNSEvent>(snsEventBody);
                     _currentRecord = snsEvent.Records.First().Sns;
 

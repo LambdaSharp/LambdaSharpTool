@@ -578,6 +578,8 @@ namespace LambdaSharp {
 
             // read optional git-info file
             if(File.Exists("git-info.json")) {
+
+                // TODO (2020-12-23, bjorg): use LambdaSharp-specific deserializer since it should not be affected by a customized serializer
                 var git = LambdaSerializer.Deserialize<GitInfo>(File.ReadAllText("git-info.json"));
                 _gitSha = git.SHA;
                 _gitBranch = git.Branch;
