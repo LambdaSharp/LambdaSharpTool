@@ -32,27 +32,27 @@ using Microsoft.Extensions.Logging;
 namespace LambdaSharp.App {
 
     /// <summary>
-    /// Static class with extension methods for initializing the <see cref="WebAssemblyHostBuilder"/> instance.
+    /// Static class with extension methods for initializing the <c>WebAssemblyHostBuilder</c> instance.
     /// </summary>
     public static class WebAssemblyHostBuilderEx {
 
         //--- Extension Methods ---
 
         /// <summary>
-        /// Configure the <see cref="WebAssemblyHostBuilder"/> instance for use with LambdaSharp.
+        /// Configure the <c>WebAssemblyHostBuilder</c> instance for use with LambdaSharp.
         /// </summary>
-        /// <param name="builder">The <see cref="WebAssemblyHostBuilder"/> instance.</param>
+        /// <param name="builder">The <c>WebAssemblyHostBuilder</c> instance.</param>
         /// <typeparam name="T">The application type used to determine the assembly version GUID.</typeparam>
-        /// <returns>The <see cref="WebAssemblyHostBuilder"/> instance.</returns>
+        /// <returns>The <c>WebAssemblyHostBuilder</c> instance.</returns>
         public static WebAssemblyHostBuilder AddLambdaSharp<T>(this WebAssemblyHostBuilder builder)
             => UseLambdaSharp(builder, typeof(T));
 
         /// <summary>
-        /// Configure the <see cref="WebAssemblyHostBuilder"/> instance for use with LambdaSharp.
+        /// Configure the <c>WebAssemblyHostBuilder</c> instance for use with LambdaSharp.
         /// </summary>
-        /// <param name="builder">The <see cref="WebAssemblyHostBuilder"/> instance.</param>
+        /// <param name="builder">The <c>WebAssemblyHostBuilder</c> instance.</param>
         /// <param name="mainType">The application type used to determine the assembly version GUID.</param>
-        /// <returns>The <see cref="WebAssemblyHostBuilder"/> instance.</returns>
+        /// <returns>The <c>WebAssemblyHostBuilder</c> instance.</returns>
         public static WebAssemblyHostBuilder UseLambdaSharp(this WebAssemblyHostBuilder builder, Type mainType) {
             var emptyLambdaSharpSection = !builder.Configuration.GetSection("LambdaSharp").GetChildren().Any();
 
