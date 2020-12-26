@@ -1,7 +1,10 @@
 apiRules:
   - exclude:
-      uidRegex: ^System
+      uidRegex: ^Amazon
       type: Type
   - exclude:
-      uidRegex: ^Amazon
+      uidRegex: ^Microsoft
+      type: Type
+  - exclude:
+      uidRegex: ^System
       type: Type
