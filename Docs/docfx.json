@@ -4,17 +4,52 @@
       "src": [
         {
           "files": [
-            "LambdaSharp.Logging/LambdaSharp.Logging.csproj",
-            "LambdaSharp/LambdaSharp.csproj",
-            "LambdaSharp.App/LambdaSharp.App.csproj"
+            "LambdaSharp.Logging/LambdaSharp.Logging.csproj"
           ],
-          "cwd": "../src"
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
         }
       ],
-      "dest": "sdk",
+      "dest": "sdk/LambdaSharp.Logging",
       "filter": "filterConfig.yml",
-      "disableGitFeatures": false,
-      "disableDefaultFilter": false
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp/LambdaSharp.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.App/LambdaSharp.App.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.App",
+      "filter": "filterConfig.yml",
+      "force": true
     }
   ],
   "build": {
@@ -45,7 +80,8 @@
       },
       {
         "files": [
-          "sdk/**.yml",
+          "sdk/*/**.yml",
+          "sdk/toc.yml",
           "sdk/index.md"
         ]
       },

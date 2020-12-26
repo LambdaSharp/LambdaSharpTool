@@ -70,7 +70,13 @@ namespace LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("new", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Create new LambdaSharp module, function, or resource";
+                cmd.Description = "Create new LambdaSharp module, function, app, or resource";
+
+                // add command options
+                var directoryOption = cmd.Option("--working-directory <PATH>", "(optional) Module directory (default: current directory)", CommandOptionType.SingleValue);
+                var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
+                inputFileOption.ShowInHelpText = false;
+                AddStandardCommandOptions(cmd);
 
                 // function sub-command
                 cmd.Command("function", subCmd => {
@@ -312,8 +318,104 @@ namespace LambdaSharp.Tool.Cli {
 
                 // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
-                    Program.ShowHelp = true;
-                    Console.WriteLine(cmd.GetHelpText());
+                    ExecuteCommandActions(cmd);
+                    var settings = new Settings(Version);
+                    var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
+                    var moduleFilePath = Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml");
+
+                    // check if module file exists; if none, create module
+                    if(!File.Exists(moduleFilePath)) {
+
+                        // get the module name
+                        var moduleName = "";
+                        while(string.IsNullOrEmpty(moduleName)) {
+                            moduleName = settings.PromptString("Enter the module name");
+                        }
+
+                        // prepend default namespace string
+                        if(!moduleName.Contains('.')) {
+                            moduleName = "My." + moduleName;
+                        }
+                        NewModule(
+                            moduleName,
+                            workingDirectory
+                        );
+                        return;
+                    }
+
+                    // prompt for declaration type
+                    const string BlazorApp = "Blazor WebAssembly App";
+                    const string LambdaFunction = "Lambda Function";
+                    const string AwsResource = "AWS Resource";
+                    var declarationType = settings.PromptChoice("Select declaration to add", new[] {
+                        AwsResource,
+                        BlazorApp,
+                        LambdaFunction
+                    });
+                    Console.WriteLine();
+                    switch(declarationType) {
+                    case BlazorApp:
+
+                        // get app name
+                        var appName = "";
+                        while(string.IsNullOrEmpty(appName)) {
+                            appName = settings.PromptString("Enter the app name");
+                        }
+                        Console.WriteLine();
+                        NewApp(
+                            settings,
+                            appName,
+                            rootNamespace: null,
+                            workingDirectory,
+                            moduleFilePath
+                        );
+                        break;
+                    case LambdaFunction:
+
+                        // get function name
+                        var functionName = "";
+                        while(string.IsNullOrEmpty(functionName)) {
+                            functionName = settings.PromptString("Enter the function name");
+                        }
+                        Console.WriteLine();
+                        NewFunction(
+                            settings,
+                            functionName,
+                            rootNamespace: null,
+                            "netcoreapp3.1",
+                            workingDirectory,
+                            Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
+                            "csharp",
+                            functionMemory: 256,
+                            functionTimeout: 30,
+                            FunctionType.Unknown
+                        );
+                        break;
+                    case AwsResource:
+
+                        // get the resource name
+                        var resourceName = "";
+                        while(string.IsNullOrEmpty(resourceName)) {
+                            resourceName = settings.PromptString("Enter the resource name");
+                        }
+                        Console.WriteLine();
+
+                        // get the resource type
+                        var resourceType = "";
+                        while(string.IsNullOrEmpty(resourceType)) {
+                            resourceType = settings.PromptString("Enter the resource type");
+                        }
+                        NewResource(
+                            settings,
+                            moduleFilePath,
+                            resourceName,
+                            resourceType
+                        );
+                        break;
+                    default:
+                        throw new ArgumentException("unexpected value");
+                    }
+                    return;
                 });
             });
         }

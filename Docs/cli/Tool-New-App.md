@@ -1,7 +1,7 @@
 ---
 title: LambdaSharp CLI New Command - Add Blazor App to Module
 description: Add a Blazor App to a LambdaSharp module
-keywords: cli, new, create, lambda, module
+keywords: cli, new, create, app, blazor, module
 ---
 # Add New App to Module File
 

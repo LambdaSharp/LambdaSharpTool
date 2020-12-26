@@ -15,13 +15,16 @@ if [ ! -d "$LAMBDASHARP/../Docs-LambdaSharpTool" ]; then
     exit 1
 fi
 
+# remove generated metadata files
+git clean -dxf "$LAMBDASHARP/Docs/sdk/"
+
 # write current version to `version.txt`, which is used by docfx
 echo "*** WRITING VERSION TO FILE: $LAMBDASHARP_VERSION"
-echo $LAMBDASHARP_VERSION > $LAMBDASHARP/Docs/version.txt
+echo $LAMBDASHARP_VERSION > "$LAMBDASHARP/Docs/version.txt"
 
 # clean-out current documentation folder
 echo "*** DELETING OLD DOCUMENTATION"
-cd $LAMBDASHARP/../Docs-LambdaSharpTool
+cd "$LAMBDASHARP/../Docs-LambdaSharpTool"
 
 # restore original state
 git clean -fd
@@ -39,4 +42,4 @@ git checkout master -- CNAME
 # generate new documentation
 echo "*** GENERATING NEW DOCUMENTATION"
 cd $LAMBDASHARP/Docs
-docfx docfx.json --force
+docfx docfx.json
