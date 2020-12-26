@@ -141,6 +141,19 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
+### (v0.8.1.5) - 2020-12-26
+
+#### Features
+
+* CLI
+  * Enhanced `lash new` command to prompt for type of file to create (app, function, or resource). Defaults to `module` when no `Module.yml` file is present.
+  * Enhanced `lash util list-modules` command to show a message when pre-release modules were omitted from the list.
+
+#### Fixes
+
+* CLI
+  * Fixed a NRE in `lash util list-modules` when the bucket name was passed in as an option instead of an argument.
+
 ### (v0.8.1.4) - 2020-11-20
 
 #### Fixes
