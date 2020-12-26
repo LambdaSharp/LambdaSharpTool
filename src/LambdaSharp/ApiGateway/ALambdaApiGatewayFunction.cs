@@ -38,8 +38,6 @@ namespace LambdaSharp.ApiGateway {
     /// a derived class can override <see cref="ALambdaApiGatewayFunction.ProcessProxyRequestAsync(APIGatewayProxyRequest)"/>
     /// to process requests.
     /// </remarks>
-
-    // TODO (2020-12-23, bjorg): have to use the non-generic base class so we can use LambdaSharp-specific deserializer since it should not be affected by a customized serializer
     public abstract class ALambdaApiGatewayFunction : ALambdaFunction<APIGatewayProxyRequest, APIGatewayProxyResponse> {
 
         //--- Types ---
@@ -101,8 +99,6 @@ namespace LambdaSharp.ApiGateway {
             // read optional api-gateway-mappings file
             _directory = new ApiGatewayInvocationTargetDirectory(CreateInvocationTargetInstance, LambdaSerializer);
             if(File.Exists("api-mappings.json")) {
-
-                // TODO (2020-12-23, bjorg): use LambdaSharp-specific deserializer since it should not be affected by a customized serializer
                 var mappings = LambdaSerializer.Deserialize<ApiGatewayInvocationMappings>(File.ReadAllText("api-mappings.json"));
                 if(mappings.Mappings == null) {
                     throw new InvalidDataException("missing 'Mappings' property in 'api-mappings.json' file");
