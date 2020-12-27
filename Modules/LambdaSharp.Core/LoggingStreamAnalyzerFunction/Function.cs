@@ -77,6 +77,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private const string LAMBDA_LOG_GROUP_PREFIX = "/aws/lambda/";
         private const int MAX_EVENTS_BATCHSIZE = 256 * 1024;
         private const int MAX_EVENTS_COUNT = 10;
+        private const int RESPONSE_SIZE_LIMIT = 5_000_000;
 
         //--- Fields ---
         private Logic? _logic;
@@ -90,6 +91,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private int _eventsEntriesTotalSize = 0;
         private OwnerMetaData? _selfMetaData;
         private List<string> _convertedRecords = new List<string>();
+        private int _approximateResponseSize;
 
         //--- Properties ---
         private Logic Logic => _logic ?? throw new InvalidOperationException();
@@ -102,7 +104,11 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
             _logic = new Logic(this);
+
+            // read configuration settings
             var tableName = config.ReadDynamoDBTableName("RegistrationTable");
+
+            // initialize clients
             var dynamoClient = new AmazonDynamoDBClient();
             _registrations = new RegistrationTable(dynamoClient, tableName);
             _cachedRegistrations = new Dictionary<string, OwnerMetaData>();
@@ -130,20 +136,11 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var response = new KinesisFirehoseResponse {
                 Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
             };
+            _approximateResponseSize = 0;
             try {
                 foreach(var record in request.Records) {
                     try {
-
-                        // deserialize kinesis record into a CloudWatch Log event
-                        LogEventsMessage logEvent;
-                        using(var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData)))
-                        using(var destinationStream = new MemoryStream()) {
-                            using(var gzip = new GZipStream(sourceStream, CompressionMode.Decompress)) {
-                                gzip.CopyTo(destinationStream);
-                                destinationStream.Position = 0;
-                            }
-                            logEvent = LambdaSerializer.Deserialize<LogEventsMessage>(Encoding.UTF8.GetString(destinationStream.ToArray()));
-                        }
+                        var logEvent = ConvertRecordToLogEvents(record, out var recordData);
 
                         // validate log event
                         if(
@@ -193,6 +190,14 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                             LogInfo("skipping record for non-registered log-group (record-id: {0}, log-group: {1})", record.RecordId, logEvent.LogGroup);
                             RecordDropped(record);
                             continue;
+                        }
+
+                        // check if we have reached the output limit
+                        if(_approximateResponseSize > RESPONSE_SIZE_LIMIT) {
+                            LogWarn("skipping {0} records from Kinesis Firehose because output limit was reached", request.Records.Count - response.Records.Count);
+
+                            // exit processing loop; let the remaining records be resubmitted later (hopefully)
+                            break;
                         }
 
                         // process entries in log event
@@ -269,6 +274,21 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             return response;
 
             // local functions
+            LogEventsMessage ConvertRecordToLogEvents(KinesisFirehoseEvent.FirehoseRecord record, out MemoryStream recordData) {
+                recordData = new MemoryStream();
+
+                // deserialize kinesis record into a CloudWatch Log event
+                LogEventsMessage logEvent;
+                using(var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData))) {
+                    using(var gzip = new GZipStream(sourceStream, CompressionMode.Decompress)) {
+                        gzip.CopyTo(recordData);
+                        recordData.Position = 0;
+                    }
+                    logEvent = LambdaSerializer.Deserialize<LogEventsMessage>(Encoding.UTF8.GetString(recordData.ToArray()));
+                }
+                return logEvent;
+            }
+
             void RecordSuccess(KinesisFirehoseEvent.FirehoseRecord record, string data)
                 => response.Records.Add(new KinesisFirehoseResponse.FirehoseRecord {
                     RecordId = record.RecordId,
@@ -546,8 +566,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             }
         }
 
-        private void AddConvertedRecord(OwnerMetaData owner, DateTimeOffset timestamp, ALambdaLogRecord record)
-            => _convertedRecords.Add(LambdaSerializer.Serialize(new LogRecord {
+        private void AddConvertedRecord(OwnerMetaData owner, DateTimeOffset timestamp, ALambdaLogRecord record) {
+            var json = LambdaSerializer.Serialize(new LogRecord {
                 Timestamp = timestamp.ToUnixTimeMilliseconds(),
                 ModuleInfo = owner.ModuleInfo,
                 Module = owner.Module,
@@ -557,7 +577,10 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 Tier = Info.DeploymentTier,
                 RecordType = record.Type,
                 Record = LambdaSerializer.Serialize<object>(record)
-            }));
+            });
+            _convertedRecords.Add(json);
+            _approximateResponseSize += Encoding.UTF8.GetByteCount(json);
+        }
 
         //--- ILogicDependencyProvider Members ---
         async Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report) {

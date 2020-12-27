@@ -192,7 +192,7 @@ Items:
                 Resource: !GetAtt LoggingStreamAnalyzerFunction.Arn
 
   - Function: LoggingStreamAnalyzerFunction
-    Memory: 256
+    Memory: 1024
     Timeout: 300
 
   # Rollbar Settings
