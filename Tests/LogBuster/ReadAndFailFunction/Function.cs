@@ -4,7 +4,7 @@ using Amazon.SQS;
 using LambdaSharp;
 using LambdaSharp.SimpleQueueService;
 
-namespace Bjorg.LogBuster.ReadAndFailFunction {
+namespace LogBuster.ReadAndFailFunction {
 
     public class Message {
 
