@@ -143,6 +143,11 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.1.6) - 2020-12-28
 
+#### Features
+
+* CLI
+  * Updated embedded CloudFormation spec to 22.0.0.
+
 #### Fixes
 
 * Modules
