@@ -27,6 +27,8 @@ using System.Threading.Tasks;
 using Amazon.CloudWatchEvents;
 using Amazon.CloudWatchEvents.Model;
 using Amazon.DynamoDBv2;
+using Amazon.KinesisFirehose;
+using Amazon.KinesisFirehose.Model;
 using Amazon.Lambda.KinesisFirehoseEvents;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
@@ -110,6 +112,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private OwnerMetaData? _selfMetaData;
         private List<ConvertedRecord> _convertedRecords = new List<ConvertedRecord>();
         private int _approximateResponseSize;
+        private IAmazonKinesisFirehose _firehoseClient;
 
         //--- Properties ---
         private Logic Logic => _logic ?? throw new InvalidOperationException();
@@ -132,6 +135,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             _cachedRegistrations = new Dictionary<string, OwnerMetaData>();
             _rollbarClient = new RollbarClient(null, null, message => LogInfo(message));
             _eventsClient = new AmazonCloudWatchEventsClient();
+            _firehoseClient = new AmazonKinesisFirehoseClient();
             _selfMetaData = new OwnerMetaData {
                 ModuleInfo = Info.ModuleInfo,
                 Module = Info.ModuleFullName,
@@ -256,6 +260,13 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                                         // exit processing loop; let the remaining records be resubmitted later (hopefully)
                                         LogWarn("skipping remaining Kinesis Firehose records because output limit was reached ({0} skipped, {1} processed)", request.Records.Count - response.Records.Count, response.Records.Count);
+
+                                        await _firehoseClient.PutRecordBatchAsync(
+                                            _firehoseDeliveryStream,
+                                            request.Records.Skip(response.Records.Count).Select(record => new Record {
+                                                Data = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData))
+                                            })
+                                        );
                                         break;
                                     }
                                 }
