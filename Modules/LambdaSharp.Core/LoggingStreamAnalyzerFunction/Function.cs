@@ -160,7 +160,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             };
             _approximateResponseSize = 0;
             try {
-                foreach(var record in request.Records) {
+                for(var recordIndex = 0; recordIndex < request.Records.Count; ++recordIndex) {
+                    var record = request.Records[recordIndex];
                     try {
                         var logEvent = ConvertRecordToLogEvents(record, out var recordData);
 
@@ -255,18 +256,28 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                                         // skip record since it's the first record and we cannot serialize it due to response size limits
                                         LogWarn("record too large to convert (record-id: {0})", record.RecordId);
                                         RecordFailed(record);
+
+                                        // continue with next record
                                         continue;
                                     } else {
+                                        LogInfo("reingesting remaining Kinesis Firehose records because output limit was reached ({1} processed, {0} reingested)", recordIndex, request.Records.Count - recordIndex);
 
-                                        // exit processing loop; let the remaining records be resubmitted later (hopefully)
-                                        LogWarn("skipping remaining Kinesis Firehose records because output limit was reached ({0} skipped, {1} processed)", request.Records.Count - response.Records.Count, response.Records.Count);
+                                        // reingest remaining records since the response will be too large otherwise
+                                        var firehoseDeliveryStream = request.DeliveryStreamArn.Split(':')[3].Split('/')[1];
+                                        var reingestedRecords = request.Records.Skip(recordIndex).Select(record => new Record {
+                                            Data = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData))
+                                        }).ToList();
+                                        await _firehoseClient.PutRecordBatchAsync(firehoseDeliveryStream, reingestedRecords);
 
-                                        await _firehoseClient.PutRecordBatchAsync(
-                                            _firehoseDeliveryStream,
-                                            request.Records.Skip(response.Records.Count).Select(record => new Record {
-                                                Data = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData))
-                                            })
-                                        );
+                                        // drop reingested records
+                                        for(var droppedRecordIndex = recordIndex; recordIndex < request.Records.Count; ++droppedRecordIndex) {
+                                            var droppedRecord = request.Records[droppedRecordIndex];
+                                            LogInfo($"dropped record (record-id: {droppedRecord.RecordId}");
+                                            RecordDropped(droppedRecord);
+                                        }
+                                        LogInfo("{0} records have been reingested and dropped", reingestedRecords.Count);
+
+                                        // cancel processing loop
                                         break;
                                     }
                                 }
