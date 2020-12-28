@@ -159,6 +159,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
             };
             _approximateResponseSize = 0;
+            var reingestedCount = 0;
             try {
                 for(var recordIndex = 0; recordIndex < request.Records.Count; ++recordIndex) {
                     var record = request.Records[recordIndex];
@@ -178,14 +179,14 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                         // skip log event from own module
                         if(logEvent.LogGroup.Contains(Info.FunctionName)) {
-                            LogInfo("skipping event from own event log (record-id: {0})", record.RecordId);
+                            LogInfo($"skipping event from own event log (record-id: {record.RecordId})");
                             RecordDropped(record);
                             continue;
                         }
 
                         // skip control log event
                         if(logEvent.MessageType == "CONTROL_MESSAGE") {
-                            LogInfo("skipping control message (record-id: {0})", record.RecordId);
+                            LogInfo($"skipping control message (record-id: {record.RecordId})");
                             RecordDropped(record);
                             continue;
                         }
@@ -210,7 +211,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                         // check if owner record exists
                         if(owner == null) {
-                            LogInfo("skipping record for non-registered log-group (record-id: {0}, log-group: {1})", record.RecordId, logEvent.LogGroup);
+                            LogInfo($"skipping record for non-registered log-group (record-id: {record.RecordId}, log-group: {logEvent.LogGroup})");
                             RecordDropped(record);
                             continue;
                         }
@@ -218,9 +219,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                         // process entries in log event
                         _convertedRecords.Clear();
                         var success = true;
-                        var logEventIndex = -1;
-                        foreach(var entry in logEvent.LogEvents) {
-                            ++logEventIndex;
+                        for(var logEventIndex = 0; logEventIndex < logEvent.LogEvents.Count; ++logEventIndex) {
+                            LogEventEntry? entry = logEvent.LogEvents[logEventIndex];
                             try {
                                 await Logic.ProgressLogEntryAsync(
                                     owner,
@@ -260,43 +260,41 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                                         // continue with next record
                                         continue;
                                     } else {
-                                        LogInfo("reingesting remaining Kinesis Firehose records because output limit was reached ({1} processed, {0} reingested)", recordIndex, request.Records.Count - recordIndex);
+                                        LogInfo($"reached Lambda response limit (response: {_approximateResponseSize:N0}, limit: {RESPONSE_SIZE_LIMIT:N0})");
 
                                         // reingest remaining records since the response will be too large otherwise
-                                        var firehoseDeliveryStream = request.DeliveryStreamArn.Split(':')[3].Split('/')[1];
+                                        var firehoseDeliveryStream = request.DeliveryStreamArn.Split('/').Last();
                                         var reingestedRecords = request.Records.Skip(recordIndex).Select(record => new Record {
                                             Data = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData))
                                         }).ToList();
                                         await _firehoseClient.PutRecordBatchAsync(firehoseDeliveryStream, reingestedRecords);
+                                        reingestedCount += reingestedRecords.Count;
 
                                         // drop reingested records
-                                        for(var droppedRecordIndex = recordIndex; recordIndex < request.Records.Count; ++droppedRecordIndex) {
-                                            var droppedRecord = request.Records[droppedRecordIndex];
-                                            LogInfo($"dropped record (record-id: {droppedRecord.RecordId}");
+                                        for(; recordIndex < request.Records.Count; ++recordIndex) {
+                                            var droppedRecord = request.Records[recordIndex];
+                                            LogInfo($"reingested record (record-id: {droppedRecord.RecordId}");
                                             RecordDropped(droppedRecord);
                                         }
-                                        LogInfo("{0} records have been reingested and dropped", reingestedRecords.Count);
-
-                                        // cancel processing loop
-                                        break;
                                     }
-                                }
-                                _approximateResponseSize += convertedRecordSize;
+                                } else {
+                                    _approximateResponseSize += convertedRecordSize;
 
-                                // record how long it took to process the CloudWatch Log event
-                                if(logEvent.LogEvents.Any()) {
-                                    try {
-                                        var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(logEvent.LogEvents.First().Timestamp);
-                                        LogMetric("LogEvent.Latency", (DateTimeOffset.UtcNow - timestamp).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
-                                    } catch(Exception e) {
-                                        LogError(e, "report log event latency failed");
+                                    // record how long it took to process the CloudWatch Log event
+                                    if(logEvent.LogEvents.Any()) {
+                                        try {
+                                            var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(logEvent.LogEvents.First().Timestamp);
+                                            LogMetric("LogEvent.Latency", (DateTimeOffset.UtcNow - timestamp).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
+                                        } catch(Exception e) {
+                                            LogError(e, "report log event latency failed");
+                                        }
                                     }
-                                }
 
-                                // emit events from converted records
-                                await ProcessConvertedRecordsAsync();
-                                LogInfo($"finished log events record (converted {_convertedRecords.Count:N0}, skipped {logEvent.LogEvents.Count - _convertedRecords.Count:N0}, record-id: {record.RecordId})");
-                                RecordSuccess(record, _convertedRecords.Aggregate("", (accumulator, convertedRecord) => accumulator + convertedRecord.Json + "\n"));
+                                    // emit events from converted records
+                                    await ProcessConvertedRecordsAsync();
+                                    LogInfo($"finished log events (converted {_convertedRecords.Count:N0}, skipped {logEvent.LogEvents.Count - _convertedRecords.Count:N0}, record-id: {record.RecordId})");
+                                    RecordSuccess(record, _convertedRecords.Aggregate("", (accumulator, convertedRecord) => accumulator + convertedRecord.Json + "\n"));
+                                }
                             } else {
                                 LogInfo($"dropped record (record-id: {record.RecordId}");
                                 RecordDropped(record);
@@ -311,6 +309,10 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                         RecordFailed(record);
                     }
                 }
+                var okResponsesCount = response.Records.Count(r => r.Result == KinesisFirehoseResponse.TRANSFORMED_STATE_OK);
+                var failedResponsesCount = response.Records.Count(r => r.Result == KinesisFirehoseResponse.TRANSFORMED_STATE_PROCESSINGFAILED);
+                var droppedResponsesCount = response.Records.Count(r => r.Result == KinesisFirehoseResponse.TRANSFORMED_STATE_DROPPED) - reingestedCount;
+                LogInfo($"processed {request.Records.Count:N0} records (success: {okResponsesCount}, failed: {failedResponsesCount:N0}, dropped: {droppedResponsesCount:N0}, reingested: {reingestedCount:N0})");
             } finally {
 
                 // NOTE (2020-04-21, bjorg): we don't expect this to fail; but since it's done at the end of the processing function, we
