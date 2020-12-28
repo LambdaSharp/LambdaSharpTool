@@ -65,6 +65,10 @@ Items:
               Parameters:
                 - ParameterName: LambdaArn
                   ParameterValue: !GetAtt LoggingStreamAnalyzerFunction.Arn
+                - ParameterName: BufferIntervalInSeconds
+                  ParameterValue: 60
+                - ParameterName: BufferSizeInMBs
+                  ParameterValue: 1
 
   - Parameter: CoreSecretsKey
     Scope: all
