@@ -112,7 +112,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private OwnerMetaData? _selfMetaData;
         private List<ConvertedRecord> _convertedRecords = new List<ConvertedRecord>();
         private int _approximateResponseSize;
-        private IAmazonKinesisFirehose _firehoseClient;
+        private IAmazonKinesisFirehose? _firehoseClient;
 
         //--- Properties ---
         private Logic Logic => _logic ?? throw new InvalidOperationException();
@@ -121,6 +121,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private RollbarClient RollbarClient => _rollbarClient ?? throw new InvalidOperationException();
         private RegistrationTable Registrations => _registrations ?? throw new InvalidOperationException();
         private OwnerMetaData SelfMetaData => _selfMetaData ?? throw new InvalidOperationException();
+        private IAmazonKinesisFirehose FirehoseClient => _firehoseClient ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -267,7 +268,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                                         var reingestedRecords = request.Records.Skip(recordIndex).Select(record => new Record {
                                             Data = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData))
                                         }).ToList();
-                                        await _firehoseClient.PutRecordBatchAsync(firehoseDeliveryStream, reingestedRecords);
+                                        await FirehoseClient.PutRecordBatchAsync(firehoseDeliveryStream, reingestedRecords);
                                         reingestedCount += reingestedRecords.Count;
 
                                         // drop reingested records
