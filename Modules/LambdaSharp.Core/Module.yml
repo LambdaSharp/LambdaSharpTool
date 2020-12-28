@@ -196,7 +196,7 @@ Items:
                 Resource: !GetAtt LoggingStreamAnalyzerFunction.Arn
 
   - Function: LoggingStreamAnalyzerFunction
-    Memory: 1024
+    Memory: 1792
     Timeout: 300
 
   - Resource: LoggingStreamAnalyzerFunctionPermission
