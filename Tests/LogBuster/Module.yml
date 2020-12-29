@@ -1,0 +1,13 @@
+Module: LambdaSharp.LogBuster
+Items:
+
+  - Function: ReadAndFailFunction
+    Memory: 256
+    Timeout: 30
+    Sources:
+      - Sqs: Queue
+
+  - Resource: Queue
+    Type: AWS::SQS::Queue
+    Allow: Send,Receive
+    Scope: ReadAndFailFunction

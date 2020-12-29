@@ -65,6 +65,10 @@ Items:
               Parameters:
                 - ParameterName: LambdaArn
                   ParameterValue: !GetAtt LoggingStreamAnalyzerFunction.Arn
+                - ParameterName: BufferIntervalInSeconds
+                  ParameterValue: 60
+                - ParameterName: BufferSizeInMBs
+                  ParameterValue: 1
 
   - Parameter: CoreSecretsKey
     Scope: all
@@ -192,8 +196,23 @@ Items:
                 Resource: !GetAtt LoggingStreamAnalyzerFunction.Arn
 
   - Function: LoggingStreamAnalyzerFunction
-    Memory: 256
+    Memory: 1792
     Timeout: 300
+
+  - Resource: LoggingStreamAnalyzerFunctionPermission
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${AWS::StackName}FunctionFirehosePolicy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: CloudWatchLogsFirehosePermissions
+            Effect: Allow
+            Action:
+              - firehose:PutRecordBatch
+            Resource: !Ref LoggingStream
+      Roles:
+        - !Ref Module::Role
 
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
