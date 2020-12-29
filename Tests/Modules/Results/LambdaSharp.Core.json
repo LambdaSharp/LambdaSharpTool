@@ -95,7 +95,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "948DF4DD8E9E4693E0BEAFA681577E55"
+      "Default": "A61E19E104CB541F26FA4037480E4E96"
     }
   },
   "Resources": {
@@ -155,6 +155,14 @@
                         "Arn"
                       ]
                     }
+                  },
+                  {
+                    "ParameterName": "BufferIntervalInSeconds",
+                    "ParameterValue": "60"
+                  },
+                  {
+                    "ParameterName": "BufferSizeInMBs",
+                    "ParameterValue": "1"
                   }
                 ]
               }
@@ -467,7 +475,7 @@
           }
         },
         "Handler": "LoggingStreamAnalyzerFunction::LambdaSharp.Core.LoggingStreamAnalyzerFunction.Function::FunctionHandlerAsync",
-        "MemorySize": "256",
+        "MemorySize": "1792",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -494,6 +502,45 @@
           "Fn::Sub": "/aws/lambda/${LoggingStreamAnalyzerFunction}"
         },
         "RetentionInDays": 30
+      }
+    },
+    "LoggingStreamAnalyzerFunctionPermission": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}FunctionFirehosePolicy"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "CloudWatchLogsFirehosePermissions",
+              "Effect": "Allow",
+              "Action": [
+                "firehose:PutRecordBatch"
+              ],
+              "Resource": {
+                "Fn::If": [
+                  "LoggingFirehoseStreamIsBlank",
+                  {
+                    "Fn::GetAtt": [
+                      "LoggingFirehoseStreamResource",
+                      "Arn"
+                    ]
+                  },
+                  {
+                    "Ref": "LoggingFirehoseStream"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
       }
     },
     "RegistrationTable": {
@@ -1326,7 +1373,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "948DF4DD8E9E4693E0BEAFA681577E55",
+      "TemplateChecksum": "A61E19E104CB541F26FA4037480E4E96",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [

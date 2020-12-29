@@ -311,13 +311,22 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
         }
 
         [Fact]
-        public void X() {
+        public void ExitWithoutReason() {
             _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Error: Runtime exited without providing a reason\nRuntime.ExitError", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("Runtime exited without providing a reason [Runtime.ExitError]");
             _provider.ErrorReport.Level.Should().Be("FATAL");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
+        }
+
+        [Fact]
+        public void ResponseTooLong() {
+            _logic.ProgressLogEntryAsync(_owner, "The Lambda function returned a response that is too long to serialize. The response size limit for a Lambda function is 6MB.: ArgumentException\n    at AWSLambda.Internal.Bootstrap.GenericSerializers.StreamSerializer.Serialize(Stream customerData, Stream outStream) in /opt/workspace/LambdaBYOLDotNetCore31/src/Bootstrap/Serializers/StreamSerializer.cs:line 48\n    at lambda_method(Closure , Stream , Stream , LambdaContextInternal )\n\n    at System.IO.UnmanagedMemoryStream.WriteCore(ReadOnlySpan`1 buffer)\n    at System.IO.UnmanagedMemoryStream.Write(Byte[] buffer, Int32 offset, Int32 count)\n    at System.IO.MemoryStream.CopyTo(Stream destination, Int32 bufferSize)\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            CommonErrorReportAsserts();
+            _provider.ErrorReport.Message.Should().Be("The Lambda function returned a response that is too long to serialize. The response size limit for a Lambda function is 6MB.");
+            _provider.ErrorReport.Level.Should().Be("FATAL");
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
         }
         #endregion
 

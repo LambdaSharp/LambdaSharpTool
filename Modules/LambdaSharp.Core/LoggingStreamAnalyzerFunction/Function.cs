@@ -27,6 +27,8 @@ using System.Threading.Tasks;
 using Amazon.CloudWatchEvents;
 using Amazon.CloudWatchEvents.Model;
 using Amazon.DynamoDBv2;
+using Amazon.KinesisFirehose;
+using Amazon.KinesisFirehose.Model;
 using Amazon.Lambda.KinesisFirehoseEvents;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
@@ -71,12 +73,31 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         public string? Record { get; set; }
     }
 
+    public sealed class ConvertedLogEntry {
+
+        //--- Constructors ---
+        public ConvertedLogEntry(OwnerMetaData owner, DateTimeOffset timestamp, ALambdaLogRecord record, string json) {
+            Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            Timestamp = timestamp;
+            Record = record ?? throw new ArgumentNullException(nameof(record));
+            Json = json ?? throw new ArgumentNullException(nameof(json));
+        }
+
+        //--- Properties ---
+        public OwnerMetaData Owner { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
+        public ALambdaLogRecord Record { get; set; }
+        public string Json { get; set; }
+        public int SerializedByteCount => Encoding.UTF8.GetByteCount(Json);
+    }
+
     public sealed class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse>, ILogicDependencyProvider {
 
         //--- Constants ---
         private const string LAMBDA_LOG_GROUP_PREFIX = "/aws/lambda/";
         private const int MAX_EVENTS_BATCHSIZE = 256 * 1024;
         private const int MAX_EVENTS_COUNT = 10;
+        private const int RESPONSE_SIZE_LIMIT = 3_000_000;
 
         //--- Fields ---
         private Logic? _logic;
@@ -89,7 +110,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private List<PutEventsRequestEntry> _eventEntries = new List<PutEventsRequestEntry>();
         private int _eventsEntriesTotalSize = 0;
         private OwnerMetaData? _selfMetaData;
-        private List<string> _convertedRecords = new List<string>();
+        private List<ConvertedLogEntry> _convertedLogEvents = new List<ConvertedLogEntry>();
+        private int _approximateResponseSize;
+        private IAmazonKinesisFirehose? _firehoseClient;
 
         //--- Properties ---
         private Logic Logic => _logic ?? throw new InvalidOperationException();
@@ -98,16 +121,22 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private RollbarClient RollbarClient => _rollbarClient ?? throw new InvalidOperationException();
         private RegistrationTable Registrations => _registrations ?? throw new InvalidOperationException();
         private OwnerMetaData SelfMetaData => _selfMetaData ?? throw new InvalidOperationException();
+        private IAmazonKinesisFirehose FirehoseClient => _firehoseClient ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
             _logic = new Logic(this);
+
+            // read configuration settings
             var tableName = config.ReadDynamoDBTableName("RegistrationTable");
+
+            // initialize clients
             var dynamoClient = new AmazonDynamoDBClient();
             _registrations = new RegistrationTable(dynamoClient, tableName);
             _cachedRegistrations = new Dictionary<string, OwnerMetaData>();
             _rollbarClient = new RollbarClient(null, null, message => LogInfo(message));
             _eventsClient = new AmazonCloudWatchEventsClient();
+            _firehoseClient = new AmazonKinesisFirehoseClient();
             _selfMetaData = new OwnerMetaData {
                 ModuleInfo = Info.ModuleInfo,
                 Module = Info.ModuleFullName,
@@ -130,111 +159,142 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var response = new KinesisFirehoseResponse {
                 Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
             };
+            _approximateResponseSize = 0;
+            var reingestedCount = 0;
             try {
-                foreach(var record in request.Records) {
+                for(var recordIndex = 0; recordIndex < request.Records.Count; ++recordIndex) {
+                    var record = request.Records[recordIndex];
                     try {
-
-                        // deserialize kinesis record into a CloudWatch Log event
-                        LogEventsMessage logEvent;
-                        using(var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData)))
-                        using(var destinationStream = new MemoryStream()) {
-                            using(var gzip = new GZipStream(sourceStream, CompressionMode.Decompress)) {
-                                gzip.CopyTo(destinationStream);
-                                destinationStream.Position = 0;
-                            }
-                            logEvent = LambdaSerializer.Deserialize<LogEventsMessage>(Encoding.UTF8.GetString(destinationStream.ToArray()));
-                        }
+                        var logEventsMessage = ConvertRecordToLogEventsMessage(record);
 
                         // validate log event
                         if(
-                            (logEvent.LogGroup == null)
-                            || (logEvent.MessageType == null)
-                            || (logEvent.LogEvents == null)
+                            (logEventsMessage.LogGroup is null)
+                            || (logEventsMessage.MessageType is null)
+                            || (logEventsMessage.LogEvents is null)
                         ) {
-                            LogWarn("invalid record (record-id: {0})", record.RecordId);
+                            LogWarn("invalid log events message (record-id: {0})", record.RecordId);
                             RecordFailed(record);
                             continue;
                         }
 
                         // skip log event from own module
-                        if(logEvent.LogGroup.Contains(Info.FunctionName)) {
-                            LogInfo("skipping event from own event log (record-id: {0})", record.RecordId);
+                        if(logEventsMessage.LogGroup.Contains(Info.FunctionName)) {
+                            LogInfo($"skipping log events message from own event log (record-id: {record.RecordId})");
                             RecordDropped(record);
                             continue;
                         }
 
                         // skip control log event
-                        if(logEvent.MessageType == "CONTROL_MESSAGE") {
-                            LogInfo("skipping control message (record-id: {0})", record.RecordId);
+                        if(logEventsMessage.MessageType == "CONTROL_MESSAGE") {
+                            LogInfo($"skipping control log events message (record-id: {record.RecordId})");
                             RecordDropped(record);
                             continue;
                         }
 
                         // check if this log event is expected
-                        if(logEvent.MessageType != "DATA_MESSAGE") {
-                            LogWarn("unknown message type '{1}' (record-id: {0})", record.RecordId, logEvent.MessageType);
+                        if(logEventsMessage.MessageType != "DATA_MESSAGE") {
+                            LogWarn("unknown log events message type '{1}' (record-id: {0})", record.RecordId, logEventsMessage.MessageType);
                             RecordFailed(record);
                             continue;
                         }
 
                         // check if log group belongs to a Lambda function
                         OwnerMetaData? owner;
-                        if(logEvent.LogGroup.StartsWith(LAMBDA_LOG_GROUP_PREFIX, StringComparison.Ordinal)) {
+                        if(logEventsMessage.LogGroup.StartsWith(LAMBDA_LOG_GROUP_PREFIX, StringComparison.Ordinal)) {
 
                             // use CloudWatch log name to identify owner of the log event
-                            var functionId = logEvent.LogGroup.Substring(LAMBDA_LOG_GROUP_PREFIX.Length);
+                            var functionId = logEventsMessage.LogGroup.Substring(LAMBDA_LOG_GROUP_PREFIX.Length);
                             owner = await GetOwnerMetaDataAsync($"F:{functionId}");
                         } else {
-                            owner = await GetOwnerMetaDataAsync($"L:{logEvent.LogGroup}");
+                            owner = await GetOwnerMetaDataAsync($"L:{logEventsMessage.LogGroup}");
                         }
 
                         // check if owner record exists
                         if(owner == null) {
-                            LogInfo("skipping record for non-registered log-group (record-id: {0}, log-group: {1})", record.RecordId, logEvent.LogGroup);
+                            LogInfo($"skipping log events message for unknown log-group (record-id: {record.RecordId}, log-group: {logEventsMessage.LogGroup})");
                             RecordDropped(record);
                             continue;
                         }
 
                         // process entries in log event
-                        _convertedRecords.Clear();
+                        _convertedLogEvents.Clear();
                         var success = true;
-                        var logEventIndex = -1;
-                        foreach(var entry in logEvent.LogEvents) {
-                            ++logEventIndex;
+                        for(var logEventIndex = 0; logEventIndex < logEventsMessage.LogEvents.Count; ++logEventIndex) {
+                            var logEvent = logEventsMessage.LogEvents[logEventIndex];
                             try {
                                 await Logic.ProgressLogEntryAsync(
                                     owner,
-                                    entry.Message,
-                                    DateTimeOffset.FromUnixTimeMilliseconds(entry.Timestamp)
+                                    logEvent.Message,
+                                    DateTimeOffset.FromUnixTimeMilliseconds(logEvent.Timestamp)
                                 );
                             } catch(Exception e) {
                                 if(owner.FunctionId != null) {
-                                    LogError(e, "log event entry [{1}] processing failed (function-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, entry.Message, owner.FunctionId);
+                                    LogError(e, "log event [{1}] processing failed (function-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message, owner.FunctionId);
                                 } else if(owner.AppId != null) {
-                                    LogError(e, "log event entry [{1}] processing failed (app-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, entry.Message, owner.AppId);
+                                    LogError(e, "log event [{1}] processing failed (app-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message, owner.AppId);
                                 } else {
-                                    LogError(e, "log event entry [{1}] processing failed (log-group: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, entry.Message, logEvent.LogGroup);
+                                    LogError(e, "log event [{1}] processing failed (log-group: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message, logEventsMessage.LogGroup);
                                 }
+
+                                // mark this log events message as failed and stop processing more log events
                                 success = false;
                                 break;
                             }
                         }
 
-                        // record how long it took to process the CloudWatch Log event
-                        if(logEvent.LogEvents.Any()) {
-                            try {
-                                var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(logEvent.LogEvents.First().Timestamp);
-                                LogMetric("LogEvent.Latency", (DateTimeOffset.UtcNow - timestamp).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
-                            } catch(Exception e) {
-                                LogError(e, "report log event latency failed");
-                            }
-                        }
-
-                        // record outcome
+                        // check outcome of processing log events message
                         if(success) {
-                            if(_convertedRecords.Any()) {
-                                LogInfo($"finished log events record (converted {_convertedRecords.Count:N0}, skipped {logEvent.LogEvents.Count - _convertedRecords.Count:N0}, record-id: {record.RecordId})");
-                                RecordSuccess(record, _convertedRecords.Aggregate("", (accumulator, convertedRecord) => accumulator + convertedRecord + "\n"));
+
+                            // check if any log events were converted
+                            if(_convertedLogEvents.Any()) {
+
+                                // calculate size of the converted log events
+                                var convertedLogEventsSize = _convertedLogEvents.Sum(convertedLogEvent => convertedLogEvent.SerializedByteCount);
+                                if((_approximateResponseSize + convertedLogEventsSize) > RESPONSE_SIZE_LIMIT) {
+
+                                    // check if response size was exceeded on first record
+                                    if(response.Records.Count == 0) {
+
+                                        // skip record since it's the first record and we cannot serialize it due to response size limits
+                                        LogWarn("record too large to convert (record-id: {0})", record.RecordId);
+                                        RecordFailed(record);
+                                    } else {
+                                        LogInfo($"reached Lambda response limit (response: {_approximateResponseSize:N0}, limit: {RESPONSE_SIZE_LIMIT:N0})");
+
+                                        // reingest remaining records since the response will be too large otherwise
+                                        var firehoseDeliveryStream = request.DeliveryStreamArn.Split('/').Last();
+                                        var reingestedRecords = request.Records.Skip(recordIndex).Select(record => new Record {
+                                            Data = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData))
+                                        }).ToList();
+                                        await FirehoseClient.PutRecordBatchAsync(firehoseDeliveryStream, reingestedRecords);
+                                        reingestedCount += reingestedRecords.Count;
+
+                                        // drop reingested records
+                                        for(; recordIndex < request.Records.Count; ++recordIndex) {
+                                            var droppedRecord = request.Records[recordIndex];
+                                            LogInfo($"reingested record (record-id: {droppedRecord.RecordId}");
+                                            RecordDropped(droppedRecord);
+                                        }
+                                    }
+                                } else {
+                                    _approximateResponseSize += convertedLogEventsSize;
+
+                                    // measure how long it took to successfully process the first CloudWatch Log event in the record
+                                    if(logEventsMessage.LogEvents.Any()) {
+                                        try {
+                                            var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(logEventsMessage.LogEvents.First().Timestamp);
+                                            LogMetric("LogEvent.Latency", (DateTimeOffset.UtcNow - timestamp).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
+                                        } catch(Exception e) {
+                                            LogError(e, "report log event latency failed");
+                                        }
+                                    }
+
+                                    // emit LambdaSharp events from converted log entries
+                                    await ProcessConvertedLogEntriesAsync();
+                                    LogInfo($"finished converting log events (converted {_convertedLogEvents.Count:N0}, skipped {logEventsMessage.LogEvents.Count - _convertedLogEvents.Count:N0}, record-id: {record.RecordId})");
+                                    RecordSuccess(record, _convertedLogEvents.Aggregate("", (accumulator, convertedLogEvent) => accumulator + convertedLogEvent.Json + "\n"));
+                                }
                             } else {
                                 LogInfo($"dropped record (record-id: {record.RecordId}");
                                 RecordDropped(record);
@@ -249,6 +309,12 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                         RecordFailed(record);
                     }
                 }
+
+                // show processing outcome
+                var okResponsesCount = response.Records.Count(r => r.Result == KinesisFirehoseResponse.TRANSFORMED_STATE_OK);
+                var failedResponsesCount = response.Records.Count(r => r.Result == KinesisFirehoseResponse.TRANSFORMED_STATE_PROCESSINGFAILED);
+                var droppedResponsesCount = response.Records.Count(r => r.Result == KinesisFirehoseResponse.TRANSFORMED_STATE_DROPPED) - reingestedCount;
+                LogInfo($"processed {request.Records.Count:N0} records (success: {okResponsesCount}, failed: {failedResponsesCount:N0}, dropped: {droppedResponsesCount:N0}, reingested: {reingestedCount:N0})");
             } finally {
 
                 // NOTE (2020-04-21, bjorg): we don't expect this to fail; but since it's done at the end of the processing function, we
@@ -263,12 +329,27 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 try {
                     PurgeEventEntries();
                 } catch(Exception exception) {
+
+                    // NOTE (2020-12-28, bjorg): don't use LogError() as it will eventually send an event, since there
+                    //  is no other reporting mechanism for LambdaSharp.Core otherwise.
                     Provider.Log($"EXCEPTION: {exception}\n");
                 }
             }
             return response;
 
             // local functions
+            LogEventsMessage ConvertRecordToLogEventsMessage(KinesisFirehoseEvent.FirehoseRecord record) {
+
+                // deserialize kinesis record into a CloudWatch Log events message
+                using var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData));
+                using var recordData = new MemoryStream();
+                using(var gzip = new GZipStream(sourceStream, CompressionMode.Decompress)) {
+                    gzip.CopyTo(recordData);
+                    recordData.Position = 0;
+                }
+                return LambdaSerializer.Deserialize<LogEventsMessage>(Encoding.UTF8.GetString(recordData.ToArray()));
+            }
+
             void RecordSuccess(KinesisFirehoseEvent.FirehoseRecord record, string data)
                 => response.Records.Add(new KinesisFirehoseResponse.FirehoseRecord {
                     RecordId = record.RecordId,
@@ -546,8 +627,78 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             }
         }
 
-        private void AddConvertedRecord(OwnerMetaData owner, DateTimeOffset timestamp, ALambdaLogRecord record)
-            => _convertedRecords.Add(LambdaSerializer.Serialize(new LogRecord {
+        private async Task ProcessConvertedLogEntriesAsync() {
+
+            // loop over all converted log entries and emit LambdaSharp events were applicable
+            foreach(var convertedLogEntry in _convertedLogEvents) {
+                var owner = convertedLogEntry.Owner;
+                var timestamp = convertedLogEntry.Timestamp;
+                switch(convertedLogEntry.Record) {
+                case LambdaErrorReport errorReport: {
+
+                    // send parsed error report to event bus
+                    var eventRecord = new LambdaEventRecord {
+                        Source = "LambdaSharp",
+                        DetailType = "LambdaError",
+                        Detail = LambdaSerializer.Serialize(errorReport)
+                    };
+                    eventRecord.SetTime(timestamp);
+                    SendEventRecord(owner, eventRecord);
+
+                    // capture reporting metrics
+                    switch(errorReport.Level) {
+                    case "ERROR":
+                        ++_errorsReportsCount;
+                        break;
+                    case "WARNING":
+                        ++_warningsReportsCount;
+                        break;
+                    }
+
+                    // publish error report to Rollbar
+                    try {
+                        await PublishErrorReportToRollbarAsync(owner, errorReport);
+                    } catch(Exception e) {
+                        LogErrorAsWarning(e, "failed sending error report to Rollbar");
+                    }
+                    break;
+                }
+                case LambdaUsageRecord usageReport: {
+
+                    // publish usage report to the event bus
+                    var eventRecord = new LambdaEventRecord {
+                        Source = "LambdaSharp",
+                        DetailType = "LambdaUsage",
+                        Detail = LambdaSerializer.Serialize(usageReport)
+                    };
+                    eventRecord.SetTime(timestamp);
+                    SendEventRecord(owner, eventRecord);
+                    break;
+                }
+                case LambdaEventRecord eventRecord:
+
+                    // nothing to do; events are logged as they are emitted
+                    break;
+                case LambdaMetricsRecord metricsRecord: {
+
+                    // publish metrics to the event bus
+                    var metricsEventRecord = new LambdaEventRecord {
+                        Source = "LambdaSharp",
+                        DetailType = "LambdaMetrics",
+                        Detail = LambdaSerializer.Serialize(metricsRecord)
+                    };
+                    metricsEventRecord.SetTime(DateTimeOffset.FromUnixTimeMilliseconds(metricsRecord.Aws.Timestamp));
+                    SendEventRecord(owner, metricsEventRecord);
+                    break;
+                }
+                default:
+                    throw new ArgumentException($"unexpected type: {convertedLogEntry.Record?.GetType().FullName ?? "n/a"}");
+                }
+            }
+        }
+
+        private void AddConvertedLogEntry(OwnerMetaData owner, DateTimeOffset timestamp, ALambdaLogRecord record)
+            => _convertedLogEvents.Add(new ConvertedLogEntry(owner, timestamp, record, LambdaSerializer.Serialize(new LogRecord {
                 Timestamp = timestamp.ToUnixTimeMilliseconds(),
                 ModuleInfo = owner.ModuleInfo,
                 Module = owner.Module,
@@ -557,73 +708,19 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 Tier = Info.DeploymentTier,
                 RecordType = record.Type,
                 Record = LambdaSerializer.Serialize<object>(record)
-            }));
+            })));
 
         //--- ILogicDependencyProvider Members ---
-        async Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report) {
+        async Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report)
+            => AddConvertedLogEntry(owner, timestamp, report);
 
-            // send parsed error report to event bus
-            var eventRecord = new LambdaEventRecord {
-                Source = "LambdaSharp",
-                DetailType = "LambdaError",
-                Detail = LambdaSerializer.Serialize(report)
-            };
-            eventRecord.SetTime(timestamp);
-            SendEventRecord(owner, eventRecord);
+        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaUsageRecord report)
+            => AddConvertedLogEntry(owner, timestamp, report);
 
-            // capture reporting metrics
-            switch(report.Level) {
-            case "ERROR":
-                ++_errorsReportsCount;
-                break;
-            case "WARNING":
-                ++_warningsReportsCount;
-                break;
-            }
+        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaEventRecord record)
+            => AddConvertedLogEntry(owner, timestamp, record);
 
-            // capture error report as converted record
-            AddConvertedRecord(owner, timestamp, report);
-
-            // publish error report to Rollbar
-            try {
-                await PublishErrorReportToRollbarAsync(owner, report);
-            } catch(Exception e) {
-                LogErrorAsWarning(e, "failed sending error report to Rollbar");
-            }
-        }
-
-        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaUsageRecord report) {
-
-            // publish usage report to the event bus
-            SendEventRecord(owner, new LambdaEventRecord {
-                Source = "LambdaSharp",
-                DetailType = "LambdaUsage",
-                Detail = LambdaSerializer.Serialize(report)
-            });
-
-            // capture usage report as converted record
-            AddConvertedRecord(owner, timestamp, report);
-        }
-
-        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaEventRecord record) {
-
-            // capture event as converted record
-            AddConvertedRecord(owner, timestamp, record);
-        }
-
-        async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record) {
-
-            // publish metrics to the event bus
-            var eventRecord = new LambdaEventRecord {
-                Source = "LambdaSharp",
-                DetailType = "LambdaMetrics",
-                Detail = LambdaSerializer.Serialize(record)
-            };
-            eventRecord.SetTime(DateTimeOffset.FromUnixTimeMilliseconds(record.Aws.Timestamp));
-            SendEventRecord(owner, eventRecord);
-
-            // capture metrics as converted record
-            AddConvertedRecord(owner, timestamp, record);
-        }
+        async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record)
+            => AddConvertedLogEntry(owner, timestamp, record);
     }
 }
