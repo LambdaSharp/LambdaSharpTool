@@ -75,14 +75,14 @@ namespace LambdaSharp.S3.IO.S3Writer {
             : Bucket;
     }
 
-    public class S3WriterResourceAttribute {
+    public class S3WriterResourceAttributes {
 
         //--- Properties ---
         public string Url { get; set; }
         public string BucketName { get; set; }
     }
 
-    public sealed class Function : ALambdaCustomResourceFunction<S3WriterResourceProperties, S3WriterResourceAttribute> {
+    public sealed class Function : ALambdaCustomResourceFunction<S3WriterResourceProperties, S3WriterResourceAttributes> {
 
         //--- Fields ---
         private string _manifestBucket;
@@ -100,7 +100,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             _emptyBucketLogic = new EmptyBucketLogic(Logger, _s3Client);
         }
 
-        public override async Task<Response<S3WriterResourceAttribute>> ProcessCreateResourceAsync(Request<S3WriterResourceProperties> request) {
+        public override async Task<Response<S3WriterResourceAttributes>> ProcessCreateResourceAsync(Request<S3WriterResourceProperties> request) {
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Create(request.ResourceProperties);
@@ -113,7 +113,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             }
         }
 
-        public override async Task<Response<S3WriterResourceAttribute>> ProcessUpdateResourceAsync(Request<S3WriterResourceProperties> request) {
+        public override async Task<Response<S3WriterResourceAttributes>> ProcessUpdateResourceAsync(Request<S3WriterResourceProperties> request) {
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Update(request.OldResourceProperties, request.ResourceProperties);
@@ -126,7 +126,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             }
         }
 
-        public override async Task<Response<S3WriterResourceAttribute>> ProcessDeleteResourceAsync(Request<S3WriterResourceProperties> request) {
+        public override async Task<Response<S3WriterResourceAttributes>> ProcessDeleteResourceAsync(Request<S3WriterResourceProperties> request) {
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Delete(request.ResourceProperties);
@@ -137,7 +137,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             default:
 
                 // nothing to do since we didn't process this request successfully in the first place!
-                return new Response<S3WriterResourceAttribute>();
+                return new Response<S3WriterResourceAttributes>();
            }
         }
     }

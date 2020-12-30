@@ -10,7 +10,6 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using LambdaSharp.App.EventBus.Records;
 using LambdaSharp.App.EventBus.Actions;
-using LambdaSharp;
 using LambdaSharp.ApiGateway;
 using Newtonsoft.Json.Linq;
 

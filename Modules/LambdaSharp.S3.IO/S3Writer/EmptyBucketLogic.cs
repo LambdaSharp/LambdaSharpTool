@@ -39,25 +39,25 @@ namespace LambdaSharp.S3.IO.S3Writer {
         }
 
         //--- Methods ---
-        public async Task<Response<S3WriterResourceAttribute>> Create(S3WriterResourceProperties properties) {
+        public async Task<Response<S3WriterResourceAttributes>> Create(S3WriterResourceProperties properties) {
 
             // nothing to do on create
-            return new Response<S3WriterResourceAttribute> {
+            return new Response<S3WriterResourceAttributes> {
                 PhysicalResourceId = $"s3emptybucket:{properties.BucketName}",
-                Attributes = new S3WriterResourceAttribute {
+                Attributes = new S3WriterResourceAttributes {
                     BucketName = properties.BucketName
                 }
             };
         }
 
-        public Task<Response<S3WriterResourceAttribute>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties)
+        public Task<Response<S3WriterResourceAttributes>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties)
             => Create(properties);
 
-        public async Task<Response<S3WriterResourceAttribute>> Delete(S3WriterResourceProperties properties) {
+        public async Task<Response<S3WriterResourceAttributes>> Delete(S3WriterResourceProperties properties) {
             if(properties.Enabled == false) {
 
                 // don't do anything if disabled
-                return new Response<S3WriterResourceAttribute>();
+                return new Response<S3WriterResourceAttributes>();
             }
             var bucketName = properties.BucketName;
             _logger.LogInfo($"emptying bucket: {bucketName}");
@@ -90,7 +90,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             // wait for all deletions to complete
             await Task.WhenAll(deletions);
             _logger.LogInfo($"deleted {counter:N0} objects");
-            return new Response<S3WriterResourceAttribute>();
+            return new Response<S3WriterResourceAttributes>();
         }
     }
 }

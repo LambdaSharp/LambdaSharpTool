@@ -26,5 +26,4 @@ Items:
     Memory: 128
     Timeout: 15
     Sources:
-
       - S3: Bucket

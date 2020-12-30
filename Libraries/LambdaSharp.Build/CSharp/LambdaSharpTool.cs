@@ -213,7 +213,7 @@ namespace LambdaSharp.Build.CSharp {
                                     uriParameters.Add(new KeyValuePair<string, bool>(name, required));
                                 }
 
-                                // NOTE (2020-08-10, bjorg): System.Text.Json does not deserialize fields
+                                // TODO (2020-08-10, bjorg): System.Text.Json does not deserialize fields; check which deserializer is used
 
                                 // add complex-type fields
                                 foreach(var field in queryParameterType.GetFields(BindingFlags.Instance | BindingFlags.Public)) {

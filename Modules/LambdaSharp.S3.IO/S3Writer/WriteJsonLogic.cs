@@ -43,7 +43,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
         }
 
         //--- Methods ---
-        public async Task<Response<S3WriterResourceAttribute>> Create(S3WriterResourceProperties properties) {
+        public async Task<Response<S3WriterResourceAttributes>> Create(S3WriterResourceProperties properties) {
             _logger.LogInfo($"writing JSON file to s3://{properties.BucketName}/{properties.Key}");
             var contents = Serialize(properties.Contents);
             await _s3Client.PutObjectAsync(new PutObjectRequest {
@@ -53,18 +53,18 @@ namespace LambdaSharp.S3.IO.S3Writer {
                 Key = properties.Key
             });
             _logger.LogInfo($"JSON file written ({Encoding.UTF8.GetByteCount(contents):N0} bytes)");
-            return new Response<S3WriterResourceAttribute> {
+            return new Response<S3WriterResourceAttributes> {
                 PhysicalResourceId = $"s3writejson:{properties.BucketName}:{properties.Key}",
-                Attributes = new S3WriterResourceAttribute {
+                Attributes = new S3WriterResourceAttributes {
                     Url = $"s3://{properties.BucketName}/{properties.Key}"
                 }
             };
         }
 
-        public Task<Response<S3WriterResourceAttribute>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties)
+        public Task<Response<S3WriterResourceAttributes>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties)
             => Create(properties);
 
-        public async Task<Response<S3WriterResourceAttribute>> Delete(S3WriterResourceProperties properties) {
+        public async Task<Response<S3WriterResourceAttributes>> Delete(S3WriterResourceProperties properties) {
             _logger.LogInfo($"deleting JSON file at s3://{properties.BucketName}/{properties.Key}");
             try {
                 await _s3Client.DeleteObjectAsync(new DeleteObjectRequest {
@@ -74,7 +74,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             } catch(Exception e) {
                 _logger.LogErrorAsWarning(e, "unable to delete JSON file at s3://{0}/{1}", properties.BucketName, properties.Key);
             }
-            return new Response<S3WriterResourceAttribute>();
+            return new Response<S3WriterResourceAttributes>();
         }
 
         private string Serialize(object contents) {

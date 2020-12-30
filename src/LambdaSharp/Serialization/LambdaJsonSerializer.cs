@@ -37,9 +37,16 @@ namespace LambdaSharp.Serialization {
         /// <summary>
         /// Constructs instance of serializer.
         /// </summary>
-        public LambdaJsonSerializer() : base(settings => {
-            settings.NullValueHandling = NullValueHandling.Ignore;
+        public LambdaJsonSerializer() : this(customizeSerializerSettings: null) { }
+
+        /// <summary>
+        /// Constructs instance of serializer.
+        /// </summary>
+        /// <param name="customizeSerializerSettings">A callback to customize the serializer settings.</param>
+        public LambdaJsonSerializer(Action<JsonSerializerSettings> customizeSerializerSettings) : base(settings => {
             _staticSettings = settings;
+            settings.NullValueHandling = NullValueHandling.Ignore;
+            customizeSerializerSettings?.Invoke(settings);
         }) { }
 
         /// <summary>

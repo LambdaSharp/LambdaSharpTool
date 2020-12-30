@@ -31,7 +31,7 @@ namespace ScheduleSample.MyFunction {
         public override async Task ProcessEventAsync(LambdaScheduleEvent schedule) {
             LogInfo($"Id = {schedule.Id}");
             LogInfo($"Time = {schedule.Time}");
-            LogInfo($"Name = {schedule.Name}");
+            LogInfo($"Name = '{schedule.Name}'");
         }
     }
 }
