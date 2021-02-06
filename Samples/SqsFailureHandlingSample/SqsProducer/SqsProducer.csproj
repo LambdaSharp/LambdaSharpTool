@@ -8,9 +8,6 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.102.93" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
   </ItemGroup>
 </Project>

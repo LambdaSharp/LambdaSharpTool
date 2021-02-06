@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.1.4) - TBD
+# LambdaSharp "Hicetas" Release (v0.8.1.6) - 2020-12-28
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,12 +141,38 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.1.4) - TBD
+### (v0.8.1.6) - 2020-12-28
+
+#### Features
+
+* CLI
+  * Updated embedded CloudFormation spec to 22.0.0.
+
+#### Fixes
+
+* Modules
+  * Fixed a critical issue in _LambdaSharp.Core_ where the CloudWatch Logs analyzer would get overwhelmed at times. This would cause the same batch of log events to be processed repeatedly causing a storm of CloudWatch event notifications until the batch finally failed. Failed batches can be found in the logging bucket under the `logging-failed/` prefix.
+
+### (v0.8.1.5) - 2020-12-26
+
+#### Features
+
+* CLI
+  * Enhanced `lash new` command to prompt for type of file to create (app, function, or resource). Defaults to `module` when no `Module.yml` file is present.
+  * Enhanced `lash util list-modules` command to show a message when pre-release modules were omitted from the list.
+
+#### Fixes
+
+* CLI
+  * Fixed a NRE in `lash util list-modules` when the bucket name was passed in as an option instead of an argument.
+
+### (v0.8.1.4) - 2020-11-20
 
 #### Fixes
 
 * CLI
   * Fixed an issue where the `nuke` command did not delete all stacks as expected.
+  * Fixed an issue where interactive commands would cause an audible alert for short running operations.
 
 ### (v0.8.1.3) - 2020-10-21
 

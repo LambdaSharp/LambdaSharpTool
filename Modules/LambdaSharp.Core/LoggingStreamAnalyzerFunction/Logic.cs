@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -131,6 +131,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 // Lambda runtime exceptions need to be reported; these occur when there is an exception to locate
                 //  the constructor or inside the constructor.
                 CreateMatchPattern(@"^(?<ErrorMessage>[^:]+): LambdaException$", MatchLambdaExceptionAsync),
+
+                // NOTE (2020-12-27, bjorg): this runtime error contains the word 'Exception' and must be handled before we ignore such entries (see next pattern)
+                CreateMatchPattern(@"^(?<ErrorMessage>The Lambda function returned a response that is too long to serialize\.)", MatchLambdaresponseTooLongAsync),
 
                 // NOTE (2020-05-12, bjorg): this message is shown when an exception bubbles out of the Lambda function; since
                 //  all exceptions are already logged as LambdaError records, this log entry is not needed.
@@ -327,6 +330,16 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                     report.Level = "FATAL";
                 }
             }
+            report.RequestId = GetRequestId(match);
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
+        }
+
+        private Task MatchLambdaresponseTooLongAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
+            var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
+            report.Message = message.Split(new[] { ':', '\n' })[0];
+
+            // NOTE (2020-12-27, bjorg): this message is shown on an unrecoverable exception being thrown during Lambda execution
+            report.Level = "FATAL";
             report.RequestId = GetRequestId(match);
             return _provider.SendErrorReportAsync(owner, timestamp, report);
         }

@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -324,6 +324,7 @@ namespace LambdaSharp.Tool {
                 Console.WriteLine($"{PromptColor}{constraintDescription ?? $"Value must match regular expression pattern: {pattern}"}{ResetColor}");
                 goto again;
             }
+            Program.ResetBeepTimer();
             return string.IsNullOrEmpty(result)
                 ? defaultValue
                 : result;
@@ -361,7 +362,9 @@ namespace LambdaSharp.Tool {
                 LogError($"prompt was attempted for \"{message}\"");
                 return defaultAnswer;
             }
-            return Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
+            var result = Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
+            Program.ResetBeepTimer();
+            return result;
         }
 
         public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);

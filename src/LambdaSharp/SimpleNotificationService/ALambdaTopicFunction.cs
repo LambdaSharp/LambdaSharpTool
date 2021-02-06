@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -136,7 +136,7 @@ namespace LambdaSharp.SimpleNotificationService {
                     try {
 
                         // attempt to send failed message to the dead-letter queue
-                        await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.SQS, LambdaSerializer.Serialize(snsEventBody), e);
+                        await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.SNS, LambdaSerializer.Serialize(snsEventBody), e);
 
                         // record failed processing metrics
                         metrics.Add(("MessageDead.Count", 1, LambdaMetricUnit.Count));

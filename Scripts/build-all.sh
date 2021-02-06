@@ -5,4 +5,12 @@ if [ -z "$LAMBDASHARP" ]; then
 fi
 
 find "$LAMBDASHARP" -name 'bin' -or -name 'obj' | xargs rm -rf
-find "$LAMBDASHARP" -name '*.csproj' | xargs -l dotnet build
+
+find . -name "*.csproj" -print0 | while read -d $'\0' file
+do
+    echo "Building: $file"
+    dotnet build "$file"
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+done

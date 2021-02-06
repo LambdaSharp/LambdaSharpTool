@@ -105,18 +105,24 @@ lash deploy  \
     --verbose:exceptions \
     Samples/AlexaSample/bin/cloudformation.json \
     Samples/ApiSample/bin/cloudformation.json \
+    Samples/BlazorEventsSample/bin/cloudformation.json \
+    Samples/BlazorSample/bin/cloudformation.json \
     Samples/CustomResourceTypeSample/bin/cloudformation.json \
     Samples/DynamoDBSample/bin/cloudformation.json \
+    Samples/EventSample/bin/cloudformation.json \
     Samples/FinalizerSample/bin/cloudformation.json \
     Samples/KinesisSample/bin/cloudformation.json \
+    Samples/KinesisFirehoseSample/bin/cloudformation.json \
     Samples/LambdaLayerSample/bin/cloudformation.json \
     Samples/MacroSample/bin/cloudformation.json \
+    Samples/MetricSample/bin/cloudformation.json \
     Samples/S3IOSample/bin/cloudformation.json \
     Samples/S3SubscriptionSample/bin/cloudformation.json \
     Samples/ScheduleSample/bin/cloudformation.json \
     Samples/SlackCommandSample/bin/cloudformation.json \
     Samples/SnsSample/bin/cloudformation.json \
-    Samples/SqsSample/bin/cloudformation.json
+    Samples/SqsSample/bin/cloudformation.json \
+    Samples/WebSocketSample/bin/cloudformation.json
 
     # skipping this sample since it requires a VPC
     # Samples/VpcFunctionSample/bin/manifest.json

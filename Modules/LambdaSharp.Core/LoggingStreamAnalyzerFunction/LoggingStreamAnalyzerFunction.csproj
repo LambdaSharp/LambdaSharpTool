@@ -10,11 +10,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="1.1.0"/>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
-    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.3.102.27" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28"/>
+    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.3.102.27"/>
+    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.3.105.9"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
-    <ProjectReference Include="..\CommonLib\CommonLib.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
+    <ProjectReference Include="..\CommonLib\CommonLib.csproj"/>
   </ItemGroup>
 </Project>

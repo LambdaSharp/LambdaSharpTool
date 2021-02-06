@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,7 +93,7 @@ namespace LambdaSharp.App {
         /// Initializes a new <see cref="LambdaSharpAppClient"/> instance.
         /// </summary>
         /// <param name="config">A <see cref="LambdaSharpAppConfig"/> instance.</param>
-        /// <param name="httpClient">A <code>HttpClient</code> instance.</param>
+        /// <param name="httpClient">A <c>HttpClient</c> instance.</param>
         public LambdaSharpAppClient(LambdaSharpAppConfig config, HttpClient httpClient) {
 
             // initialize fields
@@ -160,7 +160,7 @@ namespace LambdaSharp.App {
         public void LogException(Exception exception) => SendMessage(echo: true, $"EXCEPTION: {exception}\n");
 
         /// <summary>
-        /// Log a message wit the given severity level. The <c>format</c> string is used to create a unique signature for errors.
+        /// Log a message with the given severity level. The <c>format</c> string is used to create a unique signature for errors.
         /// Therefore, any error information that varies between occurrences should be provided in the <c>arguments</c> parameter.
         /// </summary>
         /// <remarks>
@@ -183,7 +183,7 @@ namespace LambdaSharp.App {
         }
 
         /// <summary>
-        /// Log a message wit the given severity level. The <c>format</c> string is used to create a unique signature for errors.
+        /// Log a message with the given severity level. The <c>format</c> string is used to create a unique signature for errors.
         /// Therefore, any error information that varies between occurrences should be provided in the <c>arguments</c> parameter.
         /// </summary>
         /// <remarks>
@@ -279,7 +279,7 @@ namespace LambdaSharp.App {
         /// <summary>
         /// Send a CloudWatch event with optional event details and resources it applies to. This event is forwarded to the configured EventBridge. The 'detail-type' property is set to the full type name of the detail value.
         /// </summary>
-        /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="detail">Data-structure to serialize as a JSON string. If value is already a <c>string</c>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
         public void LogEvent<T>(T detail, IEnumerable<string> resources = null)
             => LambdaSharp.Logging.Events.ILambdaSharpLoggerEx.LogEvent<T>(

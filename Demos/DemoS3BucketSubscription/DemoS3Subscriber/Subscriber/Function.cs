@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,10 +28,10 @@ namespace DemoS3Subscriber.Subscriber {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<string> ProcessMessageAsync(S3Event evt) {
-            LogInfo($"# S3 Records = {evt.Records.Count}");
-            for(var i = 0; i < evt.Records.Count; ++i) {
-                var record = evt.Records[i];
+        public override async Task<string> ProcessMessageAsync(S3Event s3Event) {
+            LogInfo($"# S3 Records = {s3Event.Records.Count}");
+            for(var i = 0; i < s3Event.Records.Count; ++i) {
+                var record = s3Event.Records[i];
                 LogInfo($"EventName = {record.EventName.Value}");
                 LogInfo($"EventSource = {record.EventSource}");
                 LogInfo($"EventTime = {record.EventTime}");

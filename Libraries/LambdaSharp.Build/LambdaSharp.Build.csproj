@@ -11,7 +11,7 @@
     <Title>LambdaSharp (λ#) Build</Title>
     <Description>Serverless .NET for AWS - LambdaSharp Build Library</Description>
     <Company>LambdaSharp</Company>
-    <Copyright>Copyright (C) 2018-2020</Copyright>
+    <Copyright>Copyright (C) 2018-2021</Copyright>
     <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,21 @@ namespace LambdaSharp.Serialization {
     public class LambdaJsonSerializer : DefaultLambdaJsonSerializer {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Constructs instance of serializer.
+        /// </summary>
+        public LambdaJsonSerializer() : this(customizeSerializerSettings: null) { }
+
+        /// <summary>
+        /// Constructs instance of serializer.
+        /// </summary>
+        /// <param name="customizeSerializerSettings">A callback to customize the serializer settings.</param>
+        public LambdaJsonSerializer(Action<JsonSerializerSettings> customizeSerializerSettings) : base(settings => {
+            _staticSettings = settings;
+            settings.NullValueHandling = NullValueHandling.Ignore;
+            customizeSerializerSettings?.Invoke(settings);
+        }) { }
 
         /// <summary>
         /// The <see cref="Deserialize(Stream, Type)"/> method deserializes the JSON object from a <c>string</c>.
