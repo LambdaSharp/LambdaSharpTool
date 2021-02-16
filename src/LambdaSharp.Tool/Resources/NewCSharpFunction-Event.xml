@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>%%FRAMEWORK%%</TargetFramework>
     <Deterministic>true</Deterministic>
@@ -8,7 +8,7 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.Event" Version="%%LAMBDASHARP_VERSION%%"/>
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp.Event\LambdaSharp.Event.csproj" />
+    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.CloudWatch" Version="%%LAMBDASHARP_VERSION%%"/>
+    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp.CloudWatch\LambdaSharp.CloudWatch.csproj" />
   </ItemGroup>
 </Project>
