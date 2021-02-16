@@ -48,7 +48,7 @@ Look for the following package references in your _.csproj_ files and remove the
 
 In addition, Lambda functions no longer need to declare the default serializer with the `[assembly: LambdaSerializer(...)]` attribute, unless a custom serializer is required. Instead, the serializer is defined by the base class ([ALambdaFunction](xref:LambdaSharp.ALambdaFunction)). This change was made to ease the transition to the new [System.Text.Json](https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-how-to) serializer in a future release.
 
-Finally, the [SerializeJson(...)](xref:LambdaSharp.ALambdaFunction.SerializeJson(System.Object)) and [DeserializeJson<T>(...)](xref:LambdaSharp.ALambdaFunction.DeserializeJson``1(System.IO.Stream)) have been marked as obsolete. Instead, use `LambdaSerializer.Serialize(...)` and `LambdaSerialize.Deserialize<T>(...)`, respectively.
+Finally, the `SerializeJson(...)` and `DeserializeJson<T>(...)` have been marked as obsolete. Instead, use `LambdaSerializer.Serialize(...)` and `LambdaSerialize.Deserialize<T>(...)`, respectively.
 
 
 ## New LambdaSharp Module Syntax
