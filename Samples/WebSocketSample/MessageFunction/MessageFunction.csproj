@@ -5,15 +5,15 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>WebSocketsSample.MessageFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.3.101.93" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
+    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.5.0.56" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.4.15" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp.ApiGateway\LambdaSharp.ApiGateway.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp.Serialization.NewtonsoftJson\LambdaSharp.Serialization.NewtonsoftJson.csproj" />
   </ItemGroup>
 </Project>

@@ -5,12 +5,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>Sample.Event.ReceiverFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="1.0.0"/>
+    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="2.1.0"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />

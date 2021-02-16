@@ -1,16 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.3.0" />
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.7.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.4.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.2.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.8.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -18,15 +20,16 @@
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromBodyAttribute.cs" Link="FromBodyAttribute.cs" />
-    <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromUriAttribute.cs" Link="FromUriAttribute.cs" />
-    <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayAsyncEndpointException.cs" Link="ApiGatewayAsyncEndpointException.cs" />
-    <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetDirectory.cs" Link="ApiGatewayInvocationTargetDirectory.cs" />
-    <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetParameterException.cs" Link="ApiGatewayInvocationTargetParameterException.cs" />
-    <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetReturnException.cs" Link="ApiGatewayInvocationTargetReturnException.cs" />
     <Compile Include="..\..\src\LambdaSharp\Exceptions\ShouldNeverHappenException.cs" Link="ShouldNeverHappenException.cs" />
-    <Compile Include="..\..\src\LambdaSharp\ILambdaSerializerEx.cs" Link="ILambdaSerializerEx.cs" />
-    <Compile Include="..\..\src\LambdaSharp\Serialization\LambdaJsonSerializer.cs" Link="LambdaJsonSerializer.cs" />
+    <Compile Include="..\..\src\LambdaSharp\Serialization\ILambdaJsonSerializer.cs" Link="ILambdaJsonSerializer.cs" />
+    <Compile Include="..\..\src\LambdaSharp\Serialization\LambdaSystemTextJsonSerializer.cs" Link="LambdaSystemTextJsonSerializer.cs" />
+    <Compile Include="..\..\src\LambdaSharp.ApiGateway\FromBodyAttribute.cs" Link="FromBodyAttribute.cs" />
+    <Compile Include="..\..\src\LambdaSharp.ApiGateway\FromUriAttribute.cs" Link="FromUriAttribute.cs" />
+    <Compile Include="..\..\src\LambdaSharp.ApiGateway\Internal\ApiGatewayAsyncEndpointException.cs" Link="ApiGatewayAsyncEndpointException.cs" />
+    <Compile Include="..\..\src\LambdaSharp.ApiGateway\Internal\ApiGatewayInvocationTargetDirectory.cs" Link="ApiGatewayInvocationTargetDirectory.cs" />
+    <Compile Include="..\..\src\LambdaSharp.ApiGateway\Internal\ApiGatewayInvocationTargetParameterException.cs" Link="ApiGatewayInvocationTargetParameterException.cs" />
+    <Compile Include="..\..\src\LambdaSharp.ApiGateway\Internal\ApiGatewayInvocationTargetReturnException.cs" Link="ApiGatewayInvocationTargetReturnException.cs" />
+    <Compile Include="..\..\src\LambdaSharp.Serialization.NewtonsoftJson\LambdaNewtonsoftJsonSerializer.cs" Link="LambdaNewtonsoftJsonSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\LambdaSharp.Logging\LambdaSharp.Logging.csproj" />

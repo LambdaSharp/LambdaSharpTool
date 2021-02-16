@@ -1,5 +1,5 @@
 # LambdaSharp (λ#)
-# Copyright (C) 2018-2020
+# Copyright (C) 2018-2021
 # lambdasharp.net
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,13 @@
 
 Module: Sample.ApiGateway
 Description: A sample module integrating with API Gateway
+Pragmas:
+  - Overrides:
+      Module::RestApi::CorsOrigin: !Ref CorsOrigin
 Items:
+
+  - Parameter: CorsOrigin
+    Default: "*"
 
   - Function: MyFunction
     Description: This function is invoked by API Gateway

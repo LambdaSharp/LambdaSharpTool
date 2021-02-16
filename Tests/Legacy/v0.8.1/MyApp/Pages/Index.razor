@@ -1,0 +1,61 @@
+@*
+ * Default index page
+ *@
+
+@page "/"
+
+@inject ILogger<Index> Logger
+
+<Container Fluid="true">
+    <Row>
+        <Column>
+            <Card Margin="Margin.Is4.FromTop">
+                <CardHeader Padding="Padding.Is1.FromBottom">
+                    <Heading Size="HeadingSize.Is4">Blazor WebAssembly App</Heading>
+                </CardHeader>
+                <CardBody Padding="Padding.Is0.FromBottom">
+                    <CardText>Welcome to your new app.</CardText>
+                </CardBody>
+                <CardBody>
+                    <CardText>Current count: @_currentCount</CardText>
+                </CardBody>
+                <CardBody>
+                    <Button Color="Color.Primary" @onclick="OnIncrementClick">Increment Counter</Button>
+                    <Button Color="Color.Secondary" @onclick="OnResetClick">Reset Counter</Button>
+                    <Button Color="Color.Warning" @onclick="OnThrowException">Throw Exception</Button>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@code {
+
+    //--- Fields ---
+    private int _currentCount = 0;
+
+    //--- Methods ---
+    private void OnIncrementClick() {
+
+        // increment counter
+        _currentCount++;
+
+        // use standard logger to log to CloudWatch Logs
+        Logger.LogInformation($"increment clicked (count: {_currentCount})");
+    }
+
+    private void OnResetClick() {
+
+        // reset counter
+        _currentCount = 0;
+
+        // use standard logger to log to CloudWatch Logs
+        Logger.LogInformation($"reset clicked");
+    }
+
+    private void OnThrowException() {
+
+        // rely on ILogger to forward errors to CloudWatch Logs
+        throw new ApplicationException("Oh no, something went wrong!");
+    }
+}

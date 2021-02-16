@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,9 @@ using LambdaSharp.ApiGateway;
 namespace ApiInvokeSample.MyFunction {
 
     public sealed class Function : ALambdaApiGatewayFunction, ILogicDependencyProvider {
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }

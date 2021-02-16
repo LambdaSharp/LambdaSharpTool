@@ -3,7 +3,7 @@
     <Error Condition="'$(LAMBDASHARP_VERSION_PREFIX)' == ''" Text="Run '$LAMBDASHARP/Scripts/set-lash-version.sh' before building." />
   </Target>
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>LambdaSharp.Tool</RootNamespace>
     <NoWarn>CS1998</NoWarn>
 
@@ -13,7 +13,7 @@
     <Title>LambdaSharp (λ#) Tool</Title>
     <Description>Serverless .NET for AWS - Command Line Tool</Description>
     <Company>LambdaSharp</Company>
-    <Copyright>Copyright (C) 2018-2020</Copyright>
+    <Copyright>Copyright (C) 2018-2021</Copyright>
     <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -28,17 +28,17 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="AWSSDK.APIGateway" Version="3.3.103.86" />
-    <PackageReference Include="AWSSDK.ApiGatewayV2" Version="3.3.106.14" />
-    <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.104.30" />
-    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.3.101.111" />
-    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.3.105.34" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.105.30" />
-    <PackageReference Include="AWSSDK.Lambda" Version="3.3.109.8" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.110.52" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.104.60" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.119.18" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.2.0" />
+    <PackageReference Include="AWSSDK.APIGateway" Version="3.5.2.22" />
+    <PackageReference Include="AWSSDK.ApiGatewayV2" Version="3.5.2.40" />
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.5.2.14" />
+    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.5.0.56" />
+    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.5.0.56" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.5.1.5" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.5.6.7" />
+    <PackageReference Include="AWSSDK.S3" Version="3.5.7.3" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.5.1.36" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.5.8.1" />
     <PackageReference Include="Humidifier.Json" Version="0.3.1" />
     <PackageReference Include="Humidifier" Version="0.3.1" />
     <PackageReference Include="JsonDiffPatch" Version="2.0.49" />
@@ -47,6 +47,10 @@
     <PackageReference Include="NJsonSchema" Version="9.14.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="6.1.2" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net5.0'">
+    <PackageReference Include="System.Text.Json" Version="5.0.1" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\LambdaSharp.Build\LambdaSharp.Build.csproj" />

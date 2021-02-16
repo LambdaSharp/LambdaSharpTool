@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
-using LambdaSharp.Build.Internal;
 
 namespace LambdaSharp.Build {
 
@@ -130,6 +129,16 @@ namespace LambdaSharp.Build {
                     }
                 }
             }
+        }
+
+        public void ZipFolderWithExecutable(string outputPackagePath, string folder) {
+            var files = new List<KeyValuePair<string, string>>();
+            foreach(var filePath in Directory.GetFiles(folder, "*", SearchOption.AllDirectories)) {
+                var relativeFilePathName = Path.GetRelativePath(folder, filePath);
+                files.Add(new KeyValuePair<string, string>(relativeFilePathName, filePath));
+            }
+            files = files.OrderBy(file => file.Key).ToList();
+            new ZipTool(BuildEventsConfig).ZipWithExecutable(outputPackagePath, files);
         }
     }
 }

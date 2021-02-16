@@ -21,6 +21,7 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`Module::LoggingStream`                     |Expression for determining the module logging stream.                               |`!Ref LambdaSharp::LoggingStream`      |
 |`Module::LoggingStreamRole`                 |Expression for determining the module logging stream role.                          |`!Ref LambdaSharp::LoggingStreamRole`  |
 |`Module::LogRetentionInDays`                |Expression for determining the number days CloudWatch Log streams are retained for. |`30`                                   |
+|`Module::RestApi::CorsOrigin`               |Expression for setting the REST API CORS origin header.                             |(none)                                 |
 |`Module::RestApi::StageName`                |Expression for setting the REST API stage name.                                     |`LATEST`                               |
 |`Module::RestApi.EndpointConfiguration`     |Expression for setting the REST API endpoint.                                       |(none)                                 |
 |`Module::RestApi.Policy`                    |Expression for setting the REST API policy.                                         |(none)                                 |

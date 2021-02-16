@@ -1,5 +1,0 @@
-DeadLetterQueue: ""
-LoggingFirehoseStream: ""
-CoreSecretsKey: ""
-LoggingStreamRole: ""
-LoggingBucket: ""

@@ -1,6 +1,32 @@
 - name: LambdaSharp
   href: LambdaSharp/toc.yml
+
 - name: LambdaSharp.App
   href: LambdaSharp.App/toc.yml
+
+- name: LambdaSharp.ApiGateway
+  href: LambdaSharp.ApiGateway/toc.yml
+
+- name: LambdaSharp.CloudWatch
+  href: LambdaSharp.CloudWatch/toc.yml
+
+- name: LambdaSharp.CustomResource
+  href: LambdaSharp.CustomResource/toc.yml
+
+- name: LambdaSharp.Finalizer
+  href: LambdaSharp.Finalizer/toc.yml
+
 - name: LambdaSharp.Logging
   href: LambdaSharp.Logging/toc.yml
+
+- name: LambdaSharp.Schedule
+  href: LambdaSharp.Schedule/toc.yml
+
+- name: LambdaSharp.SimpleNotificationService
+  href: LambdaSharp.SimpleNotificationService/toc.yml
+
+- name: LambdaSharp.SimpleQueueService
+  href: LambdaSharp.SimpleQueueService/toc.yml
+
+- name: LambdaSharp.Slack
+  href: LambdaSharp.Slack/toc.yml

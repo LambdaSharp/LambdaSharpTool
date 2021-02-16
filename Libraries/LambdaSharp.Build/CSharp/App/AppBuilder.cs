@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -196,7 +196,9 @@ namespace LambdaSharp.Build.CSharp {
             }
 
             // extract version id from app
-            var assemblyFilepath = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish", "wwwroot", "_framework", "_bin", $"{Path.GetFileNameWithoutExtension(app.Project)}.dll");
+            var assemblyFilepath = (string.Compare(targetFramework, "netstandard2.1", StringComparison.Ordinal) == 0)
+                ? Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish", "wwwroot", "_framework", "_bin", $"{Path.GetFileNameWithoutExtension(app.Project)}.dll")
+                : Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish", "wwwroot", "_framework", $"{Path.GetFileNameWithoutExtension(app.Project)}.dll");
             var assemblyMetadata = LambdaSharpAppAssemblyInformation(assemblyFilepath, appMetadataFilepath);
             if(assemblyMetadata?.ModuleVersionId == null) {
                 LogError($"unable to extract assembly metadata");

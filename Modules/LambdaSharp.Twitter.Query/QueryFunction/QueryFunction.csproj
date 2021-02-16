@@ -4,18 +4,20 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.Twitter.QueryFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Comprehend" Version="3.3.108.41" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.150" />
+    <PackageReference Include="AWSSDK.Comprehend" Version="3.5.3.14" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.4.15" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.5.1.27" />
+
+    <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+
     <PackageReference Include="TweetinviAPI" Version="4.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp.Schedule\LambdaSharp.Schedule.csproj" />
   </ItemGroup>
 </Project>

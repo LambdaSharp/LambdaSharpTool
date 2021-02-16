@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.Slack</RootNamespace>
     <NoWarn>CS1998</NoWarn>
     <IncludeSymbols>true</IncludeSymbols>
@@ -9,10 +9,10 @@
     <PackageId>LambdaSharp.Slack</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
-    <Title>LambdaSharp (λ#) Slack</Title>
-    <Description>Serverless .NET for AWS - Slack Integration</Description>
+    <Title>LambdaSharp (λ#) Slack Lambda</Title>
+    <Description>Serverless .NET for AWS - Slack Lambda Library</Description>
     <Company>LambdaSharp</Company>
-    <Copyright>Copyright (C) 2018-2020</Copyright>
+    <Copyright>Copyright (C) 2018-2021</Copyright>
     <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

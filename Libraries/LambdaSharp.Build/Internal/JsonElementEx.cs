@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,6 +58,21 @@ namespace LambdaSharp.Build.Internal {
                 break;
             case string stringValue:
                 writer.WriteStringValue(stringValue);
+                break;
+            case bool boolValue:
+                writer.WriteBooleanValue(boolValue);
+                break;
+            case int intValue:
+                writer.WriteNumberValue(intValue);
+                break;
+            case long longValue:
+                writer.WriteNumberValue(longValue);
+                break;
+            case float floatValue:
+                writer.WriteNumberValue(floatValue);
+                break;
+            case double doubleValue:
+                writer.WriteNumberValue(doubleValue);
                 break;
             case Dictionary<string, object> objectValue:
                 WriteObject(writer, objectValue, options);

@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,107 +16,107 @@
  * limitations under the License.
  */
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace LambdaSharp.Core.RollbarApi {
 
     public class Rollbar {
 
         //--- Properties ---
-        [JsonProperty("access_token")]
+        [JsonPropertyName("access_token")]
         public string? AccessToken { get; set; }
 
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data? Data { get; set; }
     }
 
     public class Data {
 
         //--- Properties ---
-        [JsonProperty("environment")]
+        [JsonPropertyName("environment")]
         public string? Environment { get; set; }
 
-        [JsonProperty("body")]
+        [JsonPropertyName("body")]
         public DataBody? Body { get; set; }
 
-        [JsonProperty("level")]
+        [JsonPropertyName("level")]
         public string? Level { get; set; }
 
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public long Timestamp { get; set; }
 
-        [JsonProperty("code_version")]
+        [JsonPropertyName("code_version")]
         public string? CodeVersion { get; set; }
 
-        [JsonProperty("platform")]
+        [JsonPropertyName("platform")]
         public string? Platform { get; set; }
 
-        [JsonProperty("language")]
+        [JsonPropertyName("language")]
         public string? Language { get; set; }
 
-        [JsonProperty("framework")]
+        [JsonPropertyName("framework")]
         public string? Framework { get; set; }
 
-        [JsonProperty("custom")]
+        [JsonPropertyName("custom")]
         public object? Custom { get; set; }
 
-        [JsonProperty("fingerprint")]
+        [JsonPropertyName("fingerprint")]
         public string? Fingerprint { get; set; }
 
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string? Title { get; set; }
     }
 
     public class DataBody {
 
         //--- Properties ---
-        [JsonProperty("trace_chain")]
+        [JsonPropertyName("trace_chain")]
         public Trace[]? TraceChain { get; set; }
 
-        [JsonProperty("message")]
+        [JsonPropertyName("message")]
         public Message? Message { get; set; }
     }
 
     public class Message {
 
         //--- Properties ---
-        [JsonProperty("body")]
+        [JsonPropertyName("body")]
         public string? Body { get; set; }
     }
 
     public class Trace {
 
         //--- Properties ---
-        [JsonProperty("frames")]
+        [JsonPropertyName("frames")]
         public Frame[]? Frames { get; set; }
 
-        [JsonProperty("exception")]
+        [JsonPropertyName("exception")]
         public ExceptionClass? Exception { get; set; }
     }
 
     public class ExceptionClass {
 
         //--- Properties ---
-        [JsonProperty("class")]
+        [JsonPropertyName("class")]
         public string? Class { get; set; }
 
-        [JsonProperty("message")]
+        [JsonPropertyName("message")]
         public string? Message { get; set; }
 
-        [JsonProperty("description")]
+        [JsonPropertyName("description")]
         public string? Description { get; set; }
     }
 
     public class Frame {
 
         //--- Properties ---
-        [JsonProperty("filename")]
+        [JsonPropertyName("filename")]
         public string? Filename { get; set; }
 
-        [JsonProperty("lineno")]
+        [JsonPropertyName("lineno")]
         public int? Lineno { get; set; }
 
-        [JsonProperty("method")]
+        [JsonPropertyName("method")]
         public string? Method { get; set; }
     }
 }

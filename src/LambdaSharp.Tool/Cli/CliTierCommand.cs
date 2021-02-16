@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,7 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
     using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
+    using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
 
     public class CliTierCommand : ACliCommand {
 

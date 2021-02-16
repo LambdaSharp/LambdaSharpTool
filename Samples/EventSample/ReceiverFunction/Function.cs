@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,14 +22,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.CloudWatchEvents;
 using LambdaSharp;
 
-// NOTE (2020-05-11, bjorg): due to a bug in `Amazon.Lambda.CloudWatchEvents`, the class being deserialized
-//  must be located in the `Amazon.Lambda.CloudWatchEvents` namespace.
-//  For more details, see: https://github.com/aws/aws-lambda-dotnet/issues/634
-namespace Amazon.Lambda.CloudWatchEvents {
-
-    public class CloudWatchEvent : CloudWatchEvent<Sample.Event.ReceiverFunction.EventDetails> { }
-}
-
+// NOTE (2020-01-05, bjorg): see Sample.Event.ReceiverEventFunction in this sample, which uses the preferred ALambdaEventFunction<T> base class
 namespace Sample.Event.ReceiverFunction {
 
     public class EventDetails {
@@ -40,12 +33,15 @@ namespace Sample.Event.ReceiverFunction {
 
     public class FunctionResponse { }
 
-    public sealed class Function : ALambdaFunction<CloudWatchEvent, FunctionResponse> {
+    public sealed class Function : ALambdaFunction<CloudWatchEvent<EventDetails>, FunctionResponse> {
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent request) {
+        public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent<EventDetails> request) {
             LogInfo($"Version = {request.Version}");
             LogInfo($"Account = {request.Account}");
             LogInfo($"Region = {request.Region}");

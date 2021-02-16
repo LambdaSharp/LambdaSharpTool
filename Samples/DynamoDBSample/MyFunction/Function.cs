@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,14 +24,17 @@ namespace DynamoDBSample.MyFunction {
 
     public sealed class Function : ALambdaFunction<DynamoDBEvent, string> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<string> ProcessMessageAsync(DynamoDBEvent evt) {
-            LogInfo($"# Kinesis Records = {evt.Records.Count}");
-            for(var i = 0; i < evt.Records.Count; ++i) {
-                var record = evt.Records[i];
+        public override async Task<string> ProcessMessageAsync(DynamoDBEvent dynamoDbEvent) {
+            LogInfo($"# Kinesis Records = {dynamoDbEvent.Records.Count}");
+            for(var i = 0; i < dynamoDbEvent.Records.Count; ++i) {
+                var record = dynamoDbEvent.Records[i];
                 LogInfo($"Record #{i}");
                 LogInfo($"AwsRegion = {record.AwsRegion}");
                 LogInfo($"DynamoDB.ApproximateCreationDateTime = {record.Dynamodb.ApproximateCreationDateTime}");

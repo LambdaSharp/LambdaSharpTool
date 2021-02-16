@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ namespace BadModule.FailConstructor {
     public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Constructors ---
-        public Function() {
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) {
             throw new Exception("this exception was thrown in the constructor");
         }
 
