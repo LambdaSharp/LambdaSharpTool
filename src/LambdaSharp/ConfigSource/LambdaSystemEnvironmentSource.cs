@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,7 +64,7 @@ namespace LambdaSharp.ConfigSource {
         /// </summary>
         /// <param name="key">The configuration key.</param>
         /// <returns>The configuration value or <c>null</c> if the key does not exist.</returns>
-        public string Read(string key) => Environment.GetEnvironmentVariable(CombinePrefixWithKey(key));
+        public string? Read(string key) => Environment.GetEnvironmentVariable(CombinePrefixWithKey(key));
 
         /// <summary>
         /// The <see cref="ReadAllKeys()"/> method returns all defined configuration keys.
@@ -77,11 +77,12 @@ namespace LambdaSharp.ConfigSource {
                 .Cast<string>()
                 .Select(ExtractSubKey)
                 .Where(key => key != null)
+                .Cast<string>()
                 .Distinct()
                 .ToArray();
 
             // local functions
-            string ExtractSubKey(string key) {
+            string? ExtractSubKey(string key) {
 
                 // key doesn't match the prefix
                 if(!key.StartsWith(subpath, StringComparison.Ordinal)) {

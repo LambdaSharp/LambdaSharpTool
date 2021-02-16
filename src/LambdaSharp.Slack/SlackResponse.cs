@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +18,12 @@
 
 using System;
 using System.Text;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LambdaSharp.Slack {
 
     public class SlackResponse {
-
-        //--- Types ---
 
         //--- Class Methods ---
         public static SlackResponse InChannel(string text, params SlackResponseAttachment[] attachments) {
@@ -36,17 +35,18 @@ namespace LambdaSharp.Slack {
         }
 
         //--- Fields ---
-        [JsonProperty("response_type")]
-        public readonly string ResponseType;
 
-        [JsonProperty("text")]
-        public readonly string Text;
+        [JsonPropertyName("response_type")]
+        public string ResponseType { get; set; }
 
-        [JsonProperty("attachments")]
-        public readonly SlackResponseAttachment[] Attachments;
+        [JsonPropertyName("text")]
+        public string Text { get; set; }
 
-        [JsonProperty("channel", NullValueHandling = NullValueHandling.Ignore)]
-        public string Channel;
+        [JsonPropertyName("attachments")]
+        public SlackResponseAttachment[] Attachments { get; set; }
+
+        [JsonPropertyName("channel")]
+        public string Channel { get; set; }
 
         //--- Constructors ---
         private SlackResponse(string responseType, string text, SlackResponseAttachment[] attachments) {

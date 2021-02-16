@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,31 +20,20 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.Samples.VpcFunction.MyFunction {
 
-    public class FunctionRequest {
+    public class FunctionRequest { }
 
-        //--- Properties ---
-
-        // TO-DO: add request fields
-    }
-
-    public class FunctionResponse {
-
-        //--- Properties ---
-
-        // TO-DO: add response fields
-    }
+    public class FunctionResponse { }
 
     public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-
-            // TO-DO: add business logic
-
-            return new FunctionResponse();
-        }
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request)
+            => new FunctionResponse();
     }
 }

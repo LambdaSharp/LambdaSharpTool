@@ -84,9 +84,8 @@ export LAMBDASHARP_TIER=TestContrib$SUFFIX
 
 echo "Creating test tier: $LAMBDASHARP_TIER"
 lash init \
+    --quick-start \
     --core-services enabled \
-    --existing-s3-bucket-name="" \
-    --parameters $LAMBDASHARP/Scripts/lash-init-parameters.yml \
     --verbose:exceptions
 if [ $? -ne 0 ]; then
     exit $?
@@ -115,6 +114,17 @@ if [ $? -ne 0 ]; then
 fi
 
 
+echo "****************************"
+echo "*** Build Legacy Modules ***"
+echo "****************************"
+
+cd $LAMBDASHARP/Tests/Legacy
+lash build `find . -name "Module.yml"`
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
+
 # Deploy all λ# Sample Modules
 echo "**********************"
 echo "*** Deploy Samples ***"
@@ -125,18 +135,28 @@ lash deploy  \
     --verbose:exceptions \
     Samples/AlexaSample/bin/cloudformation.json \
     Samples/ApiSample/bin/cloudformation.json \
+    Samples/ApiInvokeSample/bin/cloudformation.json \
+    Samples/ApiInvokeAssemblySample/bin/cloudformation.json \
+    Samples/BlazorEventsSample/bin/cloudformation.json \
+    Samples/BlazorSample/bin/cloudformation.json \
     Samples/CustomResourceTypeSample/bin/cloudformation.json \
     Samples/DynamoDBSample/bin/cloudformation.json \
+    Samples/EventSample/bin/cloudformation.json \
     Samples/FinalizerSample/bin/cloudformation.json \
+    Samples/JsonSerializerSample/bin/cloudformation.json \
+    Samples/KinesisFirehoseSample/bin/cloudformation.json \
     Samples/KinesisSample/bin/cloudformation.json \
     Samples/LambdaLayerSample/bin/cloudformation.json \
+    Samples/LambdaSelfContainedSample/bin/cloudformation.json \
     Samples/MacroSample/bin/cloudformation.json \
+    Samples/MetricSample/bin/cloudformation.json \
     Samples/S3IOSample/bin/cloudformation.json \
     Samples/S3SubscriptionSample/bin/cloudformation.json \
     Samples/ScheduleSample/bin/cloudformation.json \
     Samples/SlackCommandSample/bin/cloudformation.json \
     Samples/SnsSample/bin/cloudformation.json \
-    Samples/SqsSample/bin/cloudformation.json
+    Samples/SqsSample/bin/cloudformation.json \
+    Samples/WebSocketSample/bin/cloudformation.json
 
     # skipping this sample since it requires a VPC
     # Samples/VpcFunctionSample/bin/manifest.json

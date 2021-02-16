@@ -1,0 +1,53 @@
+@*
+ * Main layout applid to all pages. Includes left navigation and top display bar
+ *@
+
+@inherits LayoutComponentBase
+
+<Layout Sider="true">
+    <LayoutSider>
+        <LayoutSiderContent>
+            <Bar Breakpoint="Breakpoint.Desktop" NavigationBreakpoint="Breakpoint.Tablet" ThemeContrast="ThemeContrast.Dark" Mode="BarMode.VerticalInline" CollapseMode="BarCollapseMode.Small" Visible="@true">
+                <BarBrand>
+                    <BarItem>
+                        <BarLink To="">App</BarLink>
+                    </BarItem>
+                </BarBrand>
+                <BarMenu>
+                    <BarStart>
+                        <BarLabel>Main</BarLabel>
+                        <BarItem>
+                            <BarLink To="/">
+                                <BarIcon IconName="IconName.Home" />
+                                Home
+                            </BarLink>
+                        </BarItem>
+                        <BarItem>
+                            <BarLink To="/todo">
+                                <BarIcon IconName="IconName.Smartphone" />
+                                To Do
+                            </BarLink>
+                        </BarItem>
+                    </BarStart>
+                </BarMenu>
+            </Bar>
+        </LayoutSiderContent>
+    </LayoutSider>
+    <Layout>
+        <LayoutHeader Fixed="true">
+            <Bar Style="height: 64px;" Breakpoint="Breakpoint.Desktop" Background="Background.Primary" ThemeContrast="ThemeContrast.Light">
+                <BarBrand>
+                    <BarItem>
+                        <BarLink To="https://blazorise.com/">
+                            <BarIcon IconName="IconName.Dashboard" />
+                            Built with Blazorise
+                        </BarLink>
+                    </BarItem>
+                </BarBrand>
+            </Bar>
+        </LayoutHeader>
+        <LayoutContent Padding="Padding.Is4.OnX">
+            @Body
+        </LayoutContent>
+    </Layout>
+</Layout>

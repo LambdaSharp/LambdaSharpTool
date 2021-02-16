@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.CloudWatchEvents;
 using Amazon.CloudWatchEvents.Model;
@@ -29,7 +30,6 @@ using Amazon.Lambda.Core;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using LambdaSharp.ConfigSource;
-using LambdaSharp.Serialization;
 
 namespace LambdaSharp {
 
@@ -60,25 +60,22 @@ namespace LambdaSharp {
         /// <param name="utcNowCallback">A function that return the current <c>DateTime</c> in UTC timezone. Defaults to <see cref="DateTime.UtcNow"/> when <c>null</c>.</param>
         /// <param name="logCallback">An action that logs a string message. Defaults to <see cref="LambdaLogger.Log"/> when <c>null</c>.</param>
         /// <param name="configSource">A <see cref="ILambdaConfigSource"/> instance from which the Lambda function configuration is read. Defaults to <see cref="LambdaSystemEnvironmentSource"/> instance when <c>null</c>.</param>
-        /// <param name="jsonSerializer">A <see cref="ILambdaSerializer"/> instance for serializing and deserializing JSON data. Defaults to <see cref="LambdaLogger.Log"/> when <c>null</c>.</param>
         /// <param name="kmsClient">A <see cref="IAmazonKeyManagementService"/> client instance. Defaults to <see cref="AmazonKeyManagementServiceClient"/> when <c>null</c>.</param>
         /// <param name="sqsClient">A <see cref="IAmazonSQS"/> client instance. Defaults to <see cref="AmazonSQSClient"/> when <c>null</c>.</param>
         /// <param name="eventsClient">A <see cref="IAmazonCloudWatchEvents"/> client instance. Defaults to <see cref="AmazonCloudWatchEventsClient"/> when <c>null</c>.</param>
         /// <param name="debugLoggingEnabled">A boolean indicating if debug logging is enabled.</param>
         public LambdaFunctionDependencyProvider(
-            Func<DateTime> utcNowCallback = null,
-            Action<string> logCallback = null,
-            ILambdaConfigSource configSource = null,
-            ILambdaSerializer jsonSerializer = null,
-            IAmazonKeyManagementService kmsClient = null,
-            IAmazonSQS sqsClient = null,
-            IAmazonCloudWatchEvents eventsClient = null,
+            Func<DateTime>? utcNowCallback = null,
+            Action<string>? logCallback = null,
+            ILambdaConfigSource? configSource = null,
+            IAmazonKeyManagementService? kmsClient = null,
+            IAmazonSQS? sqsClient = null,
+            IAmazonCloudWatchEvents? eventsClient = null,
             bool? debugLoggingEnabled = null
         ) {
             _nowCallback = utcNowCallback ?? (() => DateTime.UtcNow);
             _logCallback = logCallback ?? LambdaLogger.Log;
             ConfigSource = configSource ?? new LambdaSystemEnvironmentSource();
-            JsonSerializer = jsonSerializer ?? new LambdaJsonSerializer();
             KmsClient = kmsClient ?? new AmazonKeyManagementServiceClient();
             SqsClient = sqsClient ?? new AmazonSQSClient();
             EventsClient = eventsClient ?? new AmazonCloudWatchEventsClient();
@@ -107,12 +104,6 @@ namespace LambdaSharp {
         /// </summary>
         /// <value>The <see cref="ILambdaConfigSource"/> instance.</value>
         public ILambdaConfigSource ConfigSource { get; }
-
-        /// <summary>
-        /// Retrieves the <see cref="ILambdaSerializer"/> instance used for serializing/deserializing JSON data.
-        /// </summary>
-        /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
-        public ILambdaSerializer JsonSerializer { get; }
 
         /// <summary>
         /// Retrieves the <see cref="IAmazonKeyManagementService"/> instance used for communicating with the
@@ -154,12 +145,13 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="secretBytes">Array containing the encrypted bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual async Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string> encryptionContext)
+        public virtual async Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string>? encryptionContext, CancellationToken cancellationToken = default)
             => (await KmsClient.DecryptAsync(new DecryptRequest {
                     CiphertextBlob = new MemoryStream(secretBytes),
                     EncryptionContext = encryptionContext
-                })).Plaintext.ToArray();
+                }, cancellationToken)).Plaintext.ToArray();
 
         /// <summary>
         /// Encrypt a sequence of bytes using the specified KMS key. The Lambda function requires
@@ -168,13 +160,14 @@ namespace LambdaSharp {
         /// <param name="plaintextBytes">Array containing plaintext byte to encrypt.</param>
         /// <param name="encryptionKeyId">The KMS key ID used encrypt the plaintext bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual async Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string> encryptionContext)
+        public virtual async Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string>? encryptionContext, CancellationToken cancellationToken)
             => (await KmsClient.EncryptAsync(new EncryptRequest {
                     KeyId = encryptionKeyId,
                     Plaintext = new MemoryStream(plaintextBytes),
                     EncryptionContext = encryptionContext
-                })).CiphertextBlob.ToArray();
+                }, cancellationToken)).CiphertextBlob.ToArray();
 
         /// <summary>
         /// Send a message to the specified SQS queue. The Lambda function requires <c>sqs:SendMessage</c> permission
@@ -183,8 +176,9 @@ namespace LambdaSharp {
         /// <param name="deadLetterQueueUrl">The SQS queue URL.</param>
         /// <param name="message">The message to send.</param>
         /// <param name="messageAttributes">Optional attributes for the message.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual Task SendMessageToQueueAsync(string deadLetterQueueUrl, string message, IEnumerable<KeyValuePair<string, string>> messageAttributes)
+        public virtual Task SendMessageToQueueAsync(string deadLetterQueueUrl, string message, IEnumerable<KeyValuePair<string, string>>? messageAttributes, CancellationToken cancellationToken)
             => SqsClient.SendMessageAsync(new SendMessageRequest {
                 QueueUrl = deadLetterQueueUrl,
                 MessageBody = message,
@@ -192,7 +186,7 @@ namespace LambdaSharp {
                     DataType = "String",
                     StringValue = kv.Value
                 }) ?? new Dictionary<string, MessageAttributeValue>()
-            });
+            }, cancellationToken);
 
         /// <summary>
         /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
@@ -203,7 +197,8 @@ namespace LambdaSharp {
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
         /// <param name="detail">Optional data-structure serialized as JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        public virtual Task SendEventAsync(DateTimeOffset timestamp, string eventbus, string source, string detailType, string detail, IEnumerable<string> resources)
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+        public virtual Task SendEventAsync(DateTimeOffset timestamp, string eventbus, string source, string detailType, string detail, IEnumerable<string> resources, CancellationToken cancellationToken)
             => EventsClient.PutEventsAsync(new PutEventsRequest {
                 Entries = {
                     new PutEventsRequestEntry {
@@ -215,6 +210,6 @@ namespace LambdaSharp {
                         Resources = resources?.ToList() ?? new List<string>()
                     }
                 }
-            });
+            }, cancellationToken);
     }
 }

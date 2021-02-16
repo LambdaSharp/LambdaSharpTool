@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,45 +17,49 @@
  */
 
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using LambdaSharp;
 using LambdaSharp.ApiGateway;
 using LambdaSharp.Logging;
-using Newtonsoft.Json;
+
+// TODO (2020-12-28, bjorg): how do we know what serializer to use for this assembly?
 
 namespace ApiInvokeSample.Shared {
 
     public class CaptureEventRequest {
 
         //--- Properties ---
-        [JsonRequired]
+        [Required]
         public string EventType { get; set; }
 
-        [JsonRequired]
+        [Required]
         public string Data { get; set; }
     }
 
     public class ComputeRequest {
 
         //--- Properties ---
-        [JsonRequired]
+        [Required]
         public double LeftOperand { get; set; }
 
-        [JsonRequired]
+        [Required]
         public double RightOperand { get; set; }
     }
 
     public class ComputeQuery {
 
         //--- Properties ---
-        [JsonProperty("op", Required = Required.Always)]
+        [JsonPropertyName("op")]
+        [Required]
         public string Operator { get; set; }
     }
 
     public class ComputeResponse {
 
         //--- Properties ---
-        [JsonRequired]
+        [Required]
         public double Value { get; set; }
     }
 
@@ -78,8 +82,8 @@ namespace ApiInvokeSample.Shared {
         }
 
         public ComputeResponse Compute(ComputeRequest computation, [FromUri] ComputeQuery query) {
-            _logger.LogInfo($"request: {JsonConvert.SerializeObject(computation)}");
-            _logger.LogInfo($"query: {JsonConvert.SerializeObject(query)}");
+            _logger.LogInfo($"request: {JsonSerializer.Serialize(computation)}");
+            _logger.LogInfo($"query: {JsonSerializer.Serialize(query)}");
             switch(query.Operator) {
             case "add":
                 return new ComputeResponse {

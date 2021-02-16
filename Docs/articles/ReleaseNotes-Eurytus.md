@@ -184,7 +184,7 @@ The next example shows how to set Lambda layers for a function:
 
 ### Nested Modules
 
-Nested modules are similar to nested CloudFormation stacks. The module reference is resolved at compile time to a CloudFormation template location. Furthermore, the LambdaSharp CLI seamlessly injects the deployment tier parameters required for deploying modules. [See `Nested` documentation](~/syntax/Module-Nested.md).
+Nested modules are similar to nested CloudFormation stacks. The module reference is resolved at compile time to a CloudFormation template location. Furthermore, the LambdaSharp CLI seamlessly injects the deployment tier parameters required for deploying modules. [See `Nested` documentation](~/syntax/Module-Stack.md).
 
 During the _build_ phase, the LambdaSharp CLI validates that all required parameters are supplied and that the supplied parameters exist.
 

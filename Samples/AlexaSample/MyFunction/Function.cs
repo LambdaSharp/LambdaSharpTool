@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,11 @@ using LambdaSharp;
 namespace AlexaSample.MyFunction {
 
     public sealed class Function : ALambdaFunction<SkillRequest, SkillResponse> {
+
+        //--- Constructors ---
+
+        // NOTE (2021-01-04, bjorg): Alexa.NET uses Newtonsoft.Json for serialization
+        public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)

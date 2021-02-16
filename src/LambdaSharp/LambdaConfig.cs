@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -106,7 +106,7 @@ namespace LambdaSharp {
         private static bool IsValidKey(string key) => (key?.Any() ?? false) && key.All(c => char.IsLetterOrDigit(c) || (c == ':'));
 
         //--- Fields ---
-        private readonly LambdaConfig _parent;
+        private readonly LambdaConfig? _parent;
         private readonly string _key = "";
         private readonly ILambdaConfigSource _source;
 
@@ -195,7 +195,7 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public T Read<T>(string key, Func<string, T> fallback, Func<string, T> convert, Action<T> validate) {
+        public T Read<T>(string key, Func<string, T>? fallback, Func<string, T>? convert, Action<T>? validate) {
 
             // validate key
             if(!IsValidKey(key)) {
@@ -211,7 +211,7 @@ namespace LambdaSharp {
             var nestedKey = keys[keys.Length - 1];
 
             // attempt to read the requested key
-            string textValue;
+            string? textValue;
             try {
                 textValue = nestedSource.Read(nestedKey);
             } catch(Exception e) when(!(e is ALambdaConfigException)) {
@@ -271,7 +271,7 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public string ReadText(string key, Action<string> validate = null)
+        public string ReadText(string key, Action<string>? validate = null)
             => Read(key, fallback: null, convert: v => v, validate: validate);
 
         /// <summary>
@@ -284,8 +284,8 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public string ReadText(string key, string defaultValue, Action<string> validate = null)
-            => Read(key, fallback: _ => defaultValue, convert: v => v, validate: validate);
+        public string ReadText(string key, string? defaultValue, Action<string>? validate = null)
+            => Read(key, fallback: _ => defaultValue! /* NOTE (2021-01-04, bjorg): this is ugly, but I don't know how to allow a `null` value here :( */, convert: v => v, validate: validate);
 
         /// <summary>
         /// Read an enumeration of comma-delimited <c>string</c> values for a
@@ -300,7 +300,7 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public IEnumerable<string> ReadCommaDelimitedList(string key, Action<IEnumerable<string>> validate = null)
+        public IEnumerable<string> ReadCommaDelimitedList(string key, Action<IEnumerable<string>>? validate = null)
             => Read(key, fallback: null, convert: v => v.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries), validate: validate);
 
         /// <summary>
@@ -315,7 +315,7 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public int ReadInt(string key, Action<int> validate = null)
+        public int ReadInt(string key, Action<int>? validate = null)
             => Read(key, fallback: null, convert: int.Parse, validate: validate);
 
         /// <summary>
@@ -328,7 +328,7 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public int ReadInt(string key, int defaultValue, Action<int> validate = null)
+        public int ReadInt(string key, int defaultValue, Action<int>? validate = null)
             => Read(key, fallback: _ => defaultValue, convert: int.Parse, validate: validate);
 
         /// <summary>
@@ -343,7 +343,7 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public TimeSpan ReadTimeSpan(string key, Action<TimeSpan> validate = null)
+        public TimeSpan ReadTimeSpan(string key, Action<TimeSpan>? validate = null)
             => Read(key, fallback: null, convert: value => TimeSpan.FromSeconds(float.Parse(value)), validate: validate);
 
         /// <summary>
@@ -356,7 +356,7 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public TimeSpan ReadTimeSpan(string key, TimeSpan defaultValue, Action<TimeSpan> validate = null)
+        public TimeSpan ReadTimeSpan(string key, TimeSpan defaultValue, Action<TimeSpan>? validate = null)
             => Read(key, fallback: _ => defaultValue, convert: value => TimeSpan.FromSeconds(float.Parse(value)), validate: validate);
     }
 }

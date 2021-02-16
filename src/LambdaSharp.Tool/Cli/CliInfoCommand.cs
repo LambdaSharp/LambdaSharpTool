@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,7 +101,6 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"Tools");
             Console.WriteLine($"    .NET Core CLI Version: {new DotNetTool(BuildEventsConfig).GetDotNetVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Git CLI Version: {new GitTool(BuildEventsConfig).GetGitVersion() ?? "<NOT FOUND>"}");
-            Console.WriteLine($"    Amazon.Lambda.Tools: {new AmazonLambdaTool(BuildEventsConfig).GetAmazonLambdaToolVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    ReadyToRun Compilation: {(Settings.IsAmazonLinux2() ? "Yes" : "No")}");
 
             // local functions

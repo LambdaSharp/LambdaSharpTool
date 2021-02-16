@@ -68,6 +68,16 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
+lash new function --type event MyEventFunction --verbose:exceptions
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
+lash new function --type selfcontained MySelfContainedFunction --verbose:exceptions
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
 lash new function Finalizer --verbose:exceptions
 if [ $? -ne 0 ]; then
     exit $?

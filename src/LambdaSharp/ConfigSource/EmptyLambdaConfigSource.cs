@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +45,7 @@ namespace LambdaSharp.ConfigSource {
         /// </summary>
         /// <param name="key">The configuration key.</param>
         /// <returns>The configuration value or <c>null</c> if the key does not exist.</returns>
-        public string Read(string key) => null;
+        public string? Read(string key) => null;
 
         /// <summary>
         /// The <see cref="ReadAllKeys()"/> method returns all defined configuration keys.

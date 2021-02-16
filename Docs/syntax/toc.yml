@@ -91,9 +91,6 @@
 - name: Mapping
   href: Module-Mapping.md
 
-- name: Nested
-  href: Module-Nested.md
-
 - name: Package
   href: Module-Package.md
 
@@ -116,6 +113,9 @@
 
     - name: Property
       href: Module-ResourceType-Property.md
+
+- name: Stack
+  href: Module-Stack.md
 
 - name: Variable
   href: Module-Variable.md

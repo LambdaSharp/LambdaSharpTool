@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using LambdaSharp.Serialization;
 
 namespace LambdaSharp {
 
@@ -36,14 +38,18 @@ namespace LambdaSharp {
         /// Initializes a new <see cref="ALambdaFunction{TRequest, TResponse}"/> instance using the default
         /// implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
-        protected ALambdaFunction() : this(null) { }
+        /// <param name="serializer">Custom implementation of <see cref="ILambdaJsonSerializer"/>.</param>
+        protected ALambdaFunction(ILambdaJsonSerializer serializer) : this(serializer, provider: null) { }
 
         /// <summary>
         /// Initializes a new <see cref="ALambdaFunction{TRequest, TResponse}"/> instance using a
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
+        /// <param name="serializer">Custom implementation of <see cref="ILambdaJsonSerializer"/>.</param>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider ?? new LambdaFunctionDependencyProvider()) { }
+        protected ALambdaFunction(ILambdaJsonSerializer serializer, ILambdaFunctionDependencyProvider? provider) : base(provider ?? new LambdaFunctionDependencyProvider()) {
+            LambdaSerializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+        }
 
         //--- Properties ---
 
@@ -53,6 +59,12 @@ namespace LambdaSharp {
         /// </summary>
         /// <value>The <see cref="ILambdaFunctionDependencyProvider"/> instance.</value>
         protected new ILambdaFunctionDependencyProvider Provider => (ILambdaFunctionDependencyProvider)base.Provider;
+
+        /// <summary>
+        /// An instance of <see cref="ILambdaJsonSerializer"/> used for serializing/deserializing JSON data.
+        /// </summary>
+        /// <value>The <see cref="ILambdaJsonSerializer"/> instance.</value>
+        protected ILambdaJsonSerializer LambdaSerializer { get; }
 
         //--- Abstract Methods ---
 
@@ -82,6 +94,6 @@ namespace LambdaSharp {
             LambdaSerializer.Serialize(response, responseStream);
             responseStream.Position = 0;
             return responseStream;
-       }
+        }
     }
 }

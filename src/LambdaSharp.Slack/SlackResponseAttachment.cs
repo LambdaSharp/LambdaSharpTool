@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,39 +18,39 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace LambdaSharp.Slack {
 
     public class SlackResponseAttachment {
 
         //--- Fields ---
-        [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
-        public string Text;
+        [JsonPropertyName("text")]
+        public string Text { get; set; }
 
-        [JsonProperty("pretext", NullValueHandling = NullValueHandling.Ignore)]
-        public string Pretext;
+        [JsonPropertyName("pretext")]
+        public string Pretext { get; set; }
 
-        [JsonProperty("fallback", NullValueHandling = NullValueHandling.Ignore)]
-        public string Fallback;
+        [JsonPropertyName("fallback")]
+        public string Fallback { get; set; }
 
-        [JsonProperty("color", NullValueHandling = NullValueHandling.Ignore)]
-        public string Color;
+        [JsonPropertyName("color")]
+        public string Color { get; set; }
 
-        [JsonProperty("title", NullValueHandling = NullValueHandling.Ignore)]
-        public string Title;
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
 
-        [JsonProperty("fields", NullValueHandling = NullValueHandling.Ignore)]
-        public IEnumerable<SlackResponseAttachmentFields> Fields;
+        [JsonPropertyName("fields")]
+        public IEnumerable<SlackResponseAttachmentFields> Fields { get; set; }
 
-        [JsonProperty("footer", NullValueHandling = NullValueHandling.Ignore)]
-        public string Footer;
+        [JsonPropertyName("footer")]
+        public string Footer { get; set; }
 
-        [JsonProperty("ts", NullValueHandling = NullValueHandling.Ignore)]
-        public string Timestamp;
+        [JsonPropertyName("ts")]
+        public string Timestamp { get; set; }
 
-        [JsonProperty("mrkdwn_in", NullValueHandling = NullValueHandling.Ignore)]
-        public IEnumerable<string> MarkdownIn;
+        [JsonPropertyName("mrkdwn_in")]
+        public IEnumerable<string> MarkdownIn { get; set; }
 
         //--- Constructors ---
         public SlackResponseAttachment(string text) {
@@ -73,13 +73,13 @@ namespace LambdaSharp.Slack {
     public class SlackResponseAttachmentFields {
 
         //--- Fields ---
-        [JsonProperty("title", NullValueHandling = NullValueHandling.Ignore)]
-        public string Title;
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
 
-        [JsonProperty("value", NullValueHandling = NullValueHandling.Ignore)]
-        public string Value;
+        [JsonPropertyName("value")]
+        public string Value { get; set; }
 
-        [JsonProperty("short", NullValueHandling = NullValueHandling.Ignore)]
-        public bool Short;
+        [JsonPropertyName("short")]
+        public bool Short { get; set; }
     }
 }

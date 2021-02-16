@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "82420BF3C8641C305B3B6B8964423D28"
+      "Default": "E3DF820837F27151790321C44ED0A1F2"
     }
   },
   "Resources": {
@@ -287,7 +287,7 @@
             ]
           }
         },
-        "Description": "Lambda function for receiving CloudWatch events (v1.0-DEV)",
+        "Description": "Lambda function for receiving CloudWatch events using ALambdaFunction<TRequest, TResponse> (v1.0-DEV)",
         "Environment": {
           "Variables": {
             "DEBUG_LOGGING_ENABLED": "false",
@@ -401,6 +401,173 @@
       "Properties": {
         "LogGroupName": {
           "Fn::Sub": "/aws/lambda/${ReceiverFunction}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "ReceiverEventFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Event/.artifacts/ReceiverEventFunction-DRYRUN.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Fn::If": [
+                  "LambdaSharpCoreDeadLetterQueueIsImported",
+                  {
+                    "Fn::ImportValue": {
+                      "Fn::Sub": [
+                        "${DeploymentPrefix}${Import}",
+                        {
+                          "Import": {
+                            "Fn::Select": [
+                              "1",
+                              {
+                                "Fn::Split": [
+                                  "$",
+                                  {
+                                    "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "Ref": "LambdaSharpCoreDeadLetterQueue"
+                  }
+                ]
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        },
+        "Description": "Lambda function for receiving CloudWatch events using ALambdaEventFunction<TMessage> (v1.0-DEV)",
+        "Environment": {
+          "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "Sample.Event:1.0-DEV@<%MODULE_ORIGIN%>",
+            "LAMBDA_NAME": "ReceiverEventFunction",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Fn::If": [
+                    "LambdaSharpCoreDeadLetterQueueIsImported",
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": [
+                          "${DeploymentPrefix}${Import}",
+                          {
+                            "Import": {
+                              "Fn::Select": [
+                                "1",
+                                {
+                                  "Fn::Split": [
+                                    "$",
+                                    {
+                                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                    }
+                  ]
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_DEADLETTERQUEUEPOLICY": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Ref": "ModuleRoleDeadLetterQueuePolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          }
+        },
+        "Handler": "ReceiverEventFunction::Sample.Event.ReceiverEventFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore3.1",
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
+          }
+        }
+      }
+    },
+    "ReceiverEventFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ReceiverEventFunction}"
         },
         "RetentionInDays": 30
       }
@@ -833,6 +1000,122 @@
         }
       }
     },
+    "ReceiverEventFunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationFunction",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Function",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "ReceiverEventFunction"
+        },
+        "FunctionName": "ReceiverEventFunction",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ReceiverEventFunction}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore3.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "256",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "ReceiverEventFunctionLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStream"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStream"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "ReceiverEventFunctionLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamRoleIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
     "ReceiverFunctionSource1Event": {
       "Type": "AWS::Events::Rule",
       "Properties": {
@@ -891,6 +1174,69 @@
         "SourceArn": {
           "Fn::GetAtt": [
             "ReceiverFunctionSource1Event",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "ReceiverEventFunctionSource1Event": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "EventBusName": "default",
+        "EventPattern": {
+          "source": [
+            "MySample"
+          ],
+          "detail-type": [
+            "MyEvent"
+          ],
+          "resources": [
+            {
+              "Fn::Sub": [
+                "lambdasharp:tier:${P0}",
+                {
+                  "P0": {
+                    "Fn::Select": [
+                      "0",
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Ref": "DeploymentPrefix"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "ReceiverEventFunction",
+                "Arn"
+              ]
+            },
+            "Id": "ReceiverEventFunction-1"
+          }
+        ]
+      }
+    },
+    "ReceiverEventFunctionSource1Permission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ReceiverEventFunction"
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "ReceiverEventFunctionSource1Event",
             "Arn"
           ]
         }
@@ -1137,7 +1483,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.Event:1.0-DEV",
       "Description": "Sample module to demonstrate sending and receiving events",
-      "TemplateChecksum": "82420BF3C8641C305B3B6B8964423D28",
+      "TemplateChecksum": "E3DF820837F27151790321C44ED0A1F2",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -1220,6 +1566,7 @@
       "ResourceNameMappings": {
         "SenderFunctionLogGroup": "SenderFunction::LogGroup",
         "ReceiverFunctionLogGroup": "ReceiverFunction::LogGroup",
+        "ReceiverEventFunctionLogGroup": "ReceiverEventFunction::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
         "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
@@ -1228,8 +1575,12 @@
         "SenderFunctionLogGroupSubscription": "SenderFunction::LogGroupSubscription",
         "ReceiverFunctionRegistration": "ReceiverFunction::Registration",
         "ReceiverFunctionLogGroupSubscription": "ReceiverFunction::LogGroupSubscription",
+        "ReceiverEventFunctionRegistration": "ReceiverEventFunction::Registration",
+        "ReceiverEventFunctionLogGroupSubscription": "ReceiverEventFunction::LogGroupSubscription",
         "ReceiverFunctionSource1Event": "ReceiverFunction::Source1Event",
-        "ReceiverFunctionSource1Permission": "ReceiverFunction::Source1Permission"
+        "ReceiverFunctionSource1Permission": "ReceiverFunction::Source1Permission",
+        "ReceiverEventFunctionSource1Event": "ReceiverEventFunction::Source1Event",
+        "ReceiverEventFunctionSource1Permission": "ReceiverEventFunction::Source1Permission"
       },
       "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",

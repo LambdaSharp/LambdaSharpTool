@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,7 +84,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Description",
                 "Value"
             },
-            ["Nested"] = new[] {
+            ["Stack"] = new[] {
                 "DependsOn",
                 "Description",
                 "Module",
@@ -162,6 +162,14 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Group"] = new[] {
                 "Items",
                 "Description"
+            },
+
+            // same as 'Stack', kept for legacy compatibility
+            ["Nested"] = new[] {
+                "DependsOn",
+                "Description",
+                "Module",
+                "Parameters"
             }
         };
 
@@ -268,13 +276,13 @@ namespace LambdaSharp.Tool.Model.AST {
         public string DefaultAttribute { get; set; }
 
         /*
-         * Nested: string
+         * Stack: string
          * Description: string
          * Module: string
          * DependsOn: string -or- list<string>
          * Parameters: map
          */
-        public string Nested { get; set; }
+        public string Stack { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*

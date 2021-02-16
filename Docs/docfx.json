@@ -50,6 +50,142 @@
       "dest": "sdk/LambdaSharp.App",
       "filter": "filterConfig.yml",
       "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.ApiGateway/LambdaSharp.ApiGateway.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.ApiGateway",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.CloudWatch/LambdaSharp.CloudWatch.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.CloudWatch",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.CustomResource/LambdaSharp.CustomResource.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.CustomResource",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.Finalizer/LambdaSharp.Finalizer.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.Finalizer",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.Schedule/LambdaSharp.Schedule.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.Schedule",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.SimpleNotificationService/LambdaSharp.SimpleNotificationService.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.SimpleNotificationService",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.SimpleQueueService/LambdaSharp.SimpleQueueService.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.SimpleQueueService",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.Slack/LambdaSharp.Slack.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.Slack",
+      "filter": "filterConfig.yml",
+      "force": true
     }
   ],
   "build": {

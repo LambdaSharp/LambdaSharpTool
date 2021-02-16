@@ -48,11 +48,43 @@ update
 cd $LAMBDASHARP/src/LambdaSharp
 update
 
+# Update LambdaSharp.ApiGateway
+cd $LAMBDASHARP/src/LambdaSharp.ApiGateway
+update
+
+# Update LambdaSharp.CloudWatch
+cd $LAMBDASHARP/src/LambdaSharp.CloudWatch
+update
+
+# Update LambdaSharp.CustomResource
+cd $LAMBDASHARP/src/LambdaSharp.CustomResource
+update
+
+# Update LambdaSharp.Finalizer
+cd $LAMBDASHARP/src/LambdaSharp.Finalizer
+update
+
+# Update LambdaSharp.Schedule
+cd $LAMBDASHARP/src/LambdaSharp.Schedule
+update
+
+# Update LambdaSharp.Serialization.NewtonsoftJson
+cd $LAMBDASHARP/src/LambdaSharp.Serialization.NewtonsoftJson
+update
+
+# Update LambdaSharp.SimpleNotificationService
+cd $LAMBDASHARP/src/LambdaSharp.SimpleNotificationService
+update
+
+# Update LambdaSharp.SimpleQueueService
+cd $LAMBDASHARP/src/LambdaSharp.SimpleQueueService
+update
+
 # Update LambdaSharp.Slack
 cd $LAMBDASHARP/src/LambdaSharp.Slack
 update
 
-# Update LambdaSharp
+# Update LambdaSharp.App
 cd $LAMBDASHARP/src/LambdaSharp.App
 update
 

@@ -1,0 +1,49 @@
+using System;
+using System.Threading.Tasks;
+using Amazon.Lambda.RuntimeSupport;
+using LambdaSharp;
+
+namespace %%ROOTNAMESPACE%% {
+
+    public class FunctionRequest {
+
+        //--- Properties ---
+
+        // TO-DO: add request fields
+    }
+
+    public class FunctionResponse {
+
+        //--- Properties ---
+
+        // TO-DO: add response fields
+    }
+
+    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+
+        //--- Class Methods ---
+        public static async Task Main(string[] args) {
+
+            // NOTE: this method is the entry point for Lambda functions with a custom runtime
+            using var handlerWrapper = HandlerWrapper.GetHandlerWrapper(new Function().FunctionHandlerAsync);
+            using var bootstrap = new LambdaBootstrap(handlerWrapper);
+            await bootstrap.RunAsync();
+       }
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
+        //--- Methods ---
+        public override async Task InitializeAsync(LambdaConfig config) {
+
+            // TO-DO: add function initialization and reading configuration settings
+        }
+
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+
+            // TO-DO: add business logic
+
+            return new FunctionResponse();
+        }
+    }
+}

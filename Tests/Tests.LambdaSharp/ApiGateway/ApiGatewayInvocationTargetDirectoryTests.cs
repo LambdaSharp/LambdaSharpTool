@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,14 +34,14 @@ namespace Tests.LambdaSharp.ApiGateway {
         public class SimpleRequest {
 
             //--- Properties ---
-            public string Text { get; set; }
+            public string? Text { get; set; }
 
         }
 
         public class SimpleResponse {
 
             //--- Properties ---
-            public string Message { get; set; }
+            public string? Message { get; set; }
         }
 
         //--- Class Fields ---
@@ -67,7 +67,7 @@ namespace Tests.LambdaSharp.ApiGateway {
         //--- Class Methods ---
         private static string SerializeJson(object value) => JsonConvert.SerializeObject(value);
 
-        private static SimpleResponse CreateSimpleResponse(params object[] values)
+        private static SimpleResponse CreateSimpleResponse(params object?[] values)
             => new SimpleResponse {
                 Message = $"Value: ({string.Join(",", values)})"
             };
@@ -240,7 +240,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 Test(
                     nameof(MethodRequiredStringType),
                     DefaultRequest,
-                    CreateResponse(CreateSimpleResponse(new object[] { null }))
+                    CreateResponse(CreateSimpleResponse(new object?[] { null }))
                 );
             });
             exception.ParameterName.Should().Be("unknown");
@@ -282,7 +282,7 @@ namespace Tests.LambdaSharp.ApiGateway {
             Test(
                 nameof(MethodNullableValueType),
                 DefaultRequest,
-                CreateResponse(CreateSimpleResponse(new object[] { null }))
+                CreateResponse(CreateSimpleResponse(new object?[] { null }))
             );
         }
 
@@ -399,7 +399,7 @@ namespace Tests.LambdaSharp.ApiGateway {
         private void Test(string methodName, APIGatewayProxyRequest request, APIGatewayProxyResponse expectedResponse) {
 
             // Arrange
-            var invocationTargetDirectory = new ApiGatewayInvocationTargetDirectory(type => (type == GetType()) ? this : Activator.CreateInstance(type, new[] { this }), new LambdaJsonSerializer());
+            var invocationTargetDirectory = new ApiGatewayInvocationTargetDirectory(type => (type == GetType()) ? this : (Activator.CreateInstance(type, new[] { this }) ?? throw new ApplicationException("Activator.CreateInstance() return null")), new LambdaSystemTextJsonSerializer());
             invocationTargetDirectory.Add("test", $"{GetType().Assembly.FullName}::{GetType().FullName}::{methodName}");
 
             // Act
@@ -409,7 +409,7 @@ namespace Tests.LambdaSharp.ApiGateway {
             found.Should().Be(true);
 
             // Act
-            var response = invocationTarget(request).GetAwaiter().GetResult();
+            var response = invocationTarget!(request).GetAwaiter().GetResult();
 
             // Assert
             response.Should().BeEquivalentTo(expectedResponse);

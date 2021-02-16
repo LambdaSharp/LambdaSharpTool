@@ -4,15 +4,14 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.Core.RegistrationFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.4.15" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp.CustomResource\LambdaSharp.CustomResource.csproj" />
     <ProjectReference Include="..\CommonLib\CommonLib.csproj" />
   </ItemGroup>
 </Project>

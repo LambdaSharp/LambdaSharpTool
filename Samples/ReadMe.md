@@ -12,7 +12,7 @@ Please refer to the [Folder Structure Documentation](https://lambdasharp.net/art
 1. [Macro Definition Example](MacroSample/)
 1. [Module Finalizer Example](FinalizerSample/)
 
-## Function Source Examples
+## Function Examples
 1. [Alexa Skill Source Example](AlexaSample/)
 1. [API Gateway Source Example with Method Invocation](ApiInvokeSample/)
 1. [API Gateway Source Example](ApiSample/)
@@ -26,12 +26,13 @@ Please refer to the [Folder Structure Documentation](https://lambdasharp.net/art
 1. [SQS Queue Failure Handling Example](SqsFailureHandlingSample/)
 1. [CloudWatch Event Example](EventSample/)
 
-## Function Source Examples
+## App Examples
 1. [Blazor Event Example](BlazorEventSample/)
+1. [Blazor App Example](BlazorSample/)
 
-## Miscellaneous Examples
+## Advanced Examples
+1. [Debug Logging](DebugSample/)
 1. [Lambda Function in VPC](VpcFunctionSample/)
 1. [Lambda Function with Lambda Layer](LambdaLayerSample/)
-1. [Blazor WebAssembly App](BlazorSample/)
-1. [Blazor WebAssembly App w/ CloudWatch Events](BlazorEventsSample/)
-1. [Debug Logging](DebugSample/)
+1. [Custom JSON Serializer](JsonSerializerSample/)
+1. [Self-Contained Lambda Function](LambdaSelfContainedSample/)

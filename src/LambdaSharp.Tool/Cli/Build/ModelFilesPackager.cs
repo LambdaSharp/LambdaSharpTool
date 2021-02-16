@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.IO.Compression;
-using System.Text;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
-using ICSharpCode.SharpZipLib.Zip;
 using LambdaSharp.Build;
 
 namespace LambdaSharp.Tool.Cli.Build {

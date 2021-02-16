@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,11 +26,11 @@ using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Runtime;
+using Demo.WebSocketsChat.Common;
 using LambdaSharp;
+using LambdaSharp.ApiGateway;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Demo.WebSocketsChat.Common;
-using LambdaSharp.ApiGateway;
 
 namespace WebSocketsSample.MessageFunction {
 
@@ -48,6 +48,9 @@ namespace WebSocketsSample.MessageFunction {
     }
 
     public sealed class Function : ALambdaApiGatewayFunction {
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
 
         //--- Fields ---
         private IAmazonApiGatewayManagementApi _amaClient;

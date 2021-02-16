@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ namespace ScheduleSample.MyFunction {
         public override async Task ProcessEventAsync(LambdaScheduleEvent schedule) {
             LogInfo($"Id = {schedule.Id}");
             LogInfo($"Time = {schedule.Time}");
-            LogInfo($"Name = {schedule.Name}");
+            LogInfo($"Name = '{schedule.Name}'");
         }
     }
 }

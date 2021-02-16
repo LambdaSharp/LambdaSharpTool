@@ -14,7 +14,7 @@
     <Title>LambdaSharp (λ#) App</Title>
     <Description>Serverless .NET for AWS - App Library</Description>
     <Company>LambdaSharp</Company>
-    <Copyright>Copyright (C) 2018-2020</Copyright>
+    <Copyright>Copyright (C) 2018-2021</Copyright>
     <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -25,13 +25,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.6" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.10" />
     <PackageReference Include="System.Net.Http.Json" Version="3.2.1" />
-    <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.Logging\LambdaSharp.Logging.csproj" />
-    <Compile Include="..\..\Modules\LambdaSharp.App.EventBus\LambdaSharp.App.EventBus.Actions\*.cs"/>
+    <Compile Include="..\..\Modules\LambdaSharp.App.EventBus\LambdaSharp.App.EventBus.Actions\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />

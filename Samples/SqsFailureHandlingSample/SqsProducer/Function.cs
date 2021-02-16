@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,9 @@ using LambdaSharp;
 namespace SqsSample.Producer {
 
     public sealed class Function : ALambdaFunction<int, string> {
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
         //--- Fields ---
         private string _sqsQueueUrl;

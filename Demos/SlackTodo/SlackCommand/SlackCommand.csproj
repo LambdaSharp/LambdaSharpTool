@@ -5,10 +5,9 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <NoWarn>CS1998</NoWarn>
     <RootNamespace>Demo.SlackTodo</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.4.15" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />

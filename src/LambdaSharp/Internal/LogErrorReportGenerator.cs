@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ namespace LambdaSharp.Records.ErrorReports {
             => _provider = provider ?? throw new ArgumentNullException(nameof(provider));
 
         //--- Methods ---
-        public LambdaErrorReport CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args) {
+        public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object[] args) {
             var message = LambdaErrorReportGenerator.FormatMessage(format, args) ?? exception?.Message;
             if(message != null) {
                 _provider.Log($"*** {level.ToString().ToUpperInvariant()}: {message}\n{PrintException()}");
