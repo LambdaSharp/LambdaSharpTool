@@ -98,7 +98,7 @@ namespace LambdaSharp.Build {
                     }
                 }
             }
-            if(containsElfExecutable) {
+            if(containsElfExecutable || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 
                 // compress package contents with executable permissions
                 using(var outputStream = File.OpenWrite(package))
