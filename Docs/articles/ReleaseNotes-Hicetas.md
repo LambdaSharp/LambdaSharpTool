@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.2.0) - 2021-02-15
+# LambdaSharp "Hicetas" Release (v0.8.2.1) - 2021-02-17
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -48,7 +48,7 @@ Look for the following package references in your _.csproj_ files and remove the
 
 In addition, Lambda functions no longer need to declare the default serializer with the `[assembly: LambdaSerializer(...)]` attribute, unless a custom serializer is required. Instead, the serializer is defined by the base class ([ALambdaFunction](xref:LambdaSharp.ALambdaFunction)). This change was made to ease the transition to the new [System.Text.Json](https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-how-to) serializer in a future release.
 
-Finally, the [SerializeJson(...)](xref:LambdaSharp.ALambdaFunction.SerializeJson(System.Object)) and [DeserializeJson<T>(...)](xref:LambdaSharp.ALambdaFunction.DeserializeJson``1(System.IO.Stream)) have been marked as obsolete. Instead, use `LambdaSerializer.Serialize(...)` and `LambdaSerialize.Deserialize<T>(...)`, respectively.
+Finally, the `SerializeJson(...)` and `DeserializeJson<T>(...)` have been marked as obsolete. Instead, use `LambdaSerializer.Serialize(...)` and `LambdaSerialize.Deserialize<T>(...)`, respectively.
 
 
 ## New LambdaSharp Module Syntax
@@ -140,6 +140,13 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 
 ## Releases
+
+### (v0.8.2.1) - 2021-02-17
+
+#### Fixes
+
+* CLI
+  * Fixed an issue with _ReadyToRun_ Lambda function compilation.
 
 ### (v0.8.2.0) - 2021-02-15
 
