@@ -43,9 +43,9 @@ The following steps install .NET Core 3.1, some utilities, and LambdaSharp.
     ```bash
     rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
     ```
-1. Install .NET Core 3.1 and misc. required utilities
+1. Install .NET 5, .NET Core 3.1, and misc. required utilities
     ```bash
-    yum install -y dotnet-sdk-3.1 dotnet-runtime-3.1 git zip
+    yum install -y dotnet-sdk-5.0 dotnet-runtime-5.0 dotnet-sdk-3.1 dotnet-runtime-3.1 git zip
     ```
 1. Install LambdaSharp
     ```bash
