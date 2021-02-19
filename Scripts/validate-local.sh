@@ -8,6 +8,13 @@ fi
 
 cd $LAMBDASHARP
 
+# Check if any "TODO:" comments are present
+if rg -q 'TODO:' -g '!*.{js,map,sh}'; then
+    echo "ERROR: found files with 'TODO:' comment"
+    rg 'TODO:' -g '!*.{js,map,sh}'
+    exit
+fi
+
 # Setup and validate λ# CLI
 Scripts/install-cli.sh
 

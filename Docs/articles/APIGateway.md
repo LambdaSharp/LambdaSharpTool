@@ -83,6 +83,8 @@ AddAlbumResponse AddAlbum(
 ) { ... }
 ```
 
+TODO: outdated information; need to use `System.Runtime.Serialization.DataMemberAttribute` now
+
 The validation of the request body is controlled by the definition of the `AddAlbumRequest` type. The following type definition makes the `Title` property mandatory while keeping `YearPublished` optional. The constraints of the type fields and properties are controlled using the [JsonProperty](https://www.newtonsoft.com/json/help/html/T_Newtonsoft_Json_JsonPropertyAttribute.htm) and [JsonRequired](https://www.newtonsoft.com/json/help/html/T_Newtonsoft_Json_JsonRequiredAttribute.htm) attributes.
 
 ```csharp

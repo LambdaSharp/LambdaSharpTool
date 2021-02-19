@@ -48,6 +48,9 @@
 - name: Debugging
   href: Debugging.md
 
+- name: JSON Serialization
+  href: JSON-Serialization.md
+
 - name: Samples
   href: Samples.md
 
