@@ -105,7 +105,7 @@ namespace LambdaSharp.Compiler {
             // load CloudFormation specification
             CloudFormationSpec = await Provider.LoadCloudFormationSpecificationAsync(
                 moduleDeclaration.CloudFormation?.Region?.Value ?? "us-east-1",
-                moduleDeclaration.CloudFormation?.Version?.Value ?? "15.0.0"
+                moduleDeclaration.CloudFormation?.Version?.Value ?? "28.0.0"
             );
 
             // register pseudo-parameter and module declarations

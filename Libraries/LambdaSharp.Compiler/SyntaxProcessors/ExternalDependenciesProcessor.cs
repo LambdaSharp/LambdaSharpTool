@@ -65,7 +65,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         Logger.Log(ModuleNotFound(usingModuleInfo.ToString()), usingModuleDeclaration.ModuleName);
                     }
                     break;
-                case NestedModuleDeclaration nestedModuleDeclaration:
+                case StackDeclaration nestedModuleDeclaration:
 
                     // check if module reference is valid
                     if(!ModuleInfo.TryParse(nestedModuleDeclaration.Module?.Value, out var nestedModuleInfo)) {

@@ -682,8 +682,6 @@ namespace LambdaSharp {
         /// pendings tasks have completed before responding to the active invocation.
         /// </summary>
         /// <param name="task">A task to wait for before responding to the active invocation.</param>
-
-        // TODO: consider renaming
         protected void AddPendingTask(Task task) {
             lock(_pendingTasksSyncRoot) {
                 _pendingTasks.Add(task);

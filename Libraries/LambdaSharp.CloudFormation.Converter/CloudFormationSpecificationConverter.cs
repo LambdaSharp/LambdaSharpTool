@@ -38,6 +38,8 @@ namespace LambdaSharp.CloudFormation.Converter {
         private const string CFN_LINT_SOURCE = "https://github.com/aws-cloudformation/cfn-python-lint/archive/master.zip";
 
         //--- Class Fields ---
+
+        // TODO: fetch list of available zones from https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html
         private static Dictionary<string, string> RegionalSpecifications = new Dictionary<string, string> {
             ["af-south-1"] = "https://cfn-resource-specifications-af-south-1-prod.s3.af-south-1.amazonaws.com/latest/gzip/CloudFormationResourceSpecification.json",
             ["ap-east-1"] = "https://cfn-resource-specifications-ap-east-1-prod.s3.ap-east-1.amazonaws.com/latest/gzip/CloudFormationResourceSpecification.json",

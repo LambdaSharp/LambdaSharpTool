@@ -22,8 +22,8 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
-    [SyntaxDeclarationKeyword("Nested")]
-    public sealed class NestedModuleDeclaration : AItemDeclaration, IResourceDeclaration {
+    [SyntaxDeclarationKeyword("Stack")]
+    public sealed class StackDeclaration : AItemDeclaration, IResourceDeclaration {
 
         //--- Fields ---
         private LiteralExpression? _module;
@@ -32,7 +32,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private ListExpression _pragmas;
 
         //--- Constructors ---
-        public NestedModuleDeclaration(LiteralExpression itemName) : base(itemName) {
+        public StackDeclaration(LiteralExpression itemName) : base(itemName) {
             _dependsOn = Adopt(new SyntaxNodeCollection<LiteralExpression>());
             _pragmas = Adopt(new ListExpression());
         }

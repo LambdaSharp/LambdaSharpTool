@@ -97,7 +97,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 case ResourceDeclaration resourceDeclaration:
                     ValidateDependsOn(resourceDeclaration, resourceDeclaration.DependsOn);
                     break;
-                case NestedModuleDeclaration nestedModuleDeclaration:
+                case StackDeclaration nestedModuleDeclaration:
                     ValidateDependsOn(nestedModuleDeclaration, nestedModuleDeclaration.DependsOn);
                     break;
                 }
@@ -190,7 +190,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         case PackageDeclaration _:
                         case FunctionDeclaration _:
                         case MacroDeclaration _:
-                        case NestedModuleDeclaration _:
+                        case StackDeclaration _:
                         case ResourceDeclaration _:
                         case ImportDeclaration _:
                             Logger.Log(ReferenceMustBeParameter(referenceName.Value), referenceName);
@@ -218,7 +218,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         case PackageDeclaration _:
                         case FunctionDeclaration _:
                         case MacroDeclaration _:
-                        case NestedModuleDeclaration _:
+                        case StackDeclaration _:
                         case ResourceDeclaration _:
                         case ImportDeclaration _:
                             node.ReferencedDeclaration = referencedDeclaration;
