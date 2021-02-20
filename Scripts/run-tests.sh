@@ -52,15 +52,14 @@ if [ -z "$1" ]; then
         --tier-version $VERSION_PREFIX \
         --cli-version $VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name
+
     if [ $? -ne 0 ]; then
         exit $?
     fi
 
-    # delete old test output
-    rm $LAMBDASHARP/Tests/Modules/Results/*.json > /dev/null 2>&1
-
-    # run everything
-    dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp3.1/LambdaSharp.Tool.dll deploy \
+    # delete only generated output files
+    find $LAMBDASHARP/Tests/Modules/ -maxdepth 1 -name *.yml | xargs -l basename | sed 's/.yml/.json/' | xargs -I{} rm $LAMBDASHARP/Tests/Modules/Results/{} > /dev/null 2>&1
+    dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/net5.0/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
         --no-beep \
         --tier Test \
@@ -76,96 +75,7 @@ if [ -z "$1" ]; then
         --deployment-bucket-name lambdasharp-bucket-name \
         --no-dependency-validation \
         --module-build-date 20190809150000 \
-        $LAMBDASHARP/Tests/Modules/App.yml \
-        $LAMBDASHARP/Tests/Modules/Empty.yml \
-        $LAMBDASHARP/Tests/Modules/Empty-NoLambdaSharpDependencies.yml \
-        $LAMBDASHARP/Tests/Modules/Empty-NoModuleRegistration.yml \
-        $LAMBDASHARP/Tests/Modules/Function.yml \
-        $LAMBDASHARP/Tests/Modules/Function-NoLambdaSharpDependencies.yml \
-        $LAMBDASHARP/Tests/Modules/Function-NoModuleRegistration.yml \
-        $LAMBDASHARP/Tests/Modules/Function-NoFunctionRegistration.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Base64.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Cidr.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-FindInMap.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-GetAtt.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-GetAZs.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Include.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-ImportValue.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Join.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Ref.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Select.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Split.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Sub.yml \
-        $LAMBDASHARP/Tests/Modules/Global-Variables.yml \
-        $LAMBDASHARP/Tests/Modules/Fn-Transform.yml \
-        $LAMBDASHARP/Tests/Modules/Source-Topic.yml \
-        $LAMBDASHARP/Tests/Modules/Source-Timer.yml \
-        $LAMBDASHARP/Tests/Modules/Source-Api-SlackCommand.yml \
-        $LAMBDASHARP/Tests/Modules/Source-Api-RequestResponse.yml \
-        $LAMBDASHARP/Tests/Modules/Source-S3.yml \
-        $LAMBDASHARP/Tests/Modules/Source-Sqs.yml \
-        $LAMBDASHARP/Tests/Modules/Source-Alexa.yml \
-        $LAMBDASHARP/Tests/Modules/Variables.yml \
-        $LAMBDASHARP/Tests/Modules/Source-DynamoDB.yml \
-        $LAMBDASHARP/Tests/Modules/Source-Kinesis.yml \
-        $LAMBDASHARP/Tests/Modules/Parameter-String.yml \
-        $LAMBDASHARP/Tests/Modules/Parameter-Resource.yml \
-        $LAMBDASHARP/Tests/Modules/Parameter-ConditionalResource.yml \
-        $LAMBDASHARP/Tests/Modules/Parameter-Secret.yml \
-        $LAMBDASHARP/Tests/Modules/Import-String.yml \
-        $LAMBDASHARP/Tests/Modules/Import-Resource.yml \
-        $LAMBDASHARP/Tests/Modules/Import-Secret.yml \
-        $LAMBDASHARP/Tests/Modules/Output-LiteralValue.yml \
-        $LAMBDASHARP/Tests/Modules/Output-Variable.yml \
-        $LAMBDASHARP/Tests/Modules/Output-Resource.yml \
-        $LAMBDASHARP/Tests/Modules/Output-Function.yml \
-        $LAMBDASHARP/Tests/Modules/Output-CustomResource.yml \
-        $LAMBDASHARP/Tests/Modules/Output-Macro.yml \
-        $LAMBDASHARP/Tests/Modules/Package.yml \
-        $LAMBDASHARP/Tests/Modules/NestedModule.yml \
-        $LAMBDASHARP/Tests/Modules/Variable-Secret.yml \
-        $LAMBDASHARP/Tests/Modules/Function-Finalizer.yml \
-        $LAMBDASHARP/Tests/Modules/Condition-Resource.yml \
-        $LAMBDASHARP/Tests/Modules/Condition-Inline-Resource.yml \
-        $LAMBDASHARP/Tests/Modules/Condition-Scoped-Resource.yml \
-        $LAMBDASHARP/Tests/Modules/Condition-Function.yml \
-        $LAMBDASHARP/Tests/Modules/Condition-Condition.yml \
-        $LAMBDASHARP/Tests/BadModule \
-        $LAMBDASHARP/Modules/LambdaSharp.Core \
-        $LAMBDASHARP/Modules/LambdaSharp.S3.IO \
-        $LAMBDASHARP/Modules/LambdaSharp.S3.Subscriber \
-        $LAMBDASHARP/Modules/LambdaSharp.Twitter.Query \
-        $LAMBDASHARP/Modules/LambdaSharp.App.Bucket \
-        $LAMBDASHARP/Modules/LambdaSharp.App.Api \
-        $LAMBDASHARP/Modules/LambdaSharp.App.EventBus \
-        $LAMBDASHARP/Samples/AlexaSample \
-        $LAMBDASHARP/Samples/ApiSample \
-        $LAMBDASHARP/Samples/ApiInvokeSample \
-        $LAMBDASHARP/Samples/BlazorSample \
-        $LAMBDASHARP/Samples/BlazorEventsSample \
-        $LAMBDASHARP/Samples/CustomResourceTypeSample \
-        $LAMBDASHARP/Samples/DynamoDBSample \
-        $LAMBDASHARP/Samples/EventSample \
-        $LAMBDASHARP/Samples/FinalizerSample \
-        $LAMBDASHARP/Samples/KinesisSample \
-        $LAMBDASHARP/Samples/MetricSample \
-        $LAMBDASHARP/Samples/MacroSample \
-        $LAMBDASHARP/Samples/S3IOSample \
-        $LAMBDASHARP/Samples/S3SubscriptionSample \
-        $LAMBDASHARP/Samples/ScheduleSample \
-        $LAMBDASHARP/Samples/SlackCommandSample \
-        $LAMBDASHARP/Samples/SnsSample \
-        $LAMBDASHARP/Samples/SqsFailureHandlingSample \
-        $LAMBDASHARP/Samples/SqsSample \
-        $LAMBDASHARP/Samples/VpcFunctionSample \
-        $LAMBDASHARP/Samples/WebSocketSample \
-        $LAMBDASHARP/Demos/DemoS3BucketSubscription/DemoS3Bucket \
-        $LAMBDASHARP/Demos/DemoS3BucketSubscription/DemoS3Subscriber \
-        $LAMBDASHARP/Demos/SlackTodo \
-        $LAMBDASHARP/Demos/TwitterNotifier
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
+        `find $LAMBDASHARP/Tests/Modules/ -maxdepth 1 -name *.yml`
 
 else
     testfile=$(basename $1 .yml)
