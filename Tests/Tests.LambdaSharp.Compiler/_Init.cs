@@ -26,7 +26,6 @@ using LambdaSharp.Compiler;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit.Abstractions;
 using LambdaSharp.Compiler.Model;
@@ -34,6 +33,7 @@ using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Modules;
 using System.IO;
+using LambdaSharp.CloudFormation.TypeSystem;
 
 namespace Tests.LambdaSharp.Compiler {
 

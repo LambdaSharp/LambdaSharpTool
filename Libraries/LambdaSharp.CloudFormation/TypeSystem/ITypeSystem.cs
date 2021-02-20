@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -18,19 +18,15 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace LambdaSharp.CloudFormation.TypeSystem {
 
-    public class EmptyTypeSystem : ITypeSystem {
+    public interface ITypeSystem {
 
         //--- Properties ---
-        public IEnumerable<IResourceType> ResourceTypes => Enumerable.Empty<IResourceType>();
+        IEnumerable<IResourceType> ResourceTypes { get; }
 
         //--- Methods ---
-        public bool TryGetResourceType(string resourceTypeName, [NotNullWhen(true)] out IResourceType? resourceType) {
-            resourceType = null;
-            return false;
-        }
+        bool TryGetResourceType(string resourceTypeName, [NotNullWhen(true)] out IResourceType? resourceType);
     }
 }

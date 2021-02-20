@@ -16,23 +16,17 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.TypeSystem {
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
-    public enum ResourceCollectionType {
-        NoCollection,
-        List,
-        Map
-    }
+namespace LambdaSharp.CloudFormation.TypeSystem {
 
-    public enum ResourceItemType {
-        ComplexType,
-        String,
-        Long,
-        Integer,
-        Double,
-        Boolean,
-        Timestamp,
-        Json,
-        Any
+    public interface IResourceType {
+
+        //--- Properties ---
+        string Name { get; }
+        bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property);
+        bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute);
+        IEnumerable<IResourceProperty> RequiredProperties { get; }
     }
 }

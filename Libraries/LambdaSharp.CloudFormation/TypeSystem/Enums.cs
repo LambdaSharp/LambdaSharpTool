@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -16,17 +16,23 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+namespace LambdaSharp.CloudFormation.TypeSystem {
 
-namespace LambdaSharp.Compiler.TypeSystem {
+    public enum ResourceCollectionType {
+        NoCollection,
+        List,
+        Map
+    }
 
-    public interface ITypeSystem {
-
-        //--- Properties ---
-        IEnumerable<IResourceType> ResourceTypes { get; }
-
-        //--- Methods ---
-        bool TryGetResourceType(string resourceTypeName, [NotNullWhen(true)] out IResourceType? resourceType);
+    public enum ResourceItemType {
+        ComplexType,
+        String,
+        Long,
+        Integer,
+        Double,
+        Boolean,
+        Timestamp,
+        Json,
+        Any
     }
 }

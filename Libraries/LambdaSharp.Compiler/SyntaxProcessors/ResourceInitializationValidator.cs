@@ -17,10 +17,10 @@
  */
 
 using System;
+using LambdaSharp.CloudFormation.TypeSystem;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
-using LambdaSharp.Compiler.TypeSystem;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;

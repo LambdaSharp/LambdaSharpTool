@@ -19,11 +19,11 @@
 using System;
 using System.Linq;
 using FluentAssertions;
-using LambdaSharp.Compiler.TypeSystem;
+using LambdaSharp.CloudFormation.TypeSystem;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation {
+namespace Tests.LambdaSharp.CloudFormation.Specification.TypeSystem {
 
     public class CloudFormationTypeSystemTests : _Init, IClassFixture<CloudFormationTypeSystemFixture> {
 

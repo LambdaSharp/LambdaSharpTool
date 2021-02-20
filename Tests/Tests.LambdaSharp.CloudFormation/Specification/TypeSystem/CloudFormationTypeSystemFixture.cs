@@ -21,7 +21,7 @@ using System.IO.Compression;
 using LambdaSharp.CloudFormation.Specification.TypeSystem;
 using LambdaSharp.CloudFormation.TypeSystem;
 
-namespace Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation {
+namespace Tests.LambdaSharp.CloudFormation.Specification.TypeSystem {
 
     public class CloudFormationTypeSystemFixture : IDisposable {
 

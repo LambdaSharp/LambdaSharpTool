@@ -17,10 +17,9 @@
  */
 
 using System;
-using LambdaSharp.Compiler.Exceptions;
-using LambdaSharp.CloudFormation.Specification;
+using LambdaSharp.CloudFormation.TypeSystem;
 
-namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
+namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
     internal class CloudFormationResourceAttribute : IResourceAttribute {
 
@@ -74,7 +73,7 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
                     case "Json":
                         return ResourceItemType.Json;
                     default:
-                        throw new ShouldNeverHappenException($"unexpected primitive type: {_attributeType.PrimitiveType ?? "<null>"} in {Name}");
+                        throw new InvalidOperationException($"unexpected primitive type: {_attributeType.PrimitiveType ?? "<null>"} in {Name}");
                     }
                 } else {
                     switch(_attributeType.PrimitiveItemType) {
@@ -95,7 +94,7 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
                     case "Json":
                         return ResourceItemType.Json;
                     default:
-                        throw new ShouldNeverHappenException($"unexpected primitive item type: {_attributeType.PrimitiveItemType ?? "<null>"} in {Name}");
+                        throw new InvalidOperationException($"unexpected primitive item type: {_attributeType.PrimitiveItemType ?? "<null>"} in {Name}");
                     }
                 }
             }
@@ -108,11 +107,9 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
                 throw new InvalidOperationException("attribute uses a primitive type");
             }
             if(CollectionType == ResourceCollectionType.NoCollection) {
-                return GetResourceType(_attributeType.Type ?? throw new ShouldNeverHappenException("'Type' is null"));
-            } else {
-                return GetResourceType(_attributeType.ItemType ?? throw new ShouldNeverHappenException("'ItemType' is null"));
+                return GetResourceType(_attributeType.Type ?? throw new InvalidOperationException("'Type' is null"));
             }
-            throw new ShouldNeverHappenException();
+            return GetResourceType(_attributeType.ItemType ?? throw new InvalidOperationException("'ItemType' is null"));
 
             // local function
             CloudFormationResourceType GetResourceType(string complexTypeName) {
@@ -122,7 +119,7 @@ namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
                 } else if(_specification.PropertyTypes.TryGetValue(complexTypeName, out type)) {
                     return new CloudFormationResourceType(complexTypeName, type, _specification);
                 } else {
-                    throw new ShouldNeverHappenException($"complex type name not found: {resourceSpecificComplexTypeName}");
+                    throw new InvalidOperationException($"complex type name not found: {resourceSpecificComplexTypeName}");
                 }
             }
         }

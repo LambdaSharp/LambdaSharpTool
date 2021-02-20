@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -16,19 +16,15 @@
  * limitations under the License.
  */
 
-using System;
+namespace LambdaSharp.CloudFormation.TypeSystem {
 
-namespace LambdaSharp.Compiler.TypeSystem {
-
-    internal class AnyResourceAttribute : IResourceAttribute {
-
-        //--- Constructors ---
-        public AnyResourceAttribute(string attributeName) => Name = attributeName ?? throw new ArgumentNullException(nameof(attributeName));
+    public interface IResourceProperty {
 
         //--- Properties ---
-        public string Name { get; }
-        public ResourceCollectionType CollectionType => ResourceCollectionType.NoCollection;
-        public ResourceItemType ItemType => ResourceItemType.Any;
-        public IResourceType ComplexType => AnyResourceType.Instance;
+        string Name { get; }
+        bool Required { get; }
+        ResourceCollectionType CollectionType { get; }
+        ResourceItemType ItemType { get; }
+        IResourceType ComplexType { get; }
     }
 }

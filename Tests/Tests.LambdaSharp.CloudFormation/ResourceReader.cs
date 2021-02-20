@@ -20,7 +20,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace Tests.LambdaSharp.Compiler {
+namespace Tests.LambdaSharp.CloudFormation {
 
     internal static class ResourceReader {
 

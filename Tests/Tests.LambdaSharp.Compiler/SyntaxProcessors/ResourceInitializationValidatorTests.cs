@@ -17,11 +17,11 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
-using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.SyntaxProcessors;
 using Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation;
 using Xunit;
 using Xunit.Abstractions;
+using LambdaSharp.CloudFormation.TypeSystem;
 
 namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
@@ -93,7 +93,6 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             // assert
             ExpectedMessages();
         }
-
 
         //--- Properties ---
         protected ITypeSystem TypeSystem => _typeSystemFixture.TypeSystem;

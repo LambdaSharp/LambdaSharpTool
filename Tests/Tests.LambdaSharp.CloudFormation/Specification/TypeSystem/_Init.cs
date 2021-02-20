@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2019
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +17,26 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+using FluentAssertions;
+using Xunit.Abstractions;
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace Tests.LambdaSharp.CloudFormation.Specification.TypeSystem {
 
-    internal class AnyResourceProperty : IResourceProperty {
+    public abstract class _Init {
+
+        //--- Class Methods ---
+        protected static void ShouldNotBeNull([NotNull] object? value, string? because = null) {
+            value.Should().NotBeNull(because);
+            if(value == null) {
+                throw new InvalidOperationException();
+            }
+        }
+
+        //--- Fields ---
+        protected readonly ITestOutputHelper Output;
 
         //--- Constructors ---
-        public AnyResourceProperty(string propertyName) => Name = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
-
-        //--- Properties ---
-        public string Name { get; }
-        public bool Required => false;
-        public ResourceCollectionType CollectionType => ResourceCollectionType.NoCollection;
-        public ResourceItemType ItemType => ResourceItemType.Any;
-        public IResourceType ComplexType => AnyResourceType.Instance;
+        public _Init(ITestOutputHelper output) => Output = output;
     }
 }

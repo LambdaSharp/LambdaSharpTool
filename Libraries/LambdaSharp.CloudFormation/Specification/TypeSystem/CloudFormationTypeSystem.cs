@@ -22,9 +22,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using LambdaSharp.CloudFormation.Specification;
+using LambdaSharp.CloudFormation.TypeSystem;
 
-namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
+namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
     public sealed class CloudFormationTypeSystem : ITypeSystem {
 

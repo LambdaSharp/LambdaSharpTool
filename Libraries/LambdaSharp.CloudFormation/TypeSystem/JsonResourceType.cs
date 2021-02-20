@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace LambdaSharp.CloudFormation.TypeSystem {
 
     internal class JsonResourceType : IResourceType {
 

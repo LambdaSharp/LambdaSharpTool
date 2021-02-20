@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace LambdaSharp.CloudFormation.TypeSystem {
 
-    public interface IResourceProperty {
+    public interface IResourceAttribute {
 
         //--- Properties ---
         string Name { get; }
-        bool Required { get; }
         ResourceCollectionType CollectionType { get; }
         ResourceItemType ItemType { get; }
         IResourceType ComplexType { get; }

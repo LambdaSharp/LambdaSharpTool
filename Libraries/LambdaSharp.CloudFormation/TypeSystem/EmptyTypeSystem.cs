@@ -16,14 +16,21 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.TypeSystem {
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
-    public interface IResourceAttribute {
+namespace LambdaSharp.CloudFormation.TypeSystem {
+
+    public class EmptyTypeSystem : ITypeSystem {
 
         //--- Properties ---
-        string Name { get; }
-        ResourceCollectionType CollectionType { get; }
-        ResourceItemType ItemType { get; }
-        IResourceType ComplexType { get; }
+        public IEnumerable<IResourceType> ResourceTypes => Enumerable.Empty<IResourceType>();
+
+        //--- Methods ---
+        public bool TryGetResourceType(string resourceTypeName, [NotNullWhen(true)] out IResourceType? resourceType) {
+            resourceType = null;
+            return false;
+        }
     }
 }

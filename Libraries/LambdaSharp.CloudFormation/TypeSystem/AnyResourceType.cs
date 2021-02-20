@@ -20,9 +20,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace LambdaSharp.Compiler.TypeSystem {
+namespace LambdaSharp.CloudFormation.TypeSystem {
 
-    internal class AnyResourceType : IResourceType {
+    public class AnyResourceType : IResourceType {
 
         //--- Class Fields ---
         public static readonly IResourceType Instance = new AnyResourceType();

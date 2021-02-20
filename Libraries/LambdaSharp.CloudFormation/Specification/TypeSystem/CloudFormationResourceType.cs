@@ -20,9 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using LambdaSharp.CloudFormation.Specification;
+using LambdaSharp.CloudFormation.TypeSystem;
 
-namespace LambdaSharp.Compiler.TypeSystem.CloudFormation {
+namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
     internal sealed class CloudFormationResourceType : IResourceType {
 
