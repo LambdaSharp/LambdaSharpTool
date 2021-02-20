@@ -46,7 +46,10 @@ namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
 
         //--- Properties ---
         public string Name => _resourceType.Type ?? throw new InvalidOperationException();
-        public IEnumerable<IResourceProperty> RequiredProperties => _properties.Values.Where(property => property.Required);
+        public string? Documentation => null;
+        public IEnumerable<IResourceProperty> RequiredProperties => Properties.Where(property => property.Required);
+        public IEnumerable<IResourceProperty> Properties => _properties.Values;
+        public IEnumerable<IResourceAttribute> Attributes => _attributes.Values;
 
         //--- Methods ---
         public bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute) => _attributes.TryGetValue(attributeName, out attribute);

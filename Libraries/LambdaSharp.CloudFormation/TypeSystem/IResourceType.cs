@@ -25,8 +25,11 @@ namespace LambdaSharp.CloudFormation.TypeSystem {
 
         //--- Properties ---
         string Name { get; }
+        string? Documentation { get; }
         bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property);
         bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute);
+        IEnumerable<IResourceProperty> Properties { get; }
         IEnumerable<IResourceProperty> RequiredProperties { get; }
+        IEnumerable<IResourceAttribute> Attributes { get; }
     }
 }

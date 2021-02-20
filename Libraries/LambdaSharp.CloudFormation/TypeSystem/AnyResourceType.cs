@@ -32,7 +32,10 @@ namespace LambdaSharp.CloudFormation.TypeSystem {
 
         //--- Properties ---
         public string Name => "*";
+        public string? Documentation => null;
         public IEnumerable<IResourceProperty> RequiredProperties => Enumerable.Empty<IResourceProperty>();
+        public IEnumerable<IResourceProperty> Properties => Enumerable.Empty<IResourceProperty>();
+        public IEnumerable<IResourceAttribute> Attributes => Enumerable.Empty<IResourceAttribute>();
 
         //--- Methods ---
         public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property) {

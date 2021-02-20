@@ -29,23 +29,30 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
         //--- Fields ---
         private readonly ResourceType _resourceType;
         private readonly ExtendedCloudFormationSpecification _specification;
-        private readonly Lazy<IEnumerable<IResourceProperty>> _requiredProperties;
+        private readonly Lazy<IEnumerable<IResourceProperty>> _properties;
+        private readonly Lazy<IEnumerable<IResourceAttribute>> _attributes;
 
         //--- Constructors ---
         public CloudFormationResourceType(string resourceName, ResourceType resourceType, ExtendedCloudFormationSpecification specification) {
             Name = resourceName ?? throw new ArgumentNullException(nameof(resourceName));
             _resourceType = resourceType ?? throw new ArgumentNullException(nameof(resourceType));
             _specification = specification ?? throw new ArgumentNullException(nameof(specification));
-            _requiredProperties = new Lazy<IEnumerable<IResourceProperty>>(() => _resourceType.Properties
-                .Where(kv => kv.Value.Required).Select(kv => new CloudFormationResourceProperty(kv.Key, this, kv.Value, _specification))
-                .ToList()
+            _properties = new Lazy<IEnumerable<IResourceProperty>>(() => _resourceType.Properties
+                .Select(kv => new CloudFormationResourceProperty(kv.Key, this, kv.Value, _specification))
+                .ToArray()
+            );
+            _attributes = new Lazy<IEnumerable<IResourceAttribute>>(() => _resourceType.Attributes
+                .Select(kv => new CloudFormationResourceAttribute(kv.Key, this, kv.Value, _specification))
+                .ToArray()
             );
         }
 
         //--- Properties ---
         public string Name { get; }
-
-        public IEnumerable<IResourceProperty> RequiredProperties => _requiredProperties.Value;
+        public string? Documentation => _resourceType.Documentation;
+        public IEnumerable<IResourceProperty> RequiredProperties => Properties.Where(property => property.Required);
+        public IEnumerable<IResourceProperty> Properties => _properties.Value;
+        public IEnumerable<IResourceAttribute> Attributes => _attributes.Value;
 
         //--- Methods ---
         public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property) {
