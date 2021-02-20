@@ -93,7 +93,7 @@ Items:
       Pragmas:
         - no-type-validation
 
-    - Nested: MyNestedModule
+    - Stack: MyNestedModule
       Description: description
       Module: Acme.MyOtherModule:1.0@my-bucket
       DependsOn:
