@@ -47,6 +47,25 @@ The <code>Type</code> attribute specifies the data type for the attribute. When 
 <i>Required</i>: No
 
 <i>Type</i>: String
+
+The following attributes types are supported.
+
+<dl>
+
+<dt><code>String</code></dt>
+<dd>
+
+A text value.
+</dd>
+
+<dt><code>Number</code></dt>
+<dd>
+
+An integer or float value.
+</dd>
+
+</dl>
+</dd>
 </dd>
 
 </dl>

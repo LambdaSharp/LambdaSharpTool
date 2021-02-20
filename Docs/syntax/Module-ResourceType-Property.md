@@ -58,6 +58,30 @@ The <code>Type</code> attribute specifies the data type for the property. When o
 <i>Required</i>: No
 
 <i>Type</i>: String
+
+The following property types are supported.
+
+<dl>
+
+<dt><code>String</code></dt>
+<dd>
+
+A text value.
+</dd>
+
+<dt><code>Number</code></dt>
+<dd>
+
+An integer or float value.
+</dd>
+
+<dt><code>Json</code></dt>
+<dd>
+
+An object expression with keys and values.
+</dd>
+
+</dl>
 </dd>
 
 </dl>
