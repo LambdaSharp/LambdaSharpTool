@@ -20,9 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using LambdaSharp.Exceptions;
+using LambdaSharp.Internal;
 using LambdaSharp.Logging.ErrorReports.Models;
 
 namespace LambdaSharp.Logging.ErrorReports {
@@ -39,7 +41,9 @@ namespace LambdaSharp.Logging.ErrorReports {
         private const string LANGUAGE = "csharp";
 
         //--- Class Fields ---
-        private static readonly HashAlgorithm _algorithm = MD5.Create();
+        private static readonly HashAlgorithm _algorithm = RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))
+            ? (HashAlgorithm)new MonoMD5()
+            : MD5.Create();
 
         //--- Class Methods ---
         private static string ToHash(string value) {
@@ -93,16 +97,16 @@ namespace LambdaSharp.Logging.ErrorReports {
         }
 
         //--- Fields ---
-        private readonly string _moduleId;
-        private readonly string _moduleInfo;
-        private readonly string _functionId;
-        private readonly string _functionName;
-        private readonly string _appId;
-        private readonly string _appName;
-        private readonly string _framework;
-        private readonly string _gitSha;
-        private readonly string _gitBranch;
-        private readonly string _platform;
+        private readonly string? _moduleId;
+        private readonly string? _moduleInfo;
+        private readonly string? _functionId;
+        private readonly string? _functionName;
+        private readonly string? _appId;
+        private readonly string? _appName;
+        private readonly string? _framework;
+        private readonly string? _gitSha;
+        private readonly string? _gitBranch;
+        private readonly string? _platform;
 
         //--- Constructors ---
 
@@ -120,16 +124,16 @@ namespace LambdaSharp.Logging.ErrorReports {
         /// <param name="gitSha">An optional git SHA.</param>
         /// <param name="gitBranch">An optional git branch name.</param>
         public LambdaErrorReportGenerator(
-            string moduleId,
-            string moduleInfo,
-            string platform,
-            string functionId,
-            string functionName,
-            string appId,
-            string appName,
-            string framework,
-            string gitSha,
-            string gitBranch
+            string? moduleId,
+            string? moduleInfo,
+            string? platform,
+            string? functionId,
+            string? functionName,
+            string? appId,
+            string? appName,
+            string? framework,
+            string? gitSha,
+            string? gitBranch
         ) {
             _moduleId = moduleId ?? throw new ArgumentNullException(nameof(moduleId));
             _moduleInfo = moduleInfo ?? throw new ArgumentNullException(nameof(moduleInfo));
@@ -175,7 +179,7 @@ namespace LambdaSharp.Logging.ErrorReports {
                 .ToList();
             return new LambdaErrorReport {
                 ModuleInfo = _moduleInfo,
-                Module = _moduleInfo.Split(new[] { ':' }, 2)[0],
+                Module = _moduleInfo?.Split(new[] { ':' }, 2)[0],
                 ModuleId = _moduleId,
                 RequestId = requestId,
                 Level = level,

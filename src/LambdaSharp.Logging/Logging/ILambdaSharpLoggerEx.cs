@@ -35,7 +35,7 @@ namespace LambdaSharp.Logging {
         /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
         /// <param name="arguments">Optional arguments for the message string.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogDebug(this ILambdaSharpLogger logger, string format, params object[] arguments){
+        public static void LogDebug(this ILambdaSharpLogger logger, string format, params object?[] arguments){
             if(logger.DebugLoggingEnabled) {
                 logger.Log(LambdaLogLevel.DEBUG, exception: null, format: format, arguments: arguments);
             }
@@ -48,7 +48,7 @@ namespace LambdaSharp.Logging {
         /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
         /// <param name="arguments">Optional arguments for the message string.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogInfo(this ILambdaSharpLogger logger, string format, params object[] arguments)
+        public static void LogInfo(this ILambdaSharpLogger logger, string format, params object?[] arguments)
             => logger.Log(LambdaLogLevel.INFO, exception: null, format: format, arguments: arguments);
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace LambdaSharp.Logging {
         /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
         /// <param name="arguments">Optional arguments for the message string.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogWarn(this ILambdaSharpLogger logger, string format, params object[] arguments)
+        public static void LogWarn(this ILambdaSharpLogger logger, string format, params object?[] arguments)
             => logger.Log(LambdaLogLevel.WARNING, exception: null, format: format, arguments: arguments);
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace LambdaSharp.Logging {
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogError(this ILambdaSharpLogger logger, Exception exception, string format, params object[] arguments)
+        public static void LogError(this ILambdaSharpLogger logger, Exception exception, string? format, params object?[] arguments)
             => logger.Log(LambdaLogLevel.ERROR, exception, format, arguments);
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace LambdaSharp.Logging {
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogErrorAsInfo(this ILambdaSharpLogger logger, Exception exception, string format, params object[] arguments)
+        public static void LogErrorAsInfo(this ILambdaSharpLogger logger, Exception exception, string? format, params object?[] arguments)
             => logger.Log(LambdaLogLevel.INFO, exception, format, arguments);
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace LambdaSharp.Logging {
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogErrorAsWarning(this ILambdaSharpLogger logger, Exception exception, string format, params object[] arguments)
+        public static void LogErrorAsWarning(this ILambdaSharpLogger logger, Exception exception, string? format, params object?[] arguments)
             => logger.Log(LambdaLogLevel.WARNING, exception, format, arguments);
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace LambdaSharp.Logging {
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogFatal(this ILambdaSharpLogger logger, Exception exception, string format, params object[] arguments)
+        public static void LogFatal(this ILambdaSharpLogger logger, Exception exception, string? format, params object?[] arguments)
             => logger.Log(LambdaLogLevel.FATAL, exception, format, arguments);
     }
 }

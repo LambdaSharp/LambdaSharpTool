@@ -309,6 +309,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 "Parameter",
                 "Resource",
                 "ResourceType",
+                "Stack",
                 "Variable"
             });
 
@@ -497,7 +498,8 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 });
                 break;
             case "Nested":
-                AtLocation(node.Nested, () => {
+            case "Stack":
+                AtLocation(node.Stack, () => {
 
                     // validation
                     if(node.Module == null) {
@@ -519,13 +521,13 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                         return innerModuleInfo;
                     });
 
-                    // create nested module definition
+                    // create nested stack definition
                     if(moduleInfo != null) {
 
-                        // create nested module item
-                        _builder.AddNestedModule(
+                        // create nested stack item
+                        _builder.AddNestedStack(
                             parent: parent,
-                            name: node.Nested,
+                            name: node.Stack,
                             description: node.Description,
                             moduleInfo: moduleInfo,
                             scope: ConvertScope(node.Scope),
@@ -679,12 +681,9 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     if(node.Attributes != null) {
                         AtLocation("Attributes", () => {
                             attributes = ParseTo<List<ModuleManifestResourceProperty>>(node.Attributes);
-
-                            // validate fields
-                            Validate((attributes?.Count() ?? 0) > 0, "empty or invalid 'Attributes' section");
                         });
                     } else {
-                        LogError("missing 'Attributes' section");
+                        attributes = new List<ModuleManifestResourceProperty>();
                     }
 
                     // create resource type
@@ -1035,6 +1034,10 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     break;
                 case "netcoreapp3.1":
                     runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
+                    break;
+                case "net5":
+                case "net5.0":
+                    runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
                     break;
                 default:
                     LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");

@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <RootNamespace>LambdaSharp.SimpleNotificationService</RootNamespace>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS1998</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <PackageId>LambdaSharp.SimpleNotificationService</PackageId>
+    <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
+    <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
+    <Title>LambdaSharp (λ#) SNS Lambda</Title>
+    <Description>Serverless .NET for AWS - SNS Lambda Library</Description>
+    <Company>LambdaSharp</Company>
+    <Copyright>Copyright (C) 2018-2021</Copyright>
+    <Authors>Bjorg</Authors>
+
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
+    <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
+    <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LambdaSharp\LambdaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+</Project>

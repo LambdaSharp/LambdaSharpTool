@@ -284,8 +284,8 @@ namespace LambdaSharp {
         /// <exception cref="LambdaConfigBadValueException">
         /// Thrown when the value fails validation.
         /// </exception>
-        public string? ReadText(string key, string? defaultValue, Action<string?>? validate = null)
-            => Read(key, fallback: _ => defaultValue, convert: v => v, validate: validate);
+        public string ReadText(string key, string? defaultValue, Action<string>? validate = null)
+            => Read(key, fallback: _ => defaultValue! /* NOTE (2021-01-04, bjorg): this is ugly, but I don't know how to allow a `null` value here :( */, convert: v => v, validate: validate);
 
         /// <summary>
         /// Read an enumeration of comma-delimited <c>string</c> values for a

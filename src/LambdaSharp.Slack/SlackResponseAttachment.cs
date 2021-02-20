@@ -72,7 +72,7 @@ namespace LambdaSharp.Slack {
 
     public class SlackResponseAttachmentFields {
 
-        //--- Properties ---
+        //--- Fields ---
         [JsonPropertyName("title")]
         public string Title { get; set; }
 

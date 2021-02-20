@@ -709,7 +709,7 @@ namespace LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleItem AddNestedModule(
+        public AModuleItem AddNestedStack(
             AModuleItem parent,
             string name,
             string description,
@@ -725,7 +725,7 @@ namespace LambdaSharp.Tool.Model {
                 LogError("missing module version");
             }
 
-            // add nested module resource
+            // add nested stack resource
             var stack = new Humidifier.CloudFormation.Stack {
                 NotificationARNs = FnRef("AWS::NotificationARNs"),
                 Parameters = moduleParameters,
@@ -776,7 +776,7 @@ namespace LambdaSharp.Tool.Model {
                             LogError($"unknown module parameter '{moduleParameter.Key}'");
                         }
 
-                        // inherit dependencies from nested module
+                        // inherit dependencies from module for nested stack
                         foreach(var manifestDependency in manifest.Dependencies) {
                             AddDependencyAsync(manifestDependency.ModuleInfo, manifestDependency.Type).Wait();
                         }
@@ -800,12 +800,12 @@ namespace LambdaSharp.Tool.Model {
                             moduleParameters.Add(nestedImport.Name, FnRef(parameterName));
                         }
 
-                        // check if x-ray tracing should be enabled in nested module
+                        // check if x-ray tracing should be enabled in nested stack
                         if(formalParameters.ContainsKey("XRayTracing") && !moduleParameters.ContainsKey("XRayTracing")) {
                             moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", XRayTracingLevel.AllModules.ToString(), XRayTracingLevel.Disabled.ToString()));
                         }
                     } else {
-                        LogWarn("unable to validate nested module parameters");
+                        LogWarn("unable to validate nested stack parameters");
                     }
                 } else {
 
@@ -1129,7 +1129,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // create app bucket
-            var appBucket = AddNestedModule(
+            var appBucket = AddNestedStack(
                 parent: app,
                 name: "Bucket",
                 description: null,
@@ -1200,7 +1200,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // add nested stack for the app API
-            var appApi = AddNestedModule(
+            var appApi = AddNestedStack(
                 parent: app,
                 name: "Api",
                 description: null,
@@ -1226,7 +1226,7 @@ namespace LambdaSharp.Tool.Model {
 
             // add nested stack for the app event bus
             if(app.Sources.Any()) {
-                var appEventBus = AddNestedModule(
+                var appEventBus = AddNestedStack(
                     parent: app,
                     name: "EventBus",
                     description: null,

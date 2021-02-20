@@ -29,6 +29,7 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
     using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
+    using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
 
     public class CliTierCommand : ACliCommand {
 

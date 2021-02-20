@@ -29,7 +29,7 @@ namespace BadModule.FailConstructor {
     public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Constructors ---
-        public Function() {
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) {
             throw new Exception("this exception was thrown in the constructor");
         }
 

@@ -18,8 +18,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using LambdaSharp.ConfigSource;
 
 namespace LambdaSharp {
@@ -69,8 +69,9 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="secretBytes">Array containing the encrypted bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string>? encryptionContext = null);
+        Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string>? encryptionContext = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Encrypt a sequence of bytes using the specified KMS key. The Lambda function requires
@@ -79,8 +80,9 @@ namespace LambdaSharp {
         /// <param name="plaintextBytes">Array containing plaintext byte to encrypt.</param>
         /// <param name="encryptionKeyId">The KMS key ID used encrypt the plaintext bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string>? encryptionContext = null);
+        Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string>? encryptionContext = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Send a message to the specified SQS queue. The Lambda function requires <c>sqs:SendMessage</c> permission
@@ -89,8 +91,9 @@ namespace LambdaSharp {
         /// <param name="queueUrl">The SQS queue URL.</param>
         /// <param name="message">The message to send.</param>
         /// <param name="messageAttributes">Optional attributes for the message.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task SendMessageToQueueAsync(string queueUrl, string message, IEnumerable<KeyValuePair<string, string>>? messageAttributes = null);
+        Task SendMessageToQueueAsync(string queueUrl, string message, IEnumerable<KeyValuePair<string, string>>? messageAttributes = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
@@ -101,6 +104,7 @@ namespace LambdaSharp {
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
         /// <param name="detail">Optional data-structure serialized as JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        Task SendEventAsync(DateTimeOffset timestamp, string eventbus, string source, string detailType, string detail, IEnumerable<string> resources);
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+        Task SendEventAsync(DateTimeOffset timestamp, string eventbus, string source, string detailType, string detail, IEnumerable<string> resources, CancellationToken cancellationToken = default);
     }
 }

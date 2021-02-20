@@ -1,5 +1,8 @@
 Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
+Pragmas:
+  - Overrides:
+      Module::RestApi::CorsOrigin: "*"
 Items:
 
   - Function: Function
@@ -15,4 +18,3 @@ Items:
       - Api: DELETE /items/{id}
         Integration: RequestResponse
         ApiKeyRequired: true
-

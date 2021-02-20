@@ -106,7 +106,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D893A4FD1ECAE9F3D20FB5A71589F75F"
+      "Default": "8C371C993EEA4F27A9CDE4B55915B7B8"
     }
   },
   "Resources": {
@@ -1797,7 +1797,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.App.Api:1.0-DEV",
       "Description": "LambdaSharp app API for CloudWatch Logs, Metrics, and Events",
-      "TemplateChecksum": "D893A4FD1ECAE9F3D20FB5A71589F75F",
+      "TemplateChecksum": "8C371C993EEA4F27A9CDE4B55915B7B8",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [

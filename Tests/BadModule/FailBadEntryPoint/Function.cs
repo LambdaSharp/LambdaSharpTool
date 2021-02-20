@@ -27,6 +27,9 @@ namespace BadModule.FailBadEntryPoint {
 
     public class WrongFunction : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
+        //--- Constructors ---
+        public WrongFunction() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

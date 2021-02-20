@@ -36,6 +36,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool {
+    using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
 
     public class ModelManifestLoader : AModelProcessor {
 

@@ -18,13 +18,12 @@
 
 using System;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace LambdaSharp.Slack {
 
     public class SlackResponse {
-
-        //--- Types ---
 
         //--- Class Methods ---
         public static SlackResponse InChannel(string text, params SlackResponseAttachment[] attachments) {
@@ -36,6 +35,7 @@ namespace LambdaSharp.Slack {
         }
 
         //--- Fields ---
+
         [JsonPropertyName("response_type")]
         public string ResponseType { get; set; }
 

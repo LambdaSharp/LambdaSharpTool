@@ -6,15 +6,23 @@ keywords: newtonsoft, json, serialization, system
 
 # JSON Serialization
 
-> TODO:
-> * describe `[JsonConverter(typeof(JsonIntConverter))] public int Value { get; set; }`
-> * describe `[JsonConverter(typeof(JsonUnixDateTimeConverter))]`
+Starting with v0.8.2, _LambdaSharp_ uses _System.Text.Json_ v5.0 instead of _Newtonsoft.Json_ for JSON serialization of built-in types. Custom types are handled with the JSON serializer specified using the `LambdaSerializer` assembly attribute.
 
-As of _v0.8.1.0_, LambdaSharp has switched from using _Newtonsoft.Json_ to _System.Text.Json_. See the section below on how to migrate existing code to the new JSON serializer.
+This article describes how to switch from the default _Newtonsoft.Json_ to _System.Text.Json_, as well as what to look out for.
 
 ## Migrating JSON Serialization from _Newtonsoft.Json_ to _System.Text.Json_
 
-Microsoft has published an excellent [migration guide](https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to) for switching from _Newtonsoft.Json_ to _System.Text.Json_. In addition to the guide, the following sections explain how to migrate existing data-structures.
+Lambda functions using _System.Text.Json_ must declare `LambdaSystemTextJsonSerializer` as their JSON serializer using the `JsonSerializer` assembly attribute.
+```csharp
+[assembly: Amazon.Lambda.Core.LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaSystemTextJsonSerializer))]
+```
+
+Microsoft has published an excellent [migration guide](https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0) for switching from _Newtonsoft.Json_ to _System.Text.Json_. In addition to the guide, the following sections explain how to migrate existing data-structures.
+
+Alternatively, functions can continue to use _Newtonsoft.Json_ as their JSON serializer by including the `LambdaSharp.Serialization.NewtonsoftJson` assembly from NuGet:
+```csharp
+[assembly: Amazon.Lambda.Core.LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer))]
+```
 
 ### Update Projects
 
@@ -22,39 +30,46 @@ Upgrade projects to .NET Core 3.1 by changing the target framework in the _.cspr
 * Before: `<TargetFramework>netcoreapp2.1</TargetFramework>`
 * After: `<TargetFramework>netcoreapp3.1</TargetFramework>`
 
-Remove all _Newtonsoft.Json_ package dependencies.
-* Remove: `<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />`
+Remove all _Newtonsoft.Json_ package dependencies (version may vary).
+* Remove: `<PackageReference Include="Newtonsoft.Json" />`
 
-### Remove Serializer Declarations
+### Replace Non-Public Properties/Fields with Public Properties/Fields
 
-Remove all explicit `LambdaSerializer` declarations in the function files.
-* Remove: `[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]`
-
-### Replace Fields with Public Properties
-
-Fields must be converted to public, mutable properties.
-* Before: `public string Name;`
-* After: `public string Name { get; set; }`
+Unlike _Newtonsoft.Json_, _System.Text.Json_ does not serialize non-public properties/fields.
 
 Non-public properties must be converted to public, mutable properties.
-* Before: `internal string Name { get; set; };`
+* Before: `internal string Name { get; set; }`
 * After: `public string Name { get; set; }`
 
 Limited mutable properties must be converted to public, mutable properties to be deserialized properly.
-* Before: `public string Name { get; protected set; };`
+* Before: `public string Name { get; protected set; }`
 * After: `public string Name { get; set; }`
 
-### Review Property Types
+Non-public fields must be converted to public, mutable fields.
+* Before: `internal string Name;`
+* After: `public string Name;`
 
-> TODO: verify if this was `string` to `int` -or- `int` to `string`
+### Convert JSON string values to `enum` properties
 
-Beware of `string` properties to deserialize a JSON number. _Newtonsoft.Json_ would automatically convert the number to a string. _System.Text.Json_ ignores the number instead.
-* Before: `public string Timestamp { get; set; }`
-* After: `public long Timestamp { get; set; }`
+_Newtonsoft.Json_ provides `StringEnumConverter` to convert JSON string to `enum` properties. _System.Text.Json_ includes an equivalent converter called `JsonStringEnumConverter` in the _System.Text.Json.Serialization_ namespace.
+* Before: `[JsonConverter(typeof(StringEnumConverter))]`
+* After: `[JsonConverter(typeof(JsonStringEnumConverter))]`
 
-Beware of derived classes during serialization. _System.Text.Json_ will only serialize properties of the declared type, not all the properties of the actual instance, unless you use `object` as type.
-* Before: `JsonSerializer.Serialize<Car>(new Sedan { ... })` (only `Car` properties are serialized; any additional `Sedan` properties are skipped)
-* After: `JsonSerializer.Serialize<object>(mySedan)` (all public properties are always serialized)
+### Convert JSON integer values to `DateTimeOffset`/`DateTime` properties
+
+_Newtonsoft.Json_ provides `UnixDateTimeConverter` to convert JSON integer to `DateTime` properties. _System.Text.Json_ does not include such a converter. Instead, _LambdaSharp.Serialization_ defines `JsonEpochSecondsDateTimeOffsetConverter` and `JsonEpochSecondsDateTimeConverter` to convert `DateTimeOffset` and `DateTime`, respectively to a JSON integer representing the UNIX epoch in seconds.
+
+```csharp
+[JsonConverter(typeof(JsonEpochSecondsDateTimeOffsetConverter))]
+public DateTimeOffset Epoch { get; set; }
+```
+
+--OR--
+
+```csharp
+[JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
+public DateTime Epoch { get; set; }
+```
 
 ### Update Property Attributes
 
@@ -65,15 +80,55 @@ Replace attribute for explicitly naming JSON elements.
 
 Replace attribute for requiring a JSON property (used by JSON schema generator for API Gateway models)
 * Before: `[JsonRequired]` -or- `[JsonProperty(Required = Required.DisallowNull)]`
-* After: `[DataMember(IsRequired = true)]`
-* Requires: `using System.Runtime.Serialization;`
+* After: `[Required]`
+* Requires: `using System.ComponentModel.DataAnnotations;`
 
-### Replace JSON Converters
+### Case-Sensitive Serialization
 
-Replace enum-to-string converters.
-* Before: `[JsonConverter(typeof(StringEnumConverter))]`
-* After: `[JsonConverter(typeof(JsonStringEnumConverter))]`
-* Requires: `using System.Text.Json.Serialization;`
+_Newtonsoft.Json_ is not case-sensitive on property/field names, but _System.Text.Json_ is.
+
+#### Solution 1: Use _Newtonsoft.Json_ Serializer
+
+Keep using the _Newtonsoft.Json_ serializer instead by adding the `LambdaSharp.Serialization.NewtonsoftJson` NuGet package and assembly attribute for it.
+
+```csharp
+[assembly: Amazon.Lambda.Core.LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer))]`
+```
+
+#### Solution 2: Provide Proper Case-Sensitive Spelling for Property/Field
+
+Use the `[JsonPropertyName("name")]` attribute to provide the property/field name with the case-sensitive spelling.
+
+```csharp
+class MyClass {
+
+    //--- Properties ---
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+}
+```
+
+#### Solution 3: Custom _System.Text.Json_ Serializer Settings
+
+Create a custom serializer that overrides the default _System.Text.Json_ behavior in its constructor.
+
+```csharp
+[assembly: Amazon.Lambda.Core.LambdaSerializer(typeof(MySerializer))]
+
+public class MySerializer : LambdaSharp.Serialization.LambdaSystemTextJsonSerializer {
+
+    //--- Constructors ---
+    public MySerializer() : base(settings => {
+        settings.settings.PropertyNameCaseInsensitive = true;
+    }) { }
+}
+```
+
+### Derived Classes Serialization
+
+Beware of derived classes during serialization. _System.Text.Json_ will only serialize properties of the declared type, not all the properties of the actual instance, unless you use `object` as type.
+* Before: `LambdaSerializer.Serialize<Car>(new Sedan { ... })` (only `Car` properties are serialized; any additional `Sedan` properties are skipped)
+* After: `LambdaSerializer.Serialize<object>(mySedan)` (all public properties are serialized)
 
 ### Polymorphic Serialization
 
@@ -115,6 +170,8 @@ public class ExpressionConverter : JsonConverter<AExpression> {
 
     //--- Methods ---
     public override ACloudFormationExpression Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+
+        // Read() implementation omitted for brevity
         throw new NotImplementedException();
     }
 
@@ -129,6 +186,33 @@ public class ExpressionConverter : JsonConverter<AExpression> {
         default:
             throw new ArgumentException($"unsupported serialization type {value?.GetType().FullName ?? "<null>"}");
         }
+    }
+}
+```
+
+## Custom JSON Serializer
+
+Custom JSON serializer implementation can also be used by providing a class that derives from `ILambdaJsonSerializer`.
+
+For example, the following JSON serializer uses [LitJSON](https://litjson.net/) instead.
+
+```csharp
+[assembly: Amazon.Lambda.Core.LambdaSerializer(typeof(MySerializer))]
+
+public class MySerializer : ILambdaJsonSerializer {
+
+    //--- Methods ---
+    public object Deserialize(Stream stream, Type type) {
+        var reader = new StreamReader(stream);
+        var json = reader.ReadToEnd();
+        return LitJson.JsonMapper.ToObject(json, type);
+    }
+
+    public T Deserialize<T>(Stream requestStream) => (T)Deserialize(stream, typeof(T));
+
+    public void Serialize<T>(T response, Stream responseStream) {
+        var json = LitJson.JsonMapper.ToJson(response);
+        responseStream.Write(Encoding.UTF8.GetBytes(json));
     }
 }
 ```

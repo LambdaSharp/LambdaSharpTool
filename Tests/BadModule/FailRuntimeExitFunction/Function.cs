@@ -28,6 +28,9 @@ namespace LambdaSharp.BadModule.FailRuntimeExitFunction {
 
     public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }
 

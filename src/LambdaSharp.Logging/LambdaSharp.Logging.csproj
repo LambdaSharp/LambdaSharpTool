@@ -37,8 +37,9 @@
     <NoWarn>$(NoWarn);8600;8601;8602;8603;8604</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="4.7.2"/>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net5.0'">
+    <PackageReference Include="System.Text.Json" Version="5.0.1" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />

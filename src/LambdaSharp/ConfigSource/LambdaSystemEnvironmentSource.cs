@@ -77,10 +77,7 @@ namespace LambdaSharp.ConfigSource {
                 .Cast<string>()
                 .Select(ExtractSubKey)
                 .Where(key => key != null)
-
-                // NOTE (2020-04-02, bjorg): this Cast() operation is only needed to indicate the references are non-null
                 .Cast<string>()
-
                 .Distinct()
                 .ToArray();
 

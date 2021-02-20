@@ -49,7 +49,9 @@ namespace LambdaSharp.Tool.Cli {
         Topic,
         WebSocket,
         WebSocketProxy,
-        Finalizer
+        Finalizer,
+        Event,
+        SelfContained
     }
 
     public class CliNewCommand : ACliCommand {
@@ -556,7 +558,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // create function project
-            var isNetCore31OrLater = (framework.CompareTo("netcoreapp3.") >= 0);
+            var isNetCore31OrLater = VersionInfoCompatibility.IsNetCore3OrLater(framework);
             var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
@@ -564,7 +566,7 @@ namespace LambdaSharp.Tool.Cli {
                 ["LAMBDASHARP_VERSION"] = VersionInfoCompatibility.GetLambdaSharpAssemblyWildcardVersion(settings.ToolVersion, framework)
             };
             try {
-                var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);
+                var projectContents = ReadResource($"NewCSharpFunction-{functionType}.xml", substitutions);
                 File.WriteAllText(projectFile, projectContents);
                 Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
             } catch(Exception e) {
@@ -658,7 +660,8 @@ namespace LambdaSharp.Tool.Cli {
 
             // generate project
             var substitutions = new Dictionary<string, string> {
-                ["ROOTNAMESPACE"] = rootNamespace
+                ["ROOTNAMESPACE"] = rootNamespace,
+                ["APPNAME"] = appName
             };
             using(var projectStream = typeof(CliNewCommand).Assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.BlazorProjectTemplate.zip"))
             using(var projectArchive = new ZipArchive(projectStream)) {
@@ -669,7 +672,7 @@ namespace LambdaSharp.Tool.Cli {
                     } else {
 
                         // use app name for .csproj file
-                        entryPath = (entry.Name == "MyApp.csproj")
+                        entryPath = (entry.Name == "MyApp._csproj")
                             ? Path.Combine(projectDirectory, $"{appName}.csproj")
                             : entryPath;
                         using(var file = File.OpenWrite(entryPath))

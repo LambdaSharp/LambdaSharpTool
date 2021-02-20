@@ -98,10 +98,7 @@ namespace LambdaSharp.ConfigSource {
             return _parameters.Keys
                 .Select(ExtractSubKey)
                 .Where(key => key != null)
-
-                // NOTE (2020-04-02, bjorg): this Cast() operation is only needed to indicate the string values are non-null
                 .Cast<string>()
-
                 .Distinct()
                 .ToArray();
 

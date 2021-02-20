@@ -43,7 +43,6 @@ using LambdaSharp.Records.ErrorReports;
 using LambdaSharp.Serialization;
 
 namespace LambdaSharp {
-    using SystemJsonSerializer = System.Text.Json.JsonSerializer;
 
     /// <summary>
     /// <see cref="ALambdaFunction"/> is the abstract base class for all AWS Lambda functions. This class takes care of initializing the function from
@@ -54,7 +53,7 @@ namespace LambdaSharp {
         //--- Types ---
         private class GitInfo {
 
-            //--- Properties ---
+            //--- Fields ---
             public string? Branch { get; set; }
             public string? SHA { get; set; }
         }
@@ -115,12 +114,12 @@ namespace LambdaSharp {
             /// <summary>
             /// The ID of the AWS Lambda function. This value corresponds to the Physical ID of the AWS Lambda function in the CloudFormation template.
             /// </summary>
-            public string FunctionId => _function._functionId ?? throw new InvalidOperationException();
+            public string? FunctionId => _function._functionId;
 
             /// <summary>
             /// The name of the AWS Lambda function. This value corresponds to the Logical ID of the AWS Lambda function in the CloudFormation template.
             /// </summary>
-            public string FunctionName => _function._functionName ?? throw new InvalidOperationException();
+            public string? FunctionName => _function._functionName;
 
             /// <summary>
             /// The framework used by the AWS Lambda function.
@@ -182,8 +181,15 @@ namespace LambdaSharp {
             /// <summary>
             /// The message originated from the Simple Queue Service service.
             /// </summary>
-            SQS
+            SQS,
+
+            /// <summary>
+            /// The message originated from the CloudWatch service.
+            /// </summary>
+            CloudWatch
         }
+
+        private class TerminateLambdaException : Exception { }
 
         //--- Class Fields ---
         private static readonly Stopwatch Stopwatch = Stopwatch.StartNew();
@@ -191,26 +197,28 @@ namespace LambdaSharp {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
+
         private static void ParseModuleInfoString(string? moduleInfo, out string? moduleNamespace, out string? moduleName, out string? moduleVersion, out string? moduleOrigin) {
+            moduleNamespace = null;
+            moduleName = null;
+            moduleVersion = null;
+            moduleOrigin = null;
+            if(moduleInfo != null) {
 
-            // try parsing module reference
-            var match = ModuleKeyPattern.Match(moduleInfo);
-            if(match.Success) {
-                moduleNamespace = GetMatchValue("Namespace");
-                moduleName = GetMatchValue("Name");
-                moduleOrigin = GetMatchValue("Origin");
-                moduleVersion = GetMatchValue("Version");
-            } else {
-                moduleNamespace = null;
-                moduleName = null;
-                moduleVersion = null;
-                moduleOrigin = null;
-            }
+                // try parsing module reference
+                var match = ModuleKeyPattern.Match(moduleInfo);
+                if(match.Success) {
+                    moduleNamespace = GetMatchValue("Namespace");
+                    moduleName = GetMatchValue("Name");
+                    moduleOrigin = GetMatchValue("Origin");
+                    moduleVersion = GetMatchValue("Version");
+                }
 
-            // local function
-            string? GetMatchValue(string groupName) {
-                var group = match.Groups[groupName];
-                return group.Success ? group.Value : null;
+                // local function
+                string? GetMatchValue(string groupName) {
+                    var group = match.Groups[groupName];
+                    return group.Success ? group.Value : null;
+                }
             }
         }
 
@@ -256,15 +264,6 @@ namespace LambdaSharp {
             Provider = provider ?? new LambdaFunctionDependencyProvider();
             ErrorReportGenerator = new LogErrorReportGenerator(Provider);
 
-            // instantiate the assembly serializer or default LambdaJsonSerializer
-            var serializerAttribute = GetType().Assembly
-                .GetCustomAttributes(typeof(LambdaSerializerAttribute), false)
-                .OfType<LambdaSerializerAttribute>()
-                .FirstOrDefault();
-            LambdaSerializer = (serializerAttribute != null)
-                ? (ILambdaSerializer)(Activator.CreateInstance(serializerAttribute.SerializerType) ?? throw new ShouldNeverHappenException())
-                : new LambdaJsonSerializer();
-
             // initialize function fields from configuration
             _started = UtcNow;
         }
@@ -283,13 +282,6 @@ namespace LambdaSharp {
         /// </summary>
         /// <value>Current date-time in UTC timezone.</value>
         protected DateTime UtcNow => Provider.UtcNow;
-
-        /// <summary>
-        /// An instance of <see cref="ILambdaSerializer"/>, as specified by the <see cre="LambdaSerializer"/> attribute on the assembly,
-        /// used for serializing/deserializing JSON data.
-        /// </summary>
-        /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
-        protected ILambdaSerializer LambdaSerializer { get; set; }
 
         /// <summary>
         /// Retrieve the Lambda function initialization settings.
@@ -322,7 +314,10 @@ namespace LambdaSharp {
         /// The <see cref="HttpClient"/> property holds a <c>HttpClient</c> instance that is initialized with X-Ray support.
         /// </summary>
         /// <value>The <see cref="HttpClient"/> instance.</value>
-        protected HttpClient HttpClient => _httpClient ?? throw new InvalidOperationException();
+        protected HttpClient HttpClient {
+            get => _httpClient ?? throw new InvalidOperationException();
+            set => _httpClient = value ?? throw new ArgumentNullException();
+        }
 
         /// <summary>
         /// The <see cref="DebugLoggingEnabled"/> property indicates if the requests received and responses emitted
@@ -369,7 +364,7 @@ namespace LambdaSharp {
         /// <see cref="CurrentContext"/> property.
         /// </param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        [LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
+        [LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaSystemTextJsonSerializer))]
         public async Task<Stream> FunctionHandlerAsync(Stream stream, ILambdaContext context) {
             _currentContext = context;
             Exception? foregroundException = null;
@@ -573,14 +568,14 @@ namespace LambdaSharp {
 
             // read optional git-info file
             if(File.Exists("git-info.json")) {
-                var git = LambdaSerializer.Deserialize<GitInfo>(File.ReadAllText("git-info.json"));
+                var git = LambdaSerializerSettings.LambdaSharpSerializer.Deserialize<GitInfo>(File.ReadAllText("git-info.json"));
                 _gitSha = git.SHA;
                 _gitBranch = git.Branch;
                 info["GIT-SHA"] = _gitSha;
                 info["GIT-BRANCH"] = _gitBranch;
             }
             if(info.Any()) {
-                LogInfo("function startup information\n{0}", SystemJsonSerializer.Serialize(info));
+                LogInfo("function startup information\n{0}", LambdaSerializerSettings.LambdaSharpSerializer.Serialize(info));
             }
 
             // initialize error/warning reporter
@@ -648,33 +643,37 @@ namespace LambdaSharp {
         }
 
         /// <summary>
-        /// The <see cref="DecryptSecretAsync(string, Dictionary{string, string})"/> method decrypts a Base64-encoded string with an optional encryption context. The Lambda function
+        /// The <see cref="DecryptSecretAsync(string, Dictionary{string, string},CancellationToken)"/> method decrypts a Base64-encoded string with an optional encryption context. The Lambda function
         /// requires permission to use the <c>kms:Decrypt</c> operation on the KMS key used to
         /// encrypt the original message.
         /// </summary>
         /// <param name="secret">Base64-encoded string of the encrypted value.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        protected async Task<string> DecryptSecretAsync(string secret, Dictionary<string, string>? encryptionContext = null) {
+        protected async Task<string> DecryptSecretAsync(string secret, Dictionary<string, string>? encryptionContext = null, CancellationToken cancellationToken = default) {
             return Encoding.UTF8.GetString(await Provider.DecryptSecretAsync(
                 Convert.FromBase64String(secret),
-                encryptionContext
+                encryptionContext,
+                cancellationToken
             ));
         }
 
         /// <summary>
-        /// The <see cref="EncryptSecretAsync(string, string, Dictionary{string, string})"/> encrypts a sequence of bytes using the specified KMS key. The Lambda function requires
+        /// The <see cref="EncryptSecretAsync(string, string, Dictionary{string, string},CancellationToken)"/> encrypts a sequence of bytes using the specified KMS key. The Lambda function requires
         /// permission to use the <c>kms:Encrypt</c> opeartion on the specified KMS key.
         /// </summary>
         /// <param name="text">The plaintext string to encrypt.</param>
         /// <param name="encryptionKeyId">The KMS key ID used encrypt the plaintext bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        protected async Task<string> EncryptSecretAsync(string text, string encryptionKeyId, Dictionary<string, string>? encryptionContext = null) {
+        protected async Task<string> EncryptSecretAsync(string text, string encryptionKeyId, Dictionary<string, string>? encryptionContext = null, CancellationToken cancellationToken = default) {
             return Convert.ToBase64String(await Provider.EncryptSecretAsync(
                 Encoding.UTF8.GetBytes(text),
                 encryptionKeyId ?? throw new ArgumentNullException(encryptionKeyId),
-                encryptionContext
+                encryptionContext,
+                cancellationToken
             ));
         }
 
@@ -715,6 +714,19 @@ namespace LambdaSharp {
             LogFatal(new ApplicationException(reason), "restart Lambda runtime");
 
             // NOTE (2020-10-13, bjorg): the following line will cause an uncatchable exception that force the Lambda runtime to start over
+            System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
+        }
+
+        /// <summary>
+        /// The <see cref="TerminateLambdaInstance(string)"/> method forces the Lambda instance to terminate and perform a cold start on next invocation.
+        /// This method should only be used when the processing environment has become corrupted beyond repair.
+        /// </summary>
+        /// <param name="reason">Optional message shown as reason for terminating the Lambda instance.</param>
+        protected void TerminateLambdaInstance(string? reason = null) {
+            var message = (reason != null)
+                ? $"Lambda instance was intentionally terminated (reason: {reason})"
+                : $"Lambda instance was intentionally terminated (no reason provided)";
+            LogFatal(exception: new TerminateLambdaException(), message);
             System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
         }
 
@@ -765,7 +777,7 @@ namespace LambdaSharp {
         /// The <see cref="RecordErrorReport(LambdaErrorReport)"/> method is invoked record errors for later reporting.
         /// </summary>
         /// <param name="report">The <see cref="LambdaErrorReport"/> to record.</param>
-        protected virtual void RecordErrorReport(LambdaErrorReport report) => Provider.Log(SystemJsonSerializer.Serialize(report) + "\n");
+        protected virtual void RecordErrorReport(LambdaErrorReport report) => Provider.Log(LambdaSerializerSettings.LambdaSharpSerializer.Serialize(report) + "\n");
 
         /// <summary>
         /// The <see cref="RecordException(Exception)"/> method is only invoked when Lambda function <see cref="ErrorReportGenerator"/> instance
@@ -929,7 +941,7 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="source">Name of the event source.</param>
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
-        /// <param name="detail">Data-structure to serialize as a JSON string using the <see cref="LambdaSerializer"/> property. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="detail">Data-structure to serialize as a JSON string using <see cref="System.Text.Json.JsonSerializer"/>. If value is already a <code>string</code>, it is sent as-is. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
         protected void LogEvent<T>(string source, string detailType, T detail, IEnumerable<string>? resources = null)
             => Logger.LogEvent(source, detailType, detail, resources);
@@ -939,11 +951,11 @@ namespace LambdaSharp {
         bool ILambdaSharpLogger.DebugLoggingEnabled => DebugLoggingEnabled;
         ILambdaSharpInfo ILambdaSharpLogger.Info => Info;
 
-        void ILambdaSharpLogger.Log(LambdaLogLevel level, Exception exception, string? format, params object?[] arguments) {
+        void ILambdaSharpLogger.Log(LambdaLogLevel level, Exception? exception, string? format, params object?[] arguments) {
             if(level >= LambdaLogLevel.NONE) {
                 return;
             }
-            string message = LambdaErrorReportGenerator.FormatMessage(format, arguments) ?? exception?.Message ?? "(no message)";
+            string message = LambdaErrorReportGenerator.FormatMessage(format, arguments) ?? exception?.Message ?? "Missing Exception Message";
             if((level >= LambdaLogLevel.WARNING) && (exception != null)) {
 
                 // avoid reporting the same error multiple times as it works its way up the stack
@@ -992,17 +1004,23 @@ namespace LambdaSharp {
         }
 
         void ILambdaSharpLogger.LogRecord(ALambdaLogRecord record) {
-            Provider.Log(SystemJsonSerializer.Serialize<object>(record ?? throw new ArgumentNullException(nameof(record))) + "\n");
+            Provider.Log(LambdaSerializerSettings.LambdaSharpSerializer.Serialize<object>(record ?? throw new ArgumentNullException(nameof(record))) + "\n");
 
             // emit events
             if(record is LambdaEventRecord eventRecord) {
+                if(eventRecord.DetailType is null) {
+                    throw new ArgumentNullException(nameof(record), "DetailType property is null");
+                }
+                if(eventRecord.Detail is null) {
+                    throw new ArgumentNullException(nameof(record), "Detail property is null");
+                }
                 AddPendingTask(Provider.SendEventAsync(
                     DateTimeOffset.UtcNow,
-                    eventRecord.EventBus,
-                    eventRecord.Source,
+                    eventRecord.EventBus ?? "default",
+                    eventRecord.Source ?? $"{Info.ModuleFullName}::{Info.FunctionName}",
                     eventRecord.DetailType,
                     eventRecord.Detail,
-                    eventRecord.Resources
+                    eventRecord.Resources ?? Enumerable.Empty<string>()
                 ));
             }
         }

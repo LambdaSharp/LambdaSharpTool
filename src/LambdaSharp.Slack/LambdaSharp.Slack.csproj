@@ -9,8 +9,8 @@
     <PackageId>LambdaSharp.Slack</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
-    <Title>LambdaSharp (λ#) Slack</Title>
-    <Description>Serverless .NET for AWS - Slack Integration</Description>
+    <Title>LambdaSharp (λ#) Slack Lambda</Title>
+    <Description>Serverless .NET for AWS - Slack Lambda Library</Description>
     <Company>LambdaSharp</Company>
     <Copyright>Copyright (C) 2018-2021</Copyright>
     <Authors>Bjorg</Authors>

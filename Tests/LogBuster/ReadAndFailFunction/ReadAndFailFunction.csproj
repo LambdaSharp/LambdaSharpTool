@@ -5,11 +5,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LogBuster.ReadAndFailFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="0.8.1.*"/>
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.SimpleQueueService\LambdaSharp.SimpleQueueService.csproj" />
   </ItemGroup>
 </Project>

@@ -51,26 +51,41 @@ namespace LambdaSharp.Logging.Internal {
 
         //--- Extension Methods ---
         public static string? GetModuleFullName(this ILambdaSharpInfo info) {
+            if(info.ModuleInfo == null) {
+                return null;
+            }
             ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out var moduleName, out var _, out var _);
             return moduleNamespace + "." + moduleName;
         }
 
         public static string? GetModuleNamespace(this ILambdaSharpInfo info) {
+            if(info.ModuleInfo == null) {
+                return null;
+            }
             ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out var _, out var _, out var _);
             return moduleNamespace;
         }
 
         public static string? GetModuleName(this ILambdaSharpInfo info) {
+            if(info.ModuleInfo == null) {
+                return null;
+            }
             ParseModuleInfoString(info.ModuleInfo, out var _, out var moduleName, out var _, out var _);
             return moduleName;
         }
 
         public static string? GetModuleVersion(this ILambdaSharpInfo info) {
+            if(info.ModuleInfo == null) {
+                return null;
+            }
             ParseModuleInfoString(info.ModuleInfo, out var _, out var _, out var moduleVersion, out var _);
             return moduleVersion;
         }
 
         public static string? GetModuleOrigin(this ILambdaSharpInfo info) {
+            if(info.ModuleInfo == null) {
+                return null;
+            }
             ParseModuleInfoString(info.ModuleInfo, out var _, out var _, out var _, out var moduleOrigin);
             return moduleOrigin;
         }

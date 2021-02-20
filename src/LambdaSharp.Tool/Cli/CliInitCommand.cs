@@ -32,6 +32,7 @@ using LambdaSharp.Tool.Model;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
+    using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
 
     public class CliInitCommand : ACliCommand {
 

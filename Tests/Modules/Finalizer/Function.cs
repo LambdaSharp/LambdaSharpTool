@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Threading;
 using System.Threading.Tasks;
 using LambdaSharp;
 using LambdaSharp.Finalizer;
@@ -28,15 +29,15 @@ namespace LambdaSharpTestModule.Finalizer {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task CreateDeployment(FinalizerProperties current) {
+        public override async Task CreateDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
             LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
         }
 
-        public override async Task UpdateDeployment(FinalizerProperties current, FinalizerProperties previous) {
+        public override async Task UpdateDeploymentAsync(FinalizerProperties current, FinalizerProperties previous, CancellationToken cancellationToken) {
             LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {current.DeploymentChecksum}");
         }
 
-        public override async Task DeleteDeployment(FinalizerProperties current) {
+        public override async Task DeleteDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
             LogInfo($"Deleting Deployment: {current.DeploymentChecksum}");
         }
     }

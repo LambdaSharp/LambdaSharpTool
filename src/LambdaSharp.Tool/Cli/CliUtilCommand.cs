@@ -48,6 +48,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli {
+    using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
 
     public class CliUtilCommand : ACliCommand {
 
@@ -133,6 +134,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // create JSON schema definition for API Gateway methods
                 cmd.Command("create-invoke-methods-schema", subCmd => {
+                    subCmd.ShowInHelpText = false;
                     subCmd.HelpOption();
                     subCmd.Description = "Create JSON schemas for API Gateway invoke methods";
                     var directoryOption = subCmd.Option("--directory|-d", "Directory where .NET assemblies are located", CommandOptionType.SingleValue);
@@ -230,6 +232,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // validate assembly as Lambda function
                 cmd.Command("validate-assembly", subCmd => {
+                    subCmd.ShowInHelpText = false;
                     subCmd.HelpOption();
                     subCmd.Description = "Validate Lambda assembly";
                     var directoryOption = subCmd.Option("--directory|-d", "Directory where .NET assemblies are located", CommandOptionType.SingleValue);
@@ -312,6 +315,7 @@ namespace LambdaSharp.Tool.Cli {
                 });
 
                 cmd.Command("extract-assembly-metadata", subCmd => {
+                    subCmd.ShowInHelpText = false;
                     subCmd.HelpOption();
                     subCmd.Description = "Extract metadata from .NET Core assembly";
                     var assemblyOption = subCmd.Option("--assembly", "Filepath to .NET Core assembly", CommandOptionType.SingleValue);
@@ -778,37 +782,6 @@ namespace LambdaSharp.Tool.Cli {
                     throw new ProcessTargetInvocationException($"error loading assembly '{assemblyFilepath}': {e.Message}");
                 }
 
-                // check for Lambda serialization assembly attribute
-                var lambdaSerializationAssemblyAttribute = assembly
-                    .GetCustomAttributes(typeof(Amazon.Lambda.Core.LambdaSerializerAttribute), false)
-                    .OfType<Amazon.Lambda.Core.LambdaSerializerAttribute>()
-                    .FirstOrDefault();
-                if(lambdaSerializationAssemblyAttribute != null) {
-                    switch(lambdaSerializationAssemblyAttribute.SerializerType.FullName) {
-                    case "LambdaSharp.Serialization.LambdaJsonSerializer":
-                    case "Amazon.Lambda.Serialization.SystemTextJson.LambdaJsonSerializer":
-                    case "Amazon.Lambda.Serialization.Json.JsonSerializer":
-                        throw new ProcessTargetInvocationException($"remove Lambda serializer attribute: [assembly: LambdaSerializer(typeof(...))]");
-                    default:
-                        var current = lambdaSerializationAssemblyAttribute.SerializerType;
-                        while(current.BaseType != null) {
-                            current = current.BaseType;
-                            var name = current.FullName;
-                            if(name == "LambdaSharp.Serialization.LambdaJsonSerializer") {
-
-                                // custom serializer derives from LambdaSharp serializer, which is okay
-                                output?.WriteLine("=> Custom Lambda serializer is derived from LambdaSharp.Serialization.LambdaJsonSerializer");
-                                break;
-                            } else if((name == "Amazon.Lambda.Serialization.SystemTextJson.LambdaJsonSerializer") || (name == "Amazon.Lambda.Serialization.Json.JsonSerializer")) {
-                                throw new ProcessTargetInvocationException($"custom Lambda serializer must derive from LambdaSharp.Serialization.LambdaJsonSerializer");
-                            }
-                        }
-                        break;
-                    }
-                } else {
-                    output?.WriteLine("=> Default Lambda serializer used");
-                }
-
                 // load Lambda function class
                 var type = assembly.GetType(typeName);
                 if(type == null) {
@@ -819,6 +792,17 @@ namespace LambdaSharp.Tool.Cli {
                 var method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
                 if(method == null) {
                     throw new ProcessTargetInvocationException($"could not find method '{methodName}' in class '{typeName}'");
+                }
+
+                // check for Lambda serialization assembly attribute
+                var lambdaSerializationAssemblyAttribute = assembly
+                    .GetCustomAttributes(typeof(Amazon.Lambda.Core.LambdaSerializerAttribute), false)
+                    .OfType<Amazon.Lambda.Core.LambdaSerializerAttribute>()
+                    .FirstOrDefault();
+                if(lambdaSerializationAssemblyAttribute != null) {
+                    throw new ProcessTargetInvocationException($"remove Lambda serializer attribute: [assembly: LambdaSerializer(typeof(...))]");
+                } else {
+                    output?.WriteLine("=> Function does not use LambdaSharp assembly");
                 }
                 output?.WriteLine("=> Entry-point class and method are valid");
             } catch(ProcessTargetInvocationException e) {

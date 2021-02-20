@@ -29,52 +29,52 @@ namespace LambdaSharp.Logging {
         /// The <see cref="ModuleId"/> property holds the CloudFormation stack name.
         /// </summary>
         /// <value>Name of the CloudFormation stack.</value>
-        string ModuleId { get; }
+        string? ModuleId { get; }
 
         /// <summary>
         /// The module full name, version, and origin.
         /// </summary>
-        string ModuleInfo { get; }
+        string? ModuleInfo { get; }
 
         /// <summary>
         /// The <see cref="FunctionName"/> property holds the name of the Lambda function.
         /// </summary>
         /// <value>Name of the Lambda function.</value>
-        string FunctionName { get; }
+        string? FunctionName { get; }
 
         /// <summary>
         /// The <see cref="AppName"/> property holds the name of the app.
         /// </summary>
         /// <value>Name of the app.</value>
-        string AppName { get; }
+        string? AppName { get; }
 
         /// <summary>
         /// The <see cref="AppId"/> property holds the app instance id.
         /// </summary>
         /// <value>Id of the app instance.</value>
-        string AppId { get; }
+        string? AppId { get; }
 
         /// <summary>
         /// The <see cref="AppInstanceId"/> property describes app instance identifier.
         /// </summary>
         /// <value>The app assembly version GUID.</value>
-        string AppInstanceId { get; }
+        string? AppInstanceId { get; }
 
         /// <summary>
         /// The deployment tier name.
         /// </summary>
-        string DeploymentTier { get; }
+        string? DeploymentTier { get; }
 
         /// <summary>
         /// The <see cref="GitSha"/> property holds the optional Git SHA of the code.
         /// </summary>
         /// <value>Git SHA value or null.</value>
-        string GitSha { get; }
+        string? GitSha { get; }
 
         /// <summary>
         /// The <see cref="GitBranch"/> property hold the optional Git branch of the code.
         /// </summary>
         /// <value>Git branch name or null.</value>
-        string GitBranch { get; }
+        string? GitBranch { get; }
     }
 }

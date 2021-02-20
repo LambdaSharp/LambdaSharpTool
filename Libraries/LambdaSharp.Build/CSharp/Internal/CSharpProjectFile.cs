@@ -137,12 +137,16 @@ namespace LambdaSharp.Build.CSharp.Internal {
             ProjectName = _mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(filePath);
             TargetFramework = _mainPropertyGroup?.Element("TargetFramework").Value ?? throw new InvalidDataException("missing <TargetFramework>");
             RootNamespace = _mainPropertyGroup?.Element("RootNamespace")?.Value;
+            OutputType = _mainPropertyGroup?.Element("OutputType")?.Value;
+            AssemblyName = _mainPropertyGroup?.Element("AssemblyName")?.Value;
         }
 
         //--- Properties ---
         public string ProjectName { get; }
         public string TargetFramework { get; }
         public string? RootNamespace { get; }
+        public string? OutputType { get; }
+        public string? AssemblyName { get; }
         public IEnumerable<XElement> PackageReferences => _csproj.Element("Project")?.Descendants("PackageReference") ?? Enumerable.Empty<XElement>();
 
         //--- Methods ---

@@ -1,0 +1,54 @@
+Module: Legacy.ModuleV081
+Items:
+
+  - App: MyApp
+    Description: Blazor .NET Standard 3.1 WebAssembly App
+
+  - Variable: MyAppWebsiteUrl
+    Description: MyApp Website URL
+    Scope: public
+    Value: !GetAtt MyApp::Bucket.Outputs.WebsiteUrl
+
+  - Function: MyApiGatewayFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyApiGatewayProxyFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyCustomResourceFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyGenericFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyQueueFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyTopicFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyScheduleFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyWebSocketFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyWebSocketProxyFunction
+    Memory: 256
+    Timeout: 30
+
+  - Function: Finalizer
+    Memory: 256
+    Timeout: 30
+
+  - Function: MyJavascriptFunction
+    Memory: 256
+    Timeout: 30

@@ -139,7 +139,7 @@ The <code>TweetTopic</code> output contains the ARN of the SNS topic to which tw
 ### Use LambdaSharp.Twitter.Query to invoke a Lambda function
 
 ```yaml
-- Nested: TwitterNotify
+- Stack: TwitterNotify
   Module: LambdaSharp.Twitter.Query
   Parameters:
     TwitterApiKey: !Ref TwitterApiKey

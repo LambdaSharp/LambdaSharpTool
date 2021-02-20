@@ -84,7 +84,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Description",
                 "Value"
             },
-            ["Nested"] = new[] {
+            ["Stack"] = new[] {
                 "DependsOn",
                 "Description",
                 "Module",
@@ -162,6 +162,14 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Group"] = new[] {
                 "Items",
                 "Description"
+            },
+
+            // same as 'Stack', kept for legacy compatibility
+            ["Nested"] = new[] {
+                "DependsOn",
+                "Description",
+                "Module",
+                "Parameters"
             }
         };
 
@@ -269,13 +277,13 @@ namespace LambdaSharp.Tool.Model.AST {
         public object DependsOn { get; set; }
 
         /*
-         * Nested: string
+         * Stack: string
          * Description: string
          * Module: string
          * DependsOn: string -or- list<string>
          * Parameters: map
          */
-        public string Nested { get; set; }
+        public string Stack { get; set; }
         public IDictionary<string, object> Parameters { get; set; }
 
         /*

@@ -18,10 +18,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -101,11 +101,6 @@ namespace LambdaSharp.Build.CSharp.Function {
             string buildConfiguration,
             bool forceBuild
         ) {
-
-            // check if AWS Lambda Tools extension is installed
-            if(!new AmazonLambdaTool(BuildEventsConfig).CheckIsInstalled()) {
-                return;
-            }
 
             // collect sources with invoke methods
             var mappings = ExtractMappings(function);
@@ -224,18 +219,32 @@ namespace LambdaSharp.Build.CSharp.Function {
             var projectFile = new CSharpProjectFile(function.Project);
 
             // compile function project
-            var isNetCore31OrLater = projectFile.TargetFramework.CompareTo("netcoreapp3.") >= 0;
+            var isNetCore31OrLater = VersionInfoCompatibility.IsNetCore3OrLater(projectFile.TargetFramework);
             var isAmazonLinux2 = Provider.IsAmazonLinux2();
             var isReadyToRun = isNetCore31OrLater && isAmazonLinux2;
+            var isSelfContained = (projectFile.OutputType == "Exe")
+                || (projectFile.AssemblyName == "bootstrap");
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
-            Provider.WriteLine($"=> Building function {Provider.InfoColor}{function.FullName}{Provider.ResetColor} [{projectFile.TargetFramework}, {buildConfiguration}{readyToRunText}]");
+            var selfContained = isSelfContained ? ", SelfContained" : "";
+            Provider.WriteLine($"=> Building function {Provider.InfoColor}{function.FullName}{Provider.ResetColor} [{projectFile.TargetFramework}, {buildConfiguration}{readyToRunText}{selfContained}]");
             var projectDirectory = Path.Combine(Provider.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
-            var temporaryPackage = Path.Combine(Provider.OutputDirectory, $"function_{Provider.ModuleFullName}_{function.LogicalId}_temporary.zip");
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
             if(projectFile.RemoveAmazonLambdaToolsReference()) {
                 LogWarn($"removing obsolete AWS Lambda Tools extension from {Path.GetRelativePath(Provider.WorkingDirectory, function.Project)}");
                 projectFile.Save(function.Project);
+            }
+
+            // validate project properties for self-contained functions
+            if(
+                isSelfContained
+                && (
+                    (projectFile.OutputType != "Exe")
+                    || (projectFile.AssemblyName != "bootstrap")
+                )
+            ) {
+                LogError("function project must have <OutputType>Exe</OutputType> and <AssemblyName>bootstrap</AssemblyName> properties");
+                return;
             }
 
             // validate the project is using the most recent lambdasharp assembly references
@@ -251,151 +260,165 @@ namespace LambdaSharp.Build.CSharp.Function {
             }
 
             // build project with AWS dotnet CLI lambda tool
-            if(!DotNetLambdaPackage(projectFile.TargetFramework, buildConfiguration, temporaryPackage, projectDirectory, forceBuild, isNetCore31OrLater, isAmazonLinux2, isReadyToRun)) {
+            if(!DotNetPublish(projectFile.TargetFramework, buildConfiguration, projectDirectory, forceBuild, isNetCore31OrLater, isAmazonLinux2, isReadyToRun, isSelfContained, out var publishFolder)) {
 
                 // nothing to do; error was already reported
                 return;
             }
 
-            // verify the function handler can be found in the compiled assembly
-            var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, projectFile.TargetFramework, "publish");
+            // check if the assembly entry-point needs to be validated
             if(function.HasHandlerValidation) {
-                if(function.Handler != null) {
-                    if(!ValidateEntryPoint(
-                        buildFolder,
-                        function.Handler
-                    )) {
-                        return;
+                if(isSelfContained) {
+
+                    // TODO (2021-02-08, bjorg): validate the assembly has a Main() entry point
+                } else {
+
+                    // verify the function handler can be found in the compiled assembly
+                    if(function.Handler != null) {
+                        if(!ValidateEntryPoint(
+                            publishFolder,
+                            function.Handler
+                        )) {
+                            return;
+                        }
                     }
                 }
-            }
-
-            // create request/response schemas for invocation methods
-            if(!LambdaSharpCreateInvocationSchemas(
-                function,
-                buildFolder,
-                projectFile.RootNamespace,
-                function.Handler,
-                mappings
-            )) {
-                LogError($"'{Provider.Lash} util create-invoke-methods-schema' command failed");
-                return;
             }
 
             // add api mappings JSON file(s)
             if(mappings.Any()) {
-                using(var zipArchive = ZipFile.Open(temporaryPackage, ZipArchiveMode.Update)) {
-                    var entry = zipArchive.CreateEntry(API_MAPPINGS);
 
-                    // Set RW-R--R-- permissions attributes on non-Windows operating system
-                    if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
-                    }
-                    using(var stream = entry.Open()) {
-                        stream.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new ApiGatewayInvocationMappings {
-                            Mappings = mappings
-                        }, _jsonOptions)));
-                    }
+                // self-contained assemblies cannot be inspected
+                if(isSelfContained) {
+                    LogError("API Gateway mappings are not supported for self-contained Lambda functions");
+                    return;
                 }
+
+                // create request/response schemas for invocation methods
+                if(!LambdaSharpCreateInvocationSchemas(
+                    function,
+                    publishFolder,
+                    projectFile.RootNamespace,
+                    function.Handler,
+                    mappings
+                )) {
+                    LogError($"'{Provider.Lash} util create-invoke-methods-schema' command failed");
+                    return;
+                }
+
+                // write api-mappings.json file to publish folder
+                File.WriteAllText(Path.Combine(publishFolder, API_MAPPINGS), JsonSerializer.Serialize(new ApiGatewayInvocationMappings {
+                    Mappings = mappings
+                }, _jsonOptions));
             }
 
-            // compute hash for zip contents
+            // compute hash o publish folder
             string hash;
-            using(var zipArchive = ZipFile.OpenRead(temporaryPackage)) {
-                using(var md5 = MD5.Create())
-                using(var hashStream = new CryptoStream(Stream.Null, md5, CryptoStreamMode.Write)) {
-                    foreach(var entry in zipArchive.Entries.OrderBy(e => e.FullName)) {
+            using(var md5 = MD5.Create())
+            using(var hashStream = new CryptoStream(Stream.Null, md5, CryptoStreamMode.Write)) {
+                foreach(var publishedFile in Directory.GetFiles(publishFolder, "*", SearchOption.AllDirectories).OrderBy(filePath => filePath)) {
 
-                        // hash file path
-                        var filePathBytes = Encoding.UTF8.GetBytes(entry.FullName.Replace('\\', '/'));
-                        hashStream.Write(filePathBytes, 0, filePathBytes.Length);
+                    // hash file path
+                    var filePathBytes = Encoding.UTF8.GetBytes(Path.GetRelativePath(publishFolder, publishedFile).Replace('\\', '/'));
+                    hashStream.Write(filePathBytes, 0, filePathBytes.Length);
 
-                        // hash file contents
-                        using(var stream = entry.Open()) {
-                            stream.CopyTo(hashStream);
-                        }
+                    // hash file contents
+                    using(var stream = File.OpenRead(publishedFile)) {
+                        stream.CopyTo(hashStream);
                     }
-                    hashStream.FlushFinalBlock();
-                    hash = md5.Hash.ToHexString();
                 }
+                hashStream.FlushFinalBlock();
+                hash = md5.Hash.ToHexString();
             }
 
-            // rename function package with hash
+            // genereate function package with hash
             var package = Path.Combine(Provider.OutputDirectory, $"function_{Provider.ModuleFullName}_{function.LogicalId}_{hash}.zip");
             if(Provider.ExistingPackages.Remove(package)) {
 
-                // remove old, existing package so we can move the new package into location (which also preserves the more recent build timestamp)
+                // remove old, existing package so we can create the new package in the same location (which also preserves the more recent build timestamp)
                 File.Delete(package);
             }
-            File.Move(temporaryPackage, package);
 
-            // add git-info.json file
-            using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Update)) {
-                var entry = zipArchive.CreateEntry(GIT_INFO_FILE);
+            // write git-info.json file to publish folder
+            File.WriteAllText(Path.Combine(publishFolder, GIT_INFO_FILE), JsonSerializer.Serialize(new ModuleManifestGitInfo {
+                SHA = gitSha,
+                Branch = gitBranch
+            }, _jsonOptions));
 
-                // Set RW-R--R-- permissions attributes on non-Windows operating system
-                if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                    entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
-                }
-                using(var stream = entry.Open()) {
-                    stream.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new ModuleManifestGitInfo {
-                        SHA = gitSha,
-                        Branch = gitBranch
-                    }, _jsonOptions)));
-                }
-            }
+            // zip files in publishing folder
+            new ZipTool(BuildEventsConfig).ZipFolderWithExecutable(package, publishFolder);
 
             // set the module variable to the final package name
             Provider.AddArtifact($"{function.FullName}::PackageName", package);
         }
 
-        private bool DotNetLambdaPackage(
+        private bool DotNetPublish(
             string targetFramework,
             string buildConfiguration,
-            string outputPackagePath,
             string projectDirectory,
             bool forceBuild,
             bool isNetCore31OrLater,
             bool isAmazonLinux2,
-            bool isReadyToRun
+            bool isReadyToRun,
+            bool isSelfContained,
+            [NotNullWhen(true)] out string? publishFolder
         ) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 LogError("failed to find the \"dotnet\" executable in path.");
+                publishFolder = null;
                 return false;
             }
 
-            // set MSBuild optimization parameters
-            var msBuildParametersList = new List<string>();
+            // delete publishing folder to avoid residual files from previous builds
+            publishFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "linux-x64", "publish");
+            if(Directory.Exists(publishFolder)) {
+                try {
+                    Directory.Delete(publishFolder, recursive: true);
+                } catch {
+                    LogWarn($"unable to delete publishing folder; it may contain unneeded files: {publishFolder}");
+                }
+            }
+
+            // set default publish parameters
+            var publishParameters = new List<string> {
+                "publish",
+                "--configuration", buildConfiguration,
+                "--framework", targetFramework,
+                "--runtime", "linux-x64",
+                "--output", publishFolder,
+                "/p:GenerateRuntimeConfigurationFiles=true"
+            };
+
+            // for .NET Core 3.1 and later, disable tiered compilation since Lambda functions are generally short lived
             if(isNetCore31OrLater) {
-
-                // allows disable tiered compilation since Lambda functions are generally short lived
-                msBuildParametersList.Add("/p:TieredCompilation=false");
-                msBuildParametersList.Add("/p:TieredCompilationQuickJit=false");
+                publishParameters.Add("/p:TieredCompilation=false");
+                publishParameters.Add("/p:TieredCompilationQuickJit=false");
             }
 
-            // enable Ready2Run when compiling on Amazon Linux 2
+            // for Amazon Linux 2, enable Ready2Run when compiling
             if(isReadyToRun) {
-                msBuildParametersList.Add("/p:PublishReadyToRun=true");
+                publishParameters.Add("/p:PublishReadyToRun=true");
             }
-            var msBuildParameters = string.Join(" ", msBuildParametersList);
 
-            // build lambda function
+            // run `dotnet publish`
+            if(isSelfContained) {
+
+                // build a self-contained package
+                publishParameters.Add("--self-contained");
+            } else {
+
+                // build a framework-dependent package
+                publishParameters.Add("--no-self-contained");
+            }
             if(!new ProcessLauncher(BuildEventsConfig).Execute(
                 dotNetExe,
-                new[] {
-                    "lambda", "package",
-                    "--configuration", buildConfiguration,
-                    "--framework", targetFramework,
-                    "--output-package", outputPackagePath,
-                    "--disable-interactive", "true",
-                    "--msbuild-parameters", $"\"{msBuildParameters}\""
-                },
+                publishParameters,
                 projectDirectory,
                 Provider.DetailedOutput,
                 ColorizeOutput
             )) {
-                LogError("'dotnet lambda package' command failed");
+                LogError("'dotnet publish' command failed");
                 return false;
             }
             return true;

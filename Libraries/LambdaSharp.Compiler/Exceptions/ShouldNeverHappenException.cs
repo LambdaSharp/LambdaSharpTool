@@ -23,7 +23,7 @@ namespace LambdaSharp.Compiler.Exceptions {
     public class ShouldNeverHappenException : Exception {
 
         //--- Constructors ---
-        public ShouldNeverHappenException() : this("this shouldn't happen") { }
+        public ShouldNeverHappenException() : base("should never happen") { }
         public ShouldNeverHappenException(string message) : base(message) { }
     }
 }

@@ -102,7 +102,8 @@ namespace LambdaSharp.Compiler.Syntax {
         [return: NotNullIfNotNull("node")]
         private T? SetItemParent(T? node) {
             if((node != null) && (_parent != null)) {
-                return (T?)ASyntaxNode.SetParent(node, _parent);
+                var result = ASyntaxNode.SetParent(node, _parent);
+                return (T)(result ?? throw new ShouldNeverHappenException());
             }
             return node;
         }

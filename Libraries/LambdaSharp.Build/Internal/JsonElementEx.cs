@@ -59,6 +59,21 @@ namespace LambdaSharp.Build.Internal {
             case string stringValue:
                 writer.WriteStringValue(stringValue);
                 break;
+            case bool boolValue:
+                writer.WriteBooleanValue(boolValue);
+                break;
+            case int intValue:
+                writer.WriteNumberValue(intValue);
+                break;
+            case long longValue:
+                writer.WriteNumberValue(longValue);
+                break;
+            case float floatValue:
+                writer.WriteNumberValue(floatValue);
+                break;
+            case double doubleValue:
+                writer.WriteNumberValue(doubleValue);
+                break;
             case Dictionary<string, object> objectValue:
                 WriteObject(writer, objectValue, options);
                 break;

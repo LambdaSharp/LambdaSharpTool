@@ -35,7 +35,7 @@ The <code>Description</code> attribute specifies the group description.
 <dt><code>Items</code></dt>
 <dd>
 
-The <code>Items</code> section specifies the items defined in the group, such as parameters, variables, resources, conditions, mappings, functions, nested modules, resource type definitions, macro definitions, and module imports.
+The <code>Items</code> section specifies the items defined in the group, such as parameters, variables, resources, conditions, mappings, functions, nested stacks, resource type definitions, macro definitions, and module imports.
 
 <i>Required:</i> No
 

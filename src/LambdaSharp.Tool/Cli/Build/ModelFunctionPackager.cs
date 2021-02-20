@@ -20,8 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.IO.Compression;
-using System.Runtime.InteropServices;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json.Linq;
