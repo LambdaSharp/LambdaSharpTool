@@ -850,7 +850,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         name: "ResponseModel",
                         description: null,
                         scope: null,
-                        resource: new Humidifier.CustomResource("AWS::ApiGateway::Method") {
+                        resource: new Humidifier.CustomResource("AWS::ApiGateway::Model") {
                             ["ContentType"] = route.Source.ResponseContentType,
                             ["RestApiId"] = restApiId,
                             ["Schema"] = route.Source.ResponseSchema
