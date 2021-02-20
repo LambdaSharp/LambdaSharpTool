@@ -27,6 +27,11 @@ namespace AlexaSample.MyFunction {
 
     public sealed class Function : ALambdaFunction<SkillRequest, SkillResponse> {
 
+        //--- Constructors ---
+
+        // NOTE (2021-01-04, bjorg): Alexa.NET uses Newtonsoft.Json for serialization
+        public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

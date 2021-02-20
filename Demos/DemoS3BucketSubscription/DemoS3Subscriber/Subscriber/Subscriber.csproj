@@ -4,11 +4,10 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>DemoS3Subscriber.Subscriber</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.S3Events" Version="1.1.0" />
+    <PackageReference Include="Amazon.Lambda.S3Events" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\LambdaSharp\LambdaSharp.csproj" />

@@ -114,6 +114,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private int _approximateResponseSize;
         private IAmazonKinesisFirehose? _firehoseClient;
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Properties ---
         private Logic Logic => _logic ?? throw new InvalidOperationException();
         private IAmazonCloudWatchEvents EventsClient => _eventsClient ?? throw new InvalidOperationException();
@@ -134,7 +137,12 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var dynamoClient = new AmazonDynamoDBClient();
             _registrations = new RegistrationTable(dynamoClient, tableName);
             _cachedRegistrations = new Dictionary<string, OwnerMetaData>();
-            _rollbarClient = new RollbarClient(null, null, message => LogInfo(message));
+            _rollbarClient = new RollbarClient(
+                httpClient: null,
+                accountReadAccessToken: null,
+                accountWriteAccessToken: null,
+                message => LogInfo(message)
+            );
             _eventsClient = new AmazonCloudWatchEventsClient();
             _firehoseClient = new AmazonKinesisFirehoseClient();
             _selfMetaData = new OwnerMetaData {
@@ -179,7 +187,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                         }
 
                         // skip log event from own module
-                        if(logEventsMessage.LogGroup.Contains(Info.FunctionName)) {
+                        if((Info.FunctionName != null) && logEventsMessage.LogGroup.Contains(Info.FunctionName)) {
                             LogInfo($"skipping log events message from own event log (record-id: {record.RecordId})");
                             RecordDropped(record);
                             continue;
@@ -230,11 +238,11 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                                 );
                             } catch(Exception e) {
                                 if(owner.FunctionId != null) {
-                                    LogError(e, "log event [{1}] processing failed (function-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message, owner.FunctionId);
+                                    LogError(e, "log event [{1}] processing failed (function-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message ?? "<null>", owner.FunctionId);
                                 } else if(owner.AppId != null) {
-                                    LogError(e, "log event [{1}] processing failed (app-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message, owner.AppId);
+                                    LogError(e, "log event [{1}] processing failed (app-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message ?? "<null>", owner.AppId);
                                 } else {
-                                    LogError(e, "log event [{1}] processing failed (log-group: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message, logEventsMessage.LogGroup);
+                                    LogError(e, "log event [{1}] processing failed (log-group: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, logEvent.Message ?? "<null>", logEventsMessage.LogGroup);
                                 }
 
                                 // mark this log events message as failed and stop processing more log events

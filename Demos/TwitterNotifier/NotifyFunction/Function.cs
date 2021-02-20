@@ -47,6 +47,9 @@ namespace Demo.TwitterNotifier.NotifyFunction {
         private IAmazonSimpleNotificationService _snsClient;
         private string _notificationTopic;
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
             _twitterQuery = config.ReadText("TwitterQuery");

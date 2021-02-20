@@ -194,6 +194,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var text = match.ToString();
             var record = JsonSerializer.Deserialize<LambdaLogRecord>(text);
+            if(record == null) {
+                throw new ProcessLogEventsException($"null record");
+            }
 
             // check for pre-0.8 log record
             if((record.Type == null) && (record.Source != null)) {
@@ -201,6 +204,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                     // report error record
                     var errorReport = JsonSerializer.Deserialize<LambdaErrorReport>(text);
+                    if(errorReport == null) {
+                        throw new ProcessLogEventsException($"null error report");
+                    }
 
                     // convert old format into new
                     errorReport.ModuleInfo = errorReport.Module;
@@ -215,19 +221,25 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                     // report error record
                     var errorReport = JsonSerializer.Deserialize<LambdaErrorReport>(text);
-                    await _provider.SendErrorReportAsync(owner, timestamp, errorReport);
+                    if(errorReport != null) {
+                        await _provider.SendErrorReportAsync(owner, timestamp, errorReport);
+                    }
                     break;
                 case "LambdaEvent":
 
                     // report event record
                     var eventRecord = JsonSerializer.Deserialize<LambdaEventRecord>(text);
-                    await _provider.SendEventAsync(owner, timestamp, eventRecord);
+                    if(eventRecord != null) {
+                        await _provider.SendEventAsync(owner, timestamp, eventRecord);
+                    }
                     break;
                 case "LambdaMetrics":
 
                     // report metrics record
                     var metricsRecord = JsonSerializer.Deserialize<LambdaMetricsRecord>(text);
-                    await _provider.SendMetricsAsync(owner, timestamp, metricsRecord);
+                    if(metricsRecord != null) {
+                        await _provider.SendMetricsAsync(owner, timestamp, metricsRecord);
+                    }
                     break;
                 case null:
                     throw new ProcessLogEventsException($"missing record '{nameof(record.Type)}' property");
@@ -387,7 +399,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                 // report near out-of-memory/timeout warning
                 report.Level = "WARNING";
-                report.Message = FormattableString.Invariant($"Lambda nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})");
+                report.Message = $"Lambda nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})";
                 report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda nearing execution limits");
             }
             if(report.Message != null) {
@@ -400,8 +412,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.RequestId = GetRequestId(match);
             var error = JsonSerializer.Deserialize<JavascriptException>(match.Groups["ErrorMessage"].Value);
-            report.Message = error.ErrorMessage;
-            if(error.StackTrace?.Any() == true) {
+            report.Message = error?.ErrorMessage ?? "Missing Error Message";
+            if(error?.StackTrace?.Any() == true) {
                 report.Traces = new List<LambdaErrorReportStackTrace> {
                     new LambdaErrorReportStackTrace {
                         Exception = new LambdaErrorReportExceptionInfo {

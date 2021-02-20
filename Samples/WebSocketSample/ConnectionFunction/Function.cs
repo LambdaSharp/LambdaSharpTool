@@ -31,6 +31,9 @@ namespace WebSocketsSample.ConnectionFunction {
         //--- Fields ---
         private ConnectionsTable _connections;
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
             _connections = new ConnectionsTable(

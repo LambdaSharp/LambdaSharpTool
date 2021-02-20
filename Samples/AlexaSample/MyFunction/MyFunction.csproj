@@ -4,7 +4,6 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>AlexaSample.MyFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -12,5 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp.Serialization.NewtonsoftJson\LambdaSharp.Serialization.NewtonsoftJson.csproj" />
   </ItemGroup>
 </Project>

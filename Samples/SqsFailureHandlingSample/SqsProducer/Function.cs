@@ -25,6 +25,9 @@ namespace SqsSample.Producer {
 
     public sealed class Function : ALambdaFunction<int, string> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Fields ---
         private string _sqsQueueUrl;
         private IAmazonSQS _sqsClient;

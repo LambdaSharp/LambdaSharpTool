@@ -1,5 +1,5 @@
-/*
- * LambdaSharp (?#)
+﻿/*
+ * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
  *
@@ -17,7 +17,7 @@
  */
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace LambdaSharp.App.EventBus.BroadcastFunction {
 
@@ -25,13 +25,13 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
 
         //--- Properties ---
 
-        [JsonProperty("source")]
+        [JsonPropertyName("source")]
         public string Source { get; set; }
 
-        [JsonProperty("detail-type")]
+        [JsonPropertyName("detail-type")]
         public string DetailType { get; set; }
 
-        [JsonProperty("resources")]
+        [JsonPropertyName("resources")]
         public List<string> Resources { get; set; }
     }
 }

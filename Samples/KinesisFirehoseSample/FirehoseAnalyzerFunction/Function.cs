@@ -29,6 +29,9 @@ namespace Sample.KinesisFirehose.FirehoseAnalyzerFunction {
 
     public sealed class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }
 

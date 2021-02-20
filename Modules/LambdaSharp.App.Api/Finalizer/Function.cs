@@ -17,6 +17,7 @@
  */
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.APIGateway;
 using Amazon.APIGateway.Model;
@@ -42,11 +43,11 @@ namespace LambdaSharp.AppHosting.Finalizer {
             _apiGatewayClient = new AmazonAPIGatewayClient();
         }
 
-        public override Task CreateDeployment(FinalizerProperties current) => Task.CompletedTask;
-        public override Task UpdateDeployment(FinalizerProperties current, FinalizerProperties previous) => UpdateApiDeployment();
-        public override Task DeleteDeployment(FinalizerProperties current) => DeleteApiDeployments();
+        public override Task CreateDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) => Task.CompletedTask;
+        public override Task UpdateDeploymentAsync(FinalizerProperties current, FinalizerProperties previous, CancellationToken cancellationToken) => UpdateApiDeploymentAsync(cancellationToken);
+        public override Task DeleteDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) => DeleteApiDeploymentAsync(cancellationToken);
 
-        private async Task UpdateApiDeployment() {
+        private async Task UpdateApiDeploymentAsync(CancellationToken cancellationToken) {
 
             // list current deployments
             LogInfo("Listing deployments");
@@ -91,7 +92,7 @@ namespace LambdaSharp.AppHosting.Finalizer {
             }
         }
 
-        private async Task DeleteApiDeployments() {
+        private async Task DeleteApiDeploymentAsync(CancellationToken cancellationToken) {
 
             // remove old deployments
             LogInfo("Listing deployments");

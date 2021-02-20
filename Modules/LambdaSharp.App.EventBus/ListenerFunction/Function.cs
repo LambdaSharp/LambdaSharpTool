@@ -40,6 +40,9 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         private string _httpApiToken;
         private string _clientApiKey;
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
 

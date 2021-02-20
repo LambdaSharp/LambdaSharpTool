@@ -16,7 +16,13 @@
 
 Module: Sample.ApiGateway
 Description: A sample module integrating with API Gateway
+Pragmas:
+  - Overrides:
+      Module::RestApi::CorsOrigin: !Ref CorsOrigin
 Items:
+
+  - Parameter: CorsOrigin
+    Default: "*"
 
   - Function: MyFunction
     Description: This function is invoked by API Gateway

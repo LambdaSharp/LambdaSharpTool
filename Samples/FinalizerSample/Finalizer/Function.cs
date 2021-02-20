@@ -18,6 +18,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -40,15 +41,15 @@ namespace FinalizerSample.Finalizer {
             _bucketName = config.ReadS3BucketName("MyBucket");
         }
 
-        public override async Task CreateDeployment(FinalizerProperties current) {
+        public override async Task CreateDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
             LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
         }
 
-        public override async Task UpdateDeployment(FinalizerProperties current, FinalizerProperties previous) {
+        public override async Task UpdateDeploymentAsync(FinalizerProperties current, FinalizerProperties previous, CancellationToken cancellationToken) {
             LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {current.DeploymentChecksum}");
         }
 
-        public override async Task DeleteDeployment(FinalizerProperties current) {
+        public override async Task DeleteDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
             LogInfo($"Deleting Deployment: {current.DeploymentChecksum}");
 
             // enumerate all S3 objects

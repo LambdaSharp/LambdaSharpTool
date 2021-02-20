@@ -4,7 +4,6 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.Samples.VpcFunction.MyFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>

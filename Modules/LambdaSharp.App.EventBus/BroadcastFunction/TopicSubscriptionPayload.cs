@@ -1,5 +1,5 @@
-/*
- * LambdaSharp (?#)
+﻿/*
+ * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
  *

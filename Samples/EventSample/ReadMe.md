@@ -30,25 +30,25 @@ Items:
 
 ## Function Code
 
-CloudWatch Event messages can parsed into a `CloudWatchEvent<T>` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.CloudWatchEvents` nuget package.
+CloudWatch Event messages can parsed by using the `ALambdaEventFunction<T>` base class.
 
 ```csharp
-public sealed class Function : ALambdaFunction<CloudWatchEvent<EventDetails>, FunctionResponse> {
+public sealed class Function : ALambdaEventFunction<EventDetails> {
 
     //--- Methods ---
     public override async Task InitializeAsync(LambdaConfig config) { }
 
-    public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent<EventDetails> request) {
+    public override async Task<FunctionResponse> ProcessMessageAsync(EventDetails eventDetails) {
+        vat request = CurrentEvent;
         LogInfo($"Version = {request.Version}");
         LogInfo($"Account = {request.Account}");
         LogInfo($"Region = {request.Region}");
-        LogInfo($"Detail = {LambdaSerializer.Serialize(request.Detail)}");
+        LogInfo($"Detail = {LambdaSerializer.Serialize(eventDetails)}");
         LogInfo($"DetailType = {request.DetailType}");
         LogInfo($"Source = {request.Source}");
         LogInfo($"Time = {request.Time}");
         LogInfo($"Id = {request.Id}");
         LogInfo($"Resources = [{string.Join(",", request.Resources ?? Enumerable.Empty<string>())}]");
-        return new FunctionResponse();
     }
 }
 ```

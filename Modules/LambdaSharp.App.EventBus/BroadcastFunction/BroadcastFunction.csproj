@@ -5,18 +5,18 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.App.EventBus.BroadcastFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.3.*"/>
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.4.0" />
+    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.2.0" />
+    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.5.0.56" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.App.EventBus\LambdaSharp.App.EventBus.csproj" />
     <ProjectReference Include="..\LambdaSharp.App.EventBus.Actions\LambdaSharp.App.EventBus.Actions.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="0.8.1.*" />
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)/src/LambdaSharp/LambdaSharp.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
   </ItemGroup>
 </Project>

@@ -20,15 +20,14 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.CustomResource;
 using LambdaSharp.Exceptions;
-using LambdaSharp.Serialization;
 
 namespace LambdaSharp.Core.RegistrationFunction {
 
@@ -50,11 +49,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
         public string? FunctionId { get; set; }
         public string? FunctionName { get; set; }
         public string? FunctionLogGroupName { get; set; }
-
-        [JsonConverter(typeof(JsonParseIntConverter))]
         public int FunctionMaxMemory { get; set; }
-
-        [JsonConverter(typeof(JsonParseIntConverter))]
         public int FunctionMaxDuration { get; set; }
         public string? FunctionPlatform { get; set; }
         public string? FunctionFramework { get; set; }
@@ -113,6 +108,9 @@ namespace LambdaSharp.Core.RegistrationFunction {
         private string? _rollbarProjectPattern;
         private string? _coreSecretsKey;
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Properties ---
         private RegistrationTable Registrations => _registrations ?? throw new InvalidOperationException();
         private RollbarClient RollbarClient => _rollbarClient ?? throw new InvalidOperationException();
@@ -124,6 +122,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             var tableName = config.ReadDynamoDBTableName("RegistrationTable");
             _registrations = new RegistrationTable(new AmazonDynamoDBClient(), tableName);
             _rollbarClient = new RollbarClient(
+                HttpClient,
                 config.ReadText("RollbarReadAccessToken", defaultValue: null),
                 config.ReadText("RollbarWriteAccessToken", defaultValue: null),
                 message => LogInfo(message)
@@ -138,7 +137,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             }
         }
 
-        public override async Task<Response<RegistrationResourceAttributes>> ProcessCreateResourceAsync(Request<RegistrationResourceProperties> request) {
+        public override async Task<Response<RegistrationResourceAttributes>> ProcessCreateResourceAsync(Request<RegistrationResourceProperties> request, CancellationToken cancellationToken) {
             var properties = request.ResourceProperties;
 
             // request validation
@@ -202,7 +201,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             }
         }
 
-        public override async Task<Response<RegistrationResourceAttributes>> ProcessDeleteResourceAsync(Request<RegistrationResourceProperties> request) {
+        public override async Task<Response<RegistrationResourceAttributes>> ProcessDeleteResourceAsync(Request<RegistrationResourceProperties> request, CancellationToken cancellationToken) {
             var properties = request.ResourceProperties;
 
             // request validation
@@ -265,7 +264,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             return new Response<RegistrationResourceAttributes>();
         }
 
-        public override async Task<Response<RegistrationResourceAttributes>> ProcessUpdateResourceAsync(Request<RegistrationResourceProperties> request) {
+        public override async Task<Response<RegistrationResourceAttributes>> ProcessUpdateResourceAsync(Request<RegistrationResourceProperties> request, CancellationToken cancellationToken) {
 
             // request validation
             if(request.PhysicalResourceId == null) {

@@ -26,6 +26,9 @@ namespace SqsSample.Consumer {
 
     public sealed class Function : ALambdaQueueFunction<int> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

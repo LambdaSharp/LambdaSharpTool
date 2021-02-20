@@ -5,11 +5,10 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>Sample.KinesisFirehose.FirehoseAnalyzerFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="1.1.0"/>
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.1.0"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj"/>

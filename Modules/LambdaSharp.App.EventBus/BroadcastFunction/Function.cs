@@ -1,5 +1,5 @@
-/*
- * LambdaSharp (?#)
+﻿/*
+ * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
  *
@@ -42,6 +42,9 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
         private string _eventTopicArn;
         private string _keepAliveRuleArn;
         private string _httpApiToken;
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {

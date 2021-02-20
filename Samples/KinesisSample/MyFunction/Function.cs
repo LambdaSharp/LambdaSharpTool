@@ -26,6 +26,9 @@ namespace KinesisSample.MyFunction {
 
     public sealed class Function : ALambdaFunction<KinesisEvent, string> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

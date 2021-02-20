@@ -30,6 +30,9 @@ namespace SnsSample.MyFunction {
 
     public sealed class Function : ALambdaTopicFunction<MyMessage> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

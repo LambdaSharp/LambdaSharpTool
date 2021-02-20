@@ -24,6 +24,9 @@ namespace S3Sample.MyFunction {
 
     public sealed class Function : ALambdaFunction<S3Event, string> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

@@ -5,7 +5,6 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.App.EventBus.ListenerFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -16,7 +15,6 @@
     <ProjectReference Include="..\LambdaSharp.App.EventBus.Actions\LambdaSharp.App.EventBus.Actions.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="0.8.1.*"/>
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)/src/LambdaSharp/LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.ApiGateway\LambdaSharp.ApiGateway.csproj" />
   </ItemGroup>
 </Project>

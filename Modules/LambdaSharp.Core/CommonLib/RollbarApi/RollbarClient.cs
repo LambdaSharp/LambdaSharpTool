@@ -72,11 +72,11 @@ namespace LambdaSharp.Core.RollbarApi {
         public string? Status { get; set; }
 
         [JsonPropertyName("date_created")]
-        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeOffsetConverter))]
         public DateTimeOffset Created { get; set; }
 
         [JsonPropertyName("date_modified")]
-        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeOffsetConverter))]
         public DateTimeOffset Modified { get; set; }
     }
 
@@ -96,29 +96,34 @@ namespace LambdaSharp.Core.RollbarApi {
         public string? Status { get; set; }
 
         [JsonPropertyName("date_created")]
-        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeOffsetConverter))]
         public DateTime Created { get; set; }
 
         [JsonPropertyName("date_modified")]
-        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeOffsetConverter))]
         public DateTime Modified { get; set; }
     }
 
     public class RollbarClient {
 
         //--- Class Fields ---
-        public static HttpClient HttpClient = new HttpClient();
-
-        //--- Fields ---
-        private readonly string? _accountReadAccessToken;
-        private readonly string? _accountWriteAccessToken;
-        private readonly Action<string> _logInfo;
-        private readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions {
+        private static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions {
             IgnoreNullValues = true
         };
 
+        //--- Class Methods ---
+        private static string Serialize<T>(T value) => JsonSerializer.Serialize<T>(value, _serializerOptions);
+        private static T Deserialize<T>(string json) => JsonSerializer.Deserialize<T>(json, _serializerOptions) ?? throw new InvalidDataException($"Data return null: {json}");
+
+        //--- Fields ---
+        private readonly HttpClient? _httpClient;
+        private readonly string? _accountReadAccessToken;
+        private readonly string? _accountWriteAccessToken;
+        private readonly Action<string> _logInfo;
+
         //--- Constructors ---
-        public RollbarClient(string? accountReadAccessToken, string? accountWriteAccessToken, Action<string> logInfo) {
+        public RollbarClient(HttpClient? httpClient, string? accountReadAccessToken, string? accountWriteAccessToken, Action<string> logInfo) {
+            _httpClient = httpClient;
             _accountReadAccessToken = accountReadAccessToken;
             _accountWriteAccessToken = accountWriteAccessToken;
             _logInfo = logInfo;
@@ -126,12 +131,13 @@ namespace LambdaSharp.Core.RollbarApi {
 
         //--- Properties ---
         public bool HasTokens => (_accountReadAccessToken != null) && (_accountWriteAccessToken != null);
+        private HttpClient HttpClient => _httpClient ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public string SendRollbarPayload(Rollbar rollbar) {
 
             // send payload to rollbar
-            var payload = JsonSerializer.Serialize<Rollbar>(rollbar, _serializerOptions);
+            var payload = Serialize(rollbar);
             var payloadBytes = Encoding.UTF8.GetBytes(payload);
             var request = (HttpWebRequest)WebRequest.Create("https://api.rollbar.com/api/1/item/");
             request.ContentType = "application/json";
@@ -157,12 +163,12 @@ namespace LambdaSharp.Core.RollbarApi {
             var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                 RequestUri = new Uri("https://api.rollbar.com/api/1/projects/"),
                 Method = HttpMethod.Post,
-                Content = new StringContent(JsonSerializer.Serialize(new RollbarCreateProjectRequest {
+                Content = new StringContent(Serialize(new RollbarCreateProjectRequest {
                     AccessToken = _accountWriteAccessToken,
                     Name = projectName
-                }, _serializerOptions), Encoding.UTF8, "application/json")
+                }), Encoding.UTF8, "application/json")
             });
-            var result = JsonSerializer.Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
+            var result = Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
             if((httpResponse.StatusCode == (HttpStatusCode)422) && (result.Message == "Project with this name already exists")) {
                 return await FindProjectByName(projectName) ?? throw new RollbarClientException($"could not find project: {projectName}");
             }
@@ -172,7 +178,7 @@ namespace LambdaSharp.Core.RollbarApi {
             if(result.Error != 0) {
                 throw new RollbarClientException($"rollbar operation failed (error {result.Error}): {result.Message}");
             }
-            return JsonSerializer.Deserialize<RollbarProject>(JsonSerializer.Serialize(result.Result, _serializerOptions));
+            return Deserialize<RollbarProject>(Serialize(result.Result));
         }
 
         public async Task<IEnumerable<RollbarProject>> ListAllProjects() {
@@ -184,11 +190,11 @@ namespace LambdaSharp.Core.RollbarApi {
             if(!httpResponse.IsSuccessStatusCode) {
                 throw new RollbarClientException($"http operation failed: {httpResponse.StatusCode}");
             }
-            var result = JsonSerializer.Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
+            var result = Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
             if(result.Error != 0) {
                 throw new RollbarClientException($"rollbar operation failed (error {result.Error}): {result.Message}");
             }
-            var list = JsonSerializer.Deserialize<List<RollbarProject>>(JsonSerializer.Serialize(result.Result, _serializerOptions));
+            var list = Deserialize<List<RollbarProject>>(Serialize(result.Result));
             return list.Where(project => project.Name != null).ToArray();
         }
 
@@ -211,11 +217,11 @@ namespace LambdaSharp.Core.RollbarApi {
             if(!httpResponse.IsSuccessStatusCode) {
                 throw new RollbarClientException($"http operation failed: {httpResponse.StatusCode}");
             }
-            var result = JsonSerializer.Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
+            var result = Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
             if(result.Error != 0) {
                 throw new RollbarClientException($"rollbar operation failed (error {result.Error}): {result.Message}");
             }
-            return JsonSerializer.Deserialize<RollbarProject>(JsonSerializer.Serialize(result.Result, _serializerOptions));
+            return Deserialize<RollbarProject>(Serialize(result.Result));
         }
 
         public async Task DeleteProject(int projectId) {
@@ -227,7 +233,7 @@ namespace LambdaSharp.Core.RollbarApi {
             if(!httpResponse.IsSuccessStatusCode) {
                 throw new RollbarClientException($"http operation failed: {httpResponse.StatusCode}");
             }
-            var result = JsonSerializer.Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
+            var result = Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
             if(result.Error != 0) {
                 throw new RollbarClientException($"rollbar operation failed (error {result.Error}): {result.Message}");
             }
@@ -242,11 +248,11 @@ namespace LambdaSharp.Core.RollbarApi {
             if(!httpResponse.IsSuccessStatusCode) {
                 throw new RollbarClientException($"http operation failed: {httpResponse.StatusCode}");
             }
-            var result = JsonSerializer.Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
+            var result = Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
             if(result.Error != 0) {
                 throw new RollbarClientException($"rollbar operation failed (error {result.Error}): {result.Message}");
             }
-            return JsonSerializer.Deserialize<List<RollbarProjectToken>>(JsonSerializer.Serialize(result.Result, _serializerOptions));
+            return Deserialize<List<RollbarProjectToken>>(Serialize(result.Result));
         }
 
         private void LogInfo(string message) => _logInfo?.Invoke(message);

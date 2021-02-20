@@ -24,7 +24,19 @@ Items:
     Timeout: 30
 
   - Function: ReceiverFunction
-    Description: Lambda function for receiving CloudWatch events
+    Description: Lambda function for receiving CloudWatch events using ALambdaFunction<TRequest, TResponse>
+    Memory: 256
+    Timeout: 30
+    Sources:
+      - EventBus: default
+        Pattern:
+          Source:
+            - MySample
+          DetailType:
+            - MyEvent
+
+  - Function: ReceiverEventFunction
+    Description: Lambda function for receiving CloudWatch events using ALambdaEventFunction<TMessage>
     Memory: 256
     Timeout: 30
     Sources:

@@ -4,15 +4,14 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.Core.LoggingStreamAnalyzerFunction</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="1.1.0"/>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28"/>
-    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.3.102.27"/>
-    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.3.105.9"/>
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.1.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.4.15" />
+    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.5.4.17" />
+    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.5.0.56"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>

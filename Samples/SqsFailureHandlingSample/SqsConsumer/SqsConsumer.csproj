@@ -4,10 +4,9 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>SqsSample.Consumer</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp.SimpleQueueService\LambdaSharp.SimpleQueueService.csproj" />
   </ItemGroup>
 </Project>

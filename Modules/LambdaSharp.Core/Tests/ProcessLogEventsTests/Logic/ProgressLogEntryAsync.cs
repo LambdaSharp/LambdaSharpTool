@@ -153,7 +153,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
             _provider.UsageReport.InitDuration.Should().BeNull();
             CommonErrorReportAsserts(usageReportCheck: false);
-            _provider.ErrorReport.Message.Should().Be("Lambda nearing execution limits (Memory 100.00 %, Duration: 10.62 %)");
+            _provider.ErrorReport.Message.Should().Be("Lambda nearing execution limits (Memory 100.00%, Duration: 10.62%)");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
         }

@@ -26,6 +26,9 @@ namespace ApiSample.MyFunction {
 
     public sealed class Function : ALambdaApiGatewayFunction {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

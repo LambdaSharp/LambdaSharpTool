@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Threading.Tasks;
 using LambdaSharp;
 
@@ -27,6 +26,9 @@ namespace Sample.Debug.MyFunction {
     public class FunctionResponse { }
 
     public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }

@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.S3;
 using LambdaSharp.CustomResource;
@@ -91,6 +92,9 @@ namespace LambdaSharp.S3.IO.S3Writer {
         private WriteJsonLogic _writeJsonLogic;
         private EmptyBucketLogic _emptyBucketLogic;
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
             _manifestBucket = config.ReadS3BucketName("ManifestBucket");
@@ -100,7 +104,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             _emptyBucketLogic = new EmptyBucketLogic(Logger, _s3Client);
         }
 
-        public override async Task<Response<S3WriterResourceAttributes>> ProcessCreateResourceAsync(Request<S3WriterResourceProperties> request) {
+        public override async Task<Response<S3WriterResourceAttributes>> ProcessCreateResourceAsync(Request<S3WriterResourceProperties> request, CancellationToken cancellationToken) {
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Create(request.ResourceProperties);
@@ -113,7 +117,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             }
         }
 
-        public override async Task<Response<S3WriterResourceAttributes>> ProcessUpdateResourceAsync(Request<S3WriterResourceProperties> request) {
+        public override async Task<Response<S3WriterResourceAttributes>> ProcessUpdateResourceAsync(Request<S3WriterResourceProperties> request, CancellationToken cancellationToken) {
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Update(request.OldResourceProperties, request.ResourceProperties);
@@ -126,7 +130,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             }
         }
 
-        public override async Task<Response<S3WriterResourceAttributes>> ProcessDeleteResourceAsync(Request<S3WriterResourceProperties> request) {
+        public override async Task<Response<S3WriterResourceAttributes>> ProcessDeleteResourceAsync(Request<S3WriterResourceProperties> request, CancellationToken cancellationToken) {
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::S3::Unzip":
                 return await _unzipLogic.Delete(request.ResourceProperties);

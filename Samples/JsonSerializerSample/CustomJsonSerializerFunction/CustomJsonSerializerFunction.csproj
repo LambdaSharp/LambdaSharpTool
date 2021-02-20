@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>Sample.JsonSerializer.CustomJsonSerializerFunction</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LitJson" Version="0.16.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Deterministic>true</Deterministic>
@@ -8,9 +8,11 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.3.*" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.*" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.*" />
+    <PackageReference Include="AWSSDK.Core" Version="3.5.1.56" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.5.4.15" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.5.1.27" />
+
+    <!-- TODO (2021-01-02, bjorg): remove Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
   <ItemGroup>

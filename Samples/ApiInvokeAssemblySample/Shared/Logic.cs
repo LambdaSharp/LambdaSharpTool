@@ -17,32 +17,34 @@
  */
 
 using System;
-using System.Runtime.Serialization;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using LambdaSharp.ApiGateway;
 using LambdaSharp.Logging;
 
+// TODO (2020-12-28, bjorg): how do we know what serializer to use for this assembly?
+
 namespace ApiInvokeSample.Shared {
 
     public class CaptureEventRequest {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public string EventType { get; set; }
 
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Data { get; set; }
     }
 
     public class ComputeRequest {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public double LeftOperand { get; set; }
 
-        [DataMember(IsRequired = true)]
+        [Required]
         public double RightOperand { get; set; }
     }
 
@@ -50,14 +52,14 @@ namespace ApiInvokeSample.Shared {
 
         //--- Properties ---
         [JsonPropertyName("op")]
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Operator { get; set; }
     }
 
     public class ComputeResponse {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public double Value { get; set; }
     }
 
@@ -80,8 +82,8 @@ namespace ApiInvokeSample.Shared {
         }
 
         public ComputeResponse Compute(ComputeRequest computation, [FromUri] ComputeQuery query) {
-            _logger.LogInfo($"request: {SerializeJson(computation)}");
-            _logger.LogInfo($"query: {SerializeJson(query)}");
+            _logger.LogInfo($"request: {JsonSerializer.Serialize(computation)}");
+            _logger.LogInfo($"query: {JsonSerializer.Serialize(query)}");
             switch(query.Operator) {
             case "add":
                 return new ComputeResponse {
@@ -105,10 +107,5 @@ namespace ApiInvokeSample.Shared {
                 };
             }
         }
-
-        private string SerializeJson<T>(T value)
-            => JsonSerializer.Serialize(value, new JsonSerializerOptions {
-                IgnoreNullValues = true
-            });
     }
 }

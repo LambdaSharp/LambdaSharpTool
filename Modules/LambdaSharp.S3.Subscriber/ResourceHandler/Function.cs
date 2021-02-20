@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -60,13 +61,16 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
         //--- Fields ---
         private IAmazonS3 _s3Client;
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config) {
             _s3Client = new AmazonS3Client();
             return Task.CompletedTask;
         }
 
-        public override async Task<Response<S3SubscriptionAttributes>> ProcessCreateResourceAsync(Request<S3SubscriptionProperties> request) {
+        public override async Task<Response<S3SubscriptionAttributes>> ProcessCreateResourceAsync(Request<S3SubscriptionProperties> request, CancellationToken cancellationToken) {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
@@ -108,7 +112,7 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
             };
         }
 
-        public override async Task<Response<S3SubscriptionAttributes>> ProcessDeleteResourceAsync(Request<S3SubscriptionProperties> request) {
+        public override async Task<Response<S3SubscriptionAttributes>> ProcessDeleteResourceAsync(Request<S3SubscriptionProperties> request, CancellationToken cancellationToken) {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
@@ -126,7 +130,7 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
             return new Response<S3SubscriptionAttributes>();
         }
 
-        public override async Task<Response<S3SubscriptionAttributes>> ProcessUpdateResourceAsync(Request<S3SubscriptionProperties> request) {
+        public override async Task<Response<S3SubscriptionAttributes>> ProcessUpdateResourceAsync(Request<S3SubscriptionProperties> request, CancellationToken cancellationToken) {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)

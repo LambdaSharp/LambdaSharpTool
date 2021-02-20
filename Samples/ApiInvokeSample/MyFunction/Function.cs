@@ -30,6 +30,9 @@ namespace ApiInvokeSample.MyFunction {
         //--- Fields ---
         private List<Item> _items = new List<Item>();
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

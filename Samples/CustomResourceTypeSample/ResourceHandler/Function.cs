@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Threading;
 using System.Threading.Tasks;
 using LambdaSharp;
 using LambdaSharp.CustomResource;
@@ -38,11 +39,14 @@ namespace CustomResourceSample.ResourceHandler {
 
     public sealed class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<Response<ResourceAttributes>> ProcessCreateResourceAsync(Request<ResourceProperties> request) {
+        public override async Task<Response<ResourceAttributes>> ProcessCreateResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
 
             // TO-DO: create custom resource using resource properties from request
 
@@ -56,14 +60,14 @@ namespace CustomResourceSample.ResourceHandler {
             };
         }
 
-        public override async Task<Response<ResourceAttributes>> ProcessDeleteResourceAsync(Request<ResourceProperties> request) {
+        public override async Task<Response<ResourceAttributes>> ProcessDeleteResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
 
             // TO-DO: delete custom resource identified by PhysicalResourceId in request
 
             return new Response<ResourceAttributes>();
         }
 
-        public override async Task<Response<ResourceAttributes>> ProcessUpdateResourceAsync(Request<ResourceProperties> request) {
+        public override async Task<Response<ResourceAttributes>> ProcessUpdateResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
 
             // TO-DO: update custom resource using resource properties from request
 

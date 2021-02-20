@@ -17,55 +17,55 @@
  */
 
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.ComponentModel.DataAnnotations;
 
 namespace ApiInvokeSample.MyFunction {
 
     public class Item {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Id { get; set; }
 
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Value { get; set; }
     }
 
     public class AddItemRequest {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Value { get; set; }
     }
 
     public class AddItemResponse {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Id { get; set; }
     }
 
     public class GetItemsResponse {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public List<Item> Items = new List<Item>();
     }
 
     public class GetItemResponse {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Id { get; set; }
 
-        [DataMember(IsRequired = true)]
+        [Required]
         public string Value { get; set; }
     }
 
     public class DeleteItemResponse {
 
         //--- Properties ---
-        [DataMember(IsRequired = true)]
+        [Required]
         public bool Deleted;
     }
 }
