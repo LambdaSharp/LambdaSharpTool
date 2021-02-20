@@ -58,6 +58,13 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
                 return true;
             }
 
+            // check for nested stack resource type
+            if(resourceTypeName.Equals("AWS::CloudFormation::Stack", StringComparison.Ordinal)) {
+
+                // TODO: add special case for "AWS::CloudFormation::Stack" since the attributes are driven by the output
+                throw new NotImplementedException();
+            }
+
             // check CloudFormation specification for matching resource type
             return _resourceTypes.TryGetValue(resourceTypeName, out resourceType);
         }
