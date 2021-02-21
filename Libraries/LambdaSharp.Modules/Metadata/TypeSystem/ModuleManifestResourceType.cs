@@ -75,9 +75,15 @@ namespace LambdaSharp.Modules.Metadata.TypeSystem {
             // TODO: this doesn't feel right; seems like we're injecting the `ServiceToken` too early
             switch(propertyName) {
             case "ServiceToken":
+
+                // NOTE (2021-02-21, bjorg): this property is required by 'AWS::CloudFormation::CustomResource'
+                //  https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cfn-customresource.html#cfn-customresource-servicetoken
                 property = new StringResourceProperty(propertyName, required: true);
                 return true;
             case "ResourceType":
+
+                // NOTE (2021-02-21, bjorg): this used by LambdaSharp to carry over the original custom resource name
+                //  since it had to be transformed to 'Custom::XYZ'
                 property = new StringResourceProperty(propertyName, required: false);
                 return true;
             default:
