@@ -1510,48 +1510,28 @@ namespace LambdaSharp.Tool.Model {
         }
 
         private void ValidateProperties(
-            string awsType,
+            string resourceTypeName,
             IDictionary properties
         ) {
-            var matches = _typeSystems.GetAllMacthingResourceTypes(awsType);
+            var matches = _typeSystems.GetAllMacthingResourceTypes(resourceTypeName);
             switch(matches.Count()) {
             case 0:
-                LogError($"unrecognized resource type {awsType}");
+                if(_dependencies.Values.Any(d => d.Manifest == null)) {
+
+                    // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
+                    LogWarn($"unable to validate properties for {resourceTypeName}");
+                } else {
+                    LogError($"unrecognized resource type {resourceTypeName}");
+                }
                 break;
             case 1:
                 ValidateProperties("", matches.First().ResourceType, properties);
                 break;
             default:
-                LogWarn($"ambiguous resource type '{awsType}' [{string.Join(", ", matches.Select(t => t.Source))}]");
+                LogWarn($"ambiguous resource type '{resourceTypeName}' [{string.Join(", ", matches.Select(t => t.Source))}]");
                 ValidateProperties("", matches.First().ResourceType, properties);
                 break;
             }
-
-            // TODO: not sure what to keep here
-
-            // var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.Any(existing => existing.Type == awsType) ?? false);
-            // if(dependency == null) {
-            //     if(_dependencies.Values.Any(d => d.Manifest == null)) {
-
-            //         // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
-            //         LogWarn($"unable to validate properties for {awsType}");
-            //     } else {
-            //         LogError($"unrecognized resource type {awsType}");
-            //     }
-            // } else if(properties != null) {
-            //     var definition = dependency.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
-            //     if(definition != null) {
-            //         foreach(var key in properties.Keys) {
-            //             var stringKey = (string)key;
-            //             if(
-            //                 (stringKey != "ServiceToken")
-            //                 && (stringKey != "ResourceType")
-            //                 && !definition.Properties.Any(field => field.Name == stringKey)) {
-            //                 LogError($"unrecognized attribute '{key}' on type {awsType}");
-            //             }
-            //         }
-            //     }
-            // }
 
             // local functions
             void ValidateProperties(string prefix, IResourceType currentResource, IDictionary currentProperties) {

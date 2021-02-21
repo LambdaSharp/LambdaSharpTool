@@ -64,9 +64,7 @@ namespace Tests.LambdaSharp.ApiGateway {
         };
 
         //--- Class Methods ---
-        private static string SerializeJson(object value) => JsonSerializer.Serialize(value, new JsonSerializerOptions {
-            IgnoreNullValues = true
-        });
+        private static string SerializeJson(object value) => LambdaSerializerSettings.LambdaSharpSerializer.Serialize(value);
 
         private static SimpleResponse CreateSimpleResponse(params object?[] values)
             => new SimpleResponse {

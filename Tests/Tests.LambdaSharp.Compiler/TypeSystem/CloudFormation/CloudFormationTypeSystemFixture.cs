@@ -29,7 +29,7 @@ namespace Tests.LambdaSharp.Compiler.TypeSystem.CloudFormation {
         public CloudFormationTypeSystemFixture() {
             using var stream = ResourceReader.OpenStream("us-east-1.json.br");
             using var compression = new BrotliStream(stream, CompressionMode.Decompress);
-            TypeSystem = CloudFormationTypeSystem.LoadFromAsync(compression).GetAwaiter().GetResult();
+            TypeSystem = CloudFormationTypeSystem.LoadFromAsync("us-east-1.json.br", compression).GetAwaiter().GetResult();
         }
 
         //--- Properties ---
