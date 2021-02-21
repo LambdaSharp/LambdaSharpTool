@@ -27,8 +27,8 @@ using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
 using LambdaSharp.Build;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {

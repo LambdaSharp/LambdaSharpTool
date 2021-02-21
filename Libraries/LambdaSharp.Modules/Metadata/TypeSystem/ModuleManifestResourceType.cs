@@ -22,9 +22,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LambdaSharp.CloudFormation.TypeSystem;
 
-namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
+namespace LambdaSharp.Modules.Metadata.TypeSystem {
 
-    public class CloudFormationModuleManifestResourceType : IResourceType {
+    internal class ModuleManifestResourceType : IResourceType {
 
         //--- Types ---
         private class StringResourceProperty : IResourceProperty {
@@ -44,16 +44,16 @@ namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
         }
 
         //--- Fields ---
-        private readonly ModuleManifest.CloudFormationModuleManifestResourceType _resourceType;
+        private readonly Metadata.ModuleManifestResourceType _resourceType;
         private readonly Dictionary<string, IResourceProperty> _properties;
         private readonly Dictionary<string, IResourceAttribute> _attributes;
 
         //--- Constructors ---
-        public CloudFormationModuleManifestResourceType(ModuleManifest.CloudFormationModuleManifestResourceType resourceType) {
+        public ModuleManifestResourceType(Metadata.ModuleManifestResourceType resourceType) {
             _resourceType = resourceType;
             _properties = new Dictionary<string, IResourceProperty>();
             foreach(var property in resourceType.Properties) {
-                _properties[property.Name ?? throw new ArgumentException("missing property name")] = new CloudFormationModuleManifestResourceProperty(property);
+                _properties[property.Name ?? throw new ArgumentException("missing property name")] = new ModuleManifestResourceProperty(property);
             }
             _attributes = new Dictionary<string, IResourceAttribute>();
             foreach(var attribute in resourceType.Attributes) {

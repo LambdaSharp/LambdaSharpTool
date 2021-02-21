@@ -21,21 +21,21 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using LambdaSharp.CloudFormation.TypeSystem;
 
-namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
+namespace LambdaSharp.Modules.Metadata.TypeSystem {
 
-    public sealed class CloudFormationModuleManifestTypeSystem : ITypeSystem {
+    public sealed class ModuleManifestTypeSystem : ITypeSystem {
 
         //--- Fields ---
-        private readonly CloudFormationModuleManifest _manifest;
+        private readonly ModuleManifest _manifest;
         private readonly Dictionary<string, IResourceType> _resourceTypes;
 
         //--- Constructors ---
-        public CloudFormationModuleManifestTypeSystem(string source, CloudFormationModuleManifest manifest) {
+        public ModuleManifestTypeSystem(string source, ModuleManifest manifest) {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             _manifest = manifest;
             _resourceTypes = new Dictionary<string, IResourceType>();
             foreach(var resourceType in manifest.ResourceTypes) {
-                _resourceTypes[resourceType.Type ?? throw new ArgumentException("missing resource type name")] = new CloudFormationModuleManifestResourceType(resourceType);
+                _resourceTypes[resourceType.Type ?? throw new ArgumentException("missing resource type name")] = new ModuleManifestResourceType(resourceType);
             }
         }
 

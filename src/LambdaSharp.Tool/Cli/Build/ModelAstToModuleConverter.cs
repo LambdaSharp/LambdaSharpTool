@@ -29,6 +29,7 @@ using LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -677,13 +678,13 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     }
 
                     // read attributes
-                    List<ModuleManifestResourceProperty> attributes = null;
+                    List<ModuleManifestResourceAttribute> attributes = null;
                     if(node.Attributes != null) {
                         AtLocation("Attributes", () => {
-                            attributes = ParseTo<List<ModuleManifestResourceProperty>>(node.Attributes);
+                            attributes = ParseTo<List<ModuleManifestResourceAttribute>>(node.Attributes);
                         });
                     } else {
-                        attributes = new List<ModuleManifestResourceProperty>();
+                        attributes = new List<ModuleManifestResourceAttribute>();
                     }
 
                     // create resource type

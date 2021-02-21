@@ -30,8 +30,8 @@ using Amazon.CloudFormation.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -468,7 +468,7 @@ namespace LambdaSharp.Tool {
                 && (metadataToken is JObject metadata)
             ) {
                 JToken nameMappingsToken;
-                if(metadata.TryGetValue("LambdaSharp::NameMappings", out nameMappingsToken)) {
+                if(metadata.TryGetValue(ModuleNameMappings.MetadataName, out nameMappingsToken)) {
                     var nameMappings = nameMappingsToken.ToObject<ModuleNameMappings>();
                     if(nameMappings.Version == ModuleNameMappings.CurrentVersion) {
                         return nameMappings;
@@ -476,7 +476,7 @@ namespace LambdaSharp.Tool {
                     LogWarn($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
                     return null;
                 } else if(
-                    metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
+                    metadata.TryGetValue(ModuleManifest.MetadataName, out var manifestToken)
                     && (manifestToken is JObject manifest)
                     && manifest.TryGetValue("ResourceNameMappings", out nameMappingsToken)
                 ) {
@@ -506,7 +506,7 @@ namespace LambdaSharp.Tool {
             if(
                 cloudformation.TryGetValue("Metadata", out var metadataToken)
                 && (metadataToken is JObject metadata)
-                && metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
+                && metadata.TryGetValue(ModuleManifest.MetadataName, out var manifestToken)
             ) {
                 var manifest = manifestToken.ToObject<ModuleManifest>();
                 if(manifest.Version != null) {
@@ -592,7 +592,7 @@ namespace LambdaSharp.Tool {
             if(
                 cloudformation.TryGetValue("Metadata", out var metadataToken)
                 && (metadataToken is JObject metadata)
-                && metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
+                && metadata.TryGetValue(ModuleManifest.MetadataName, out var manifestToken)
             ) {
                 var manifest = manifestToken.ToObject<ModuleManifest>();
                 if(manifest.Version == ModuleManifest.CurrentVersion) {

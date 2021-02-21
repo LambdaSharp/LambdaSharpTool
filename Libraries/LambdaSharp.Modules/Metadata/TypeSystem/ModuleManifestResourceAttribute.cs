@@ -19,15 +19,15 @@
 using System;
 using LambdaSharp.CloudFormation.TypeSystem;
 
-namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
+namespace LambdaSharp.Modules.Metadata.TypeSystem {
 
-    public class ModuleManifestResourceAttribute : IResourceAttribute {
+    internal class ModuleManifestResourceAttribute : IResourceAttribute {
 
         //--- Fields ---
-        private readonly CloudFormationModuleManifestResourceAttribute _attribute;
+        private readonly Metadata.ModuleManifestResourceAttribute _attribute;
 
         //--- Constructors ---
-        public ModuleManifestResourceAttribute(CloudFormationModuleManifestResourceAttribute attribute) => _attribute = attribute;
+        public ModuleManifestResourceAttribute(Metadata.ModuleManifestResourceAttribute attribute) => _attribute = attribute;
 
         //--- Properties ---
         public string Name => _attribute.Name ?? throw new InvalidOperationException();

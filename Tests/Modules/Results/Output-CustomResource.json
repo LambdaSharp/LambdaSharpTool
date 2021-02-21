@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "508708090120C8BB6CA0C25AD76AB5DF"
+      "Default": "D05B6DF75C0C52F56432C12681A7BE40"
     }
   },
   "Resources": {
@@ -848,7 +848,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "508708090120C8BB6CA0C25AD76AB5DF",
+      "TemplateChecksum": "D05B6DF75C0C52F56432C12681A7BE40",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -937,8 +937,7 @@
           "Attributes": [
             {
               "Name": "Bar",
-              "Type": "String",
-              "Required": true
+              "Type": "String"
             }
           ]
         },
@@ -963,8 +962,7 @@
             {
               "Name": "Bar",
               "Description": "Bar response value",
-              "Type": "String",
-              "Required": true
+              "Type": "String"
             }
           ]
         }

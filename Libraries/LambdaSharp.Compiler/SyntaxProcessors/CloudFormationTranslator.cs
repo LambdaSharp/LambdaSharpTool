@@ -23,9 +23,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.CloudFormation.ModuleManifest;
 using LambdaSharp.CloudFormation.Template;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using Fn = CloudFormationFunction;
@@ -38,7 +38,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         //--- Methods ---
         public CloudFormationTemplate Process(ModuleDeclaration moduleDeclaration) {
             var template = new CloudFormationTemplate();
-            var metadata = new CloudFormationModuleManifest();
+            var metadata = new ModuleManifest();
             var referenceSubstitutions = new Dictionary<string, ACloudFormationExpression>();
 
             // TODO: set template information from module
@@ -89,7 +89,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                     // add parameter description to metadate section
                     var section = MetadataSection($"{moduleReference} Imports");
-                    section.Parameters.Add(new CloudFormationModuleManifestParameter {
+                    section.Parameters.Add(new ModuleManifestParameter {
                         Name = importParameterName,
                         Type = node.Type.Value,
                         AllowedPattern = parameter.AllowedPattern,
@@ -124,14 +124,14 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 return "String";
             }
 
-            CloudFormationModuleManifestParameterSection MetadataSection(string title) {
+            ModuleManifestParameterSection MetadataSection(string title) {
 
                 // check if section already exists
                 var section = metadata.ParameterSections.FirstOrDefault(section => section.Title == title);
                 if(section == null) {
 
                     // add missing section
-                    section = new CloudFormationModuleManifestParameterSection {
+                    section = new ModuleManifestParameterSection {
                         Title = title
                     };
                     metadata.ParameterSections.Add(section);

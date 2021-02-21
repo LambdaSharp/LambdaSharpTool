@@ -24,10 +24,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LambdaSharp.Build.CSharp;
-using LambdaSharp.CloudFormation.ModuleManifest;
-using LambdaSharp.CloudFormation.ModuleManifest.TypeSystem;
 using LambdaSharp.CloudFormation.TypeSystem;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
+using LambdaSharp.Modules.Metadata.TypeSystem;
 using LambdaSharp.Tool.Internal;
 using Newtonsoft.Json.Linq;
 
@@ -241,12 +241,8 @@ namespace LambdaSharp.Tool.Model {
                     return null;
                 }
 
-                // TODO: avoid unnecessary type conversion by using CloudFormationModuleManifest everywhere instead
-
                 // add resource types found in manifest to type system
-                var manifestJson = System.Text.Json.JsonSerializer.Serialize(dependency.Manifest);
-                var convertedManifest = System.Text.Json.JsonSerializer.Deserialize<CloudFormationModuleManifest>(manifestJson);
-                _typeSystems.Add(new CloudFormationModuleManifestTypeSystem(moduleInfo.ToString(), convertedManifest));
+                _typeSystems.Add(new ModuleManifestTypeSystem(dependency.Manifest.ModuleInfo.ToString(), dependency.Manifest));
             } else {
                 LogWarn("unable to validate dependency");
                 dependency = new ModuleBuilderDependency {
@@ -506,7 +502,7 @@ namespace LambdaSharp.Tool.Model {
             string description,
             string handler,
             IEnumerable<ModuleManifestResourceProperty> properties,
-            IEnumerable<ModuleManifestResourceProperty> attributes
+            IEnumerable<ModuleManifestResourceAttribute> attributes
         ) {
 
             // TODO (2018-09-20, bjorg): add custom resource name validation
@@ -520,7 +516,7 @@ namespace LambdaSharp.Tool.Model {
                 Type = resourceType,
                 Description = description,
                 Properties = properties ?? Enumerable.Empty<ModuleManifestResourceProperty>(),
-                Attributes = attributes ?? Enumerable.Empty<ModuleManifestResourceProperty>()
+                Attributes = attributes ?? Enumerable.Empty<ModuleManifestResourceAttribute>()
             });
         }
 

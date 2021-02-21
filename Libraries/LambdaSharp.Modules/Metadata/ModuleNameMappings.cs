@@ -17,15 +17,19 @@
  */
 
 using System.Collections.Generic;
+using LambdaSharp.CloudFormation.Template;
 
-namespace LambdaSharp.CloudFormation.ModuleManifest {
+namespace LambdaSharp.Modules.Metadata {
 
-    public class CloudFormationModuleManifestResourceType {
+    public class ModuleNameMappings : ACloudFormationExpression {
 
-       //--- Properties ---
-       public string? Type { get; set; }
-       public string? Description { get; set; }
-       public IEnumerable<CloudFormationModuleManifestResourceProperty> Properties { get; set; } = new List<CloudFormationModuleManifestResourceProperty>();
-       public IEnumerable<CloudFormationModuleManifestResourceAttribute> Attributes { get; set; } = new List<CloudFormationModuleManifestResourceAttribute>();
+        //--- Constants ---
+        public const string MetadataName = "LambdaSharp::NameMappings";
+        public const string CurrentVersion = "2019-07-04";
+
+        //--- Properties ---
+        public string Version { get; set; } = CurrentVersion;
+        public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
     }
 }

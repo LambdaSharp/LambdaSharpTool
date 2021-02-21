@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;

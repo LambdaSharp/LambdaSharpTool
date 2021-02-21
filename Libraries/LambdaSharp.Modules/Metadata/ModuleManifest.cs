@@ -20,24 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using LambdaSharp.Modules;
+using LambdaSharp.CloudFormation.Template;
 
-namespace LambdaSharp.Tool.Model {
+namespace LambdaSharp.Modules.Metadata {
 
-    public class ModuleNameMappings {
-
-        //--- Constants ---
-        public const string CurrentVersion = "2019-07-04";
-
-        //--- Properties ---
-        public string Version { get; set; } = CurrentVersion;
-        public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
-        public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
-    }
-
-    public class ModuleManifest {
+    public class ModuleManifest : ACloudFormationExpression {
 
         //--- Constants ---
+        public const string MetadataName = "LambdaSharp::Manifest";
         public const string CurrentVersion = "2019-07-04";
 
         //--- Properties ---
@@ -45,24 +35,24 @@ namespace LambdaSharp.Tool.Model {
 
         [Newtonsoft.Json.JsonProperty("Module")]
         [JsonPropertyName("Module")]
-        public ModuleInfo ModuleInfo { get; set; }
-        public string Description { get; set; }
-        public string TemplateChecksum { get; set; }
+        public ModuleInfo? ModuleInfo { get; set; }
+        public string? Description { get; set; }
+        public string? TemplateChecksum { get; set; }
         public DateTime Date { get; set; }
-        public VersionInfo CoreServicesVersion { get; set; }
+        public VersionInfo? CoreServicesVersion { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
-        public ModuleManifestGitInfo Git { get; set; }
+        public ModuleManifestGitInfo? Git { get; set; }
         public IList<string> Artifacts { get; set; } = new List<string>();
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
         public IList<ModuleManifestResourceType> ResourceTypes { get; set; } = new List<ModuleManifestResourceType>();
         public IList<ModuleManifestOutput> Outputs { get; set; } = new List<ModuleManifestOutput>();
 
         //--- Methods ---
-        public string GetModuleTemplatePath() => ModuleInfo.GetArtifactPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
-        public string GetFullName() => ModuleInfo.FullName;
-        public string GetNamespace() => ModuleInfo.Namespace;
-        public string GetName() => ModuleInfo.Name;
-        public VersionInfo GetVersion() => ModuleInfo.Version;
+        public string? GetModuleTemplatePath() => ModuleInfo?.GetArtifactPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
+        public string? GetFullName() => ModuleInfo?.FullName;
+        public string? GetNamespace() => ModuleInfo?.Namespace;
+        public string? GetName() => ModuleInfo?.Name;
+        public VersionInfo? GetVersion() => ModuleInfo?.Version;
 
         public IEnumerable<ModuleManifestParameter> GetAllParameters()
             => ParameterSections.SelectMany(section => section.Parameters);
@@ -71,40 +61,48 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleManifestGitInfo {
 
         //--- Properties ---
-        public string Branch { get; set; }
-        public string SHA { get; set; }
+        public string? Branch { get; set; }
+        public string? SHA { get; set; }
     }
 
     public class ModuleManifestResourceType {
 
        //--- Properties ---
-       public string Type { get; set; }
-       public string Description { get; set; }
+       public string? Type { get; set; }
+       public string? Description { get; set; }
        public IEnumerable<ModuleManifestResourceProperty> Properties { get; set; } = new List<ModuleManifestResourceProperty>();
-       public IEnumerable<ModuleManifestResourceProperty> Attributes { get; set; } = new List<ModuleManifestResourceProperty>();
+       public IEnumerable<ModuleManifestResourceAttribute> Attributes { get; set; } = new List<ModuleManifestResourceAttribute>();
     }
 
     public class ModuleManifestResourceProperty {
 
        //--- Properties ---
-       public string Name { get; set; }
-       public string Description { get; set; }
+       public string? Name { get; set; }
+       public string? Description { get; set; }
        public string Type { get; set; } = "String";
        public bool Required { get; set; } = true;
+    }
+
+    public class ModuleManifestResourceAttribute {
+
+       //--- Properties ---
+       public string? Name { get; set; }
+       public string? Description { get; set; }
+       public string Type { get; set; } = "String";
     }
 
     public class ModuleManifestOutput {
 
         //--- Properties ---
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string Type { get; set; }
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public string? Type { get; set; }
     }
 
     public class ModuleManifestMacro {
 
         //--- Properties ---
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 
     [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
@@ -119,28 +117,28 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleManifestDependency {
 
         //--- Properties ---
-        public ModuleInfo ModuleInfo { get; set; }
+        public ModuleInfo? ModuleInfo { get; set; }
         public ModuleManifestDependencyType Type { get; set; }
     }
 
     public class ModuleManifestParameterSection {
 
         //--- Properties ---
-        public string Title { get; set; }
+        public string? Title { get; set; }
         public IList<ModuleManifestParameter> Parameters { get; set; } = new List<ModuleManifestParameter>();
     }
 
     public class ModuleManifestParameter {
 
         //--- Properties ---
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public string Label { get; set; }
-        public string Default { get; set; }
-        public string Import { get; set; }
-        public List<string> AllowedValues { get; set; }
-        public string AllowedPattern { get; set; }
-        public string ConstraintDescription { get; set; }
+        public string? Name { get; set; }
+        public string? Type { get; set; }
+        public string? Label { get; set; }
+        public string? Default { get; set; }
+        public string? Import { get; set; }
+        public List<string>? AllowedValues { get; set; }
+        public string? AllowedPattern { get; set; }
+        public string? ConstraintDescription { get; set; }
         public int? MinValue { get; set; }
         public int? MaxValue { get; set; }
         public int? MinLength { get; set; }

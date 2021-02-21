@@ -22,6 +22,7 @@ using System.Linq;
 using Humidifier;
 using Humidifier.Json;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 
@@ -126,10 +127,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .OrderBy(output => output.Name)
                     .ToList(),
             };
-            _stack.AddTemplateMetadata("LambdaSharp::Manifest", manifest);
+            _stack.AddTemplateMetadata(ModuleManifest.MetadataName, manifest);
 
             // add resource name and type name mappings
-            _stack.AddTemplateMetadata("LambdaSharp::NameMappings", new ModuleNameMappings {
+            _stack.AddTemplateMetadata(ModuleNameMappings.MetadataName, new ModuleNameMappings {
                 TypeNameMappings = module.ResourceTypeNameMappings
                     .Where(kv => _stack.Resources.Any(resource => resource.Value.AWSTypeName == kv.Key))
                     .ToDictionary(kv => kv.Key, kv => kv.Value),

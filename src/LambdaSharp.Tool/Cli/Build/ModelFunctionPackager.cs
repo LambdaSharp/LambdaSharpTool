@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using LambdaSharp.Build;
 using LambdaSharp.Modules;
 using LambdaSharp.Build.CSharp.Function;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Tool.Cli.Build {
 

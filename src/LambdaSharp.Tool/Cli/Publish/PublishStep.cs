@@ -25,8 +25,8 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -261,7 +261,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             var template = File.ReadAllText(SourceFilename)
                 .Replace(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER, moduleInfo.Origin ?? throw new ApplicationException("missing Origin information"));
             var cloudformation = JObject.Parse(template);
-            ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest, new JsonSerializer {
+            ((JObject)cloudformation["Metadata"])[ModuleManifest.MetadataName] = JObject.FromObject(manifest, new JsonSerializer {
                 NullValueHandling = NullValueHandling.Ignore
             });
             var minified = JsonConvert.SerializeObject(cloudformation, new JsonSerializerSettings {
