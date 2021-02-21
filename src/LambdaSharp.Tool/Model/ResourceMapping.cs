@@ -17,18 +17,18 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
+using LambdaSharp.CloudFormation.Specification.TypeSystem;
+using LambdaSharp.CloudFormation.TypeSystem;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace LambdaSharp.Tool.Model {
-    using System.IO.Compression;
-    using LambdaSharp.CloudFormation.Specification.TypeSystem;
-    using LambdaSharp.CloudFormation.TypeSystem;
     using static ModelFunctions;
 
     public static class ResourceMapping {
@@ -80,8 +80,11 @@ namespace LambdaSharp.Tool.Model {
                 _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<List<{awsType}>>");
             }
 
+            // TODO: don't hardcode the region
+            const string region = "us-east-1";
+
             // check if we already have a CloudFormation specification downloaded or if it's older than 24 hours
-            var cloudFormationSpecFile = Path.Combine(Settings.ToolSettingsDirectory, "AWS", "us-east-1", "CloudFormationResourceSpecification.json.br");
+            var cloudFormationSpecFile = Path.Combine(Settings.ToolSettingsDirectory, "AWS", region, "CloudFormationResourceSpecification.json.br");
             if(
                 !File.Exists(cloudFormationSpecFile)
                 || (File.GetLastWriteTimeUtc(cloudFormationSpecFile).AddDays(1) < DateTime.UtcNow)
@@ -94,7 +97,7 @@ namespace LambdaSharp.Tool.Model {
             // load CloudFormation specification
             using(var stream = File.OpenRead(cloudFormationSpecFile)) {
                 using var compression = new BrotliStream(stream, CompressionMode.Decompress);
-                CloudformationSpec = CloudFormationTypeSystem.LoadFromAsync(compression).GetAwaiter().GetResult();
+                CloudformationSpec = CloudFormationTypeSystem.LoadFromAsync(region, compression).GetAwaiter().GetResult();
             }
         }
 

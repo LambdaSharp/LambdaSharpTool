@@ -24,6 +24,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LambdaSharp.Build.CSharp;
+using LambdaSharp.CloudFormation.ModuleManifest;
+using LambdaSharp.CloudFormation.ModuleManifest.TypeSystem;
 using LambdaSharp.CloudFormation.TypeSystem;
 using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
@@ -59,6 +61,7 @@ namespace LambdaSharp.Tool.Model {
         private IList<ModuleManifestResourceType> _customResourceTypes;
         private IList<string> _macroNames;
         private IDictionary<string, string> _resourceTypeNameMappings;
+        private TypeSystemCollection _typeSystems;
 
         //--- Constructors ---
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
@@ -88,6 +91,11 @@ namespace LambdaSharp.Tool.Model {
             } else {
                 _resourceStatements = new List<Humidifier.Statement>();
             }
+
+            // initialize type system
+            _typeSystems = new TypeSystemCollection("Module") {
+                ResourceMapping.CloudformationSpec
+            };
         }
 
         //--- Properties ---
@@ -232,6 +240,13 @@ namespace LambdaSharp.Tool.Model {
                     // nothing to do; loader already emitted an error
                     return null;
                 }
+
+                // TODO: avoid unnecessary type conversion by using CloudFormationModuleManifest everywhere instead
+
+                // add resource types found in manifest to type system
+                var manifestJson = System.Text.Json.JsonSerializer.Serialize(dependency.Manifest);
+                var convertedManifest = System.Text.Json.JsonSerializer.Deserialize<CloudFormationModuleManifest>(manifestJson);
+                _typeSystems.Add(new CloudFormationModuleManifestTypeSystem(moduleInfo.ToString(), convertedManifest));
             } else {
                 LogWarn("unable to validate dependency");
                 dependency = new ModuleBuilderDependency {
@@ -625,14 +640,14 @@ namespace LambdaSharp.Tool.Model {
                 var resourceTypeName = (resource is Humidifier.CustomResource customResource)
                     ? customResource.OriginalTypeName
                     : resource.AWSTypeName;
-                if(ResourceMapping.HasAttribute(resourceTypeName, "Arn")) {
+
+                if(
+                    _typeSystems.TryGetResourceType(resourceTypeName, out var resourceType)
+                    && (resourceType.TryGetAttribute("Arn", out _))
+                ) {
 
                     // for built-in type, use the 'Arn' attribute if it exists
                     resourceExportAttribute = "Arn";
-                } else if(TryGetResourceType(resourceTypeName, out var resourceType)) {
-
-                    // for custom resource types, use the first defined response attribute
-                    resourceExportAttribute = resourceType.Attributes.FirstOrDefault()?.Name;
                 }
             }
 
@@ -1450,10 +1465,8 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public bool HasAttribute(AModuleItem item, string attribute) {
-            if(TryGetResourceType(item.Type, out var resourceType)) {
-                return resourceType.Attributes.Any(field => field.Name == attribute);
-            }
-            return ResourceMapping.HasAttribute(item.Type, attribute);
+            return _typeSystems.TryGetResourceType(item.Type, out var resourceType)
+                && resourceType.TryGetAttribute(attribute, out _);
         }
 
         public Module ToModule() {
@@ -1500,33 +1513,45 @@ namespace LambdaSharp.Tool.Model {
             string awsType,
             IDictionary properties
         ) {
-            if(ResourceMapping.CloudformationSpec.TryGetResourceType(awsType, out var resource)) {
-                ValidateProperties("", resource, properties);
-            } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.Any(existing => existing.Type == awsType) ?? false);
-                if(dependency == null) {
-                    if(_dependencies.Values.Any(d => d.Manifest == null)) {
-
-                        // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
-                        LogWarn($"unable to validate properties for {awsType}");
-                    } else {
-                        LogError($"unrecognized resource type {awsType}");
-                    }
-                } else if(properties != null) {
-                    var definition = dependency.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
-                    if(definition != null) {
-                        foreach(var key in properties.Keys) {
-                            var stringKey = (string)key;
-                            if(
-                                (stringKey != "ServiceToken")
-                                && (stringKey != "ResourceType")
-                                && !definition.Properties.Any(field => field.Name == stringKey)) {
-                                LogError($"unrecognized attribute '{key}' on type {awsType}");
-                            }
-                        }
-                    }
-                }
+            var matches = _typeSystems.GetAllMacthingResourceTypes(awsType);
+            switch(matches.Count()) {
+            case 0:
+                LogError($"unrecognized resource type {awsType}");
+                break;
+            case 1:
+                ValidateProperties("", matches.First().ResourceType, properties);
+                break;
+            default:
+                LogWarn($"ambiguous resource type '{awsType}' [{string.Join(", ", matches.Select(t => t.Source))}]");
+                ValidateProperties("", matches.First().ResourceType, properties);
+                break;
             }
+
+            // TODO: not sure what to keep here
+
+            // var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.Any(existing => existing.Type == awsType) ?? false);
+            // if(dependency == null) {
+            //     if(_dependencies.Values.Any(d => d.Manifest == null)) {
+
+            //         // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
+            //         LogWarn($"unable to validate properties for {awsType}");
+            //     } else {
+            //         LogError($"unrecognized resource type {awsType}");
+            //     }
+            // } else if(properties != null) {
+            //     var definition = dependency.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
+            //     if(definition != null) {
+            //         foreach(var key in properties.Keys) {
+            //             var stringKey = (string)key;
+            //             if(
+            //                 (stringKey != "ServiceToken")
+            //                 && (stringKey != "ResourceType")
+            //                 && !definition.Properties.Any(field => field.Name == stringKey)) {
+            //                 LogError($"unrecognized attribute '{key}' on type {awsType}");
+            //             }
+            //         }
+            //     }
+            // }
 
             // local functions
             void ValidateProperties(string prefix, IResourceType currentResource, IDictionary currentProperties) {
@@ -1536,8 +1561,16 @@ namespace LambdaSharp.Tool.Model {
 
                     // check that all required properties are defined
                     foreach(var property in currentResource.RequiredProperties) {
+
+                        // HACKHACKHACK (2021-02-20, bjorg): 'LambdaSharp::Registration::App' was shipped with a incorrectly
+                        //  required property that was never enforced by previous compilers.
+                        if((property.Name == "AppDomainName") && (currentResource.Name == "LambdaSharp::Registration::App")) {
+                            continue;
+                        }
+
+                        // check if a required property is missing
                         if(currentProperties[property.Name] == null) {
-                            LogError($"missing property '{prefix + property.Name}");
+                            LogError($"property '{prefix + property.Name} is required for '{currentResource.Name}'");
                         }
                     }
                 }
@@ -1654,29 +1687,6 @@ namespace LambdaSharp.Tool.Model {
                 _resourceTypeNameMappings[customResource.AWSTypeName] = customResource.OriginalTypeName;
             }
             return customResource;
-        }
-
-        private bool TryGetResourceType(string resourceTypeName, out ModuleManifestResourceType resourceType) {
-            var matches = _dependencies
-                .Where(kv => kv.Value.Type == ModuleManifestDependencyType.Shared)
-                .Select(kv => new {
-                    Found = kv.Value.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == resourceTypeName),
-                    From = kv.Key
-                })
-                .Where(foundResourceType => foundResourceType.Found != null)
-                .ToArray();
-            switch(matches.Length) {
-            case 0:
-                resourceType = null;
-                return false;
-            case 1:
-                resourceType = matches[0].Found;
-                return true;
-            default:
-                LogWarn($"ambiguous resource type '{resourceTypeName}' [{string.Join(", ", matches.Select(t => t.From))}]");
-                resourceType = matches[0].Found;
-                return true;
-            }
         }
     }
 }

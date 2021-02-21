@@ -33,12 +33,17 @@ namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
         public string Name => _property.Name ?? throw new InvalidOperationException();
         public bool Required => _property.Required;
 
-        public ResourceCollectionType CollectionType => ResourceCollectionType.NoCollection;
+        public ResourceCollectionType CollectionType =>
+            (_property.Type == "List")
+                ? ResourceCollectionType.List
+                : ResourceCollectionType.NoCollection;
 
         public ResourceItemType ItemType => _property.Type switch {
-            "String" => ResourceItemType.String,
-            "Number" => ResourceItemType.Double,
+            "Boolean" => ResourceItemType.Boolean,
             "Json" => ResourceItemType.Json,
+            "List" => ResourceItemType.Any,
+            "Number" => ResourceItemType.Double,
+            "String" => ResourceItemType.String,
             _ => throw new InvalidOperationException($"unexpected type: {_property.Type ?? "<null>"} in {Name}")
         };
 

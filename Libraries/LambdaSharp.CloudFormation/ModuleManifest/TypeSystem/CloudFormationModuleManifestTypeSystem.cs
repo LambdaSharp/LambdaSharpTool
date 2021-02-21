@@ -30,7 +30,8 @@ namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
         private readonly Dictionary<string, IResourceType> _resourceTypes;
 
         //--- Constructors ---
-        public CloudFormationModuleManifestTypeSystem(CloudFormationModuleManifest manifest) {
+        public CloudFormationModuleManifestTypeSystem(string source, CloudFormationModuleManifest manifest) {
+            Source = source ?? throw new ArgumentNullException(nameof(source));
             _manifest = manifest;
             _resourceTypes = new Dictionary<string, IResourceType>();
             foreach(var resourceType in manifest.ResourceTypes) {
@@ -39,6 +40,7 @@ namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
         }
 
         //--- Properties ---
+        public string Source { get; }
         public IEnumerable<IResourceType> ResourceTypes => _resourceTypes.Values;
 
         //--- Methods ---

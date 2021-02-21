@@ -55,13 +55,13 @@ The following attributes types are supported.
 <dt><code>String</code></dt>
 <dd>
 
-A text value.
+A string expression.
 </dd>
 
 <dt><code>Number</code></dt>
 <dd>
 
-An integer or float value.
+An integer or float expression.
 </dd>
 
 </dl>

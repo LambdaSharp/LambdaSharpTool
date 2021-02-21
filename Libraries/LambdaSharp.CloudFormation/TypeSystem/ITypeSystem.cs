@@ -24,6 +24,7 @@ namespace LambdaSharp.CloudFormation.TypeSystem {
     public interface ITypeSystem {
 
         //--- Properties ---
+        string Source { get; }
         IEnumerable<IResourceType> ResourceTypes { get; }
 
         //--- Methods ---

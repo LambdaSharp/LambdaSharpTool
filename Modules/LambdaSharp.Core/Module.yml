@@ -362,11 +362,6 @@ Items:
         Type: String
         Required: true
 
-      - Name: AppDomainName
-        Description: Application domain name
-        Type: String
-        Required: true
-
       - Name: AppLogGroup
         Description: Application CloudWatch log group name
         Type: String

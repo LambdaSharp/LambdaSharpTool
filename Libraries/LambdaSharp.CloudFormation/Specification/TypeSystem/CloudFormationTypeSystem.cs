@@ -29,9 +29,9 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
     public sealed class CloudFormationTypeSystem : ITypeSystem {
 
         //--- Class Methods ---
-        public static async Task<CloudFormationTypeSystem> LoadFromAsync(Stream stream) {
+        public static async Task<CloudFormationTypeSystem> LoadFromAsync(string source, Stream stream) {
             var specification = await JsonSerializer.DeserializeAsync<ExtendedCloudFormationSpecification>(stream);
-            return new CloudFormationTypeSystem(specification);
+            return new CloudFormationTypeSystem(source, specification);
         }
 
         //--- Fields ---
@@ -39,14 +39,21 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
         private readonly Dictionary<string, IResourceType> _resourceTypes = new Dictionary<string, IResourceType>();
 
         //--- Constructors ---
-        public CloudFormationTypeSystem(ExtendedCloudFormationSpecification specification) {
+        public CloudFormationTypeSystem(string source, ExtendedCloudFormationSpecification specification) {
+            if(source is null) {
+                throw new ArgumentNullException(nameof(source));
+            }
             _specification = specification;
             foreach(var resourceTypeEntry in _specification.ResourceTypes) {
                 _resourceTypes[resourceTypeEntry.Key] = new CloudFormationResourceType(resourceTypeEntry.Key, resourceTypeEntry.Value, _specification);
             }
+            Source = (_specification.ResourceSpecificationVersion != null)
+                ? $"{source} (v{_specification.ResourceSpecificationVersion})"
+                : source;
         }
 
-        //--- Methods ---
+        //--- Properties ---
+        public string Source { get; }
         public IEnumerable<IResourceType> ResourceTypes => _resourceTypes.Values;
 
         //--- Methods ---

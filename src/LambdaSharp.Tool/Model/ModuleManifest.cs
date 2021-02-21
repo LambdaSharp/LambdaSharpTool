@@ -19,9 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using LambdaSharp.Modules;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool.Model {
 
@@ -44,7 +43,8 @@ namespace LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
 
-        [JsonProperty("Module")]
+        [Newtonsoft.Json.JsonProperty("Module")]
+        [JsonPropertyName("Module")]
         public ModuleInfo ModuleInfo { get; set; }
         public string Description { get; set; }
         public string TemplateChecksum { get; set; }
@@ -107,7 +107,8 @@ namespace LambdaSharp.Tool.Model {
         public string Name { get; set; }
     }
 
-    [JsonConverter(typeof(StringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ModuleManifestDependencyType {
         Unknown,
         Root,

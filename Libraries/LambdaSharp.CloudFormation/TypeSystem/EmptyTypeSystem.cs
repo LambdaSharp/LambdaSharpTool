@@ -25,6 +25,7 @@ namespace LambdaSharp.CloudFormation.TypeSystem {
     public class EmptyTypeSystem : ITypeSystem {
 
         //--- Properties ---
+        public string Source => "Empty";
         public IEnumerable<IResourceType> ResourceTypes => Enumerable.Empty<IResourceType>();
 
         //--- Methods ---

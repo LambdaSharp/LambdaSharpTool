@@ -26,6 +26,23 @@ namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
 
     public class CloudFormationModuleManifestResourceType : IResourceType {
 
+        //--- Types ---
+        private class StringResourceProperty : IResourceProperty {
+
+            //--- Constructors ---
+            public StringResourceProperty(string attributeName, bool required) {
+                Name = attributeName ?? throw new ArgumentNullException(nameof(attributeName));
+                Required = required;
+            }
+
+            //--- Properties ---
+            public string Name { get; }
+            public ResourceCollectionType CollectionType => ResourceCollectionType.NoCollection;
+            public ResourceItemType ItemType => ResourceItemType.String;
+            public IResourceType ComplexType => throw new InvalidOperationException();
+            public bool Required { get; }
+        }
+
         //--- Fields ---
         private readonly ModuleManifest.CloudFormationModuleManifestResourceType _resourceType;
         private readonly Dictionary<string, IResourceProperty> _properties;
@@ -53,6 +70,19 @@ namespace LambdaSharp.CloudFormation.ModuleManifest.TypeSystem {
 
         //--- Methods ---
         public bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute) => _attributes.TryGetValue(attributeName, out attribute);
-        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property) => _properties.TryGetValue(propertyName, out property);
+        public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property) {
+
+            // TODO: this doesn't feel right; seems like we're injecting the `ServiceToken` too early
+            switch(propertyName) {
+            case "ServiceToken":
+                property = new StringResourceProperty(propertyName, required: true);
+                return true;
+            case "ResourceType":
+                property = new StringResourceProperty(propertyName, required: false);
+                return true;
+            default:
+                return _properties.TryGetValue(propertyName, out property);
+            }
+        }
     }
 }
