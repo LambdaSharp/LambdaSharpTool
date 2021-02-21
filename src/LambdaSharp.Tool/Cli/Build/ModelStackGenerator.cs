@@ -24,8 +24,6 @@ using Humidifier.Json;
 using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;

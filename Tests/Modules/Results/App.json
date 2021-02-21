@@ -60,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4CF059C0F831E8F90ACCF3FDEDC565C7"
+      "Default": "9CAF74262F35CA2B09844BC2284F5C99"
     }
   },
   "Resources": {
@@ -136,6 +136,7 @@
           "DevMode": {
             "Ref": "AppDeveloperMode"
           },
+          "EventSource": "Test.TestModule::MyApp",
           "DeploymentBucketName": {
             "Ref": "DeploymentBucketName"
           },
@@ -189,13 +190,6 @@
         "Contents": {
           "MySettings": "MyValue",
           "LambdaSharp": {
-            "ApiUrl": "https://localhost:5000/.app",
-            "ApiKey": {
-              "Fn::GetAtt": [
-                "MyAppApi",
-                "Outputs.ApiKey"
-              ]
-            },
             "ModuleId": {
               "Ref": "AWS::StackName"
             },
@@ -220,7 +214,15 @@
             "AppFramework": "<MISSING>",
             "DevMode": {
               "Ref": "AppDeveloperMode"
-            }
+            },
+            "ApiUrl": "https://localhost:5000/.app",
+            "ApiKey": {
+              "Fn::GetAtt": [
+                "MyAppApi",
+                "Outputs.ApiKey"
+              ]
+            },
+            "AppEventSource": "Test.TestModule::MyApp"
           }
         }
       }
@@ -553,7 +555,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "4CF059C0F831E8F90ACCF3FDEDC565C7",
+      "TemplateChecksum": "9CAF74262F35CA2B09844BC2284F5C99",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [

@@ -112,15 +112,17 @@ namespace Humidifier {
             }
             set => _properties[(string)key] = value;
         }
-
-        //--- IEnumerable Members ---
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         void IDictionary.Add(object key, object value) => Add((string)key, value);
         void IDictionary.Clear() => _properties.Clear();
         bool IDictionary.Contains(object key) => _properties.ContainsKey((string)key);
         IDictionaryEnumerator IDictionary.GetEnumerator()
             => ((IDictionary)_properties.ToDictionary(kv => kv.Key, kv => kv.Value)).GetEnumerator();
         void IDictionary.Remove(object key) => _properties.Remove((string)key);
+
+        //--- IEnumerable Members ---
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        //--- ICollection Members ---
         void ICollection.CopyTo(Array array, int index)
             => ((IDictionary)_properties.ToDictionary(kv => kv.Key, kv => kv.Value)).CopyTo(array, index);
     }
