@@ -19,8 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Humidifier;
-using Humidifier.Json;
 using LambdaSharp.Modules;
 using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
@@ -33,7 +31,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         //--- Fields ---
         private Module _module;
-        private Stack _stack;
+        private Humidifier.Stack _stack;
 
         //--- Constructors ---
         public ModelStackGenerator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -43,7 +41,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _module = module;
 
             // stack header
-            _stack = new Stack {
+            _stack = new Humidifier.Stack {
                 AWSTemplateFormatVersion = "2010-09-09",
                 Description = (_module.Description != null)
                     ? _module.Description.TrimEnd() + $" (v{_module.Version})"
@@ -161,17 +159,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
             });
             _stack.Add("ModuleChecksum", new Humidifier.Output {
-                Value = Fn.Ref("DeploymentChecksum")
+                Value = Humidifier.Fn.Ref("DeploymentChecksum")
             });
             _stack.Add("LambdaSharpTool", new Humidifier.Output {
                 Value = Settings.ToolVersion.ToString()
             });
             _stack.Add("LambdaSharpTier", new Humidifier.Output {
-                Value = Fn.Select("0", Fn.Split("-", Fn.Ref("DeploymentPrefix")))
+                Value = Humidifier.Fn.Select("0", Humidifier.Fn.Split("-", Humidifier.Fn.Ref("DeploymentPrefix")))
             });
 
             // generate JSON template
-            return new JsonStackSerializer().Serialize(_stack);
+            return new Humidifier.Json.JsonStackSerializer().Serialize(_stack);
         }
 
         private void AddItem(AModuleItem item) {
@@ -184,7 +182,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 break;
             case ResourceItem resourceItem:
                 var deletionPolicy = (resourceItem.DeletionPolicy != null)
-                    ? (DeletionPolicy?)Enum.Parse<DeletionPolicy>(resourceItem.DeletionPolicy, ignoreCase: true)
+                    ? (Humidifier.DeletionPolicy?)Enum.Parse<Humidifier.DeletionPolicy>(resourceItem.DeletionPolicy, ignoreCase: true)
                     : null;
                 _stack.Add(
                     resourceItem.LogicalId,
@@ -215,10 +213,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
                 break;
             case ConditionItem conditionItem:
-                _stack.Add(conditionItem.LogicalId, new Condition(conditionItem.Reference));
+                _stack.Add(conditionItem.LogicalId, new Humidifier.Condition(conditionItem.Reference));
                 break;
             case MappingItem mappingItem: {
-                    var mapping = new Mapping();
+                    var mapping = new Humidifier.Mapping();
                     foreach(var level1Mapping in mappingItem.Mapping) {
                         mapping[level1Mapping.Key] = level1Mapping.Value.ToDictionary(
                             level2Mapping => level2Mapping.Key,
@@ -233,7 +231,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Description = resourceTypeItem.Description,
                     Value = _module.Items.First(i => i.LogicalId == resourceTypeItem.Handler).GetExportReference(),
                     Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub($"${{DeploymentPrefix}}{resourceTypeItem.CustomResourceType}")
+                        ["Name"] = Humidifier.Fn.Sub($"${{DeploymentPrefix}}{resourceTypeItem.CustomResourceType}")
                     }
                 });
                 break;
@@ -263,7 +261,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Condition = condition,
                         Value = ifTrue,
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
+                            ["Name"] = Humidifier.Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
                         }
                     });
                 } else {
@@ -271,13 +269,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Description = exportItem.Description,
                         Value = value,
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
+                            ["Name"] = Humidifier.Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
                         }
                     });
                 }
             }
         }
 
-        private string GenerateCloudFormationTemplateChecksum() => StringEx.GetJsonChecksum(new JsonStackSerializer().Serialize(_stack));
+        private string GenerateCloudFormationTemplateChecksum() => StringEx.GetJsonChecksum(new Humidifier.Json.JsonStackSerializer().Serialize(_stack));
     }
 }
