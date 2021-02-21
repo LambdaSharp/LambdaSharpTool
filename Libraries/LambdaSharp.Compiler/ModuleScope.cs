@@ -40,8 +40,6 @@ namespace LambdaSharp.Compiler {
         ILogger Logger { get; }
 
         //--- Methods ---
-
-        // TODO: this should be Async and maybe return a Stream instead?
         string ReadFile(string filePath);
         Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region, string version);
     }

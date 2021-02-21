@@ -630,7 +630,7 @@ namespace LambdaSharp.Tool {
             if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
                 LogWarn($"could not detect region for '{bucketName}' bucket");
 
-                // TODO: the 'x-amz-bucket-region' header is missing sporadically; leaving this code here to make it easier to diagnose
+                // HACKHACKHACK (2020-08-31, bjorg): the 'x-amz-bucket-region' header is missing sporadically; leaving this code here to make it easier to diagnose
                 LogInfo($"... (DEBUG) S3 bucket '{bucketName}' region check response status: {headResponse.StatusCode}");
                 foreach(var header in headResponse.Headers) {
                     LogInfo($"... (DEBUG) S3 region check response header: {header.Key} = {string.Join(", ", header.Value)}");
