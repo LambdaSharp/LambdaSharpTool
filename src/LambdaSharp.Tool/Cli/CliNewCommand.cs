@@ -34,6 +34,7 @@ using System.Text.RegularExpressions;
 using LambdaSharp.Modules;
 using System.IO.Compression;
 using System.Text;
+using LambdaSharp.CloudFormation.TypeSystem;
 
 namespace LambdaSharp.Tool.Cli {
     using Tag = Amazon.CloudFormation.Model.Tag;
@@ -729,8 +730,8 @@ namespace LambdaSharp.Tool.Cli {
 
             // determine if we have a precise resource type match
             var matches = ResourceMapping.CloudformationSpec.ResourceTypes
-                .Where(item => item.Key.ToLowerInvariant().Contains(resourceTypeName.ToLowerInvariant()))
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
+                .Where(item => item.Name.ToLowerInvariant().Contains(resourceTypeName.ToLowerInvariant()))
+                .ToDictionary(item => item.Name, item => item);
 
             // check if we have an exact match
             if(!matches.TryGetValue(resourceTypeName, out var resourceType)) {
@@ -779,70 +780,62 @@ namespace LambdaSharp.Tool.Cli {
             if(resourceType.Documentation != null) {
                 lines.Add($"      # Documentation: {resourceType.Documentation}");
             }
-            WriteResourceProperties(resourceTypeName, resourceType, 3, startList: false);
+            WriteResourceProperties(resourceType, 3, startList: false);
             InsertModuleItemsLines(moduleFile, lines);
             Console.WriteLine($"Added resource '{resourceName}' [{resourceTypeName}]");
 
             // local functions
-            void WriteResourceProperties(string currentTypeName, ResourceType currentType, int indentation, bool startList) {
+            void WriteResourceProperties(IResourceType currentType, int indentation, bool startList) {
 
                 // check for recursion since some types are recursive (e.g. AWS::EMR::Cluster)
-                if(types.Contains(currentTypeName)) {
-                    AddLine($"{currentTypeName} # Recursive");
+                if(types.Contains(currentType.Name)) {
+                    AddLine($"{currentType.Name} # Recursive");
                     return;
                 }
-                types.Add(currentTypeName);
-                foreach(var entry in currentType.Properties.OrderBy(kv => kv.Key)) {
-                    var property = entry.Value;
-                    var line = $"{entry.Key}:";
-                    if(property.PrimitiveType != null) {
-                        line += $" {property.PrimitiveType}";
+                types.Add(currentType.Name);
+                foreach(var property in currentType.Properties.OrderBy(kv => kv.Name)) {
+                    var line = $"{property.Name}:";
+                    if(
+                        (property.CollectionType == ResourceCollectionType.NoCollection)
+                        && (property.ItemType != ResourceItemType.ComplexType)
+                    ) {
+                        line += $" {property.ItemType}";
                     }
                     if(property.Required) {
                         line += " # Required";
                     }
                     AddLine(line);
                     ++indentation;
-                    switch(property.Type) {
-                    case null:
-                        break;
-                    case "List":
-                        if(property.PrimitiveItemType != null) {
-                            AddLine($"- {property.PrimitiveItemType}");
-                        } else if(TryGetType(property.ItemType, out var nestedListType)) {
-                            WriteResourceProperties(property.ItemType, nestedListType, indentation + 1, startList: true);
+                    switch(property.CollectionType) {
+                    case ResourceCollectionType.List:
+                        if(property.ItemType == ResourceItemType.ComplexType) {
+                            WriteResourceProperties(property.ComplexType, indentation + 1, startList: true);
                         } else {
-                            LogError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
+                            AddLine($"- {property.ItemType}");
                         }
                         break;
-                    case "Map":
-                        if(property.PrimitiveItemType != null) {
-                            AddLine($"String: {property.PrimitiveItemType}");
-                        } else if(TryGetType(property.ItemType, out var nestedMapType)) {
+                    case ResourceCollectionType.Map:
+                        if(property.ItemType == ResourceItemType.ComplexType) {
                             AddLine($"String:");
-                            WriteResourceProperties(property.ItemType, nestedMapType, indentation + 2, startList: true);
+                            WriteResourceProperties(property.ComplexType, indentation + 2, startList: true);
                         } else {
-                            LogError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
+                            AddLine($"String: {property.ItemType}");
                         }
+                        break;
+                    case ResourceCollectionType.NoCollection when property.ItemType == ResourceItemType.ComplexType:
+                        WriteResourceProperties(property.ComplexType, indentation, startList: false);
                         break;
                     default:
-                        if(TryGetType(property.Type, out var nestedType)) {
-                            WriteResourceProperties(property.Type, nestedType, indentation, startList: false);
-                        } else {
-                            LogError($"could not find property type '{resourceTypeName}.{property.Type}'");
-                        }
+
+                        // nothing to do
                         break;
                     }
                     --indentation;
                 }
-                types.Remove(currentTypeName);
+                types.Remove(currentType.Name);
 
                 // local functions
                 string Indent(int count) => new string(' ', count * 2);
-
-                bool TryGetType(string typeName, out ResourceType type)
-                    => ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(typeName, out type)
-                        || ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(resourceTypeName + "." + typeName, out type);
 
                 void AddLine(string line) {
                     if(startList) {

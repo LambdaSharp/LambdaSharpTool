@@ -26,6 +26,19 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
     internal sealed class CloudFormationResourceType : IResourceType {
 
+        //--- Types ---
+        private class StringResourceAttribute : IResourceAttribute {
+
+            //--- Constructors ---
+            public StringResourceAttribute(string attributeName) => Name = attributeName ?? throw new ArgumentNullException(nameof(attributeName));
+
+            //--- Properties ---
+            public string Name { get; }
+            public ResourceCollectionType CollectionType => ResourceCollectionType.NoCollection;
+            public ResourceItemType ItemType => ResourceItemType.String;
+            public IResourceType ComplexType => throw new InvalidOperationException();
+        }
+
         //--- Fields ---
         private readonly ResourceType _resourceType;
         private readonly ExtendedCloudFormationSpecification _specification;
@@ -65,6 +78,19 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
         }
 
         public bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute) {
+
+            // special case for nested stacks, which have an arbitrary number of output attributes
+            if(
+                Name.Equals("AWS::CloudFormation::Stack", StringComparison.Ordinal)
+                && attributeName.StartsWith("Outputs.", StringComparison.Ordinal)
+            ) {
+
+                // TODO: we need more meta-data to determine the output attribute type from the stack
+                attribute = new StringResourceAttribute(attributeName);
+                return true;
+            }
+
+            // check if attribute exists in type specification
             if(_resourceType.Attributes.TryGetValue(attributeName, out var type)) {
                 attribute = new CloudFormationResourceAttribute(attributeName, this, type, _specification);
                 return true;

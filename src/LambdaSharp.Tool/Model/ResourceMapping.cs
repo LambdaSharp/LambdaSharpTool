@@ -27,54 +27,16 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace LambdaSharp.Tool.Model {
     using System.IO.Compression;
+    using LambdaSharp.CloudFormation.Specification.TypeSystem;
+    using LambdaSharp.CloudFormation.TypeSystem;
     using static ModelFunctions;
-
-    public class CloudFormationSpec {
-
-        // SEE: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
-
-        //--- Properties ---
-        public string ResourceSpecificationVersion { get; set; }
-        public IDictionary<string, ResourceType> ResourceTypes { get; set; }
-        public IDictionary<string, ResourceType> PropertyTypes { get; set; }
-    }
-
-    public class ResourceType {
-
-        //--- Properties ---
-        public string Documentation { get; set; }
-        public IDictionary<string, AttributeType> Attributes { get; set; }
-        public IDictionary<string, PropertyType> Properties { get; set; }
-    }
-
-    public class AttributeType {
-
-        //--- Properties ---
-        public string ItemType { get; set; }
-        public string PrimitiveItemType { get; set; }
-        public string PrimitiveType { get; set; }
-        public string Type { get; set; }
-    }
-
-    public class PropertyType {
-
-        //--- Properties ---
-
-        public bool DuplicatesAllowed { get; set; }
-        public string ItemType { get; set; }
-        public string PrimitiveItemType { get; set; }
-        public string PrimitiveType { get; set; }
-        public bool Required { get; set; }
-        public string Type { get; set; }
-    }
 
     public static class ResourceMapping {
 
         //--- Fields ---
-        public static readonly CloudFormationSpec CloudformationSpec;
+        public static readonly ITypeSystem CloudformationSpec;
         private static readonly IDictionary<string, IDictionary<string, IList<string>>> _iamMappings;
         private static readonly HashSet<string> _cloudFormationParameterTypes;
-
 
         //--- Constructors ---
         static ResourceMapping() {
@@ -118,31 +80,21 @@ namespace LambdaSharp.Tool.Model {
                 _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<List<{awsType}>>");
             }
 
-            // read CloudFormation specification
-            var cloudFormationSpecFile = Settings.CloudFormationResourceSpecificationCacheFilePath;
-            if(File.Exists(cloudFormationSpecFile)) {
+            // check if we already have a CloudFormation specification downloaded or if it's older than 24 hours
+            var cloudFormationSpecFile = Path.Combine(Settings.ToolSettingsDirectory, "AWS", "us-east-1", "CloudFormationResourceSpecification.json.br");
+            if(
+                !File.Exists(cloudFormationSpecFile)
+                || (File.GetLastWriteTimeUtc(cloudFormationSpecFile).AddDays(1) < DateTime.UtcNow)
+            ) {
 
-                // read date-time of embedded resource
-                DateTime embeddedDateTime;
-                using(var specResourceDate = assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.CloudFormationResourceSpecification.json.gz.timestamp"))
-                using(var specReaderDate = new StreamReader(specResourceDate)) {
-                    embeddedDateTime = DateTime.Parse(specReaderDate.ReadToEnd()).ToUniversalTime();
-                }
-
-                // check if embedded spec is newer
-                if(File.GetLastWriteTimeUtc(cloudFormationSpecFile) > embeddedDateTime) {
-
-                    // read spec from global folder
-                    CloudformationSpec = JsonConvert.DeserializeObject<CloudFormationSpec>(File.ReadAllText(cloudFormationSpecFile));
-                    return;
-                }
+                // TODO: download CloudFormation specification
+                throw new NotImplementedException($"expected cloudformation spec at: {cloudFormationSpecFile}");
             }
 
-            // read spec from embedded resource
-            using(var specResource = assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.CloudFormationResourceSpecification.json.gz"))
-            using(var specGzipStream = new GZipStream(specResource, CompressionMode.Decompress))
-            using(var specReader = new StreamReader(specGzipStream)) {
-                CloudformationSpec = JsonConvert.DeserializeObject<CloudFormationSpec>(specReader.ReadToEnd());
+            // load CloudFormation specification
+            using(var stream = File.OpenRead(cloudFormationSpecFile)) {
+                using var compression = new BrotliStream(stream, CompressionMode.Decompress);
+                CloudformationSpec = CloudFormationTypeSystem.LoadFromAsync(compression).GetAwaiter().GetResult();
             }
         }
 
@@ -185,42 +137,14 @@ namespace LambdaSharp.Tool.Model {
                     : new object[] { arnReference };
         }
 
-        public static bool HasProperty(string awsType, string property) {
-
-            // for 'Custom::', allow any property
-            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                return true;
-            }
-
-            // check if type exists and contains property
-            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)
-                && (resource.Properties?.ContainsKey(property) == true);
-        }
-
         public static bool HasAttribute(string awsType, string attribute) {
-
-            // for 'AWS::CloudFormation::Stack', allow attributes starting with "Outputs."
-            if((awsType == "AWS::CloudFormation::Stack") && attribute.StartsWith("Outputs.", StringComparison.Ordinal)) {
-                return true;
-            }
-
-            // for 'Custom::', allow any attribute
-            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                return true;
-            }
-
-            // check if type exists and contains attribute
-            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)
-                && (resource.Attributes?.ContainsKey(attribute) == true);
+            return CloudformationSpec.TryGetResourceType(awsType, out var resourceType)
+                && resourceType.TryGetAttribute(attribute, out _);
         }
 
-        public static bool IsCloudFormationType(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);
+        public static bool IsCloudFormationType(string awsType) => CloudformationSpec.TryGetResourceType(awsType, out _);
 
         public static string ToCloudFormationParameterType(string type)
             => _cloudFormationParameterTypes.Contains(type) ? type : "String";
-
-        public static bool TryGetPropertyItemType(string rootAwsType, string itemTypeName, out ResourceType type)
-            => ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(itemTypeName, out type)
-                || ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(rootAwsType + "." + itemTypeName, out type);
     }
 }

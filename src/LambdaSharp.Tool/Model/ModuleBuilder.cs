@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LambdaSharp.Build.CSharp;
+using LambdaSharp.CloudFormation.TypeSystem;
 using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using Newtonsoft.Json.Linq;
@@ -1499,7 +1500,7 @@ namespace LambdaSharp.Tool.Model {
             string awsType,
             IDictionary properties
         ) {
-            if(ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)) {
+            if(ResourceMapping.CloudformationSpec.TryGetResourceType(awsType, out var resource)) {
                 ValidateProperties("", resource, properties);
             } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
                 var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.Any(existing => existing.Type == awsType) ?? false);
@@ -1528,26 +1529,26 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // local functions
-            void ValidateProperties(string prefix, ResourceType currentResource, IDictionary currentProperties) {
+            void ValidateProperties(string prefix, IResourceType currentResource, IDictionary currentProperties) {
 
                 // 'Fn::Transform' can add arbitrary properties at deployment time, so we can't validate the properties at compile time
                 if(!currentProperties.Contains("Fn::Transform")) {
 
                     // check that all required properties are defined
-                    foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
-                        if(currentProperties[property.Key] == null) {
-                            LogError($"missing property '{prefix + property.Key}");
+                    foreach(var property in currentResource.RequiredProperties) {
+                        if(currentProperties[property.Name] == null) {
+                            LogError($"missing property '{prefix + property.Name}");
                         }
                     }
                 }
 
                 // check that all defined properties exist
                 foreach(DictionaryEntry property in currentProperties) {
-                    if(!currentResource.Properties.TryGetValue((string)property.Key, out var propertyType)) {
+                    if(!currentResource.TryGetProperty((string)property.Key, out var propertyType)) {
                         LogError($"unrecognized property '{prefix + property.Key}'");
                     } else {
-                        switch(propertyType.Type) {
-                        case "List": {
+                        switch(propertyType.CollectionType) {
+                        case ResourceCollectionType.List: {
 
                                 // check if property value is a function invocation
                                 if(
@@ -1560,16 +1561,15 @@ namespace LambdaSharp.Tool.Model {
                                     // TODO (2019-01-25, bjorg): validate the return type of the function is a list
                                 } else if(!(property.Value is IList nestedList)) {
                                     LogError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
-                                } else if(propertyType.ItemType != null) {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
-                                    ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
+                                } else if(propertyType.ItemType == ResourceItemType.ComplexType) {
+                                    ValidateList(prefix + property.Key + ".", propertyType.ComplexType, ListToEnumerable(nestedList));
                                 } else {
 
                                     // TODO (2018-12-06, bjorg): validate list items using the primitive type
                                 }
                             }
                             break;
-                        case "Map": {
+                        case ResourceCollectionType.Map: {
                                 if(
                                     (property.Value is IDictionary fnMap)
                                     && (fnMap.Count == 1)
@@ -1578,22 +1578,18 @@ namespace LambdaSharp.Tool.Model {
                                 ) {
 
                                     // TODO (2019-01-25, bjorg): validate the return type of the function is a map
-                                } else if(!(property.Value is IDictionary nestedProperties1)) {
+                                } else if(!(property.Value is IDictionary nestedProperties)) {
                                     LogError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
-                                } else if(propertyType.ItemType != null) {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
-                                    ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
+                                } else if(propertyType.ItemType == ResourceItemType.ComplexType) {
+                                    ValidateList(prefix + property.Key + ".", propertyType.ComplexType, DictionaryToEnumerable(nestedProperties));
                                 } else {
 
                                     // TODO (2018-12-06, bjorg): validate map entries using the primitive type
                                 }
                             }
                             break;
-                        case null:
-
-                            // TODO (2018-12-06, bjorg): validate property value with the primitive type
-                            break;
-                        default: {
+                        case ResourceCollectionType.NoCollection:
+                            if(propertyType.ItemType == ResourceItemType.ComplexType) {
                                 if(
                                     (property.Value is IDictionary fnMap)
                                     && (fnMap.Count == 1)
@@ -1602,20 +1598,24 @@ namespace LambdaSharp.Tool.Model {
                                 ) {
 
                                     // TODO (2019-01-25, bjorg): validate the return type of the function is a map
-                                } else if(!(property.Value is IDictionary nestedProperties2)) {
+                                } else if(!(property.Value is IDictionary nestedProperties)) {
                                     LogError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                                 } else {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.Type, out var nestedResource);
-                                    ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
+                                    ValidateProperties(prefix + property.Key + ".", propertyType.ComplexType, nestedProperties);
                                 }
+                            } else {
+
+                                // TODO (2018-12-06, bjorg): validate property value with the primitive type
                             }
                             break;
+                        default:
+                            throw new ArgumentOutOfRangeException($"unexpected property collection type: {propertyType.CollectionType}");
                         }
                     }
                 }
             }
 
-            void ValidateList(string prefix, ResourceType currentResource, IEnumerable<KeyValuePair<string, object>> items) {
+            void ValidateList(string prefix, IResourceType currentResource, IEnumerable<KeyValuePair<string, object>> items) {
                 foreach(var item in items) {
                     if(!(item.Value is IDictionary nestedProperties)) {
                         LogError($"property type mismatch for '{prefix + item.Key}', expected a map [{item.Value?.GetType().FullName ?? "<null>"}]");

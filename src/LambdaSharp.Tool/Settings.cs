@@ -145,12 +145,11 @@ namespace LambdaSharp.Tool {
         public static bool HasErrors => _errors.Any(entry => entry.Error);
         public static int WarningCount => _errors.Count(entry => !entry.Error);
         public static bool HasWarnings => _errors.Any(entry => !entry.Error);
-        public static string ToolCacheDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LambdaSharp");
-        public static string AwsProfileCacheDirectory => Path.Combine(ToolCacheDirectory, AwsProfileEnvironmentVariable);
+        public static string ToolSettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LambdaSharp");
+        public static string AwsProfileCacheDirectory => Path.Combine(ToolSettingsDirectory, AwsProfileEnvironmentVariable);
         public static string AwsProfileEnvironmentVariable = Environment.GetEnvironmentVariable("AWS_PROFILE")
                 ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_PROFILE")
                 ?? "default";
-        public static string CloudFormationResourceSpecificationCacheFilePath = Path.Combine(ToolCacheDirectory, "CloudFormationResourceSpecification.json");
 
         public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
@@ -368,6 +367,6 @@ namespace LambdaSharp.Tool {
             return result;
         }
 
-        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
+        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolSettingsDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
     }
 }

@@ -65,9 +65,6 @@
     - name: Delete Orphaned Logs
       href: Tool-Util-DeleteOrphanLogs.md
 
-    - name: Download CloudFormation Spec
-      href: Tool-Util-DownloadCloudFormationSpec.md
-
     - name: List Lambdas
       href: Tool-Util-ListLambdas.md
 

@@ -22,22 +22,6 @@ if [ $? -ne 0 ]; then
 fi
 
 
-echo "*******************************************"
-echo "*** Update CloudFormation Specification ***"
-echo "*******************************************"
-
-lash util download-cloudformation-spec
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-UNCOMMITTED=$(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l)
-if [ $UNCOMMITTED -ne "0" ]; then
-    echo "ERROR: found $UNCOMMITTED uncommitted files"
-    exit 1
-fi
-
-
 echo "***********************************"
 echo "*** Run Module Generation Tests ***"
 echo "***********************************"

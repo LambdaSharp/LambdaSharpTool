@@ -148,7 +148,15 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
             // local function
             CloudFormationResourceType GetResourceType(string complexTypeName) {
-                var resourceSpecificComplexTypeName = $"{_resourceType.Name}.{complexTypeName}";
+
+                // current resource type name could be a composite name, such as 'AWS::S3::Bucket.Transition'
+                var dotIndex = _resourceType.Name.IndexOf('.');
+                var resourceSpecificComplexTypeName =
+                    (dotIndex >= 0)
+                    ? $"{_resourceType.Name.Substring(0, dotIndex)}.{complexTypeName}"
+                    : $"{_resourceType.Name}.{complexTypeName}";
+
+                // check most specific name first, the check the complex type name by itself
                 if(_specification.PropertyTypes.TryGetValue(resourceSpecificComplexTypeName, out var type)) {
                     return new CloudFormationResourceType(resourceSpecificComplexTypeName, type, _specification);
                 } else if(_specification.PropertyTypes.TryGetValue(complexTypeName, out type)) {
