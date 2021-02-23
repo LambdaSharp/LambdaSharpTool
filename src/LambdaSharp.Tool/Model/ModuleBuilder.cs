@@ -227,19 +227,19 @@ namespace LambdaSharp.Tool.Model {
             if(!Settings.NoDependencyValidation) {
                 dependency = new ModuleBuilderDependency {
                     Type = dependencyType,
-                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, dependencyType, allowImport: true, showError: true, allowCaching: true)
+                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, dependencyType, allowImport: true, showError: true)
                 };
                 if(dependency.ModuleLocation == null) {
 
                     // nothing to do; loader already emitted an error
                     return null;
                 }
-                dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation, allowCaching: true);
-                if(dependency.Manifest == null) {
-
-                    // nothing to do; loader already emitted an error
+                var (dependencyManifest, dependencyManifestErrorReason) = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation);
+                if(dependencyManifest == null) {
+                    LogError(dependencyManifestErrorReason);
                     return null;
                 }
+                dependency.Manifest = dependencyManifest;
 
                 // add resource types found in manifest to type system
                 _typeSystems.Add(new ModuleManifestTypeSystem(dependency.Manifest.ModuleInfo.ToString(), dependency.Manifest));

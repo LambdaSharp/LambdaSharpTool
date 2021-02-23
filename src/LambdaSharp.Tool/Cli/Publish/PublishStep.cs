@@ -71,7 +71,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // load cloudformation file
-            if(!_loader.TryLoadFromFile(cloudformationFile, out var manifest)) {
+            if(!_loader.TryLoadManifestFromCloudFormationFile(cloudformationFile, out var manifest)) {
+                LogError($"invalid CloudFormation template: {cloudformationFile}");
                 return null;
             }
 
@@ -184,10 +185,9 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 // nothing to do; loader already emitted an error
                 return false;
             }
-            var manifest = await _loader.LoadManifestFromLocationAsync(moduleLocation);
+            var (manifest, manifestErrorReason) = await _loader.LoadManifestFromLocationAsync(moduleLocation);
             if(manifest == null) {
-
-                // error has already been reported
+                LogError(manifestErrorReason);
                 return false;
             }
 

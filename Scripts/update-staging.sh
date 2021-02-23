@@ -33,6 +33,7 @@ lash publish \
     --verbose:exceptions \
     --force-publish \
     --force-build \
+    --force-resolve \
     --module-version $LAMBDASHARP_VERSION \
     $LAMBDASHARP/Modules/LambdaSharp.Core \
     $LAMBDASHARP/Modules/LambdaSharp.S3.IO \

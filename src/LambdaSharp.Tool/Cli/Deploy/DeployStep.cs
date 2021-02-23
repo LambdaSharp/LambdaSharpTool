@@ -69,8 +69,9 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             // download module manifest
-            var manifest = await _loader.LoadManifestFromLocationAsync(foundModuleLocation);
+            var (manifest, manifestErrorReason) = await _loader.LoadManifestFromLocationAsync(foundModuleLocation);
             if(manifest == null) {
+                LogError(manifestErrorReason);
                 return false;
             }
 

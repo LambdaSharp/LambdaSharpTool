@@ -278,6 +278,7 @@ namespace LambdaSharp.Tool {
         public bool PromptsAsErrors { get; set; }
         public DateTime UtcNow { get; set; }
         public BuildPolicy BuildPolicy { get; set; }
+        public bool ForceResolve = false;
 
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)
@@ -367,6 +368,26 @@ namespace LambdaSharp.Tool {
             return result;
         }
 
-        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolSettingsDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
+        public string GetCachedManifestFilePath(ModuleLocation moduleLocation) {
+
+            // never cache pre-release versions or when the module origin is not set
+            if(
+                moduleLocation.ModuleInfo.Version.IsPreRelease()
+                || (moduleLocation.ModuleInfo.Origin is null)
+            ) {
+                return null;
+            }
+
+            // ensure directory exists since it will be used
+            var cachedManifestFolder = Path.Combine(ToolSettingsDirectory, "Manifests", moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.Namespace, moduleLocation.ModuleInfo.Name);
+            try {
+                Directory.CreateDirectory(cachedManifestFolder);
+            } catch {
+
+                // let the optimal outcome not get in the way of a successful outcome
+                return null;
+            }
+            return Path.Combine(cachedManifestFolder, moduleLocation.ModuleInfo.Version.ToString());
+        }
     }
 }
