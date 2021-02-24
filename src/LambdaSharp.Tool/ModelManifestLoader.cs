@@ -50,6 +50,13 @@ namespace LambdaSharp.Tool {
             public ModuleManifestDependencyType Type { get; set; }
         }
 
+        private class ModuleManifestVersions {
+
+            //--- Properties ---
+            public string Region { get; set; }
+            public List<VersionInfo> Versions { get; set; } = new List<VersionInfo>();
+        }
+
         //--- Class Fields ---
         private static HttpClient _httpClient = new HttpClient();
 
@@ -277,47 +284,86 @@ namespace LambdaSharp.Tool {
 
             async Task<IEnumerable<VersionInfo>> FindModuleVersionsInBucketAsync(string bucketName) {
                 StartLogPerformance($"FindModuleVersionsInBucketAsync() for s3://{bucketName}");
+                var cached = false;
                 try {
+                    var moduleOrigin = moduleInfo.Origin ?? Settings.DeploymentBucketName;
+                    List<VersionInfo> versions = null;
+                    string region = null;
 
-                    // get bucket region specific S3 client
-                    var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
-                    if(s3Client == null) {
+                    // check if a cached version exists
+                    string cachedManifestVersionsFilePath = null;
+                    if(!Settings.ForceRefresh) {
+                        var cachedManifestFolder = GetCachedManifestDirectory(bucketName, moduleOrigin, moduleInfo.Namespace, moduleInfo.Name);
+                        if(cachedManifestFolder != null) {
+                            cachedManifestVersionsFilePath = Path.Combine(cachedManifestFolder, "versions.json");
 
-                        // nothing to do; GetS3ClientByBucketName already emitted an error
-                        return new List<VersionInfo>();
+                            // TODO (2021-02-24, bjorg): make ignoring the cached value after 10 minutes configurable
+                            if(File.Exists(cachedManifestVersionsFilePath) && (File.GetLastWriteTimeUtc(cachedManifestVersionsFilePath).AddMinutes(10) > DateTime.UtcNow)) {
+                                cached = true;
+                                var cachedManifestVersions = JsonSerializer.Deserialize<ModuleManifestVersions>(File.ReadAllText(cachedManifestVersionsFilePath), Settings.JsonSerializerOptions);
+                                region = cachedManifestVersions.Region;
+                                versions = cachedManifestVersions.Versions;
+                            }
+                        }
                     }
 
-                    // enumerate versions in bucket
-                    var versions = new List<VersionInfo>();
-                    var request = new ListObjectsV2Request {
-                        BucketName = bucketName,
-                        Prefix = $"{moduleInfo.Origin ?? Settings.DeploymentBucketName}/{moduleInfo.Namespace}/{moduleInfo.Name}/",
-                        Delimiter = "/",
-                        MaxKeys = 100,
-                        RequestPayer = RequestPayer.Requester
-                    };
-                    do {
-                        try {
-                            var response = await s3Client.ListObjectsV2Async(request);
-                            versions.AddRange(response.S3Objects
-                                .Select(s3Object => s3Object.Key.Substring(request.Prefix.Length))
-                                .Select(found => VersionInfo.Parse(found))
-                            );
-                            request.ContinuationToken = response.NextContinuationToken;
-                        } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
+                    // check if data needs to be fetched from S3 bucket
+                    if(versions == null) {
 
-                            // show message that access was denied for this location
-                            LogInfoVerbose($"... access denied to {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
-                            return Enumerable.Empty<VersionInfo>();
+                        // get bucket region specific S3 client
+                        var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
+                        if(s3Client == null) {
+
+                            // nothing to do; GetS3ClientByBucketName already emitted an error
+                            return new List<VersionInfo>();
                         }
-                    } while(request.ContinuationToken != null);
+
+                        // enumerate versions in bucket
+                        versions = new List<VersionInfo>();
+                        region = s3Client.Config.RegionEndpoint.SystemName;
+                        var request = new ListObjectsV2Request {
+                            BucketName = bucketName,
+                            Prefix = $"{moduleOrigin}/{moduleInfo.Namespace}/{moduleInfo.Name}/",
+                            Delimiter = "/",
+                            MaxKeys = 100,
+                            RequestPayer = RequestPayer.Requester
+                        };
+                        do {
+                            try {
+                                var response = await s3Client.ListObjectsV2Async(request);
+                                versions.AddRange(response.S3Objects
+                                    .Select(s3Object => s3Object.Key.Substring(request.Prefix.Length))
+                                    .Select(found => VersionInfo.Parse(found))
+                                );
+                                request.ContinuationToken = response.NextContinuationToken;
+                            } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
+
+                                // show message that access was denied for this location
+                                LogInfoVerbose($"... access denied to {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
+                                return Enumerable.Empty<VersionInfo>();
+                            }
+                        } while(request.ContinuationToken != null);
+
+                        // cache module versions listing
+                        if(cachedManifestVersionsFilePath != null) {
+                            try {
+                                File.WriteAllText(cachedManifestVersionsFilePath, JsonSerializer.Serialize(new ModuleManifestVersions {
+                                    Region = region,
+                                    Versions = versions
+                                }, Settings.JsonSerializerOptions));
+                            } catch {
+
+                                // nothing to do
+                            }
+                        }
+                    }
 
                     // filter list down to matching versions
                     versions = versions.Where(version => (moduleInfo.Version == null) || version.IsGreaterOrEqualThanVersion(moduleInfo.Version, strict: true)).ToList();
-                    LogInfoVerbose($"... found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
+                    LogInfoVerbose($"... found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{region}]");
                     return versions;
                 } finally {
-                    StopLogPerformance();
+                    StopLogPerformance(cached);
                 }
             }
 
@@ -643,7 +689,15 @@ namespace LambdaSharp.Tool {
             }
 
             // ensure directory exists since it will be used
-            var cachedManifestFolder = Path.Combine(Settings.ToolSettingsDirectory, "Manifests", moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.Namespace, moduleLocation.ModuleInfo.Name);
+            var cachedManifestFolder = GetCachedManifestDirectory(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.Namespace, moduleLocation.ModuleInfo.Name);
+            if(cachedManifestFolder == null) {
+                return null;
+            }
+            return Path.Combine(cachedManifestFolder, moduleLocation.ModuleInfo.Version.ToString());
+        }
+
+        private string GetCachedManifestDirectory(string sourceBucketName, string moduleOrigin, string moduleNamespace, string moduleName) {
+            var cachedManifestFolder = Path.Combine(Settings.ToolSettingsDirectory, "Manifests", sourceBucketName, moduleOrigin, moduleNamespace, moduleName);
             try {
                 Directory.CreateDirectory(cachedManifestFolder);
             } catch {
@@ -651,7 +705,7 @@ namespace LambdaSharp.Tool {
                 // let the optimal outcome not get in the way of a successful outcome
                 return null;
             }
-            return Path.Combine(cachedManifestFolder, moduleLocation.ModuleInfo.Version.ToString());
+            return cachedManifestFolder;
         }
     }
 }
