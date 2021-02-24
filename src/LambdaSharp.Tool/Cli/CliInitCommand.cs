@@ -226,8 +226,10 @@ namespace LambdaSharp.Tool.Cli {
 
                     // local functions
                     async Task<bool> IsNewerCoreModuleVersionAvailable() {
+                        var coreModuleInfo = new ModuleInfo("LambdaSharp", "Core", settings.CoreServicesReferenceVersion, "lambdasharp");
                         var latestCoreModuleLocation = await new ModelManifestLoader(settings, "").ResolveInfoToLocationAsync(
-                            new ModuleInfo("LambdaSharp", "Core", settings.CoreServicesReferenceVersion, "lambdasharp"),
+                            coreModuleInfo,
+                            coreModuleInfo.Origin,
                             ModuleManifestDependencyType.Shared,
                             allowImport: true,
                             showError: false

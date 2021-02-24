@@ -146,7 +146,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 #### Features
 
 * CLI
-  * Added `--force-resolve`
+  * Added `--force-refresh`
 
 ### (v0.8.2.1) - 2021-02-17
 

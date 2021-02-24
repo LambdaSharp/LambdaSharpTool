@@ -85,10 +85,10 @@ lash build
 (optional) Always build function packages
 </dd>
 
-<dt><code>--force-resolve</code></dt>
+<dt><code>--force-refresh</code></dt>
 <dd>
 
-(optional) Always resolve manifests from their origin
+(optional) Always refresh manifests from their origin
 </dd>
 
 <dt><code>--build-policy &lt;FILEPATH&gt;</code></dt>

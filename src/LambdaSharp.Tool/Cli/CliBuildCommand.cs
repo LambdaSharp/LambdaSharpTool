@@ -82,8 +82,8 @@ namespace LambdaSharp.Tool.Cli {
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename)
             => new ParameterFileReader(settings, filename).ReadInputParametersFiles();
 
-        public static CommandOption AddForceResolveOption(CommandLineApplication cmd)
-            => cmd.Option("--force-resolve", "(optional) Always resolve manifests from their origin", CommandOptionType.NoValue);
+        public static CommandOption AddForceRefreshOption(CommandLineApplication cmd)
+            => cmd.Option("--force-refresh", "(optional) Always refresh manifests from their origin", CommandOptionType.NoValue);
 
         //--- Methods ---
         public void Register(CommandLineApplication app) {
@@ -109,7 +109,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
-                var forceResolveOption = AddForceResolveOption(cmd);
+                var forceRefreshOption = AddForceRefreshOption(cmd);
                 var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
@@ -165,7 +165,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // check if all references should be resolved from their origin (vs. cached)
-                    settings.ForceResolve = forceResolveOption.HasValue();
+                    settings.ForceResolve = forceRefreshOption.HasValue();
 
                     // run build step
                     foreach(var argument in arguments) {
@@ -225,7 +225,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
-                var forceResolveOption = AddForceResolveOption(cmd);
+                var forceRefreshOption = AddForceRefreshOption(cmd);
                 var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
@@ -281,7 +281,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // check if all references should be resolved from their origin (vs. cached)
-                    settings.ForceResolve = forceResolveOption.HasValue();
+                    settings.ForceResolve = forceRefreshOption.HasValue();
 
                     // run build & publish steps
                     foreach(var argument in arguments) {
@@ -381,7 +381,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
-                var forceResolveOption = AddForceResolveOption(cmd);
+                var forceRefreshOption = AddForceRefreshOption(cmd);
                 var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
@@ -446,7 +446,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // check if all references should be resolved from their origin (vs. cached)
-                    settings.ForceResolve = forceResolveOption.HasValue();
+                    settings.ForceResolve = forceRefreshOption.HasValue();
 
                     // read optional parameters file
                     var parameters = new Dictionary<string, string>();

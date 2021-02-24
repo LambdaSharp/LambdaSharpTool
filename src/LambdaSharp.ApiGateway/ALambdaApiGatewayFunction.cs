@@ -25,7 +25,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp.ApiGateway.Internal;
 using LambdaSharp.ConfigSource;
-using LambdaSharp.Exceptions;
 using LambdaSharp.Logging;
 using LambdaSharp.Logging.Metrics;
 using LambdaSharp.Serialization;

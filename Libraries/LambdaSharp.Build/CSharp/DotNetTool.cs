@@ -28,7 +28,7 @@ namespace LambdaSharp.Build.CSharp {
 
         //--- Methods ---
         public string? GetDotNetVersion() {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            StartLogPerformance($"GetDotNetVersion()");
             try {
                 var dotNetExe = ProcessLauncher.DotNetExe;
                 if(string.IsNullOrEmpty(dotNetExe)) {
@@ -56,7 +56,7 @@ namespace LambdaSharp.Build.CSharp {
                     return null;
                 }
             } finally {
-                LogInfoPerformance($"GetDotNetVersion()", stopwatch.Elapsed);
+                StopLogPerformance();
             }
         }
     }

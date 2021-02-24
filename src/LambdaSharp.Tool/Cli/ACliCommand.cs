@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -88,7 +87,6 @@ namespace LambdaSharp.Tool.Cli {
             BuildEventsConfig.OnLogWarnEvent += (sender, args) => Settings.LogWarn(args.Message);
             BuildEventsConfig.OnLogInfoEvent += (sender, args) => Settings.LogInfo(args.Message);
             BuildEventsConfig.OnLogInfoVerboseEvent += (sender, args) => Settings.LogInfoVerbose(args.Message);
-            BuildEventsConfig.OnLogInfoPerformanceEvent += (sender, args) => Settings.LogInfoPerformance(args.Message, args.Duration);
         }
 
         //--- Properties ---
@@ -102,7 +100,7 @@ namespace LambdaSharp.Tool.Cli {
             string awsUserArn = null,
             bool allowCaching = false
         ) {
-            var stopwatch = Stopwatch.StartNew();
+            Settings.StartLogPerformance("InitializeAwsProfile()");
             var cached = false;
             try {
 
@@ -169,7 +167,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
                 return result;
             } finally {
-                Settings.LogInfoPerformance($"InitializeAwsProfile()", stopwatch.Elapsed, cached);
+                Settings.StopLogPerformance(cached);
             }
         }
 
@@ -314,7 +312,7 @@ namespace LambdaSharp.Tool.Cli {
             bool force = false,
             bool allowCaching = false
         ) {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            Settings.StartLogPerformance($"PopulateDeploymentTierSettingsAsync() for '{settings.TierName}'");
             var cached = false;
             try {
                 if(
@@ -444,7 +442,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
                 return true;
             } finally {
-                Settings.LogInfoPerformance($"PopulateDeploymentTierSettingsAsync() for '{settings.TierName}'", stopwatch.Elapsed, cached);
+                Settings.StopLogPerformance(cached);
             }
         }
 

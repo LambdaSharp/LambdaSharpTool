@@ -18,9 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -135,6 +135,8 @@ namespace LambdaSharp.Tool {
             return false;
         });
 
+        private static Stack<(string Message, Stopwatch Stopwatch)> _performanceMeasurements = new Stack<(string Message, Stopwatch stopwatch)>();
+
         //--- Class Properties ---
         public static bool UseAnsiConsole  {
             get => AnsiTerminal.Enabled;
@@ -232,9 +234,13 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public static void LogInfoPerformance(string message, TimeSpan duration, bool? cached = null) {
+        public static void StartLogPerformance(string message) => _performanceMeasurements.Push((Message: message, Stopwatch: Stopwatch.StartNew()));
+
+        public static void StopLogPerformance(bool? cached = null) {
+            var (message, stopwatch) = _performanceMeasurements.Pop();
+            stopwatch.Stop();
             if(VerboseLevel >= Tool.VerboseLevel.Performance) {
-                Console.WriteLine($"{DebugColor}TIMING: {message} [duration={duration.TotalSeconds:N2}s{(cached.HasValue ? $", cached={cached.Value.ToString().ToLowerInvariant()}" : "")}]{ResetColor}");
+                Console.WriteLine($"{DebugColor}TIMING: {new string('·', _performanceMeasurements.Count)}{message} [duration={stopwatch.Elapsed.TotalSeconds:N2}s{(cached.HasValue ? $", cached={cached.Value.ToString().ToLowerInvariant()}" : "")}]{ResetColor}");
             }
         }
 
@@ -366,28 +372,6 @@ namespace LambdaSharp.Tool {
             var result = Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
             Program.ResetBeepTimer();
             return result;
-        }
-
-        public string GetCachedManifestFilePath(ModuleLocation moduleLocation) {
-
-            // never cache pre-release versions or when the module origin is not set
-            if(
-                moduleLocation.ModuleInfo.Version.IsPreRelease()
-                || (moduleLocation.ModuleInfo.Origin is null)
-            ) {
-                return null;
-            }
-
-            // ensure directory exists since it will be used
-            var cachedManifestFolder = Path.Combine(ToolSettingsDirectory, "Manifests", moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.Namespace, moduleLocation.ModuleInfo.Name);
-            try {
-                Directory.CreateDirectory(cachedManifestFolder);
-            } catch {
-
-                // let the optimal outcome not get in the way of a successful outcome
-                return null;
-            }
-            return Path.Combine(cachedManifestFolder, moduleLocation.ModuleInfo.Version.ToString());
         }
     }
 }

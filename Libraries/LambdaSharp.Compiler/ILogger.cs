@@ -36,8 +36,6 @@ namespace LambdaSharp.Compiler {
         public static void Log(this ILogger logger, IBuildReportEntry entry, SourceLocation sourceLocation) => logger.Log(entry, sourceLocation, exact: true);
         public static void LogInfoVerbose(this ILogger logger, string message, SourceLocation? sourceLocation, bool exact) => logger.Log(new Verbose(message), sourceLocation, exact);
         public static void LogInfoVerbose(this ILogger logger, string message) => logger.LogInfoVerbose(message, sourceLocation: null, exact: true);
-        public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached, SourceLocation? sourceLocation, bool exact) => logger.Log(new Timing(message, duration, cached), sourceLocation, exact);
-        public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached) => logger.LogInfoPerformance(message, duration, cached, sourceLocation: null, exact: true);
     }
 
     public static class ILoggerSyntaxNodeEx {
