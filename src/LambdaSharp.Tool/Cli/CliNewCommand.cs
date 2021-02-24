@@ -245,8 +245,7 @@ namespace LambdaSharp.Tool.Cli {
                         // initialize AWS profile
                         var awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
-                            awsRegion: awsRegionOption.Value(),
-                            allowCaching: true
+                            awsRegion: awsRegionOption.Value()
                         );
 
                         // initialize settings instance
@@ -285,8 +284,7 @@ namespace LambdaSharp.Tool.Cli {
                         // initialize AWS profile
                         var awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
-                            awsRegion: awsRegionOption.Value(),
-                            allowCaching: true
+                            awsRegion: awsRegionOption.Value()
                         );
 
                         // initialize settings instance

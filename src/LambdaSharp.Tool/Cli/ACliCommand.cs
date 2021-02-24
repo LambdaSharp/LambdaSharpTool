@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.APIGateway;
@@ -37,7 +38,6 @@ using LambdaSharp.Build;
 using LambdaSharp.Modules;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -97,21 +97,16 @@ namespace LambdaSharp.Tool.Cli {
             string awsProfile,
             string awsAccountId = null,
             string awsRegion = null,
-            string awsUserArn = null,
-            bool allowCaching = false
+            string awsUserArn = null
         ) {
             Settings.StartLogPerformance("InitializeAwsProfile()");
             var cached = false;
             try {
 
                 // check if .aws/credentials file exists
-                if(
-                    !File.Exists(CredentialsFilePath)
-                    && (
-                        (Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID") == null)
-                        || (Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") == null)
-                    )
-                ) {
+                var hasAwsAccessKeyId = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID") != null;
+                var hasAwsSecretAccessKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") != null;
+                if(!File.Exists(CredentialsFilePath) && !(hasAwsAccessKeyId && hasAwsSecretAccessKey)) {
                     LogError($"IMPORTANT: run '{Settings.Lash} init' to create an AWS profile");
                     return null;
                 }
@@ -126,11 +121,18 @@ namespace LambdaSharp.Tool.Cli {
                 Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
                 Environment.SetEnvironmentVariable("AWS_DEFAULT_PROFILE", awsProfile);
 
-                // check for  cached AWS profile
-                var cachedProfile = Path.Combine(Settings.AwsProfileCacheDirectory, "profile.json");
-                if(allowCaching && Settings.AllowCaching && File.Exists(cachedProfile) && ((DateTime.UtcNow - File.GetLastWriteTimeUtc(cachedProfile)) < Settings.MaxCacheAge)) {
-                    cached = true;
-                    return JsonConvert.DeserializeObject<AwsAccountInfo>(await File.ReadAllTextAsync(cachedProfile));
+                // neither AWS_ACCESS_KEY_ID, nor AWS_SECRET_ACCESS_KEY can be set to use the cached profile information
+                if(!hasAwsAccessKeyId && !hasAwsSecretAccessKey) {
+                    var (cachedProfile, cachedProfileTimestamp) = GetCachedProfile(awsProfile);
+
+                    // the cached profile must exist and be newer than the credentials file
+                    if(
+                        (cachedProfile != null)
+                        && (cachedProfileTimestamp > File.GetLastWriteTimeUtc(CredentialsFilePath))
+                    ) {
+                        cached = true;
+                        return cachedProfile;
+                    }
                 }
 
                 // determine default AWS region
@@ -161,9 +163,10 @@ namespace LambdaSharp.Tool.Cli {
                     AccountId = awsAccountId,
                     UserArn = awsUserArn
                 };
-                if(allowCaching && Settings.AllowCaching) {
-                    Directory.CreateDirectory(Path.GetDirectoryName(cachedProfile));
-                    await File.WriteAllTextAsync(cachedProfile, JsonConvert.SerializeObject(result));
+
+                // only store profile if no AWS keys were used
+                if(!hasAwsAccessKeyId && !hasAwsSecretAccessKey) {
+                    CacheProfile(awsProfile, result);
                 }
                 return result;
             } finally {
@@ -220,10 +223,7 @@ namespace LambdaSharp.Tool.Cli {
                             awsProfileOption.Value(),
                             awsAccountIdOption.Value(),
                             awsRegionOption.Value(),
-                            awsUserArnOption.Value(),
-
-                            // TODO (2019-10-08, bjorg): provide option to disable profile caching (or at least force a reset)
-                            allowCaching: true
+                            awsUserArnOption.Value()
                         );
                         if(awsAccount == null) {
                             return null;
@@ -322,7 +322,7 @@ namespace LambdaSharp.Tool.Cli {
                 ) {
                     var cachedDeploymentTierSettings = Path.Combine(Settings.AwsProfileCacheDirectory, $"{settings.TierPrefix}tier.json");
                     if(!force && allowCaching && Settings.AllowCaching && File.Exists(cachedDeploymentTierSettings)) {
-                        var cachedInfo = JsonConvert.DeserializeObject<CachedDeploymentTierSettingsInfo>(await File.ReadAllTextAsync(cachedDeploymentTierSettings));
+                        var cachedInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<CachedDeploymentTierSettingsInfo>(await File.ReadAllTextAsync(cachedDeploymentTierSettings));
 
                         // initialize settings
                         settings.DeploymentBucketName = cachedInfo.DeploymentBucketName;
@@ -429,7 +429,7 @@ namespace LambdaSharp.Tool.Cli {
                     // cache deployment tier settings
                     if(allowCaching && Settings.AllowCaching) {
                         Directory.CreateDirectory(Path.GetDirectoryName(cachedDeploymentTierSettings));
-                        await File.WriteAllTextAsync(cachedDeploymentTierSettings, JsonConvert.SerializeObject(new CachedDeploymentTierSettingsInfo {
+                        await File.WriteAllTextAsync(cachedDeploymentTierSettings, Newtonsoft.Json.JsonConvert.SerializeObject(new CachedDeploymentTierSettingsInfo {
                             DeploymentBucketName = settings.DeploymentBucketName,
                             TierVersion = settings.TierVersion,
                             CoreServices = settings.CoreServices
@@ -524,6 +524,38 @@ namespace LambdaSharp.Tool.Cli {
                 foreach(var action in actions) {
                     action();
                 }
+            }
+        }
+
+        private (AwsAccountInfo AccountInfo, DateTime Timestamp) GetCachedProfile(string profile) {
+            var cachedProfile = Path.Combine(Settings.ToolSettingsDirectory, "Profiles", $"{profile ?? throw new ArgumentNullException(nameof(profile))}.json");
+            if(!Settings.ForceRefresh && File.Exists(cachedProfile)) {
+                try {
+                    var accountInfo = JsonSerializer.Deserialize<AwsAccountInfo>(File.ReadAllText(cachedProfile), Settings.JsonSerializerOptions);
+                    var fileTimestamp = File.GetLastWriteTimeUtc(cachedProfile);
+                    return (AccountInfo: accountInfo, Timestamp: fileTimestamp);
+                } catch {
+
+                    // profile file might be corrupted; attempt to delete it
+                    try {
+                        File.Delete(cachedProfile);
+                    } catch {
+
+                        // nothing to do
+                    }
+                }
+            }
+            return (AccountInfo: null, Timestamp: DateTime.MinValue);
+        }
+
+        private void CacheProfile(string profile, AwsAccountInfo awsAccountInfo) {
+            var cachedProfile = Path.Combine(Settings.ToolSettingsDirectory, "Profiles", $"{profile ?? throw new ArgumentNullException(nameof(profile))}.json");
+            try {
+                Directory.CreateDirectory(Path.Combine(Settings.ToolSettingsDirectory, "Profiles"));
+                File.WriteAllText(cachedProfile, JsonSerializer.Serialize(awsAccountInfo, Settings.JsonSerializerOptions));
+            } catch {
+
+                // nothing to do
             }
         }
     }

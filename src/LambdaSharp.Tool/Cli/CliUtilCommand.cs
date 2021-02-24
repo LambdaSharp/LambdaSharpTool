@@ -418,7 +418,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine();
 
             // initialize AWS profile
-            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
+            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion);
             var logsClient = new AmazonCloudWatchLogsClient(AWSConfigs.RegionEndpoint);
 
             // delete orphaned logs
@@ -543,7 +543,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine();
 
             // initialize AWS profile
-            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
+            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion);
             var cfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint);
             var lambdaClient = new AmazonLambdaClient(AWSConfigs.RegionEndpoint);
             var logsClient = new AmazonCloudWatchLogsClient(AWSConfigs.RegionEndpoint);

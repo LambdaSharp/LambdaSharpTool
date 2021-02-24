@@ -85,7 +85,7 @@ namespace LambdaSharp.Tool {
 
                 // attempt to load manifest from cache
                 var cachedManifestFilePath = GetCachedManifestFilePath(moduleLocation);
-                if(!Settings.ForceResolve && (cachedManifestFilePath is not null) && File.Exists(cachedManifestFilePath)) {
+                if(!Settings.ForceRefresh && (cachedManifestFilePath is not null) && File.Exists(cachedManifestFilePath)) {
                     ModuleManifest result = null;
                     try {
                         result = JsonConvert.DeserializeObject<ModuleManifest>(await File.ReadAllTextAsync(cachedManifestFilePath));

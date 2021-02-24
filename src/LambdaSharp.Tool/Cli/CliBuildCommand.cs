@@ -119,6 +119,9 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.OnExecute(async () => {
                     ExecuteCommandActions(cmd);
 
+                    // check if all references should be resolved from their origin (vs. cached)
+                    Settings.ForceRefresh = forceRefreshOption.HasValue();
+
                     // read settings and validate them
                     var settings = await initSettingsCallback();
                     if(settings == null) {
@@ -163,9 +166,6 @@ namespace LambdaSharp.Tool.Cli {
                     if(!buildPolicySuccess) {
                         return;
                     }
-
-                    // check if all references should be resolved from their origin (vs. cached)
-                    settings.ForceResolve = forceRefreshOption.HasValue();
 
                     // run build step
                     foreach(var argument in arguments) {
@@ -235,6 +235,9 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.OnExecute(async () => {
                     ExecuteCommandActions(cmd);
 
+                    // check if all references should be resolved from their origin (vs. cached)
+                    Settings.ForceRefresh = forceRefreshOption.HasValue();
+
                     // read settings and validate them
                     var settings = await initSettingsCallback();
                     if(settings == null) {
@@ -279,9 +282,6 @@ namespace LambdaSharp.Tool.Cli {
                     if(!buildPolicySuccess) {
                         return;
                     }
-
-                    // check if all references should be resolved from their origin (vs. cached)
-                    settings.ForceResolve = forceRefreshOption.HasValue();
 
                     // run build & publish steps
                     foreach(var argument in arguments) {
@@ -392,6 +392,9 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.OnExecute(async () => {
                     ExecuteCommandActions(cmd);
 
+                    // check if all references should be resolved from their origin (vs. cached)
+                    Settings.ForceRefresh = forceRefreshOption.HasValue();
+
                     // read settings and validate them
                     var settings = await initSettingsCallback();
                     if(settings == null) {
@@ -444,9 +447,6 @@ namespace LambdaSharp.Tool.Cli {
                     if(!buildPolicySuccess) {
                         return;
                     }
-
-                    // check if all references should be resolved from their origin (vs. cached)
-                    settings.ForceResolve = forceRefreshOption.HasValue();
 
                     // read optional parameters file
                     var parameters = new Dictionary<string, string>();

@@ -50,6 +50,7 @@ namespace LambdaSharp.Serialization {
             settings.IgnoreNullValues = true;
             settings.IncludeFields = true;
             settings.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+            settings.WriteIndented = false;
             customizer?.Invoke(settings);
         }) { }
 

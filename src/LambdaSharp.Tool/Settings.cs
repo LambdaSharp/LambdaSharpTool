@@ -23,6 +23,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Amazon.APIGateway;
 using Amazon.CloudFormation;
@@ -34,11 +36,9 @@ using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
 using LambdaSharp.Modules;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool {
-    using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
 
     public class LambdaSharpException : Exception { }
 
@@ -75,7 +75,8 @@ namespace LambdaSharp.Tool {
         }
     }
 
-    [JsonConverter(typeof(StringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum CoreServices {
         Undefined,
         Disabled,
@@ -105,7 +106,6 @@ namespace LambdaSharp.Tool {
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         public static AnsiTerminal AnsiTerminal;
         public static bool AllowCaching = false;
-        public static TimeSpan MaxCacheAge = TimeSpan.FromDays(1);
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
         private static string PromptColor => UseAnsiConsole ? AnsiTerminal.Cyan : "";
         private static string LabelColor => UseAnsiConsole ? AnsiTerminal.BrightCyan : "";
@@ -118,6 +118,13 @@ namespace LambdaSharp.Tool {
         public static string HighContrastColor => UseAnsiConsole ? AnsiTerminal.BrightWhite : "";
         public static string LowContrastColor => UseAnsiConsole ? AnsiTerminal.BrightBlack : "";
         public static string DebugColor => UseAnsiConsole ? AnsiTerminal.BrightBlue : "";
+
+        public static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            IgnoreNullValues = true,
+            WriteIndented = true,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
+        };
 
         private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
 
@@ -154,6 +161,7 @@ namespace LambdaSharp.Tool {
                 ?? "default";
 
         public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
+        public static bool ForceRefresh { get; set; }
 
         //--- Class Methods ---
         public static void ShowErrors() {
@@ -284,7 +292,6 @@ namespace LambdaSharp.Tool {
         public bool PromptsAsErrors { get; set; }
         public DateTime UtcNow { get; set; }
         public BuildPolicy BuildPolicy { get; set; }
-        public bool ForceResolve = false;
 
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)
