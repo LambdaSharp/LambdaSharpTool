@@ -98,7 +98,6 @@ namespace LambdaSharp.Cloud.UpdateCloudFormationSpecFunction {
                 BucketName = _destinationBucketName,
                 Key = $"AWS/{region}/CloudFormationResourceSpecification.json.br",
                 InputStream = compressedJsonSpecificationStream,
-                RequestPayer = RequestPayer.Requester,
                 MD5Digest = Convert.ToBase64String(newMD5Hash),
                 Headers = {
                     ContentEncoding = "br",

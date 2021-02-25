@@ -622,6 +622,32 @@ namespace LambdaSharp.Tool {
             }
         }
 
+        public void ResetCache(string bucketName, ModuleInfo moduleInfo) {
+
+            // remove cached module
+            var moduleLocation = new ModuleLocation(bucketName, moduleInfo, "<MISSING>");
+            var cachedManifestFilePath = GetCachedManifestFilePath(moduleLocation);
+            if(cachedManifestFilePath != null) {
+                try {
+                    File.Delete(cachedManifestFilePath);
+                } catch {
+
+                    // nothing to do
+                }
+            }
+
+            // remove cached list versions
+            var cachedManifestFolder = GetCachedManifestDirectory(bucketName, moduleInfo.Origin ?? bucketName, moduleInfo.Namespace, moduleInfo.Name);
+            if(cachedManifestFolder != null) {
+                try {
+                    File.Delete(Path.Combine(cachedManifestFolder, "versions.json"));
+                } catch {
+
+                    // nothing to do
+                }
+            }
+        }
+
         private async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
             StartLogPerformance($"GetS3ObjectContentsAsync() for s3://{bucketName}/{key}");
             try {
