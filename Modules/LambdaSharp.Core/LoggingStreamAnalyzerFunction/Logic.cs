@@ -24,7 +24,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Logging;
 using LambdaSharp.Logging.ErrorReports.Models;
@@ -32,6 +31,7 @@ using LambdaSharp.Logging.Events.Models;
 using LambdaSharp.Logging.Metrics.Models;
 
 namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
+    using static System.FormattableString;
 
     public interface ILogicDependencyProvider {
 
@@ -399,7 +399,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                 // report near out-of-memory/timeout warning
                 report.Level = "WARNING";
-                report.Message = $"Lambda nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})";
+                report.Message = Invariant($"Lambda nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})");
                 report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda nearing execution limits");
             }
             if(report.Message != null) {
