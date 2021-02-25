@@ -8,32 +8,11 @@ VERSION_PREFIX="1.0.0"
 
 if [ -z "$1" ]; then
 
-    # run CLI unit tests
-    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp.CloudFormation"
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
-
-    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp.Modules"
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
-
-    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp.Compiler"
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
-
-    # run SDK unit tests
-    dotnet test --configuration Release "$LAMBDASHARP/Tests/Tests.LambdaSharp"
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
-
-    dotnet test "$LAMBDASHARP/Modules/LambdaSharp.App.EventBus/Test.LambdaSharp.App.EventBus"
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
+    for i in `find $LAMBDASHARP/ -name Tests.*.csproj`; do
+        pushd `dirname $i`
+        dotnet test --configuration Release
+        popd
+    done
 
     # run Module unit tests
     dotnet test --configuration Release "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
