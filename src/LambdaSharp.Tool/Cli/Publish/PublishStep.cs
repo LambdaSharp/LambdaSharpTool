@@ -155,6 +155,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     }
                 };
                 await _transferUtility.UploadAsync(request);
+                new ModelManifestLoader(Settings, manifest.GetFullName()).ResetCache(Settings.DeploymentBucketName, moduleInfo);
                 Console.WriteLine($"=> Published: {Settings.OutputColor}{manifest.ModuleInfo}{Settings.ResetColor}");
             } else {
                 Console.WriteLine($"{Settings.LowContrastColor}=> No changes found to publish{Settings.ResetColor}");
