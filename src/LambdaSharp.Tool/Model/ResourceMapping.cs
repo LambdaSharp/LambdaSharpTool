@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -34,7 +33,6 @@ namespace LambdaSharp.Tool.Model {
     public static class ResourceMapping {
 
         //--- Fields ---
-        public static readonly ITypeSystem CloudformationSpec;
         private static readonly IDictionary<string, IDictionary<string, IList<string>>> _iamMappings;
         private static readonly HashSet<string> _cloudFormationParameterTypes;
 
@@ -79,29 +77,9 @@ namespace LambdaSharp.Tool.Model {
                 _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<{awsType}>");
                 _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<List<{awsType}>>");
             }
-
-            // TODO: don't hardcode the region
-            const string region = "us-east-1";
-
-            // check if we already have a CloudFormation specification downloaded or if it's older than 24 hours
-            var cloudFormationSpecFile = Path.Combine(Settings.ToolSettingsDirectory, "AWS", region, "CloudFormationResourceSpecification.json.br");
-            if(
-                !File.Exists(cloudFormationSpecFile)
-                || (File.GetLastWriteTimeUtc(cloudFormationSpecFile).AddDays(1) < DateTime.UtcNow)
-            ) {
-
-                // TODO: download CloudFormation specification
-                throw new NotImplementedException($"expected cloudformation spec at: {cloudFormationSpecFile}");
-            }
-
-            // load CloudFormation specification
-            using(var stream = File.OpenRead(cloudFormationSpecFile)) {
-                using var compression = new BrotliStream(stream, CompressionMode.Decompress);
-                CloudformationSpec = CloudFormationTypeSystem.LoadFromAsync(region, compression).GetAwaiter().GetResult();
-            }
         }
 
-        //--- Methods ---
+        //--- Class Methods ---
         public static bool TryResolveAllowShorthand(string awsType, string shorthand, out IList<string> allowed) {
             allowed = null;
             return _iamMappings.TryGetValue(awsType, out var awsTypeShorthands)
@@ -138,11 +116,6 @@ namespace LambdaSharp.Tool.Model {
                 => (arnReference is IList<object> arnReferences)
                     ? arnReferences
                     : new object[] { arnReference };
-        }
-
-        public static bool HasAttribute(string awsType, string attribute) {
-            return CloudformationSpec.TryGetResourceType(awsType, out var resourceType)
-                && resourceType.TryGetAttribute(attribute, out _);
         }
 
         public static bool IsCloudFormationType(string awsType) => CloudformationSpec.TryGetResourceType(awsType, out _);

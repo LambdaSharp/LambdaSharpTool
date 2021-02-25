@@ -20,12 +20,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Amazon.APIGateway;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
@@ -33,7 +36,9 @@ using Amazon.IdentityManagement;
 using Amazon.KeyManagementService;
 using Amazon.Lambda;
 using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.SimpleSystemsManagement;
+using LambdaSharp.CloudFormation.TypeSystem;
 using LambdaSharp.Modules;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json.Converters;
@@ -252,6 +257,9 @@ namespace LambdaSharp.Tool {
             }
         }
 
+        //--- Fields ---
+        private readonly Dictionary<string, ITypeSystem> _cloudformationSpecs = new Dictionary<string, ITypeSystem>();
+
         //--- Constructors ---
         public Settings(VersionInfo toolVersion) {
             var now = DateTime.UtcNow;
@@ -379,6 +387,55 @@ namespace LambdaSharp.Tool {
             var result = Prompt.GetYesNo($"{PromptColor}|=> {message}{ResetColor}", defaultAnswer);
             Program.ResetBeepTimer();
             return result;
+        }
+
+        public ITypeSystem GetCloudFormationSpec(string region) {
+            if(!_cloudformationSpecs.TryGetValue(region, out var result)) {
+                result = GetCloudFormationSpec(region);
+                _cloudformationSpecs[region] = result;
+            }
+            return result;
+        }
+
+        private async Task<ITypeSystem> InitializeCloudFormationTypeSystem(string region) {
+            if(region is null) {
+                throw new ArgumentNullException(nameof(region));
+            }
+
+            // check if we already have a CloudFormation specification downloaded
+            var cloudFormationSpecFile = Path.Combine(Settings.ToolSettingsDirectory, "AWS", region, "CloudFormationResourceSpecification.json.br");
+            var exists = File.Exists(cloudFormationSpecFile);
+            if(ForceRefresh || !exists) {
+
+                // check if it's older than 24 hours
+                var modifiedSince = File.GetLastWriteTimeUtc(cloudFormationSpecFile);
+                var now = DateTime.UtcNow;
+                if(modifiedSince.AddDays(1) < now) {
+
+                    // fetch new CloudFormation specification if it has been modified
+                    var response = await S3Client.GetObjectAsync(new GetObjectRequest {
+                        BucketName = "lambdasharp",
+                        Key = $"AWS/{region}/CloudFormationResourceSpecification.json.br",
+                        RequestPayer = RequestPayer.Requester,
+                        ModifiedSinceDateUtc = modifiedSince
+                    });
+
+                    // check if the result was not modified
+                    if(response.HttpStatusCode == HttpStatusCode.NotModified) {
+                        File.SetLastWriteTimeUtc(cloudFormationSpecFile, now);
+                        return;
+                    }
+
+                    // TODO: download CloudFormation specification
+                    throw new NotImplementedException($"expected cloudformation spec at: {cloudFormationSpecFile}");
+                }
+            }
+
+            // load CloudFormation specification
+            using(var stream = File.OpenRead(cloudFormationSpecFile)) {
+                using var compression = new BrotliStream(stream, CompressionMode.Decompress);
+                return CloudFormationTypeSystem.LoadFromAsync(region, compression).GetAwaiter().GetResult();
+            }
         }
     }
 }
