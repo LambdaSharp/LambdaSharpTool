@@ -85,7 +85,7 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
                 && attributeName.StartsWith("Outputs.", StringComparison.Ordinal)
             ) {
 
-                // TODO: we need more meta-data to determine the output attribute type from the stack
+                // TODO (2021-02-25, bjorg): we need more meta-data to determine the output attribute type from the stack
                 attribute = new StringResourceAttribute(attributeName);
                 return true;
             }
