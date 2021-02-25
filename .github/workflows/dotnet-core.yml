@@ -43,4 +43,4 @@ jobs:
 
       # Module Tests
       - name: Test LambdaSharp.Core
-        run: dotnet test --configuration Release Modules/LambdaSharp.Core/Tests/Test.ProcessLogEventsTests
+        run: dotnet test --configuration Release Modules/LambdaSharp.Core/Tests/Tests.ProcessLogEventsTests
