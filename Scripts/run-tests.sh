@@ -9,16 +9,10 @@ VERSION_PREFIX="1.0.0"
 if [ -z "$1" ]; then
 
     for i in `find $LAMBDASHARP/ -name Tests.*.csproj`; do
-        pushd `dirname $i`
+        pushd $(dirname $(realpath $i)) > /dev/null 2>&1
         dotnet test --configuration Release
-        popd
+        popd > /dev/null 2>&1
     done
-
-    # run Module unit tests
-    dotnet test --configuration Release "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
-    if [ $? -ne 0 ]; then
-        exit $?
-    fi
 
     # run lash once with force compile to make sure we're testing the latest code
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
