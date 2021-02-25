@@ -22,7 +22,6 @@ jobs:
           dotnet-version: 3.1.301
 
       - name: Set LambdaSharp environment variable
-        # run: echo "::set-env name=LAMBDASHARP::$GITHUB_WORKSPACE"
         run: echo "LAMBDASHARP=$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       # CLI Tests
@@ -32,8 +31,8 @@ jobs:
       - name: Test LambdaSharp.Modules
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp.Modules
 
-      - name: Test LambdaSharp.Compiler
-        run: dotnet test --configuration Release Tests/Tests.LambdaSharp.Compiler
+      # - name: Test LambdaSharp.Compiler
+      #   run: dotnet test --configuration Release Tests/Tests.LambdaSharp.Compiler
 
       # SDK Tests
       - name: Test LambdaSharp
@@ -44,4 +43,4 @@ jobs:
 
       # Module Tests
       - name: Test LambdaSharp.Core
-        run: dotnet test --configuration Release Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests
+        run: dotnet test --configuration Release Modules/LambdaSharp.Core/Tests/Test.ProcessLogEventsTests
