@@ -341,7 +341,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     } else {
                         Validate(node.DeletionPolicy == null, "'DeletionPolicy' attribute cannot be used with instantiated resources");
                     }
-                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate((node.Allow == null) || (node.Type == "AWS") || Settings.GetCloudFormationSpec().HasResourceType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                     Validate(parent == null, "'Parameter' cannot be nested");
 
                     // create input parameter item
@@ -374,7 +374,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 AtLocation(node.Import, () => {
 
                     // validation
-                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate((node.Allow == null) || (node.Type == "AWS") || Settings.GetCloudFormationSpec().HasResourceType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                     Validate(node.Module != null, "missing 'Module' attribute");
 
                     // create input parameter item
@@ -436,7 +436,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     if(node.Value != null) {
 
                         // validation
-                        Validate((node.Allow == null) || (node.Type == null) || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                        Validate((node.Allow == null) || (node.Type == null) || Settings.GetCloudFormationSpec().HasResourceType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                         Validate(node.If == null, "'If' attribute cannot be used with a referenced resource");
                         Validate(node.Properties == null, "'Properties' section cannot be used with a referenced resource");
                         Validate(node.DeletionPolicy == null, "'DeletionPolicy' attribute cannot be used with a referenced resource");
@@ -463,7 +463,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
 
                         // validation
                         Validate(node.Type != null, "missing 'Type' attribute");
-                        Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
+                        Validate((node.Allow == null) || Settings.GetCloudFormationSpec().HasResourceType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
                         if((node.DeletionPolicy != null)) {
                             if(Enum.TryParse<Humidifier.DeletionPolicy>(node.DeletionPolicy, ignoreCase: true, out _)) {
 

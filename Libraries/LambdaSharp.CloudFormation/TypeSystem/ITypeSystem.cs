@@ -29,5 +29,6 @@ namespace LambdaSharp.CloudFormation.TypeSystem {
 
         //--- Methods ---
         bool TryGetResourceType(string resourceTypeName, [NotNullWhen(true)] out IResourceType? resourceType);
+        bool HasResourceType(string resourceType) => TryGetResourceType(resourceType, out _);
     }
 }

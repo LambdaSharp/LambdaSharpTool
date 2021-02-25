@@ -16,14 +16,10 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using LambdaSharp.CloudFormation.Specification.TypeSystem;
-using LambdaSharp.CloudFormation.TypeSystem;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -117,8 +113,6 @@ namespace LambdaSharp.Tool.Model {
                     ? arnReferences
                     : new object[] { arnReference };
         }
-
-        public static bool IsCloudFormationType(string awsType) => CloudformationSpec.TryGetResourceType(awsType, out _);
 
         public static string ToCloudFormationParameterType(string type)
             => _cloudFormationParameterTypes.Contains(type) ? type : "String";

@@ -727,7 +727,8 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // determine if we have a precise resource type match
-            var matches = ResourceMapping.CloudformationSpec.ResourceTypes
+            var matches = settings.GetCloudFormationSpec()
+                .ResourceTypes
                 .Where(item => item.Name.ToLowerInvariant().Contains(resourceTypeName.ToLowerInvariant()))
                 .ToDictionary(item => item.Name, item => item);
 

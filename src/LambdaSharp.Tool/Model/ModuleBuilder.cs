@@ -94,7 +94,7 @@ namespace LambdaSharp.Tool.Model {
 
             // initialize type system
             _typeSystems = new TypeSystemCollection("Module") {
-                ResourceMapping.CloudformationSpec
+                settings.GetCloudFormationSpec()
             };
         }
 
@@ -346,7 +346,7 @@ namespace LambdaSharp.Tool.Model {
                 );
                 decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
                 decoder.DiscardIfNotReachable = true;
-            } else if(!result.HasAwsType) {
+            } else if(!Settings.GetCloudFormationSpec().HasResourceType(result.Type)) {
 
                 // nothing to do
             } else if(properties == null) {
