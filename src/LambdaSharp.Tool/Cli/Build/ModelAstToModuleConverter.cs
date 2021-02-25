@@ -29,9 +29,9 @@ using LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Tool.Cli.Build {
-    using static ModelFunctions;
 
     public class ModelAstToModuleConverter : AModelProcessor {
 
@@ -55,7 +55,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(module.Version == null) {
                     version = VersionInfo.Parse("1.0-DEV");
                 } else if(!VersionInfo.TryParse(module.Version, out version)) {
-                    LogError("'Version' expected to have format: Major.Minor[.Build[.Revision]]");
+                    LogError("'Version' expected to have format: Major.Minor[.Patch][-Suffix]");
                     version = VersionInfo.Parse("0.0");
                 }
 
@@ -341,7 +341,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     } else {
                         Validate(node.DeletionPolicy == null, "'DeletionPolicy' attribute cannot be used with instantiated resources");
                     }
-                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate((node.Allow == null) || (node.Type == "AWS") || Settings.GetCloudFormationSpec().HasResourceType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                     Validate(parent == null, "'Parameter' cannot be nested");
 
                     // create input parameter item
@@ -374,7 +374,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 AtLocation(node.Import, () => {
 
                     // validation
-                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                    Validate((node.Allow == null) || (node.Type == "AWS") || Settings.GetCloudFormationSpec().HasResourceType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                     Validate(node.Module != null, "missing 'Module' attribute");
 
                     // create input parameter item
@@ -436,7 +436,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     if(node.Value != null) {
 
                         // validation
-                        Validate((node.Allow == null) || (node.Type == null) || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
+                        Validate((node.Allow == null) || (node.Type == null) || Settings.GetCloudFormationSpec().HasResourceType(node.Type), "'Allow' attribute can only be used with AWS resource types");
                         Validate(node.If == null, "'If' attribute cannot be used with a referenced resource");
                         Validate(node.Properties == null, "'Properties' section cannot be used with a referenced resource");
                         Validate(node.DeletionPolicy == null, "'DeletionPolicy' attribute cannot be used with a referenced resource");
@@ -463,7 +463,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
 
                         // validation
                         Validate(node.Type != null, "missing 'Type' attribute");
-                        Validate((node.Allow == null) || ResourceMapping.IsCloudFormationType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
+                        Validate((node.Allow == null) || Settings.GetCloudFormationSpec().HasResourceType(node.Type ?? ""), "'Allow' attribute can only be used with AWS resource types");
                         if((node.DeletionPolicy != null)) {
                             if(Enum.TryParse<Humidifier.DeletionPolicy>(node.DeletionPolicy, ignoreCase: true, out _)) {
 
@@ -678,13 +678,13 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     }
 
                     // read attributes
-                    List<ModuleManifestResourceProperty> attributes = null;
+                    List<ModuleManifestResourceAttribute> attributes = null;
                     if(node.Attributes != null) {
                         AtLocation("Attributes", () => {
-                            attributes = ParseTo<List<ModuleManifestResourceProperty>>(node.Attributes);
+                            attributes = ParseTo<List<ModuleManifestResourceAttribute>>(node.Attributes);
                         });
                     } else {
-                        attributes = new List<ModuleManifestResourceProperty>();
+                        attributes = new List<ModuleManifestResourceAttribute>();
                     }
 
                     // create resource type

@@ -30,7 +30,7 @@ namespace LambdaSharp.Build {
 
         //--- Methods ---
         public string? GetGitShaValue(string workingDirectory, bool showWarningOnFailure = true) {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            StartLogPerformance($"GetGitShaValue() for '{workingDirectory}'");
             try {
 
                 // read the gitSha using 'git' directly
@@ -96,12 +96,12 @@ namespace LambdaSharp.Build {
                 }
                 return gitSha;
             } finally {
-                LogInfoPerformance($"GetGitShaValue() for '{workingDirectory}'", stopwatch.Elapsed);
+                StopLogPerformance();
             }
         }
 
         public string? GetGitBranch(string workingDirectory, bool showWarningOnFailure = true) {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            StartLogPerformance($"GetGitBranch() for '{workingDirectory}'");
             try {
 
                 // read the gitSha using 'git' directly
@@ -131,12 +131,12 @@ namespace LambdaSharp.Build {
                 }
                 return gitBranch;
             } finally {
-                LogInfoPerformance($"GetGitBranch() for '{workingDirectory}'", stopwatch.Elapsed);
+                StopLogPerformance();
             }
         }
 
         public string? GetGitVersion() {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            StartLogPerformance($"GetGitVersion()");
             try {
 
                 // constants
@@ -166,7 +166,7 @@ namespace LambdaSharp.Build {
                     return null;
                 }
             } finally {
-                LogInfoPerformance($"GetGitVersion()", stopwatch.Elapsed);
+                StopLogPerformance();
             }
         }
     }

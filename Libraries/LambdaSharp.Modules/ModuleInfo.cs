@@ -52,7 +52,7 @@ namespace LambdaSharp.Modules {
             throw new FormatException("Input string was not in a correct format.");
         }
 
-        public static bool TryParse(string moduleReference, [NotNullWhen(true)] out ModuleInfo? moduleInfo) {
+        public static bool TryParse(string? moduleReference, [NotNullWhen(true)] out ModuleInfo? moduleInfo) {
             if(moduleReference == null) {
                 moduleInfo = null;
                 return false;

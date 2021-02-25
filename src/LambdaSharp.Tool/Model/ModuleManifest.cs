@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using LambdaSharp.Modules;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
-namespace LambdaSharp.Tool.Model {
+namespace LambdaSharp.Compiler.Model {
 
     public class ModuleNameMappings {
 
@@ -44,7 +45,7 @@ namespace LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
 
-        [JsonProperty("Module")]
+        [JsonPropertyName("Module")]
         public ModuleInfo ModuleInfo { get; set; }
         public string Description { get; set; }
         public string TemplateChecksum { get; set; }
@@ -81,7 +82,7 @@ namespace LambdaSharp.Tool.Model {
        public string Type { get; set; }
        public string Description { get; set; }
        public IEnumerable<ModuleManifestResourceProperty> Properties { get; set; } = new List<ModuleManifestResourceProperty>();
-       public IEnumerable<ModuleManifestResourceProperty> Attributes { get; set; } = new List<ModuleManifestResourceProperty>();
+       public IEnumerable<ModuleManifestResourceAttribute> Attributes { get; set; } = new List<ModuleManifestResourceAttribute>();
     }
 
     public class ModuleManifestResourceProperty {
@@ -91,6 +92,14 @@ namespace LambdaSharp.Tool.Model {
        public string Description { get; set; }
        public string Type { get; set; } = "String";
        public bool Required { get; set; } = true;
+    }
+
+    public class ModuleManifestResourceAttribute {
+
+       //--- Properties ---
+       public string Name { get; set; }
+       public string Description { get; set; }
+       public string Type { get; set; } = "String";
     }
 
     public class ModuleManifestOutput {
@@ -107,7 +116,6 @@ namespace LambdaSharp.Tool.Model {
         public string Name { get; set; }
     }
 
-    [JsonConverter(typeof(StringEnumConverter))]
     public enum ModuleManifestDependencyType {
         Unknown,
         Root,
@@ -140,9 +148,5 @@ namespace LambdaSharp.Tool.Model {
         public List<string> AllowedValues { get; set; }
         public string AllowedPattern { get; set; }
         public string ConstraintDescription { get; set; }
-        public int? MinValue { get; set; }
-        public int? MaxValue { get; set; }
-        public int? MinLength { get; set; }
-        public int? MaxLength { get; set; }
     }
 }

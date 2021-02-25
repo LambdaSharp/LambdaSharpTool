@@ -1,0 +1,22 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - App: MyApp
+    Description: My app
+    Project: MyApp/MyApp.csproj
+    LogRetentionInDays: 90
+    Pragmas:
+      - no-registration
+    Api:
+      RootPath: .app
+      CorsOrigin: '"*"'
+      BurstLimit: 200
+      RateLimit: 100
+    Bucket:
+      CloudFrontOriginAccessIdentity: abcdef
+      ContentEncoding: BROTLI
+    Client:
+      ApiUrl: "https://localhost:5000/.app"
+    AppSettings:
+      MySettings: MyValue

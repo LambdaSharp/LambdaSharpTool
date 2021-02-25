@@ -108,27 +108,32 @@ namespace LambdaSharp.Tool.Cli.Build {
                 AtLocation(app.FullName, () => {
                     switch(Path.GetExtension(app.Project).ToLowerInvariant()) {
                     case ".csproj":
-                        new AppBuilder(
-                            new AppBuilderDependencyProvider(_builder, Settings, _existingPackages),
-                            BuildEventsConfig
-                        ).Build(
-                            app,
-                            noCompile,
-                            noAssemblyValidation,
-                            gitSha,
-                            gitBranch,
-                            buildConfiguration,
-                            forceBuild,
-                            out var appPlatform,
-                            out var appFramework,
-                            out var appVersionId
-                        );
+                        StartLogPerformance($"AppBuilder.Build() for {app.FullName}");
+                        try {
+                            new AppBuilder(
+                                new AppBuilderDependencyProvider(_builder, Settings, _existingPackages),
+                                BuildEventsConfig
+                            ).Build(
+                                app,
+                                noCompile,
+                                noAssemblyValidation,
+                                gitSha,
+                                gitBranch,
+                                buildConfiguration,
+                                forceBuild,
+                                out var appPlatform,
+                                out var appFramework,
+                                out var appVersionId
+                            );
 
-                        // set app properties
-                        _builder.GetItem($"{app.FullName}::AppPlatform").Reference = appPlatform;
-                        _builder.GetItem($"{app.FullName}::AppFramework").Reference = appFramework;
-                        _builder.GetItem($"{app.FullName}::AppLanguage").Reference = "csharp";
-                        _builder.GetItem($"{app.FullName}::VersionId").Reference = appVersionId;
+                            // set app properties
+                            _builder.GetItem($"{app.FullName}::AppPlatform").Reference = appPlatform;
+                            _builder.GetItem($"{app.FullName}::AppFramework").Reference = appFramework;
+                            _builder.GetItem($"{app.FullName}::AppLanguage").Reference = "csharp";
+                            _builder.GetItem($"{app.FullName}::VersionId").Reference = appVersionId;
+                        } finally {
+                            StopLogPerformance();
+                        }
                         break;
                     default:
                         LogError("could not determine the app language");

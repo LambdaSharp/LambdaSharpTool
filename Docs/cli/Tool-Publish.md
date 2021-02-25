@@ -93,6 +93,12 @@ lash new function MyNewFunction
 (optional) Always build function packages
 </dd>
 
+<dt><code>--force-refresh</code></dt>
+<dd>
+
+(optional) Always refresh manifests from their origin
+</dd>
+
 <dt><code>--build-policy &lt;FILEPATH&gt;</code></dt>
 <dd>
 

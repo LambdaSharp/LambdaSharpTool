@@ -568,17 +568,21 @@
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
-        "EventSourceToken": "amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         "FunctionName": {
           "Ref": "Function"
         },
-        "Principal": "alexa-appkit.amazon.com"
+        "Principal": "alexa-appkit.amazon.com",
+        "EventSourceToken": "amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
       }
     },
     "FunctionSource3AlexaPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "Function"
+        },
+        "Principal": "alexa-appkit.amazon.com",
         "EventSourceToken": {
           "Fn::If": [
             "FunctionSource3AlexaIsBlank",
@@ -589,11 +593,7 @@
               "Ref": "AlexaSkillId"
             }
           ]
-        },
-        "FunctionName": {
-          "Ref": "Function"
-        },
-        "Principal": "alexa-appkit.amazon.com"
+        }
       }
     }
   },

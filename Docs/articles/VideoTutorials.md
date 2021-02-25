@@ -23,3 +23,9 @@ In this video, I'm going through the steps for creating your first Serverless .N
 Learn how you can build and deploy your serverless solution in minutes using LambdaSharp, an open-source CLI and framework for serverless .NET Core application development on AWS. The solution shares the same C# code for the backend and front end leveraging AWS Lambda functions and the Blazor WebAssembly framework. Finally, see a demonstration of how easy it is to integrate with Amazon CloudWatch Logs, metrics, and Amazon EventBridge.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/wN_0mQ7AUg8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Serverless .NET Patterns: Service Composition
+
+This presentation covers some of the serverless design patterns, such as CQRS (Command and Query Responsibility Separation), CloudFormation stacks, sharing of resources, nested vs. side-by-side composition, and then put it all together with some code samples found at: https://github.com/LambdaSharp/ServerlessPatterns-ServiceComposition
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/P8o7ZI8XCRg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
