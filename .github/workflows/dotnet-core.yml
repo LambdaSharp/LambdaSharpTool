@@ -39,7 +39,7 @@ jobs:
         run: dotnet test --configuration Release Tests/Tests.LambdaSharp
 
       - name: Test LambdaSharp.App.EventBus
-        run: dotnet test --configuration Release Modules/LambdaSharp.App.EventBus/Test.LambdaSharp.App.EventBus
+        run: dotnet test --configuration Release Modules/LambdaSharp.App.EventBus/Tests.LambdaSharp.App.EventBus
 
       # Module Tests
       - name: Test LambdaSharp.Core
