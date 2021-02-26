@@ -18,6 +18,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using LambdaSharp.CloudFormation;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
