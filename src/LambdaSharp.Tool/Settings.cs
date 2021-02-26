@@ -465,7 +465,7 @@ namespace LambdaSharp.Tool {
                 using(var stream = File.OpenRead(cloudFormationSpecFile)) {
                     using var compression = new BrotliStream(stream, CompressionMode.Decompress);
                     var specification = CloudFormationTypeSystem.LoadFromAsync(region, compression).GetAwaiter().GetResult();
-                    LogInfo($"... using CloudFormation specification v{specification.Version}");
+                    LogInfoVerbose($"... using CloudFormation specification v{specification.Version}");
                     return specification;
                 }
             } finally {

@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp.Schedule\LambdaSharp.Schedule.csproj"/>
-    <ProjectReference Include="..\..\..\Libraries\LambdaSharp.CloudFormation.Converter\LambdaSharp.CloudFormation.Converter.csproj"/>
+    <ProjectReference Include="..\LambdaSharp.CloudFormation.Converter\LambdaSharp.CloudFormation.Converter.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="3.5.8.8"/>

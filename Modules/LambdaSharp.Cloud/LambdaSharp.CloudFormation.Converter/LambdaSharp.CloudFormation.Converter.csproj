@@ -24,6 +24,6 @@
     <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="3.1.5" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />
+    <ProjectReference Include="..\..\..\Libraries\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />
   </ItemGroup>
 </Project>
