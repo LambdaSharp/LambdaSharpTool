@@ -17,6 +17,7 @@
  */
 
 using System;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler.Parser {
 

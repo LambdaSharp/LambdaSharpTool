@@ -27,10 +27,10 @@ using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.SyntaxProcessors;
-using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Compiler {
 

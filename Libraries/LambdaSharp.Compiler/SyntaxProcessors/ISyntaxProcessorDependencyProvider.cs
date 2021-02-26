@@ -20,11 +20,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using LambdaSharp.CloudFormation.TypeSystem;
-using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 

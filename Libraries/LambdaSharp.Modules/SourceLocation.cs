@@ -17,9 +17,8 @@
  */
 
 using System;
-using System.Runtime.CompilerServices;
 
-namespace LambdaSharp.Compiler {
+namespace LambdaSharp.Modules {
 
     public class SourceLocation {
 

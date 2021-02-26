@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 

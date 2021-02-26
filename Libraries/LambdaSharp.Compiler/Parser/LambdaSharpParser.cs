@@ -29,6 +29,7 @@ using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.EventSources;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Modules;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 

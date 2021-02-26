@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Compiler.Model;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Compiler {
     using ErrorFunc = Func<string, Error>;

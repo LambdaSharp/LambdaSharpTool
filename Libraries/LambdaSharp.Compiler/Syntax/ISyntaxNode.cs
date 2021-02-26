@@ -18,6 +18,7 @@
 
 using System;
 using System.Threading.Tasks;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler.Syntax {
 

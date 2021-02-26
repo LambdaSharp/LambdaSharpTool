@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler.Syntax {
 

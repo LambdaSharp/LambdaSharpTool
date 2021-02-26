@@ -23,6 +23,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Modules;
 
 namespace LambdaSharp.Compiler.Syntax {
 

@@ -19,24 +19,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.CloudFormation;
-using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 
     internal sealed class ResourceTypeDeclarationProcessor : ASyntaxProcessor {
-
-        //--- Class Fields ---
-        private static readonly HashSet<string> _reservedResourceTypePrefixes = new HashSet<string> {
-            "Alexa",
-            "AMZN",
-            "Amazon",
-            "ASK",
-            "AWS",
-            "Custom",
-            "Dev"
-        };
 
         //--- Class Methods ---
         private static bool IsValidCloudFormationType(string type) {
@@ -81,7 +70,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             if(resourceTypeNameParts.Length == 1) {
                 Logger.Log(Error.ResourceTypeNameInvalidFormat, node.ItemName);
             }
-            if(_reservedResourceTypePrefixes.Contains(resourceTypeNameParts[0])) {
+            if(CloudFormationValidationRules.IsReservedCloudFormationName(resourceTypeNameParts[0])) {
                 Logger.Log(Error.ResourceTypeNameReservedPrefix(resourceTypeNameParts[0]), node.ItemName);
             }
 

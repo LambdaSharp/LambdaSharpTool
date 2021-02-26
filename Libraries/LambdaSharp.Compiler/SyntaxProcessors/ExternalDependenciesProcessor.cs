@@ -18,10 +18,10 @@
 
 using System;
 using System.Threading.Tasks;
-using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
