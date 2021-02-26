@@ -8,7 +8,7 @@ fi
 
 cd $LAMBDASHARP
 
-# Check if any "TODO:" comments are present
+# Check if any "TODO:" comments are present (using ripgrep: https://github.com/BurntSushi/ripgrep)
 if rg -q 'TODO:' -g '!*.{js,map,sh}'; then
     echo "ERROR: found files with 'TODO:' comment"
     rg 'TODO:' -g '!*.{js,map,sh}'

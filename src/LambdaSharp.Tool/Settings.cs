@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -429,6 +429,7 @@ namespace LambdaSharp.Tool {
                             RequestPayer = RequestPayer.Requester,
                             ModifiedSinceDateUtc = modifiedSince
                         });
+                        LogInfoVerbose("... downloading new CloudFormation specification");
 
                         // write new CloudFormation specification
                         using(var outputStream = File.OpenWrite(cloudFormationSpecFile)) {
@@ -438,6 +439,7 @@ namespace LambdaSharp.Tool {
                         // check if we need to update the LambdaSharp developer copy
                         var lambdaSharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
                         if(lambdaSharpDirectory != null) {
+                            LogInfoVerbose("... updating LambdaSharp contributor CloudFormation specification");
                             using var specFile = File.OpenRead(cloudFormationSpecFile);
                             using var decompressionStream = new BrotliStream(specFile, CompressionMode.Decompress);
                             using var textReader = new StreamReader(decompressionStream);
@@ -449,6 +451,7 @@ namespace LambdaSharp.Tool {
                         (e.InnerException is Amazon.Runtime.Internal.HttpErrorResponseException httpException)
                         && (httpException.Response.StatusCode == HttpStatusCode.NotModified)
                     ) {
+                        LogInfoVerbose("... CloudFormation specification is up-to-date");
                         cached = true;
 
                         // touch CloudFormation specification to avoid check until is expires again in 24 hours
@@ -461,7 +464,9 @@ namespace LambdaSharp.Tool {
                 // load CloudFormation specification
                 using(var stream = File.OpenRead(cloudFormationSpecFile)) {
                     using var compression = new BrotliStream(stream, CompressionMode.Decompress);
-                    return CloudFormationTypeSystem.LoadFromAsync(region, compression).GetAwaiter().GetResult();
+                    var specification = CloudFormationTypeSystem.LoadFromAsync(region, compression).GetAwaiter().GetResult();
+                    LogInfoVerbose($"... using CloudFormation specification v{specification.Version}");
+                    return specification;
                 }
             } finally {
                 StopLogPerformance(cached);

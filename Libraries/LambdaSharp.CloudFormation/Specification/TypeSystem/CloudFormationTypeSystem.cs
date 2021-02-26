@@ -54,6 +54,7 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
         //--- Properties ---
         public string Source { get; }
+        public string Version => _specification.ResourceSpecificationVersion ?? "<MISSING>";
         public IEnumerable<IResourceType> ResourceTypes => _resourceTypes.Values;
 
         //--- Methods ---

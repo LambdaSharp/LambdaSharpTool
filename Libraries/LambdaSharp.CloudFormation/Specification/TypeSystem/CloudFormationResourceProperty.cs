@@ -53,8 +53,8 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
     internal class CloudFormationResourceProperty : IResourceProperty {
 
-        // TODO: leverage UpdateType (from CloudFormation spec): _propertyType.UpdateType;
-        // TODO: leverage ValueType (from Extended CloudFormation spec): _propertyType.Value.ValueType
+        // TODO (2021-02-25, bjorg): leverage UpdateType (from CloudFormation spec): _propertyType.UpdateType;
+        // TODO (2021-02-25, bjorg): leverage ValueType (from Extended CloudFormation spec): _propertyType.Value.ValueType
 
         //--- Fields ---
         private readonly CloudFormationResourceType _resourceType;

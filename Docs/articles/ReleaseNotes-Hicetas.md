@@ -146,7 +146,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 #### Features
 
 * CLI
-  * Added `--force-refresh`
+  * Added automatic, daily refresh of CloudFormation specification to surface latest capabilities. Use `--force-refresh` option to check for new CloudFormation specification more frequently.
+  * Added caching of AWS profile information used for building, publishing, and deploying modules. Use `--force-refresh` option to bypass cache.
+  * Removed `util download-cloudformation-spec` command since it is no longer needed to CloudFormation specification.
 
 ### (v0.8.2.1) - 2021-02-17
 
@@ -199,7 +201,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Added support for self-contained .NET 5 Lambda functions.
-  * Update Blazor WebAssembly app template to target .NET 5.
+  * Updated Blazor WebAssembly app template to target .NET 5.
   * Removed dependency on _Amazon.Lambda.Tools_. _Amazon.Lambda.Tools_ is no longer requires to build, publish, or deploy LambdaSharp modules.
   * Updated CloudFormation to v22.0.0.
   * Allowed resource types to have an empty or omitted `Attributes` section.

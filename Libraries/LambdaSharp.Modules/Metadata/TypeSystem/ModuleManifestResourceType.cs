@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -72,7 +72,7 @@ namespace LambdaSharp.Modules.Metadata.TypeSystem {
         public bool TryGetAttribute(string attributeName, [NotNullWhen(true)] out IResourceAttribute? attribute) => _attributes.TryGetValue(attributeName, out attribute);
         public bool TryGetProperty(string propertyName, [NotNullWhen(true)] out IResourceProperty? property) {
 
-            // TODO: this doesn't feel right; seems like we're injecting the `ServiceToken` too early
+            // TODO (2021-02-25, bjorg): this doesn't feel right; seems like we're injecting the `ServiceToken` too early
             switch(propertyName) {
             case "ServiceToken":
 
