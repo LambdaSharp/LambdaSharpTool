@@ -35,9 +35,7 @@ namespace LambdaSharp.Compiler {
             ColumnNumberEnd = columnNumberEnd;
         }
 
-        // TODO: consider using this technique to make sure that everything always a source location!
-        public SourceLocation(string filePath, int lineNumber)
-            : this(filePath, lineNumber, lineNumber, 0, 0) { }
+        public SourceLocation(string filePath, int lineNumber) : this(filePath, lineNumber, lineNumber, 0, 0) { }
 
         //--- Properties ---
         public string FilePath { get; }
