@@ -40,11 +40,11 @@ namespace LambdaSharp.Compiler {
             : this(filePath, lineNumber, lineNumber, 0, 0) { }
 
         //--- Properties ---
-        public string FilePath { get; private set; }
-        public int LineNumberStart { get; private set; }
-        public int ColumnNumberStart { get; private set; }
-        public int LineNumberEnd { get; private set; }
-        public int ColumnNumberEnd { get; private set; }
+        public string FilePath { get; }
+        public int LineNumberStart { get; }
+        public int ColumnNumberStart { get; }
+        public int LineNumberEnd { get; }
+        public int ColumnNumberEnd { get; }
 
         //--- Methods ---
         public override string ToString() {
