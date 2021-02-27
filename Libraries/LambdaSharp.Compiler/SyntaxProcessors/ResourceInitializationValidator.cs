@@ -66,10 +66,6 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     attributeName = node.DefaultAttribute.Value;
                 } else if(resourceType?.TryGetAttribute("Arn", out var _) ?? false) {
                     attributeName = "Arn";
-                } else {
-
-                    // TODO: if resource type is a custom resource, we need to pick an attribute as !Ref
-                    //  expressions are not valid on custom resources.
                 }
                 Provider.DeclareValueExpression(node.FullName, (attributeName == null)
                     ? (AExpression)Fn.FinalRef(node.FullName)

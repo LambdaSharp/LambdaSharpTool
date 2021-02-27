@@ -292,8 +292,6 @@ namespace LambdaSharp.Compiler.Parser {
                 var peek = _parsingEvents.Peek();
                 var currentParsingEvent = peek.ParsingEnumerator.Current;
 
-                // TODO: consider making this a node type instead so that it can be resolved later rather than during the parsing operation
-
                 // check if next event is an !Include statement
                 if((currentParsingEvent is Scalar scalar) && (scalar.Tag == "!Include")) {
 
@@ -408,7 +406,7 @@ namespace LambdaSharp.Compiler.Parser {
                     case "NULL":
                     case "":
 
-                        // TODO: 'null' is not allows in CloudFormation; how should we react?
+                        // TODO: 'null' is not allowed in CloudFormation; how should we react?
                         value = "";
                         type = LiteralType.Null;
                         break;
