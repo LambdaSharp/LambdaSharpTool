@@ -118,7 +118,7 @@ namespace LambdaSharp.Build {
             bool showOutput,
             Func<string, string?>? processOutputLine = null
         ) {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            StartLogPerformance($"Execute() '{Path.Combine(workingFolder ?? Directory.GetCurrentDirectory(), application)} {arguments}'");
             try {
                 using(var process = new Process()) {
                     process.StartInfo = new ProcessStartInfo {
@@ -142,7 +142,7 @@ namespace LambdaSharp.Build {
                     return success;
                 }
             } finally {
-                LogInfoPerformance($"Execute() '{Path.Combine(workingFolder ?? Directory.GetCurrentDirectory(), application)} {arguments}'", stopwatch.Elapsed);
+                StopLogPerformance();
             }
 
             // local functions
@@ -169,7 +169,7 @@ namespace LambdaSharp.Build {
         }
 
         public string? ExecuteWithOutputCapture(string application, IEnumerable<string> arguments, string? workingFolder) {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            StartLogPerformance($"ExecuteWithOutputCapture() '{Path.Combine(workingFolder ?? Directory.GetCurrentDirectory(), application)} {string.Join(" ", arguments)}'");
             try {
                 using(var process = new Process()) {
                     process.StartInfo = new ProcessStartInfo {
@@ -192,7 +192,7 @@ namespace LambdaSharp.Build {
                         : null;
                 }
             } finally {
-                LogInfoPerformance($"ExecuteWithOutputCapture() '{Path.Combine(workingFolder ?? Directory.GetCurrentDirectory(), application)} {string.Join(" ", arguments)}'", stopwatch.Elapsed);
+                StopLogPerformance();
             }
         }
     }

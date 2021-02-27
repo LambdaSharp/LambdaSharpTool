@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\LambdaSharp.Build\LambdaSharp.Build.csproj" />
+    <ProjectReference Include="..\..\Libraries\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\*" />

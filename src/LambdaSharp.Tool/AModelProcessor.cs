@@ -51,7 +51,6 @@ namespace LambdaSharp.Tool {
             BuildEventsConfig.OnLogWarnEvent += (sender, args) => LogWarn(args.Message);
             BuildEventsConfig.OnLogInfoEvent += (sender, args) => LogInfo(args.Message);
             BuildEventsConfig.OnLogInfoVerboseEvent += (sender, args) => LogInfoVerbose(args.Message);
-            BuildEventsConfig.OnLogInfoPerformanceEvent += (sender, args) => Settings.LogInfoPerformance(args.Message, args.Duration);
         }
 
         //--- Properties ---
@@ -139,8 +138,9 @@ namespace LambdaSharp.Tool {
         protected void LogInfoVerbose(string message)
             => Settings.LogInfoVerbose(message);
 
-        protected void LogInfoPerformance(string message, TimeSpan duration, bool? cached = null)
-            => Settings.LogInfoPerformance(message, duration, cached);
+        protected void StartLogPerformance(string message) => Settings.StartLogPerformance(message);
+
+        protected void StopLogPerformance(bool? cached = null) => Settings.StopLogPerformance(cached);
 
         protected List<string> ConvertToStringList(object value) {
             var result = new List<string>();

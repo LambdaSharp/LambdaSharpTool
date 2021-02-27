@@ -8,7 +8,7 @@ fi
 
 cd $LAMBDASHARP
 
-# Check if any "TODO:" comments are present
+# Check if any "TODO:" comments are present (using ripgrep: https://github.com/BurntSushi/ripgrep)
 if rg -q 'TODO:' -g '!*.{js,map,sh}'; then
     echo "ERROR: found files with 'TODO:' comment"
     rg 'TODO:' -g '!*.{js,map,sh}'
@@ -17,21 +17,8 @@ fi
 
 # Setup and validate λ# CLI
 Scripts/install-cli.sh
-
-
-echo "*******************************************"
-echo "*** Update CloudFormation Specification ***"
-echo "*******************************************"
-
-lash util download-cloudformation-spec
 if [ $? -ne 0 ]; then
     exit $?
-fi
-
-UNCOMMITTED=$(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l)
-if [ $UNCOMMITTED -ne "0" ]; then
-    echo "ERROR: found $UNCOMMITTED uncommitted files"
-    exit 1
 fi
 
 
@@ -47,37 +34,15 @@ if ! git diff-index --quiet HEAD -- Tests/; then
 fi
 
 Scripts/run-tests.sh
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 
 git update-index -q --refresh
 if ! git diff-index --quiet HEAD -- Tests/; then
     git diff-index --name-only HEAD -- Tests/
     echo "ERROR: found changes in Tests/ folder AFTER running tests"
     exit 1
-fi
-
-
-echo "**********************"
-echo "*** Run Unit Tests ***"
-echo "***********************"
-
-dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp"
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Modules"
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet test "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet test "$LAMBDASHARP/Modules/LambdaSharp.App.EventBus/Test.LambdaSharp.App.EventBus"
-if [ $? -ne 0 ]; then
-    exit $?
 fi
 
 

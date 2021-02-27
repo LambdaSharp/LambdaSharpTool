@@ -195,6 +195,7 @@ namespace LambdaSharp.Tool.Model.AST {
          * Properties: map
          * EncryptionContext: map
          * Pragmas: list<any>
+         * DefaultAttribute: string
          * DeletionPolicy: string
          */
         public string Parameter { get; set; }
@@ -216,6 +217,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public object Properties { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<object> Pragmas { get; set; }
+        public string DefaultAttribute { get; set; }
         public string DeletionPolicy { get; set; }
 
         /*
@@ -273,7 +275,6 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Resource { get; set; }
         public object If { get; set; }
         public object DependsOn { get; set; }
-        public string DefaultAttribute { get; set; }
 
         /*
          * Stack: string

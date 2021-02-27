@@ -18,26 +18,34 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Amazon;
 using Amazon.APIGateway;
 using Amazon.CloudFormation;
-using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement;
 using Amazon.KeyManagementService;
 using Amazon.Lambda;
 using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.SimpleSystemsManagement;
+using LambdaSharp.CloudFormation.Specification.TypeSystem;
+using LambdaSharp.CloudFormation.TypeSystem;
 using LambdaSharp.Modules;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool {
-    using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
+    using Tag = Amazon.CloudFormation.Model.Tag;
 
     public class LambdaSharpException : Exception { }
 
@@ -74,7 +82,8 @@ namespace LambdaSharp.Tool {
         }
     }
 
-    [JsonConverter(typeof(StringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum CoreServices {
         Undefined,
         Disabled,
@@ -104,7 +113,6 @@ namespace LambdaSharp.Tool {
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         public static AnsiTerminal AnsiTerminal;
         public static bool AllowCaching = false;
-        public static TimeSpan MaxCacheAge = TimeSpan.FromDays(1);
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
         private static string PromptColor => UseAnsiConsole ? AnsiTerminal.Cyan : "";
         private static string LabelColor => UseAnsiConsole ? AnsiTerminal.BrightCyan : "";
@@ -117,6 +125,13 @@ namespace LambdaSharp.Tool {
         public static string HighContrastColor => UseAnsiConsole ? AnsiTerminal.BrightWhite : "";
         public static string LowContrastColor => UseAnsiConsole ? AnsiTerminal.BrightBlack : "";
         public static string DebugColor => UseAnsiConsole ? AnsiTerminal.BrightBlue : "";
+
+        public static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            IgnoreNullValues = true,
+            WriteIndented = true,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
+        };
 
         private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
 
@@ -134,6 +149,8 @@ namespace LambdaSharp.Tool {
             return false;
         });
 
+        private static Stack<(string Message, Stopwatch Stopwatch)> _performanceMeasurements = new Stack<(string Message, Stopwatch stopwatch)>();
+
         //--- Class Properties ---
         public static bool UseAnsiConsole  {
             get => AnsiTerminal.Enabled;
@@ -144,12 +161,14 @@ namespace LambdaSharp.Tool {
         public static bool HasErrors => _errors.Any(entry => entry.Error);
         public static int WarningCount => _errors.Count(entry => !entry.Error);
         public static bool HasWarnings => _errors.Any(entry => !entry.Error);
-        public static string ToolCacheDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LambdaSharp");
-        public static string AwsProfileCacheDirectory => Path.Combine(ToolCacheDirectory, AwsProfileEnvironmentVariable);
+        public static string ToolSettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LambdaSharp");
+        public static string AwsProfileCacheDirectory => Path.Combine(ToolSettingsDirectory, AwsProfileEnvironmentVariable);
         public static string AwsProfileEnvironmentVariable = Environment.GetEnvironmentVariable("AWS_PROFILE")
                 ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_PROFILE")
                 ?? "default";
-        public static string CloudFormationResourceSpecificationCacheFilePath = Path.Combine(ToolCacheDirectory, "CloudFormationResourceSpecification.json");
+
+        public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
+        public static bool ForceRefresh { get; set; }
 
         //--- Class Methods ---
         public static void ShowErrors() {
@@ -230,13 +249,18 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public static void LogInfoPerformance(string message, TimeSpan duration, bool? cached = null) {
+        public static void StartLogPerformance(string message) => _performanceMeasurements.Push((Message: message, Stopwatch: Stopwatch.StartNew()));
+
+        public static void StopLogPerformance(bool? cached = null) {
+            var (message, stopwatch) = _performanceMeasurements.Pop();
+            stopwatch.Stop();
             if(VerboseLevel >= Tool.VerboseLevel.Performance) {
-                Console.WriteLine($"{DebugColor}TIMING: {message} [duration={duration.TotalSeconds:N2}s{(cached.HasValue ? $", cached={cached.Value.ToString().ToLowerInvariant()}" : "")}]{ResetColor}");
+                Console.WriteLine($"{DebugColor}TIMING: {new string('·', _performanceMeasurements.Count)}{message} [duration={stopwatch.Elapsed.TotalSeconds:N2}s{(cached.HasValue ? $", cached={cached.Value.ToString().ToLowerInvariant()}" : "")}]{ResetColor}");
             }
         }
 
-        public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
+        //--- Fields ---
+        private readonly Dictionary<string, ITypeSystem> _cloudformationSpecs = new Dictionary<string, ITypeSystem>();
 
         //--- Constructors ---
         public Settings(VersionInfo toolVersion) {
@@ -367,6 +391,86 @@ namespace LambdaSharp.Tool {
             return result;
         }
 
-        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
+        // TODO (2021-02-24, bjorg): region should be explicitly provided
+        public ITypeSystem GetCloudFormationSpec(string region = "us-east-1") {
+            if(!_cloudformationSpecs.TryGetValue(region, out var result)) {
+                result = UpdateCloudFormationSpecificationAsync(region).GetAwaiter().GetResult();
+                _cloudformationSpecs[region] = result;
+            }
+            return result;
+        }
+
+        private async Task<ITypeSystem> UpdateCloudFormationSpecificationAsync(string region) {
+            if(region is null) {
+                throw new ArgumentNullException(nameof(region));
+            }
+            StartLogPerformance($"UpdateCloudFormationSpecificationAsync() for {region}");
+            var cached = false;
+            try {
+
+                // check if we already have a CloudFormation specification downloaded
+                var cloudFormationSpecFile = Path.Combine(Settings.ToolSettingsDirectory, "AWS", region, "CloudFormationResourceSpecification.json.br");
+                var exists = File.Exists(cloudFormationSpecFile);
+                var modifiedSince = exists
+                    ? File.GetLastWriteTimeUtc(cloudFormationSpecFile)
+                    : DateTime.MinValue;
+                var now = DateTime.UtcNow;
+
+                // check if we have to refresh, if CloudFormation specification doesn't exist, or if it's too old
+                if(ForceRefresh || !exists || (modifiedSince.AddDays(1) <= now)) {
+
+                    // fetch new CloudFormation specification, but only if it has been modified
+                    var cloudFormationSpecificationKey = $"AWS/{region}/CloudFormationResourceSpecification.json.br";
+                    var s3ClientUSEast1 = new AmazonS3Client(RegionEndpoint.USEast1);
+                    try {
+                        var response = await s3ClientUSEast1.GetObjectAsync(new GetObjectRequest {
+                            BucketName = "lambdasharp",
+                            Key = cloudFormationSpecificationKey,
+                            RequestPayer = RequestPayer.Requester,
+                            ModifiedSinceDateUtc = modifiedSince
+                        });
+                        LogInfoVerbose("... downloading new CloudFormation specification");
+
+                        // write new CloudFormation specification
+                        using(var outputStream = File.OpenWrite(cloudFormationSpecFile)) {
+                            await response.ResponseStream.CopyToAsync(outputStream);
+                        }
+
+                        // check if we need to update the LambdaSharp developer copy
+                        var lambdaSharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
+                        if(lambdaSharpDirectory != null) {
+                            LogInfoVerbose("... updating LambdaSharp contributor CloudFormation specification");
+                            using var specFile = File.OpenRead(cloudFormationSpecFile);
+                            using var decompressionStream = new BrotliStream(specFile, CompressionMode.Decompress);
+                            using var textReader = new StreamReader(decompressionStream);
+                            using var jsonReader = new Newtonsoft.Json.JsonTextReader(textReader);
+                            var document = await Newtonsoft.Json.Linq.JObject.LoadAsync(jsonReader);
+                            await File.WriteAllTextAsync(Path.Combine(lambdaSharpDirectory, "src", "CloudFormationResourceSpecification.json"), document.ToString(Newtonsoft.Json.Formatting.Indented));
+                        }
+                    } catch(AmazonS3Exception e) when(
+                        (e.InnerException is Amazon.Runtime.Internal.HttpErrorResponseException httpException)
+                        && (httpException.Response.StatusCode == HttpStatusCode.NotModified)
+                    ) {
+                        LogInfoVerbose("... CloudFormation specification is up-to-date");
+                        cached = true;
+
+                        // touch CloudFormation specification to avoid check until is expires again in 24 hours
+                        File.SetLastWriteTimeUtc(cloudFormationSpecFile, now);
+                    }
+                } else {
+                    cached = true;
+                }
+
+                // load CloudFormation specification
+                using(var stream = File.OpenRead(cloudFormationSpecFile)) {
+                    using var compression = new BrotliStream(stream, CompressionMode.Decompress);
+                    var specification = CloudFormationTypeSystem.LoadFromAsync(region, compression).GetAwaiter().GetResult();
+                    LogInfoVerbose($"... using CloudFormation specification v{specification.Version}");
+                    return specification;
+                }
+            } finally {
+                StopLogPerformance(cached);
+            }
+        }
     }
 }

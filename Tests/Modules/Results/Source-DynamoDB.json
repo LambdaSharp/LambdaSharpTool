@@ -668,6 +668,7 @@
       "Type": "AWS::Lambda::EventSourceMapping",
       "Properties": {
         "BatchSize": 100,
+        "StartingPosition": "LATEST",
         "Enabled": true,
         "EventSourceArn": {
           "Fn::GetAtt": [
@@ -677,22 +678,21 @@
         },
         "FunctionName": {
           "Ref": "Function"
-        },
-        "StartingPosition": "LATEST"
+        }
       }
     },
     "FunctionSource2EventMapping": {
       "Type": "AWS::Lambda::EventSourceMapping",
       "Properties": {
         "BatchSize": 100,
+        "StartingPosition": "LATEST",
         "Enabled": true,
         "EventSourceArn": {
           "Ref": "InputTable"
         },
         "FunctionName": {
           "Ref": "Function"
-        },
-        "StartingPosition": "LATEST"
+        }
       }
     }
   },

@@ -65,7 +65,6 @@ namespace LambdaSharp.Tool.Model {
         public object Reference { get; set; }
         public bool DiscardIfNotReachable { get; set; }
         public bool HasSecretType => Type == "Secret";
-        public bool HasAwsType => ResourceMapping.IsCloudFormationType(Type);
         public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool IsPublic => Scope.Contains("public");
 
