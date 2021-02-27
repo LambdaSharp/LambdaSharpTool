@@ -28,12 +28,12 @@ using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.SyntaxProcessors;
 using Xunit.Abstractions;
-using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Modules;
 using System.IO;
 using LambdaSharp.CloudFormation.TypeSystem;
+using LambdaSharp.Modules.Metadata;
 
 namespace Tests.LambdaSharp.Compiler {
 

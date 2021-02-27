@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 if [ -z "$LAMBDASHARP" ]; then
     echo "ERROR: environment variable \$LAMBDASHARP is not set"
     exit 1
