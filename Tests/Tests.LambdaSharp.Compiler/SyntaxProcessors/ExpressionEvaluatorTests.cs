@@ -217,7 +217,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
 
         protected override ModuleDeclaration LoadTestModule([CallerMemberName] string testName = "") {
             var result = base.LoadTestModule(testName);
-            new VariableDeclarationProcessor(this).Process(result);
+            new VariableDeclarationProcessor(this).ValidateDeclaration(result);
             return result;
         }
     }

@@ -36,7 +36,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ParameterAndImportDeclarationProcessor(this).Process(module);
+            new ParameterAndImportDeclarationProcessor(this).ValidateDeclaration(module);
 
             // assert
             ExpectedMessages("ERROR: 'MinValue' attribute can only be used with 'Number' type in Module.yml: line 6, column 15");
@@ -49,7 +49,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ParameterAndImportDeclarationProcessor(this).Process(module);
+            new ParameterAndImportDeclarationProcessor(this).ValidateDeclaration(module);
 
             // assert
             ExpectedMessages("ERROR: 'MaxValue' attribute can only be used with 'Number' type in Module.yml: line 6, column 15");
@@ -62,7 +62,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ParameterAndImportDeclarationProcessor(this).Process(module);
+            new ParameterAndImportDeclarationProcessor(this).ValidateDeclaration(module);
 
             // assert
             ExpectedMessages("ERROR: 'MinValue' must be less or equal to 'MaxValue' in Module.yml: line 6, column 15");
@@ -75,7 +75,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ParameterAndImportDeclarationProcessor(this).Process(module);
+            new ParameterAndImportDeclarationProcessor(this).ValidateDeclaration(module);
 
             // assert
             ExpectedMessages("WARNING: missing 'Type' attribute, assuming type 'String' in Module.yml: line 4, column 5");
@@ -88,7 +88,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ParameterAndImportDeclarationProcessor(this).Process(module);
+            new ParameterAndImportDeclarationProcessor(this).ValidateDeclaration(module);
 
             // assert
             ExpectedMessages(
@@ -104,7 +104,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ParameterAndImportDeclarationProcessor(this).Process(module);
+            new ParameterAndImportDeclarationProcessor(this).ValidateDeclaration(module);
 
             // assert
             ExpectedMessages("ERROR: 'AllowedPattern' attribute must be a valid regular expression in Module.yml: line 6, column 21");

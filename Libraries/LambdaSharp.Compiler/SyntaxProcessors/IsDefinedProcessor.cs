@@ -29,13 +29,13 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         //--- Class Fields ---
 
         #region Errors/Warnings
-        private static readonly Error MustBeUsedInIfExpressionCondition = new Error(0, "!IsDefined can only be used as a condition in an !If expression");
+        private static readonly Error MustBeUsedInIfExpressionCondition = new Error("!IsDefined can only be used as a condition in an !If expression");
         #endregion
 
         //--- Constructors ---
         public IsDefinedProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
-        public void Process() {
+        public void Evaluate() {
             var substitutions = new Dictionary<ISyntaxNode, ISyntaxNode>();
             while(true) {
                 substitutions.Clear();
@@ -47,7 +47,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                         if(ifFunctionExpression.Condition is ConditionIsDefinedExpression ifFunctionExpressionCondition) {
 
                             // substitute !If expression with appropriate branch
-                            substitutions[ifFunctionExpression] = Provider.TryGetItem(ifFunctionExpressionCondition.ReferenceName.Value, out var _)
+                            substitutions[ifFunctionExpression] = Provider.TryGetItem(ifFunctionExpressionCondition.ReferenceName.Value, out _)
                                 ? ifFunctionExpression.IfTrue
                                 : ifFunctionExpression.IfFalse;
                         }

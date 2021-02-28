@@ -54,7 +54,7 @@ namespace LambdaSharp.Logging.Internal {
             if(info.ModuleInfo == null) {
                 return null;
             }
-            ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out var moduleName, out var _, out var _);
+            ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out var moduleName, out _, out _);
             return moduleNamespace + "." + moduleName;
         }
 
@@ -62,7 +62,7 @@ namespace LambdaSharp.Logging.Internal {
             if(info.ModuleInfo == null) {
                 return null;
             }
-            ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out var _, out var _, out var _);
+            ParseModuleInfoString(info.ModuleInfo, out var moduleNamespace, out _, out _, out _);
             return moduleNamespace;
         }
 
@@ -70,7 +70,7 @@ namespace LambdaSharp.Logging.Internal {
             if(info.ModuleInfo == null) {
                 return null;
             }
-            ParseModuleInfoString(info.ModuleInfo, out var _, out var moduleName, out var _, out var _);
+            ParseModuleInfoString(info.ModuleInfo, out _, out var moduleName, out _, out _);
             return moduleName;
         }
 
@@ -78,7 +78,7 @@ namespace LambdaSharp.Logging.Internal {
             if(info.ModuleInfo == null) {
                 return null;
             }
-            ParseModuleInfoString(info.ModuleInfo, out var _, out var _, out var moduleVersion, out var _);
+            ParseModuleInfoString(info.ModuleInfo, out _, out _, out var moduleVersion, out _);
             return moduleVersion;
         }
 
@@ -86,7 +86,7 @@ namespace LambdaSharp.Logging.Internal {
             if(info.ModuleInfo == null) {
                 return null;
             }
-            ParseModuleInfoString(info.ModuleInfo, out var _, out var _, out var _, out var moduleOrigin);
+            ParseModuleInfoString(info.ModuleInfo, out _, out _, out _, out var moduleOrigin);
             return moduleOrigin;
         }
     }

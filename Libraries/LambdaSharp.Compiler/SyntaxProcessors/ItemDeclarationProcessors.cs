@@ -24,16 +24,22 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
+    /// <summary>
+    /// The <see cref="ItemDeclarationProcessor"/> class validates that all declaration names are valid and unique.
+    /// </summary>
     internal sealed class ItemDeclarationProcessor : ASyntaxProcessor {
 
         //--- Class Fields ---
-        private static readonly ErrorFunc ReservedName = parameter => new Error(0, $"'{parameter}' is a reserved name");
+        private static readonly ErrorFunc ReservedName = parameter => new Error($"'{parameter}' is a reserved name");
+        private static readonly Error NameMustBeAlphanumeric = new Error("name must be alphanumeric");
+        private static readonly ErrorFunc DuplicateName = parameter => new Error($"duplicate name '{parameter}'");
+        private static readonly ErrorFunc AmbiguousLogicalId = parameter => new Error($"ambiguous logical ID for '{parameter}'");
 
         //--- Constructors ---
         public ItemDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void Declare(ModuleDeclaration moduleDeclaration) {
             var logicalIds = new HashSet<string>();
             moduleDeclaration.Inspect(node => {
                 switch(node) {
@@ -52,23 +58,25 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 if(!CloudFormationValidationRules.IsValidCloudFormationName(declaration.ItemName.Value)) {
 
                     // declaration name is not valid
-                    Logger.Log(Error.NameMustBeAlphanumeric, declaration);
+                    Logger.Log(NameMustBeAlphanumeric, declaration);
                 } else if(
-                    !declaration.AllowReservedName
-                    && CloudFormationValidationRules.IsReservedCloudFormationName(declaration.FullName)
+                    CloudFormationValidationRules.IsReservedCloudFormationName(declaration.FullName)
+                    && !(declaration is PseudoParameterDeclaration)
                 ) {
 
                     // declaration uses a reserved name
                     Logger.Log(ReservedName(declaration.FullName), declaration);
-                } else if(Provider.TryGetItem(declaration.FullName, out var _)) {
+                } else if(Provider.TryGetItem(declaration.FullName, out _)) {
 
                     // full name is not unique
-                    Logger.Log(Error.DuplicateName(declaration.FullName), declaration);
-                } else if(!logicalIds!.Add(declaration.LogicalId)) {
+                    Logger.Log(DuplicateName(declaration.FullName), declaration);
+                } else if(!logicalIds.Add(declaration.LogicalId)) {
 
                     // logical ID is ambiguous
-                    Logger.Log(Error.AmbiguousLogicalId(declaration.FullName));
+                    Logger.Log(AmbiguousLogicalId(declaration.FullName));
                 } else {
+
+                    // add declaration
                     Provider.DeclareItem(declaration.Parent, declaration);
                 }
             }

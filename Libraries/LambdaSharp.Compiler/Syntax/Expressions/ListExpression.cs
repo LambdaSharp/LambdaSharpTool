@@ -69,7 +69,9 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             return inspector(this);
         }
 
-        public override ASyntaxNode CloneNode() => new ListExpression(_items.Select(item => item.Clone()));
+        public override ASyntaxNode CloneNode() => new ListExpression(_items.Select(item => item.Clone())) {
+            SourceLocation = SourceLocation
+        };
 
         public void Add(AExpression expression) => _items.Add(Adopt(expression));
 

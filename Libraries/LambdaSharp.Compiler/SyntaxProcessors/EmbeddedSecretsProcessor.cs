@@ -31,10 +31,10 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         private static Regex SecretAliasRegex = new Regex("^[0-9a-zA-Z/_\\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         #region Errors/Warnings
-        private static readonly Error SecretKeyMustBeValidARN = new Error(0, "secret key must be a valid ARN");
-        private static readonly Error CannotGrantPermissionToDecryptParameterStore = new Error(0, "cannot grant permission to decrypt with aws/ssm");
-        private static readonly Error SecreteKeyMustBeValidAlias = new Error(0, "secret key must be a valid alias");
-        private static readonly Error UnableToResolveAlias = new Error(0, "cannot resolve secret key from alias to ARN");
+        private static readonly Error SecretKeyMustBeValidARN = new Error("secret key must be a valid ARN");
+        private static readonly Error CannotGrantPermissionToDecryptParameterStore = new Error("cannot grant permission to decrypt with aws/ssm");
+        private static readonly Error SecreteKeyMustBeValidAlias = new Error("secret key must be a valid alias");
+        private static readonly Error UnableToResolveAlias = new Error("cannot resolve secret key from alias to ARN");
         #endregion
 
         //--- Constructors ---

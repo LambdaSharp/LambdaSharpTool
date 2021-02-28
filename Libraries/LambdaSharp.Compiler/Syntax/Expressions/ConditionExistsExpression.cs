@@ -52,6 +52,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new ConditionIsDefinedExpression {
+            SourceLocation = SourceLocation,
             ReferenceName = ReferenceName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration
         };

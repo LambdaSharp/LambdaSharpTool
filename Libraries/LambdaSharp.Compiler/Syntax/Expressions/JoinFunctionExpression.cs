@@ -58,6 +58,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new JoinFunctionExpression {
+            SourceLocation = SourceLocation,
             Delimiter = Delimiter.Clone(),
             Values = Values.Clone()
         };

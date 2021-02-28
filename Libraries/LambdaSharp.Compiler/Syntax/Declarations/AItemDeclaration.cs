@@ -111,7 +111,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public virtual bool DiscardIfNotReachable { get; set; }
-        public bool AllowReservedName { get; set; }
 
         /// <summary>
         /// List of declarations on which this declaration depends on.
@@ -130,6 +129,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public IEnumerable<DependencyRecord> ReverseDependencies => _reverseDependencies;
 
         //--- Methods ---
+        public ADeclaration? GetParentDeclaration() => (ADeclaration?)Parent;
+
         public void TrackDependency(AItemDeclaration referencedDeclaration, AExpression dependentExpression) {
 
             // validation

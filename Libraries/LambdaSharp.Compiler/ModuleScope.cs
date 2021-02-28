@@ -41,7 +41,7 @@ namespace LambdaSharp.Compiler {
 
         //--- Methods ---
         string ReadFile(string filePath);
-        Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region, string version);
+        Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region);
     }
 
     public sealed class ModuleScope : ISyntaxProcessorDependencyProvider, ILambdaSharpParserDependencyProvider {
@@ -95,33 +95,29 @@ namespace LambdaSharp.Compiler {
             ValidateModuleInformation(moduleDeclaration);
 
             // validate AST integrity
-            new SyntaxTreeIntegrityProcessor(this).Process(moduleDeclaration);
+            new SyntaxTreeIntegrityProcessor(this).ValidateIntegrity(moduleDeclaration);
 
             // resolve all external module dependencies
-            await new ExternalDependenciesProcessor(this).ProcessAsync(moduleDeclaration);
-
-            // load CloudFormation specification
-            CloudFormationSpec = await Provider.LoadCloudFormationSpecificationAsync(
-                moduleDeclaration.CloudFormation?.Region?.Value ?? "us-east-1",
-                moduleDeclaration.CloudFormation?.Version?.Value ?? "28.0.0"
-            );
+            await new ExternalDependenciesProcessor(this).ResolveDependenciesAsync(moduleDeclaration);
 
             // register pseudo-parameter and module declarations
-            new PseudoParameterProcessor(this).Process(moduleDeclaration);
-            new ItemDeclarationProcessor(this).Process(moduleDeclaration);
+            new PseudoParameterProcessor(this).Declare(moduleDeclaration);
+            new ItemDeclarationProcessor(this).Declare(moduleDeclaration);
 
             // process declarations
-            new ParameterAndImportDeclarationProcessor(this).Process(moduleDeclaration);
-            new ResourceDeclarationProcessor(this).Process(moduleDeclaration);
-            new PackageDeclarationProcessor(this).Process(moduleDeclaration);
-            new MappingDeclarationProcessor(this).Process(moduleDeclaration);
-            new FunctionDeclarationProcessor(this).Process(moduleDeclaration);
-            new VariableDeclarationProcessor(this).Process(moduleDeclaration);
-            // TODO: NestedModuleDeclaration
-            // TODO: ResourceTypeDeclaration
-            // TODO: AppDeclaration
-            new SecretTypeDeclarationProcessor(this).Process(moduleDeclaration);
-            // TODO: Finalizer declaration
+            new ParameterAndImportDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new ResourceDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new PackageDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new MappingDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new FunctionDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new VariableDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new StackDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new ResourceTypeDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new AppDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+            new SecretTypeDeclarationProcessor(this).ValidateDeclaration(moduleDeclaration);
+
+            // TODO: needs access to IAM permissions
+            new AllowProcessor(this).ValidateDeclaration();
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationProcessor(this).FindResourceTypes(moduleDeclaration);
@@ -129,7 +125,9 @@ namespace LambdaSharp.Compiler {
             // TODO: validate expression nesting
 
             // all declarations have been made; !IsDefined can now be evaluated
-            new IsDefinedProcessor(this).Process();
+            new IsDefinedProcessor(this).Evaluate();
+
+            // TODO: inject compilation constants (module name, version, etc.)
 
             // evaluate expressions
             new ExpressionEvaluator(this).Normalize();
@@ -137,10 +135,7 @@ namespace LambdaSharp.Compiler {
             new ExpressionTypeProcessor(this).Process();
 
             // ensure that constructed resources have required and necessary properties
-            new ResourceInitializationValidator(this).Validate();
-
-            // TODO: needs access to IAM permissions
-            new AllowProcessor(this).Validate();
+            new ResourceInitializationValidator(this).ValidateExpressions();
 
             // find all resource dependencies for the 'Finalizer' invocation
             new FinalizerDependenciesProcessor(this).Process();
@@ -151,7 +146,6 @@ namespace LambdaSharp.Compiler {
             // TODO: remove any unused resources that can be garbage collected
 
             // optimize expressions
-            // TODO: inject compilation constants (module name, version, etc.)
             new ExpressionEvaluator(this).Evaluate();
 
             // TODO: generate cloudformation template
@@ -242,6 +236,9 @@ namespace LambdaSharp.Compiler {
 
         //--- ILambdaSharpParserDependencyProvider Members ---
         ILogger ILambdaSharpParserDependencyProvider.Logger => Logger;
+
+        VersionInfo ISyntaxProcessorDependencyProvider.CoreServicesReferenceVersion => throw new NotImplementedException();
+
         string ILambdaSharpParserDependencyProvider.ReadFile(string filePath) => Provider.ReadFile(filePath);
 
         Task<ModuleManifest> ISyntaxProcessorDependencyProvider.ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo)
@@ -258,5 +255,17 @@ namespace LambdaSharp.Compiler {
 
         bool ISyntaxProcessorDependencyProvider.TryGetValueExpression(string fullname, [NotNullWhen(true)] out AExpression? expression)
             => _valueExpressions.TryGetValue(fullname, out expression);
+
+        Task<ITypeSystem> ISyntaxProcessorDependencyProvider.LoadCloudFormationSpecificationAsync(string region) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        void ISyntaxProcessorDependencyProvider.AddTypeSystem(ITypeSystem typeSystem) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
     }
 }

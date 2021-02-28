@@ -30,62 +30,62 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public MappingDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
-                moduleDeclaration.InspectType<MappingDeclaration>(node => {
+        public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
+            moduleDeclaration.InspectType<MappingDeclaration>(node => {
 
-                    // check if object expression is valid (must have first- and second-level keys)
-                    if(node.Value.Any()) {
-                        var topLevelKeys = new HashSet<string>();
-                        var secondLevelKeys = new HashSet<string>();
+                // check if object expression is valid (must have first- and second-level keys)
+                if(node.Value.Any()) {
+                    var topLevelKeys = new HashSet<string>();
+                    var secondLevelKeys = new HashSet<string>();
 
-                        // check that all first-level keys have object expressions
-                        foreach(var topLevelEntry in node.Value) {
+                    // check that all first-level keys have object expressions
+                    foreach(var topLevelEntry in node.Value) {
 
-                            // validate top-level key
+                        // validate top-level key
 
-                            if(!CloudFormationValidationRules.IsValidCloudFormationName(topLevelEntry.Key.Value)) {
-                                Logger.Log(Error.MappingKeyMustBeAlphanumeric, topLevelEntry.Key);
-                            }
-                            if(!topLevelKeys.Add(topLevelEntry.Key.Value)) {
-                                Logger.Log(Error.MappingDuplicateKey, topLevelEntry.Key);
-                            }
+                        if(!CloudFormationValidationRules.IsValidCloudFormationName(topLevelEntry.Key.Value)) {
+                            Logger.Log(Error.MappingKeyMustBeAlphanumeric, topLevelEntry.Key);
+                        }
+                        if(!topLevelKeys.Add(topLevelEntry.Key.Value)) {
+                            Logger.Log(Error.MappingDuplicateKey, topLevelEntry.Key);
+                        }
 
-                            // validate top-level value
-                            if(topLevelEntry.Value is ObjectExpression secondLevelObjectExpression) {
-                                if(secondLevelObjectExpression.Any()) {
-                                    secondLevelKeys.Clear();
+                        // validate top-level value
+                        if(topLevelEntry.Value is ObjectExpression secondLevelObjectExpression) {
+                            if(secondLevelObjectExpression.Any()) {
+                                secondLevelKeys.Clear();
 
-                                    // check that all second-level keys have literal expressions
-                                    foreach(var secondLevelEntry in secondLevelObjectExpression) {
+                                // check that all second-level keys have literal expressions
+                                foreach(var secondLevelEntry in secondLevelObjectExpression) {
 
-                                        // validate top-level key
-                                        if(!CloudFormationValidationRules.IsValidCloudFormationName(secondLevelEntry.Key.Value)) {
-                                            Logger.Log(Error.MappingKeyMustBeAlphanumeric, secondLevelEntry.Key);
-                                        }
-                                        if(!secondLevelKeys.Add(secondLevelEntry.Key.Value)) {
-                                            Logger.Log(Error.MappingDuplicateKey, secondLevelEntry.Key);
-                                        }
-
-                                        // validate second-level value
-                                        if(!IsListOrLiteral(secondLevelEntry.Value)) {
-                                            Logger.Log(Error.MappingExpectedListOrLiteral, secondLevelEntry.Value);
-                                        }
+                                    // validate top-level key
+                                    if(!CloudFormationValidationRules.IsValidCloudFormationName(secondLevelEntry.Key.Value)) {
+                                        Logger.Log(Error.MappingKeyMustBeAlphanumeric, secondLevelEntry.Key);
                                     }
-                                } else {
-                                    Logger.Log(Error.MappingDeclarationSecondLevelIsMissing, secondLevelObjectExpression);
+                                    if(!secondLevelKeys.Add(secondLevelEntry.Key.Value)) {
+                                        Logger.Log(Error.MappingDuplicateKey, secondLevelEntry.Key);
+                                    }
+
+                                    // validate second-level value
+                                    if(!IsListOrLiteral(secondLevelEntry.Value)) {
+                                        Logger.Log(Error.MappingExpectedListOrLiteral, secondLevelEntry.Value);
+                                    }
                                 }
                             } else {
-                                Logger.Log(Error.ExpectedMapExpression, topLevelEntry.Value);
+                                Logger.Log(Error.MappingDeclarationSecondLevelIsMissing, secondLevelObjectExpression);
                             }
+                        } else {
+                            Logger.Log(Error.ExpectedMapExpression, topLevelEntry.Value);
                         }
-                    } else {
-                        Logger.Log(Error.MappingDeclarationTopLevelIsMissing, node);
                     }
+                } else {
+                    Logger.Log(Error.MappingDeclarationTopLevelIsMissing, node);
+                }
 
-                    // local functions
-                    bool IsListOrLiteral(AExpression value)
-                        => (value is LiteralExpression)
-                            || ((value is ListExpression listExpression) && listExpression.All(item => IsListOrLiteral(item)));
+                // local functions
+                bool IsListOrLiteral(AExpression value)
+                    => (value is LiteralExpression)
+                        || ((value is ListExpression listExpression) && listExpression.All(item => IsListOrLiteral(item)));
             });
         }
     }

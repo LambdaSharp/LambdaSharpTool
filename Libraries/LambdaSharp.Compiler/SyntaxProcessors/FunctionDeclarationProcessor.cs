@@ -27,7 +27,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public FunctionDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.InspectType<FunctionDeclaration>(node => {
 
                 // TODO: initialize 'Properties'

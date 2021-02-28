@@ -45,6 +45,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new ImportValueFunctionExpression {
+            SourceLocation = SourceLocation,
             SharedValueToImport = SharedValueToImport.Clone()
         };
     }

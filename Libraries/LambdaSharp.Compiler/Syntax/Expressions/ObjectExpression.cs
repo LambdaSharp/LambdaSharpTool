@@ -145,7 +145,9 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             }
         }
 
-        public override ASyntaxNode CloneNode() => new ObjectExpression(_pairs.Select(pair => new KeyValuePair(pair.Key.Clone(), pair.Value.Clone())));
+        public override ASyntaxNode CloneNode() => new ObjectExpression(_pairs.Select(pair => new KeyValuePair(pair.Key.Clone(), pair.Value.Clone()))) {
+            SourceLocation = SourceLocation
+        };
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();

@@ -46,6 +46,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new TransformFunctionExpression {
+            SourceLocation = SourceLocation,
             MacroName = MacroName.Clone(),
             Parameters = Parameters?.Clone()
         };

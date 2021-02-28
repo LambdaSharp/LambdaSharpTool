@@ -37,7 +37,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         private static readonly Warning IfExpressionAlwaysTrue = new Warning(0, "!If expression is always True");
         private static readonly Warning IfExpressionAlwaysFalse = new Warning(0, "!If expression is always False");
         private static readonly Func<string, Warning> SubFormatParameterIsNotUsed = parameter => new Warning(0, $"parameter '{parameter}' in never used in !Sub format string");
-        private static readonly Func<string, Error> SubFunctionParametersCannotUseAttributeNotation = parameter => new Error(0, $"cannot use attribute notation on local parameter '{parameter}'");
+        private static readonly Func<string, Error> SubFunctionParametersCannotUseAttributeNotation = parameter => new Error($"cannot use attribute notation on local parameter '{parameter}'");
         #endregion
 
         //--- Constructors ---
@@ -248,7 +248,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         private AExpression EvaluateExpression(ConditionIsDefinedExpression expression) {
 
             // this expression becomes 'true' when an item declaration exists, otherwise 'false'
-            return BooleanLiteral(expression, Provider.TryGetItem(expression.ReferenceName.Value, out var _), fromExistsExpression: true);
+            return BooleanLiteral(expression, Provider.TryGetItem(expression.ReferenceName.Value, out _), fromExistsExpression: true);
         }
 
         private AExpression EvaluateExpression(ConditionEqualsExpression expression) {

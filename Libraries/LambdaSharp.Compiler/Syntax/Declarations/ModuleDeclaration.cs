@@ -30,16 +30,9 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public class CloudFormationSpecExpression : ASyntaxNode {
 
             //--- Fields ---
-            private LiteralExpression? _version;
             private LiteralExpression? _region;
 
             //--- Properties ---
-
-            [SyntaxRequired]
-            public LiteralExpression? Version {
-                get => _version;
-                set => _version = Adopt(value);
-            }
 
             [SyntaxRequired]
             public LiteralExpression? Region {

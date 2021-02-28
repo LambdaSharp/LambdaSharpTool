@@ -63,6 +63,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new GetAttFunctionExpression {
+            SourceLocation = SourceLocation,
             ReferenceName = ReferenceName.Clone(),
             AttributeName = AttributeName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration

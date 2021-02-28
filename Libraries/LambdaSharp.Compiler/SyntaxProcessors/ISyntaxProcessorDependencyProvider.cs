@@ -33,6 +33,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         //--- Properties ---
         ILogger Logger { get; }
         IEnumerable<AItemDeclaration> Declarations { get; }
+        VersionInfo CoreServicesReferenceVersion { get; }
 
         //--- Methods ---
         bool TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType);
@@ -44,5 +45,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         bool TryGetReferenceExpression(string fullname, [NotNullWhen(true)] out AExpression? expression);
         bool TryGetValueExpression(string fullname, [NotNullWhen(true)] out AExpression? expression);
         Task<ModuleManifest> ResolveModuleInfoAsync(ModuleManifestDependencyType dependencyType, ModuleInfo moduleInfo);
+        Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region);
+        void AddTypeSystem(ITypeSystem typeSystem);
     }
 }

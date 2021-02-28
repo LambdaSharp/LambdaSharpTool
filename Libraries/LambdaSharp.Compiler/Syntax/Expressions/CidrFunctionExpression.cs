@@ -53,6 +53,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new CidrFunctionExpression {
+            SourceLocation = SourceLocation,
             IpBlock = IpBlock.Clone(),
             Count = Count.Clone(),
             CidrBits = CidrBits.Clone()

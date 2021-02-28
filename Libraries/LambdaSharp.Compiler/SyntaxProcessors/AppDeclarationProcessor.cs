@@ -16,29 +16,21 @@
  * limitations under the License.
  */
 
+using System;
 using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 
-    internal sealed class VariableDeclarationProcessor : ASyntaxProcessor {
+    internal sealed class AppDeclarationProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
-        public VariableDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
+        public AppDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectType<VariableDeclaration>(node => {
 
-                // TODO: validate type
-
-                // make variable references substitutable
-                if(node.Value is ListExpression listExpression) {
-                    Provider.DeclareReferenceExpression(node.FullName, node.Value = Fn.Join(",", listExpression, listExpression.SourceLocation));
-                } else if(node.Value != null) {
-                    Provider.DeclareReferenceExpression(node.FullName, node.Value);
-                }
-            });
+            // TODO: missing
+            throw new NotImplementedException();
         }
     }
 }

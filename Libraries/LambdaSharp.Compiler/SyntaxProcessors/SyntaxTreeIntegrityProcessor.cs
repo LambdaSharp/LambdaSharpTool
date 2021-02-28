@@ -22,35 +22,39 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 
+    /// <summary>
+    /// The <see cref="SyntaxTreeIntegrityProcessor"/> class checks the basic data-structure integrity of the syntax tree.
+    /// </summary>
     internal sealed class SyntaxTreeIntegrityProcessor : ASyntaxProcessor {
+
+        //--- Types ---
+        private class SyntaxTreeIntegrityException : Exception {
+
+            //--- Constructors ---
+            public SyntaxTreeIntegrityException(string message) : base(message) { }
+        }
 
         //--- Constructors ---
         public SyntaxTreeIntegrityProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void ValidateIntegrity(ModuleDeclaration moduleDeclaration) {
             var found = new HashSet<object>();
             moduleDeclaration.Inspect(node => {
 
                 // verify AST has no cycles
                 if(!found.Add(node)) {
-
-                    // TODO: better exception
-                    throw new Exception("found cycle");
+                    throw new SyntaxTreeIntegrityException("found cycle");
                 }
 
                 // every node must have a parent, except the starting module
                 if(!object.ReferenceEquals(node, moduleDeclaration) && (node.Parent == null)) {
-
-                    // TODO: better exception
-                    throw new Exception("missing parent");
+                    throw new SyntaxTreeIntegrityException("missing parent");
                 }
 
                 // every node must have a source location
                 if(node.SourceLocation == null) {
-
-                    // TODO: better exception
-                    throw new Exception("missing source location");
+                    throw new SyntaxTreeIntegrityException("missing source location");
                 }
             }, node => found.Remove(node));
         }

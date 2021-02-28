@@ -30,12 +30,12 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         //--- Class Fields ---
 
         #region Errors/Warnings
-        private static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error(0, $"unrecognized property '{parameter}'");
-        private static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
-        private static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}'");
-        private static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
-        private static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
-        private static readonly ErrorFunc ResourcePropertyExpectedLiteral = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a literal");
+        private static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error($"unrecognized property '{parameter}'");
+        private static readonly ErrorFunc ResourceUnknownType = parameter => new Error($"unknown resource type '{parameter}'");
+        private static readonly ErrorFunc ResourceMissingProperty = parameter => new Error($"missing property '{parameter}'");
+        private static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error($"property type mismatch for '{parameter}', expected a map");
+        private static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error($"property type mismatch for '{parameter}', expected a list");
+        private static readonly ErrorFunc ResourcePropertyExpectedLiteral = parameter => new Error($"property type mismatch for '{parameter}', expected a literal");
         private static readonly Warning ResourceContainsTransformAndCannotBeValidated = new Warning(0, "Fn::Transform prevents resource properties to be validated");
         #endregion
 
@@ -43,7 +43,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public ResourceInitializationValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate() {
+        public void ValidateExpressions() {
             InspectType<IResourceDeclaration>(node => {
 
                 // skip resources that are not being initialied
@@ -64,7 +64,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 string? attributeName = null;
                 if(node.DefaultAttribute != null) {
                     attributeName = node.DefaultAttribute.Value;
-                } else if(resourceType?.TryGetAttribute("Arn", out var _) ?? false) {
+                } else if(resourceType?.TryGetAttribute("Arn", out _) ?? false) {
                     attributeName = "Arn";
                 }
                 Provider.DeclareValueExpression(node.FullName, (attributeName == null)

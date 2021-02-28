@@ -16,50 +16,59 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
+    using ErrorFunc = Func<string, Error>;
 
     internal sealed class PackageDeclarationProcessor : ASyntaxProcessor {
+
+        //--- Class Fields ---
+
+        #region Errors/Warnings
+        private static readonly ErrorFunc DirectoryInvalid = parameter => new Error($"unrecognized property '{parameter}'");
+        public static readonly Error FilesAttributeInvalid = new Error("'Files' attribute must refer to an existing file or folder");
+        #endregion
 
         //--- Constructors ---
         public PackageDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
+            moduleDeclaration.InspectType<PackageDeclaration>(node => {
 
-            // TODO:
+                // 'Files' reference is relative to YAML file it originated from
+                var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
+                if((workingDirectory == null) || !Directory.Exists(workingDirectory)) {
+                    Logger.Log(DirectoryInvalid(workingDirectory ?? "<null>"));
+                } else {
+                    var absolutePath = Path.Combine(workingDirectory, node.Files.Value);
 
+                    // determine if 'Files' is a file or a folder
+                    if(File.Exists(absolutePath)) {
 
-            // // 'Files' reference is relative to YAML file it originated from
-            // var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
-            // var absolutePath = Path.Combine(workingDirectory, node.Files.Value);
+                        // TODO (2021-02-27, bjorg): if file is a .zip file, consider it the final package
+                        node.ResolvedFiles.Add(new KeyValuePair<string, string>(Path.GetFileName(absolutePath), absolutePath));
+                    } else if(Directory.Exists(absolutePath)) {
 
-            // // determine if 'Files' is a file or a folder
-            // if(File.Exists(absolutePath)) {
+                        // add all files from folder
+                        node.ResolvedFiles = Directory.GetFiles(absolutePath, "*", SearchOption.AllDirectories)
+                            .Select(filePath => new KeyValuePair<string, string>(Path.GetRelativePath(absolutePath, filePath), filePath))
+                            .OrderBy(kv => kv.Key)
+                            .ToList();;
+                    } else {
+                        Logger.Log(FilesAttributeInvalid, node.Files);
+                    }
+                }
 
-            //     // TODO: add support for using a single item that has no key
-            //     node.ResolvedFiles.Add(new KeyValuePair<string, string>("", absolutePath));
-            // } else if(Directory.Exists(absolutePath)) {
-
-            //     // add all files from folder
-            //     foreach(var filePath in Directory.GetFiles(absolutePath, "*", SearchOption.AllDirectories)) {
-            //         var relativeFilePathName = Path.GetRelativePath(absolutePath, filePath);
-            //         node.ResolvedFiles.Add(new KeyValuePair<string, string>(relativeFilePathName, filePath));
-            //     }
-            //     node.ResolvedFiles = node.ResolvedFiles.OrderBy(kv => kv.Key).ToList();
-            // } else {
-            //     _builder.Log(Error.FilesAttributeInvalid, node.Files);
-            // }
-
-            // // add variable to resolve package location
-            // var variable = AddDeclaration(node, new VariableDeclaration(Fn.Literal("PackageName")) {
-            //     Type = Fn.Literal("String"),
-            //     Value = Fn.Literal($"{node.LogicalId}-DRYRUN.zip")
-            // });
-
-            // // set declaration expression
-            // node.ReferenceExpression = GetModuleArtifactExpression($"${{{variable.FullName}}}");
+                // add variable to resolve package location; it will be set later when the package is built
+                Provider.DeclareValueExpression(node.FullName, Fn.Undefined());
+            });
         }
     }
 }

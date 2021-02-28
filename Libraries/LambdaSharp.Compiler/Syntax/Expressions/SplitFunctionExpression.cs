@@ -57,6 +57,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new SplitFunctionExpression {
+            SourceLocation = SourceLocation,
             Delimiter = Delimiter.Clone(),
             SourceString = SourceString.Clone()
         };

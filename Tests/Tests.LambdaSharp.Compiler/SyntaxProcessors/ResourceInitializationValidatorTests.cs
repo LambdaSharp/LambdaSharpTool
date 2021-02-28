@@ -49,7 +49,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ResourceInitializationValidator(this).Validate();
+            new ResourceInitializationValidator(this).ValidateExpressions();
 
             // assert
             ExpectedMessages();
@@ -62,7 +62,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ResourceInitializationValidator(this).Validate();
+            new ResourceInitializationValidator(this).ValidateExpressions();
 
             // assert
             ExpectedMessages("ERROR: unrecognized property 'Acme' in Module.yml: line 7, column 7");
@@ -75,7 +75,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ResourceInitializationValidator(this).Validate();
+            new ResourceInitializationValidator(this).ValidateExpressions();
 
             // assert
             ExpectedMessages("ERROR: missing property 'Endpoint' in Module.yml: line 9, column 11");
@@ -88,7 +88,7 @@ namespace Tests.LambdaSharp.Compiler.SyntaxProcessors {
             var module = LoadTestModule();
 
             // act
-            new ResourceInitializationValidator(this).Validate();
+            new ResourceInitializationValidator(this).ValidateExpressions();
 
             // assert
             ExpectedMessages();

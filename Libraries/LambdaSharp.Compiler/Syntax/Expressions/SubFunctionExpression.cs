@@ -62,6 +62,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new SubFunctionExpression {
+            SourceLocation = SourceLocation,
             FormatString = FormatString.Clone(),
             Parameters = Parameters.Clone()
         };

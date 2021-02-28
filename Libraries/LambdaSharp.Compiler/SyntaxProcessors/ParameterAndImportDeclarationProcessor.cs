@@ -18,68 +18,68 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
+    /// <summary>
+    /// The <see cref="ParameterAndImportDeclarationProcessor"/> validates 'Parameter' and 'Import' declarations.
+    /// </summary>
     internal sealed class ParameterAndImportDeclarationProcessor : ASyntaxProcessor {
 
         //--- Constants ---
         private const int MAX_PARAMETER_DESCRIPTION_LENGTH = 4_000;
-
-        // TODO: validate max parameter length
         private const int MAX_PARAMETER_VALUE_LENGTH = 4_000;
 
         //--- Class Fields ---
         #region Errors/Warnings
 
         // Structure
-        private static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
+        private static readonly Error ParameterDeclarationCannotBeNested = new Error("Parameter declaration cannot be nested in a Group");
+        private static readonly Error ImportDeclarationCannotBeNested = new Error("Import declaration cannot be nested in a Group");
 
         // Property: Type
-        private static readonly ErrorFunc UnknownType = parameter => new Error(0, $"unknown parameter type '{parameter}'");
+        private static readonly ErrorFunc UnknownType = parameter => new Error($"unknown parameter type '{parameter}'");
         private static readonly Warning AssumingStringType = new Warning(0, "missing 'Type' attribute, assuming type 'String'");
 
         // Property: MinLength, MaxLength
-        private static readonly Error MinLengthAttributeRequiresStringType = new Error(0, "'MinLength' attribute can only be used with 'String' type");
-        private static readonly Error MinLengthMustBeAnInteger = new Error(0, "'MinLength' must be an integer");
-        private static readonly Error MinLengthMustBeNonNegative = new Error(0, $"'MinLength' must be greater or equal than 0");
-        private static readonly Error MinLengthTooLarge = new Error(0, $"'MinLength' cannot exceed' {MAX_PARAMETER_VALUE_LENGTH:N0}");
-        private static readonly Error MinMaxLengthInvalidRange = new Error(0, "'MinLength' must be less or equal to 'MaxLength'");
-        private static readonly Error MaxLengthAttributeRequiresStringType = new Error(0, "'MaxLength' attribute can only be used with 'String' type");
-        private static readonly Error MaxLengthMustBeAnInteger = new Error(0, "'MaxLength' must be an integer");
-        private static readonly Error MaxLengthMustBePositive = new Error(0, "'MaxLength' must be greater than 0");
-        private static readonly Error MaxLengthTooLarge = new Error(0, $"'MaxLength' cannot exceed' {MAX_PARAMETER_VALUE_LENGTH:N0}");
+        private static readonly Error MinLengthAttributeRequiresStringType = new Error("'MinLength' attribute can only be used with 'String' type");
+        private static readonly Error MinLengthMustBeAnInteger = new Error("'MinLength' must be an integer");
+        private static readonly Error MinLengthMustBeNonNegative = new Error($"'MinLength' must be greater or equal than 0");
+        private static readonly Error MinLengthTooLarge = new Error($"'MinLength' cannot exceed' {MAX_PARAMETER_VALUE_LENGTH:N0}");
+        private static readonly Error MinMaxLengthInvalidRange = new Error("'MinLength' must be less or equal to 'MaxLength'");
+        private static readonly Error MaxLengthAttributeRequiresStringType = new Error("'MaxLength' attribute can only be used with 'String' type");
+        private static readonly Error MaxLengthMustBeAnInteger = new Error("'MaxLength' must be an integer");
+        private static readonly Error MaxLengthMustBePositive = new Error("'MaxLength' must be greater than 0");
+        private static readonly Error MaxLengthTooLarge = new Error($"'MaxLength' cannot exceed' {MAX_PARAMETER_VALUE_LENGTH:N0}");
 
         // Property: MinValue, MaxValue
-        private static readonly Error MinValueAttributeRequiresNumberType = new Error(0, "'MinValue' attribute can only be used with 'Number' type");
-        private static readonly Error MinValueMustBeAnInteger = new Error(0, "'MinValue' must be an integer");
-        private static readonly Error MaxValueAttributeRequiresNumberType = new Error(0, "'MaxValue' attribute can only be used with 'Number' type");
-        private static readonly Error MinMaxValueInvalidRange = new Error(0, "'MinValue' must be less or equal to 'MaxValue'");
-        private static readonly Error MaxValueMustBeAnInteger = new Error(0, "'MaxValue' must be an integer");
+        private static readonly Error MinValueAttributeRequiresNumberType = new Error("'MinValue' attribute can only be used with 'Number' type");
+        private static readonly Error MinValueMustBeAnInteger = new Error("'MinValue' must be an integer");
+        private static readonly Error MaxValueAttributeRequiresNumberType = new Error("'MaxValue' attribute can only be used with 'Number' type");
+        private static readonly Error MinMaxValueInvalidRange = new Error("'MinValue' must be less or equal to 'MaxValue'");
+        private static readonly Error MaxValueMustBeAnInteger = new Error("'MaxValue' must be an integer");
 
         // Property: AllowedPattern, ConstraintDescription
-        private static readonly Error AllowedPatternAttributeRequiresStringType = new Error(0, "'AllowedPattern' attribute can only be used with 'String' type");
-        private static readonly Error AllowedPatternAttributeInvalid = new Error(0, "'AllowedPattern' attribute must be a valid regular expression");
-        private static readonly Error ConstraintDescriptionAttributeRequiresStringType = new Error(0, "'ConstraintDescription' attribute can only be used with 'String' type");
-        private static readonly Error ConstraintDescriptionAttributeRequiresAllowedPatternAttribute = new Error(0, "'ConstraintDescription' attribute requires 'AllowedPattern' attribute to be set");
+        private static readonly Error AllowedPatternAttributeRequiresStringType = new Error("'AllowedPattern' attribute can only be used with 'String' type");
+        private static readonly Error AllowedPatternAttributeInvalid = new Error("'AllowedPattern' attribute must be a valid regular expression");
+        private static readonly Error ConstraintDescriptionAttributeRequiresStringType = new Error("'ConstraintDescription' attribute can only be used with 'String' type");
+        private static readonly Error ConstraintDescriptionAttributeRequiresAllowedPatternAttribute = new Error("'ConstraintDescription' attribute requires 'AllowedPattern' attribute to be set");
 
         // Property: Description
-        private static readonly Error DescriptionAttributeExceedsSizeLimit = new Error(0, $"'Description' attribute cannot exceed {MAX_PARAMETER_DESCRIPTION_LENGTH:N0} characters");
+        private static readonly Error DescriptionAttributeExceedsSizeLimit = new Error($"'Description' attribute cannot exceed {MAX_PARAMETER_DESCRIPTION_LENGTH:N0} characters");
 
         // Property: EncryptionContext
-        private static readonly Error EncryptionContextAttributeRequiresSecretType = new Error(0, "'EncryptionContext' attribute can only be used with 'Secret' type");
+        private static readonly Error EncryptionContextAttributeRequiresSecretType = new Error("'EncryptionContext' attribute can only be used with 'Secret' type");
 
         // Property: Allow, Import, Properties
-        private static readonly Error AllowAttributeRequiresCloudFormationType = new Error(0, "'Allow' attribute can only be used with a CloudFormation type");
-        private static readonly Error ParameterAttributeImportExpectedLiteral = new Error(0, "'Import' attribute can only be used with a value parameter type");
-        private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
-        private static readonly Error DefaultAttributeAttributeRequiresConditionalResourceParameter = new Error(0, "'DefaultAttribute' attribute can only be used with a conditional resource parameter");
+        private static readonly Error AllowAttributeRequiresCloudFormationType = new Error("'Allow' attribute can only be used with a CloudFormation type");
+        private static readonly Error ParameterAttributeImportExpectedLiteral = new Error("'Import' attribute can only be used with a value parameter type");
+        private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error("'Properties' attribute can only be used with a CloudFormation type");
+        private static readonly Error DefaultAttributeAttributeRequiresConditionalResourceParameter = new Error("'DefaultAttribute' attribute can only be used with a conditional resource parameter");
         #endregion
 
         private static readonly HashSet<string> _cloudFormationParameterTypes = new HashSet<string> {
@@ -152,30 +152,25 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public ParameterAndImportDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case ParameterDeclaration parameterDeclaration:
-                    ValidateStructure(parameterDeclaration);
-                    ValidateParemeterType(parameterDeclaration);
+                    ValidateParameterType(parameterDeclaration);
                     break;
                 case ImportDeclaration importDeclaration:
-                    ValidateStructure(importDeclaration);
                     ValidateImportType(importDeclaration);
                     break;
                 }
             });
         }
 
-        private void ValidateStructure(AItemDeclaration node) {
+        private void ValidateParameterType(ParameterDeclaration node) {
 
             // ensure parameter declaration is a child of the module declaration (nesting is not allowed)
-            if(!(node.GetParents().OfType<ADeclaration>().FirstOrDefault() is ModuleDeclaration)) {
+            if(!(node.GetParentDeclaration() is ModuleDeclaration)) {
                 Logger.Log(ParameterDeclarationCannotBeNested, node);
             }
-        }
-
-        private void ValidateParemeterType(ParameterDeclaration node) {
 
             // assume 'String' type when 'Type' attribute is omitted
             if(node.Type == null) {
@@ -195,10 +190,10 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
             // only the 'Number' type can have the 'MinValue' and 'MaxValue' attributes
             if(node.Type.Value == "Number") {
-                if((node.MinValue != null) && !int.TryParse(node.MinValue.Value, out var _)) {
+                if((node.MinValue != null) && !int.TryParse(node.MinValue.Value, out _)) {
                     Logger.Log(MinValueMustBeAnInteger, node.MinValue);
                 }
-                if((node.MaxValue != null) && !int.TryParse(node.MaxValue.Value, out var _)) {
+                if((node.MaxValue != null) && !int.TryParse(node.MaxValue.Value, out _)) {
                     Logger.Log(MaxValueMustBeAnInteger, node.MaxValue);
                 }
                 if(
@@ -304,7 +299,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     // set default attribute to 'Arn' if none is provided and the resource type has an 'Arn' attribute
                     if(
                         (node.DefaultAttribute == null)
-                        && resourceType.TryGetAttribute("Arn", out var _)
+                        && resourceType.TryGetAttribute("Arn", out _)
                     ) {
                         node.DefaultAttribute = Fn.Literal("Arn");
                     }
@@ -345,6 +340,11 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         private void ValidateImportType(ImportDeclaration node) {
 
+            // ensure import declaration is a child of the module declaration (nesting is not allowed)
+            if(!(node.GetParentDeclaration() is ModuleDeclaration)) {
+                Logger.Log(ParameterDeclarationCannotBeNested, node);
+            }
+
             // assume 'String' type when 'Type' attribute is omitted
             if(node.Type == null) {
                 Logger.Log(AssumingStringType, node);
@@ -356,7 +356,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                 (node.Type.Value != "String")
                 && (node.Type.Value != "Secret")
                 && (node.Type.Value != "Number")
-                && !Provider.TryGetResourceType(node.Type.Value, out var _)
+                && !Provider.TryGetResourceType(node.Type.Value, out _)
             ) {
                 Logger.Log(UnknownType(node.Type.Value), node.Type);
             }

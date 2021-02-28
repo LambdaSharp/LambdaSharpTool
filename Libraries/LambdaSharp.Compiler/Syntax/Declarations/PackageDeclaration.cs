@@ -28,6 +28,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         //--- Fields ---
         private SyntaxNodeCollection<LiteralExpression> _scope;
         private LiteralExpression? _files;
+        private LiteralExpression? _build;
 
         //--- Constructors ---
         public PackageDeclaration(LiteralExpression itemName) : base(itemName) {
@@ -43,9 +44,15 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         [SyntaxRequired]
-        public LiteralExpression? Files {
-            get => _files;
+        public LiteralExpression Files {
+            get => _files ?? throw new InvalidOperationException();
             set => _files = Adopt(value);
+        }
+
+        [SyntaxOptional]
+        public LiteralExpression? Build {
+            get => _build;
+            set => _build = Adopt(value);
         }
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();

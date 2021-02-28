@@ -52,6 +52,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new SelectFunctionExpression {
+            SourceLocation = SourceLocation,
             Index = Index.Clone(),
             Values = Values.Clone()
         };

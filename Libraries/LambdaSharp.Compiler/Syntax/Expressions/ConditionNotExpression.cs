@@ -41,6 +41,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new ConditionNotExpression {
+            SourceLocation = SourceLocation,
             Value = Value.Clone()
         };
     }

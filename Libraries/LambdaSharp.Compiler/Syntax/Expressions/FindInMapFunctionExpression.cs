@@ -71,6 +71,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new FindInMapFunctionExpression {
+            SourceLocation = SourceLocation,
             MapName = MapName.Clone(),
             TopLevelKey = TopLevelKey.Clone(),
             SecondLevelKey = SecondLevelKey.Clone(),

@@ -27,7 +27,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public AllowProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate() {
+        public void ValidateDeclaration() {
 
             // TODO: generalize this to IAllowDeclaration (ImportDeclaration, ParameterDeclaration, ResourceDeclaration, ...)
 

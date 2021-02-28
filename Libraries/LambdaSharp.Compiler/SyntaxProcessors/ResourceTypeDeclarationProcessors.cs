@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.CloudFormation;
@@ -52,6 +53,12 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         public ResourceTypeDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
+        public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
+
+            // TODO: missing
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<ModuleManifestResourceType> FindResourceTypes(ModuleDeclaration moduleDeclaration) {
             var result = new List<ModuleManifestResourceType>();
             moduleDeclaration.InspectType<ResourceTypeDeclaration>(node => {

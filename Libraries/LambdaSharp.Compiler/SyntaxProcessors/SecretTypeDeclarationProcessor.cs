@@ -29,15 +29,15 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
         //--- Class Fields ---
 
         #region Errors/Warnings
-        private static readonly Error EncryptionContextExpectedLiteralStringExpression = new Error(0, "'EncryptionContext' expected literal string expression");
-        private static readonly Error EncryptionContextAttributeRequiresSecretType = new Error(0, "'EncryptionContext' attribute can only be used with 'Secret' type");
+        private static readonly Error EncryptionContextExpectedLiteralStringExpression = new Error("'EncryptionContext' expected literal string expression");
+        private static readonly Error EncryptionContextAttributeRequiresSecretType = new Error("'EncryptionContext' attribute can only be used with 'Secret' type");
         #endregion
 
         //--- Constructors --
         public SecretTypeDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case ParameterDeclaration parameterDeclaration:

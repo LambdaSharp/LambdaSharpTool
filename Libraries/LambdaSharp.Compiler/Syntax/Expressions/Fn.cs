@@ -27,6 +27,10 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
     public static class Fn {
 
         //--- Class Methods ---
+        public static UndefinedExpression Undefined([CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new UndefinedExpression {
+            SourceLocation = new SourceLocation(filePath, lineNumber)
+        };
+
         public static ReferenceFunctionExpression Ref(string referenceName, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ReferenceFunctionExpression {
             ReferenceName = Literal(referenceName),
             SourceLocation = new SourceLocation(filePath, lineNumber)

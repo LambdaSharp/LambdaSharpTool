@@ -22,15 +22,17 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {
 
+    /// <summary>
+    /// The <see cref="PseudoParameterProcessor"/> class adds declarations for the built-in CloudFormation pseudo-parameters.
+    /// </summary>
     internal sealed class PseudoParameterProcessor : ASyntaxProcessor {
 
         //--- Constructors ---
         public PseudoParameterProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void Declare(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.Items.Add(new GroupDeclaration(Fn.Literal("AWS")) {
-                AllowReservedName = true,
                 Description = Fn.Literal("AWS Pseudo-Parameters"),
                 Items = {
                     new PseudoParameterDeclaration(Fn.Literal("AccountId")) {

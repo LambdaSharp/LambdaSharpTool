@@ -23,23 +23,27 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 namespace LambdaSharp.Compiler.SyntaxProcessors {
     using ErrorFunc = Func<string, Error>;
 
+    /// <summary>
+    /// The <see cref="ResourceDeclarationProcessor"/> class
+    /// </summary>
     internal sealed class ResourceDeclarationProcessor : ASyntaxProcessor {
 
         //--- Class Fields ---
 
         #region Errors/Warnings
-        private static readonly Error IfAttributeRequiresCloudFormationType = new Error(0, "'If' attribute can only be used with a CloudFormation type");
-        private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
-        private static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
-        private static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
-        private static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
+        private static readonly Error IfAttributeRequiresCloudFormationType = new Error("'If' attribute can only be used with a CloudFormation type");
+        private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error("'Properties' attribute can only be used with a CloudFormation type");
+        private static readonly ErrorFunc ResourceUnknownType = parameter => new Error($"unknown resource type '{parameter}'");
+        private static readonly Error TypeAttributeMissing = new Error("'Type' attribute is required");
+        private static readonly Error ResourceValueAttributeInvalid = new Error("'Value' attribute must be a valid ARN or wildcard");
+        private static readonly ErrorFunc UnknownType = parameter => new Error($"unknown parameter type '{parameter}'");
         #endregion
 
         //--- Constructors ---
         public ResourceDeclarationProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Process(ModuleDeclaration moduleDeclaration) {
+        public void ValidateDeclaration(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.InspectType<ResourceDeclaration>(node => {
 
                 // check if declaration is a resource reference
@@ -63,8 +67,6 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                         // default type to 'List'
                         if(node.Type == null) {
-
-                            // TODO: what's the best type here?
                             node.Type = Fn.Literal("List");
                         }
                     } else {
@@ -77,12 +79,18 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                     }
                 } else if(node.Type != null) {
 
+                    // check if type name exists
+                    if(Provider.TryGetResourceType(node.Type.Value, out _)) {
+                        Logger.Log(UnknownType(node.Type.Value), node.Type);
+                    }
+
                     // ensure Properties property is set to an empty object expression when null
                     if(node.Properties == null) {
                         node.Properties = new ObjectExpression();
                     }
 
-                    // NOTE (2020-06-12, bjorg): resource initialization is checked by ResourceInitializationValidator
+                    // NOTE (2020-06-12, bjorg): resource initialization is checked later by ResourceInitializationValidator;
+                    //  it cannot be checked here because not all declarations have been processed yet.
                 } else {
 
                     // CloudFormation resource must have a type

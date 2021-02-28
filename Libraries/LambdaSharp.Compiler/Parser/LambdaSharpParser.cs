@@ -335,7 +335,7 @@ namespace LambdaSharp.Compiler.Parser {
 
                 // parse declaration items in sequence
                 var result = new ObjectExpression();
-                while(!IsEvent<MappingEnd>(out var _, out var _)) {
+                while(!IsEvent<MappingEnd>(out _, out _)) {
 
                     // parse key
                     var keyScalar = Expect<Scalar>();
@@ -373,7 +373,7 @@ namespace LambdaSharp.Compiler.Parser {
 
                 // parse values in sequence
                 var result = new ListExpression();
-                while(!IsEvent<SequenceEnd>(out var _, out var _)) {
+                while(!IsEvent<SequenceEnd>(out _, out _)) {
                     var item = ParseExpression();
                     if(item != null) {
                         result.Add(item);
@@ -1195,7 +1195,7 @@ namespace LambdaSharp.Compiler.Parser {
         }
 
         private SyntaxNodeCollection<T>? ParseList<T>() where T : ASyntaxNode {
-            if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
+            if(!IsEvent<SequenceStart>(out var sequenceStart, out _) || (sequenceStart.Tag != null)) {
                 Log(Error.ExpectedListExpression, Location());
                 SkipCurrent();
                 return null;
@@ -1207,7 +1207,7 @@ namespace LambdaSharp.Compiler.Parser {
             var result = new SyntaxNodeCollection<T> {
                 SourceLocation = location
             };
-            while(!IsEvent<SequenceEnd>(out var _, out var _)) {
+            while(!IsEvent<SequenceEnd>(out _, out _)) {
                 if(TryParse(typeof(T), out var item)) {
                     try {
                         result.Add((T)item);
@@ -1238,7 +1238,7 @@ namespace LambdaSharp.Compiler.Parser {
             var foundKeys = new HashSet<string>();
             HashSet<string>? mandatoryKeys = null;
             SyntaxInfo? syntax = null;
-            while(!IsEvent<MappingEnd>(out var _, out var _)) {
+            while(!IsEvent<MappingEnd>(out _, out _)) {
 
                 // parse key
                 var keyScalar = Expect<Scalar>();
@@ -1432,7 +1432,7 @@ namespace LambdaSharp.Compiler.Parser {
                 // nothing to do
                 break;
             case MappingStart _:
-                while(!IsEvent<MappingEnd>(out var _, out var _)) {
+                while(!IsEvent<MappingEnd>(out _, out _)) {
 
                     // read key
                     SkipCurrent();
@@ -1443,7 +1443,7 @@ namespace LambdaSharp.Compiler.Parser {
                 MoveNext();
                 break;
             case SequenceStart _:
-                while(!IsEvent<SequenceEnd>(out var _, out var _)) {
+                while(!IsEvent<SequenceEnd>(out _, out _)) {
 
                     // read value
                     SkipCurrent();
@@ -1456,7 +1456,7 @@ namespace LambdaSharp.Compiler.Parser {
         }
 
         private void SkipMapRemainingEvents() {
-            while(!IsEvent<MappingEnd>(out var _, out var _)) {
+            while(!IsEvent<MappingEnd>(out _, out _)) {
                 SkipCurrent();
             }
             MoveNext();

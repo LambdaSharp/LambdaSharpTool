@@ -16,29 +16,13 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
-    public sealed class Base64FunctionExpression : AFunctionExpression {
-
-        //--- Fields ---
-        private AExpression? _value;
-
-        // !Base64 VALUE
-        // NOTE: You can use any function that returns a string inside the Fn::Base64 function.
-
-        //--- Properties ---
-        [SyntaxHidden]
-        public AExpression Value {
-            get => _value ?? throw new InvalidOperationException();
-            set => _value = Adopt(value ?? throw new ArgumentNullException());
-        }
+    public sealed class UndefinedExpression : AExpression {
 
         //--- Methods ---
-        public override ASyntaxNode CloneNode() => new Base64FunctionExpression {
-            SourceLocation = SourceLocation,
-            Value = Value.Clone()
+        public override ASyntaxNode CloneNode() => new UndefinedExpression {
+            SourceLocation = SourceLocation
         };
     }
 }

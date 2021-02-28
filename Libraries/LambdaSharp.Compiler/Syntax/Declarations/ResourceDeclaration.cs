@@ -58,6 +58,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         [SyntaxOptional]
+        // TODO: consider renaming to 'TypeName' since it's not the resolved type reference
         public LiteralExpression? Type {
             get => _type;
             set => _type = Adopt(value);

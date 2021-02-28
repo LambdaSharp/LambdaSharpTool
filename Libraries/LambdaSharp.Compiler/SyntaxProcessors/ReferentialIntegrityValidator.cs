@@ -31,16 +31,16 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
         //--- Class Fields ---
         #region Errors/Warnings
-        private static readonly ErrorFunc ReferenceMustBeParameter = parameter => new Error(0, $"{parameter} must be a parameter");
-        private static readonly ErrorFunc ReferenceDoesNotExist = parameter => new Error(0, $"undefined reference to {parameter}");
-        private static readonly ErrorFunc ReferenceMustBeResourceInstance = parameter => new Error(0, $"{parameter} must be a CloudFormation stack resource");
-        private static readonly Error GetAttCannotBeUsedInAConditionDeclaration = new Error(0, "condition cannot use !GetAtt function");
-        private static readonly ErrorFunc ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error(0, $"{parameter} must be a resource, parameter, or variable");
-        private static readonly ErrorFunc IdentifierMustReferToAConditionDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
-        private static readonly ErrorFunc IdentifierMustReferToAMappingDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
-        private static readonly ErrorFunc CircularDependencyDetected = parameter => new Error(0, $"circular dependency {parameter}");
-        private static readonly ErrorFunc ScopeReferenceDoesNotExist = parameter => new Error(0, $"undefined reference to {parameter} in 'Scope' attribute");
-        private static readonly Error HandlerMustBeLiteralOrRefExpression = new Error(0, "'Handler' attribute must be a literal or !Ref expression");
+        private static readonly ErrorFunc ReferenceMustBeParameter = parameter => new Error($"{parameter} must be a parameter");
+        private static readonly ErrorFunc ReferenceDoesNotExist = parameter => new Error($"undefined reference to {parameter}");
+        private static readonly ErrorFunc ReferenceMustBeResourceInstance = parameter => new Error($"{parameter} must be a CloudFormation stack resource");
+        private static readonly Error GetAttCannotBeUsedInAConditionDeclaration = new Error("condition cannot use !GetAtt function");
+        private static readonly ErrorFunc ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error($"{parameter} must be a resource, parameter, or variable");
+        private static readonly ErrorFunc IdentifierMustReferToAConditionDeclaration = parameter => new Error($"identifier {parameter} must refer to a Condition");
+        private static readonly ErrorFunc IdentifierMustReferToAMappingDeclaration = parameter => new Error($"identifier {parameter} must refer to a Mapping");
+        private static readonly ErrorFunc CircularDependencyDetected = parameter => new Error($"circular dependency {parameter}");
+        private static readonly ErrorFunc ScopeReferenceDoesNotExist = parameter => new Error($"undefined reference to {parameter} in 'Scope' attribute");
+        private static readonly Error HandlerMustBeLiteralOrRefExpression = new Error("'Handler' attribute must be a literal or !Ref expression");
         #endregion
 
         //--- Constructors ---

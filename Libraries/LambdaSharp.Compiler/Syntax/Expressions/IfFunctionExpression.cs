@@ -63,6 +63,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public override ASyntaxNode CloneNode() => new IfFunctionExpression {
+            SourceLocation = SourceLocation,
             Condition = Condition.Clone(),
             IfTrue = IfTrue.Clone(),
             IfFalse = IfFalse.Clone()

@@ -52,6 +52,8 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         //--- Methods ---
         public bool? AsBool() => (Type == LiteralType.Bool) ? bool.Parse(Value) : (bool?)null;
         public int? AsInt() => (Type == LiteralType.Integer) ? int.Parse(Value) : (int?)null;
-        public override ASyntaxNode CloneNode() => new LiteralExpression(Value, Type);
+        public override ASyntaxNode CloneNode() => new LiteralExpression(Value, Type) {
+            SourceLocation = SourceLocation
+        };
     }
 }
