@@ -26,7 +26,7 @@ using LambdaSharp.CloudFormation.Iam;
 
 namespace LambdaSharp.CloudFormation.Converter {
 
-    public class IamConverter {
+    public class IamPermissionsConverter {
 
         //--- Constants ---
         private const string Prefix = "https://docs.aws.amazon.com/service-authorization/latest/reference/";
@@ -38,7 +38,7 @@ namespace LambdaSharp.CloudFormation.Converter {
         private readonly Action<Exception, string>? _logError;
 
         //--- Constructors ---
-        public IamConverter(
+        public IamPermissionsConverter(
             HttpClient? httpClient,
             Action<string>? logInfo,
             Action<string>? logWarn,
@@ -56,24 +56,33 @@ namespace LambdaSharp.CloudFormation.Converter {
             // NOTE (2021-02-28, bjorg): this page contains links to all sub-pages with information
             //  about "Actions, Resources, and Condition Keys" for AWS services.
             var links = await DiscoverLinksAsync(new Uri($"{Prefix}reference_policies_actions-resources-contextkeys.html"));
-            LogInfo($"Found {links.Count():N0} links");
-
-            // process all discovered links concurrently
-            IamServiceAuthorization?[] results = (await Task.WhenAll(links.Select(async link => {
-                try {
-                    return await ProcessPageAsync(link);
-                } catch(Exception e) {
-                    LogError(e, $"failed processing page: {link}");
-                    return null;
-                }
-            }))) ?? new IamServiceAuthorization?[0];
-
-            // return result collection
-            return new IamServiceAuthorizationCollection {
-                Services = results.OfType<IamServiceAuthorization>()
-                    .OrderBy(service => service.Title)
-                    .ToList()
+            LogInfo($"discovered documentation {links.Count():N0} links");
+            var result = new IamServiceAuthorizationCollection {
+                Services = new List<IamServiceAuthorization>()
             };
+
+            // batch links into operations (so we don't get throttled by AWS)
+            var batches = links
+                .Select((link, index) => (Link: link, Batch: index / 10))
+                .GroupBy(tuple => tuple.Batch)
+                .ToList();
+
+            // process all discovered links concurrently in batches
+            foreach(var batch in batches) {
+                IamServiceAuthorization?[] results = (await Task.WhenAll(batch.Select(async entry => {
+                    try {
+                        return await ProcessPageAsync(entry.Link);
+                    } catch(Exception e) {
+                        LogError(e, $"failed processing page: {entry.Link}");
+                        return null;
+                    }
+                }))) ?? new IamServiceAuthorization?[0];
+                result.Services.AddRange(results.OfType<IamServiceAuthorization>());
+            }
+
+            // return services collection
+            result.Services = result.Services.OrderBy(service => service.Title).ToList();
+            return result;
         }
 
         private async Task<IEnumerable<Uri>> DiscoverLinksAsync(Uri pageUri) {
@@ -108,7 +117,7 @@ namespace LambdaSharp.CloudFormation.Converter {
         }
 
         private async Task<IamServiceAuthorization> ProcessPageAsync(Uri source) {
-            LogInfo($"Processing: {source}");
+            LogInfo($"processing: {source}");
             var result = new IamServiceAuthorization {
                 Source = source.ToString()
             };
