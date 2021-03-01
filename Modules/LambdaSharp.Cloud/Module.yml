@@ -21,7 +21,9 @@ Items:
 
   - Parameter: DestinationBucket
     Type: AWS::S3::Bucket
-    Scope: UpdateCloudFormationSpecFunction
+    Scope:
+      - UpdateCloudFormationSpecFunction
+      - UpdateIamSpecFunction
     Allow:
       - s3:GetObject
       - s3:PutObject
@@ -33,3 +35,10 @@ Items:
     Sources:
       - Schedule: rate(6 hours)
         Name: us-east-1
+
+  - Function: UpdateIamSpecFunction
+    Description: Function for updating the IAM specification
+    Memory: 1792
+    Timeout: 300
+    Sources:
+      - Schedule: rate(1 day)
