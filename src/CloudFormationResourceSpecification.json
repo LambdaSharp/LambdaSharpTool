@@ -674,7 +674,7 @@
         },
         "Value": {
           "DuplicatesAllowed": false,
-          "PrimitiveType": "Integer",
+          "PrimitiveType": "Double",
           "Required": true,
           "UpdateType": "Immutable"
         }
@@ -7664,6 +7664,24 @@
         }
       }
     },
+    "AWS::Athena::WorkGroup.EngineVersion": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-athena-workgroup-engineversion.html",
+      "Properties": {
+        "EffectiveEngineVersion": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "SelectedEngineVersion": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::Athena::WorkGroup.ResultConfiguration": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-athena-workgroup-resultconfiguration.html",
@@ -7728,6 +7746,12 @@
           "Required": false,
           "UpdateType": "Mutable"
         },
+        "EngineVersion": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "EngineVersion",
+          "UpdateType": "Mutable"
+        },
         "PublishCloudWatchMetricsEnabled": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "Boolean",
@@ -7762,6 +7786,12 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "Boolean",
           "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "EngineVersion": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "EngineVersion",
           "UpdateType": "Mutable"
         },
         "PublishCloudWatchMetricsEnabled": {
@@ -8954,7 +8984,7 @@
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-backup-backupvault-notificationobjecttype.html",
       "Properties": {
         "BackupVaultEvents": {
-          "DuplicatesAllowed": false,
+          "DuplicatesAllowed": true,
           "PrimitiveItemType": "String",
           "Required": true,
           "Type": "List",
@@ -12277,6 +12307,12 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "BucketOwner": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Mutable"
         },
         "EncryptionDisabled": {
@@ -20021,6 +20057,18 @@
           "PrimitiveType": "Integer",
           "Required": true,
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::EC2::TransitGatewayConnect.TransitGatewayConnectOptions": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-transitgatewayconnect-transitgatewayconnectoptions.html",
+      "Properties": {
+        "Protocol": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -29320,6 +29368,144 @@
         }
       }
     },
+    "AWS::IoT::AccountAuditConfiguration.AuditCheckConfiguration": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-accountauditconfiguration-auditcheckconfiguration.html",
+      "Properties": {
+        "Enabled": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::AccountAuditConfiguration.AuditCheckConfigurations": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-accountauditconfiguration-auditcheckconfigurations.html",
+      "Properties": {
+        "AuthenticatedCognitoRoleOverlyPermissiveCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "CaCertificateExpiringCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "CaCertificateKeyQualityCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "ConflictingClientIdsCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "DeviceCertificateExpiringCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "DeviceCertificateKeyQualityCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "DeviceCertificateSharedCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "IotPolicyOverlyPermissiveCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "IotRoleAliasAllowsAccessToUnusedServicesCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "IotRoleAliasOverlyPermissiveCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "LoggingDisabledCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "RevokedCaCertificateStillActiveCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "RevokedDeviceCertificateStillActiveCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "UnauthenticatedCognitoRoleOverlyPermissiveCheck": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditCheckConfiguration",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::AccountAuditConfiguration.AuditNotificationTarget": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-accountauditconfiguration-auditnotificationtarget.html",
+      "Properties": {
+        "Enabled": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "TargetArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::AccountAuditConfiguration.AuditNotificationTargetConfigurations": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-accountauditconfiguration-auditnotificationtargetconfigurations.html",
+      "Properties": {
+        "Sns": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditNotificationTarget",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::IoT::DomainConfiguration.AuthorizerConfig": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-domainconfiguration-authorizerconfig.html",
@@ -29362,6 +29548,133 @@
         }
       }
     },
+    "AWS::IoT::MitigationAction.ActionParams": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-mitigationaction-actionparams.html",
+      "Properties": {
+        "AddThingsToThingGroupParams": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AddThingsToThingGroupParams",
+          "UpdateType": "Mutable"
+        },
+        "EnableIoTLoggingParams": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "EnableIoTLoggingParams",
+          "UpdateType": "Mutable"
+        },
+        "PublishFindingToSnsParams": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "PublishFindingToSnsParams",
+          "UpdateType": "Mutable"
+        },
+        "ReplaceDefaultPolicyVersionParams": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "ReplaceDefaultPolicyVersionParams",
+          "UpdateType": "Mutable"
+        },
+        "UpdateCACertificateParams": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "UpdateCACertificateParams",
+          "UpdateType": "Mutable"
+        },
+        "UpdateDeviceCertificateParams": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "UpdateDeviceCertificateParams",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::MitigationAction.AddThingsToThingGroupParams": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-mitigationaction-addthingstothinggroupparams.html",
+      "Properties": {
+        "OverrideDynamicGroups": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ThingGroupNames": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::MitigationAction.EnableIoTLoggingParams": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-mitigationaction-enableiotloggingparams.html",
+      "Properties": {
+        "LogLevel": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "RoleArnForLogging": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::MitigationAction.PublishFindingToSnsParams": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-mitigationaction-publishfindingtosnsparams.html",
+      "Properties": {
+        "TopicArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::MitigationAction.ReplaceDefaultPolicyVersionParams": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-mitigationaction-replacedefaultpolicyversionparams.html",
+      "Properties": {
+        "TemplateName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::MitigationAction.UpdateCACertificateParams": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-mitigationaction-updatecacertificateparams.html",
+      "Properties": {
+        "Action": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::MitigationAction.UpdateDeviceCertificateParams": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-mitigationaction-updatedevicecertificateparams.html",
+      "Properties": {
+        "Action": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::IoT::ProvisioningTemplate.ProvisioningHook": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-provisioningtemplate-provisioninghook.html",
@@ -29373,6 +29686,214 @@
           "UpdateType": "Mutable"
         },
         "TargetArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.AlertTarget": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-alerttarget.html",
+      "Properties": {
+        "AlertTargetArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.Behavior": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-behavior.html",
+      "Properties": {
+        "Criteria": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "BehaviorCriteria",
+          "UpdateType": "Mutable"
+        },
+        "Metric": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "MetricDimension": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "MetricDimension",
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "SuppressAlerts": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.BehaviorCriteria": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-behaviorcriteria.html",
+      "Properties": {
+        "ComparisonOperator": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ConsecutiveDatapointsToAlarm": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ConsecutiveDatapointsToClear": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "DurationSeconds": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "MlDetectionConfig": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "MachineLearningDetectionConfig",
+          "UpdateType": "Mutable"
+        },
+        "StatisticalThreshold": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "StatisticalThreshold",
+          "UpdateType": "Mutable"
+        },
+        "Value": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "MetricValue",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.MachineLearningDetectionConfig": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-machinelearningdetectionconfig.html",
+      "Properties": {
+        "ConfidenceLevel": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.MetricDimension": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-metricdimension.html",
+      "Properties": {
+        "DimensionName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Operator": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.MetricToRetain": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-metrictoretain.html",
+      "Properties": {
+        "Metric": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "MetricDimension": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "MetricDimension",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.MetricValue": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-metricvalue.html",
+      "Properties": {
+        "Cidrs": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Count": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Number": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Double",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Numbers": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "Double",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Ports": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "Integer",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Strings": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile.StatisticalThreshold": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iot-securityprofile-statisticalthreshold.html",
+      "Properties": {
+        "Statistic": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": false,
@@ -31855,6 +32376,18 @@
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iotsitewise-accesspolicy-accesspolicyidentity.html",
       "Properties": {
+        "IamRole": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "IamRole",
+          "UpdateType": "Mutable"
+        },
+        "IamUser": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "IamUser",
+          "UpdateType": "Mutable"
+        },
         "User": {
           "DuplicatesAllowed": false,
           "Required": false,
@@ -31877,6 +32410,30 @@
           "DuplicatesAllowed": false,
           "Required": false,
           "Type": "Project",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoTSiteWise::AccessPolicy.IamRole": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iotsitewise-accesspolicy-iamrole.html",
+      "Properties": {
+        "arn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoTSiteWise::AccessPolicy.IamUser": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iotsitewise-accesspolicy-iamuser.html",
+      "Properties": {
+        "arn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -31959,6 +32516,37 @@
         }
       }
     },
+    "AWS::IoTSiteWise::AssetModel.AssetModelCompositeModel": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iotsitewise-assetmodel-assetmodelcompositemodel.html",
+      "Properties": {
+        "CompositeModelProperties": {
+          "DuplicatesAllowed": false,
+          "ItemType": "AssetModelProperty",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Description": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Type": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::IoTSiteWise::AssetModel.AssetModelHierarchy": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iotsitewise-assetmodel-assetmodelhierarchy.html",
@@ -31991,6 +32579,12 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "DataTypeSpec": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Mutable"
         },
         "LogicalId": {
@@ -32204,42 +32798,6 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
-        }
-      }
-    },
-    "AWS::IoTSiteWise::Portal.MonitorErrorDetails": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iotsitewise-portal-monitorerrordetails.html",
-      "Properties": {
-        "code": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "message": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::IoTSiteWise::Portal.PortalStatus": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iotsitewise-portal-portalstatus.html",
-      "Properties": {
-        "error": {
-          "DuplicatesAllowed": false,
-          "Required": false,
-          "Type": "MonitorErrorDetails",
-          "UpdateType": "Mutable"
-        },
-        "state": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": true,
-          "UpdateType": "Mutable"
         }
       }
     },
@@ -42382,49 +42940,6 @@
         }
       }
     },
-    "AWS::MediaPackage::Channel.HlsIngest": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-mediapackage-channel-hlsingest.html",
-      "Properties": {
-        "ingestEndpoints": {
-          "DuplicatesAllowed": false,
-          "ItemType": "IngestEndpoint",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::MediaPackage::Channel.IngestEndpoint": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-mediapackage-channel-ingestendpoint.html",
-      "Properties": {
-        "Id": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Password": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Url": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Username": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::MediaPackage::OriginEndpoint.Authorization": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-mediapackage-originendpoint-authorization.html",
@@ -45137,6 +45652,12 @@
           "Required": false,
           "UpdateType": "Mutable"
         },
+        "EntityId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
         "MessageType": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
@@ -45150,6 +45671,12 @@
           "UpdateType": "Mutable"
         },
         "SenderId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "TemplateId": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": false,
@@ -46369,24 +46896,6 @@
         }
       }
     },
-    "AWS::QuickSight::Dashboard.DashboardError": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-dashboard-dashboarderror.html",
-      "Properties": {
-        "Message": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Type": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::QuickSight::Dashboard.DashboardPublishOptions": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-dashboard-dashboardpublishoptions.html",
@@ -46438,75 +46947,6 @@
           "ItemType": "DataSetReference",
           "Required": true,
           "Type": "List",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Dashboard.DashboardVersion": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-dashboard-dashboardversion.html",
-      "Properties": {
-        "Arn": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "CreatedTime": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "DataSetArns": {
-          "DuplicatesAllowed": false,
-          "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Description": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Errors": {
-          "DuplicatesAllowed": false,
-          "ItemType": "DashboardError",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Sheets": {
-          "DuplicatesAllowed": false,
-          "ItemType": "Sheet",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "SourceEntityArn": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Status": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "ThemeArn": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "VersionNumber": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "Double",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -46651,24 +47091,6 @@
         }
       }
     },
-    "AWS::QuickSight::Dashboard.Sheet": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-dashboard-sheet.html",
-      "Properties": {
-        "Name": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "SheetId": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::QuickSight::Dashboard.SheetControlsOption": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-dashboard-sheetcontrolsoption.html",
@@ -46700,86 +47122,6 @@
         }
       }
     },
-    "AWS::QuickSight::Template.ColumnGroupColumnSchema": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-columngroupcolumnschema.html",
-      "Properties": {
-        "Name": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Template.ColumnGroupSchema": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-columngroupschema.html",
-      "Properties": {
-        "ColumnGroupColumnSchemaList": {
-          "DuplicatesAllowed": false,
-          "ItemType": "ColumnGroupColumnSchema",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Template.ColumnSchema": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-columnschema.html",
-      "Properties": {
-        "DataType": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "GeographicRole": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Name": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Template.DataSetConfiguration": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-datasetconfiguration.html",
-      "Properties": {
-        "ColumnGroupSchemaList": {
-          "DuplicatesAllowed": false,
-          "ItemType": "ColumnGroupSchema",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "DataSetSchema": {
-          "DuplicatesAllowed": false,
-          "Required": false,
-          "Type": "DataSetSchema",
-          "UpdateType": "Mutable"
-        },
-        "Placeholder": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
     "AWS::QuickSight::Template.DataSetReference": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-datasetreference.html",
@@ -46794,19 +47136,6 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Template.DataSetSchema": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-datasetschema.html",
-      "Properties": {
-        "ColumnSchemaList": {
-          "DuplicatesAllowed": false,
-          "ItemType": "ColumnSchema",
-          "Required": false,
-          "Type": "List",
           "UpdateType": "Mutable"
         }
       }
@@ -46826,42 +47155,6 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Template.Sheet": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-sheet.html",
-      "Properties": {
-        "Name": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "SheetId": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Template.TemplateError": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-templateerror.html",
-      "Properties": {
-        "Message": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Type": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -46911,69 +47204,6 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Template.TemplateVersion": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-template-templateversion.html",
-      "Properties": {
-        "CreatedTime": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "DataSetConfigurations": {
-          "DuplicatesAllowed": false,
-          "ItemType": "DataSetConfiguration",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Description": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Errors": {
-          "DuplicatesAllowed": false,
-          "ItemType": "TemplateError",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Sheets": {
-          "DuplicatesAllowed": false,
-          "ItemType": "Sheet",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "SourceEntityArn": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Status": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "ThemeArn": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "VersionNumber": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "Double",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -47115,79 +47345,6 @@
           "DuplicatesAllowed": false,
           "Required": false,
           "Type": "UIColorPalette",
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Theme.ThemeError": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-theme-themeerror.html",
-      "Properties": {
-        "Message": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Type": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        }
-      }
-    },
-    "AWS::QuickSight::Theme.ThemeVersion": {
-      "Attributes": {},
-      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-quicksight-theme-themeversion.html",
-      "Properties": {
-        "Arn": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "BaseThemeId": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Configuration": {
-          "DuplicatesAllowed": false,
-          "Required": false,
-          "Type": "ThemeConfiguration",
-          "UpdateType": "Mutable"
-        },
-        "CreatedTime": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Description": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "Errors": {
-          "DuplicatesAllowed": false,
-          "ItemType": "ThemeError",
-          "Required": false,
-          "Type": "List",
-          "UpdateType": "Mutable"
-        },
-        "Status": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "String",
-          "Required": false,
-          "UpdateType": "Mutable"
-        },
-        "VersionNumber": {
-          "DuplicatesAllowed": false,
-          "PrimitiveType": "Double",
-          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -49792,6 +49949,97 @@
         }
       }
     },
+    "AWS::S3Outposts::AccessPoint.VpcConfiguration": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3outposts-accesspoint-vpcconfiguration.html",
+      "Properties": {
+        "VpcId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::Bucket.AbortIncompleteMultipartUpload": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3outposts-bucket-abortincompletemultipartupload.html",
+      "Properties": {
+        "DaysAfterInitiation": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Integer",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::Bucket.LifecycleConfiguration": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3outposts-bucket-lifecycleconfiguration.html",
+      "Properties": {
+        "Rules": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Rule",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::Bucket.Rule": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3outposts-bucket-rule.html",
+      "Properties": {
+        "AbortIncompleteMultipartUpload": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AbortIncompleteMultipartUpload",
+          "UpdateType": "Mutable"
+        },
+        "ExpirationDate": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ExpirationInDays": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Filter": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Json",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Id": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Status": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::Endpoint.NetworkInterface": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3outposts-endpoint-networkinterface.html",
+      "Properties": {
+        "NetworkInterfaceId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::SageMaker::App.ResourceSpec": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sagemaker-app-resourcespec.html",
@@ -50690,6 +50938,18 @@
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sagemaker-model-containerdefinition-imageconfig.html",
       "Properties": {
         "RepositoryAccessMode": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::SageMaker::Model.InferenceExecutionConfig": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sagemaker-model-inferenceexecutionconfig.html",
+      "Properties": {
+        "Mode": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
@@ -52412,6 +52672,24 @@
         }
       }
     },
+    "AWS::SecretsManager::Secret.ReplicaRegion": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-secretsmanager-secret-replicaregion.html",
+      "Properties": {
+        "KmsKeyId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Region": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::ServiceCatalog::CloudFormationProduct.ProvisioningArtifactProperties": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-servicecatalog-cloudformationproduct-provisioningartifactproperties.html",
@@ -53749,7 +54027,7 @@
         "Handler": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
-          "Required": false,
+          "Required": true,
           "UpdateType": "Mutable"
         },
         "S3Bucket": {
@@ -53804,7 +54082,7 @@
         "TimeoutInSeconds": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "Integer",
-          "Required": true,
+          "Required": false,
           "UpdateType": "Mutable"
         }
       }
@@ -56114,7 +56392,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "29.0.0",
+  "ResourceSpecificationVersion": "30.1.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Attributes": {},
@@ -60295,6 +60573,9 @@
       "Attributes": {
         "CreationTime": {
           "PrimitiveType": "String"
+        },
+        "EffectiveEngineVersion": {
+          "PrimitiveType": "String"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-athena-workgroup.html",
@@ -61054,8 +61335,9 @@
         },
         "BackupVaultTags": {
           "DuplicatesAllowed": false,
-          "PrimitiveType": "Json",
+          "PrimitiveItemType": "String",
           "Required": false,
+          "Type": "Map",
           "UpdateType": "Mutable"
         },
         "EncryptionKeyArn": {
@@ -61496,6 +61778,12 @@
           "Required": false,
           "UpdateType": "Mutable"
         },
+        "ImageId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
         "InstanceType": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
@@ -61641,12 +61929,12 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
-          "UpdateType": "Mutable"
+          "UpdateType": "Immutable"
         },
         "ModulePackage": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
-          "Required": false,
+          "Required": true,
           "UpdateType": "Immutable"
         }
       }
@@ -64577,6 +64865,12 @@
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-databrew-dataset.html",
       "Properties": {
+        "Format": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
         "FormatOptions": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "Json",
@@ -65475,6 +65769,12 @@
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-detective-memberinvitation.html",
       "Properties": {
+        "DisableEmailNotification": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Boolean",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
         "GraphArn": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
@@ -68851,6 +69151,44 @@
         }
       }
     },
+    "AWS::EC2::TransitGatewayConnect": {
+      "Attributes": {
+        "CreationTime": {
+          "PrimitiveType": "String"
+        },
+        "State": {
+          "PrimitiveType": "String"
+        },
+        "TransitGatewayAttachmentId": {
+          "PrimitiveType": "String"
+        },
+        "TransitGatewayId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-transitgatewayconnect.html",
+      "Properties": {
+        "Options": {
+          "DuplicatesAllowed": false,
+          "Required": true,
+          "Type": "TransitGatewayConnectOptions",
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "TransportTransitGatewayAttachmentId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::EC2::TransitGatewayMulticastDomain": {
       "Attributes": {
         "CreationTime": {
@@ -69700,6 +70038,13 @@
           "PrimitiveType": "Json",
           "Required": false,
           "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -70355,6 +70700,53 @@
           "PrimitiveType": "String",
           "Required": true,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::EKS::Addon": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-eks-addon.html",
+      "Properties": {
+        "AddonName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "AddonVersion": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ClusterName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "ResolveConflicts": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ServiceAccountRoleArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -72322,6 +72714,120 @@
         }
       }
     },
+    "AWS::EMR::Studio": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "StudioId": {
+          "PrimitiveType": "String"
+        },
+        "Url": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-emr-studio.html",
+      "Properties": {
+        "AuthMode": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "DefaultS3Location": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Description": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "EngineSecurityGroupId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "ServiceRole": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "SubnetIds": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "UserRole": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "VpcId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "WorkspaceSecurityGroupId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::EMR::StudioSessionMapping": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-emr-studiosessionmapping.html",
+      "Properties": {
+        "IdentityName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "IdentityType": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "SessionPolicyArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "StudioId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::EMRContainers::VirtualCluster": {
       "Attributes": {
         "Arn": {
@@ -72351,6 +72857,52 @@
           "Required": false,
           "Type": "List",
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::Events::ApiDestination": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-events-apidestination.html",
+      "Properties": {
+        "ConnectionArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Description": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "HttpMethod": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "InvocationEndpoint": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "InvocationRateLimitPerSecond": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Integer",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -72393,6 +72945,43 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::Events::Connection": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "SecretArn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-events-connection.html",
+      "Properties": {
+        "AuthorizationType": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "AuthParameters": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Json",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Description": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
           "UpdateType": "Immutable"
         }
       }
@@ -75180,6 +75769,43 @@
         }
       }
     },
+    "AWS::IAM::OIDCProvider": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-oidcprovider.html",
+      "Properties": {
+        "ClientIdList": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "ThumbprintList": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Url": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::IAM::Policy": {
       "Attributes": {},
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html",
@@ -75290,6 +75916,82 @@
           "UpdateType": "Mutable"
         },
         "RoleName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IAM::SAMLProvider": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-samlprovider.html",
+      "Properties": {
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "SamlMetadataDocument": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IAM::ServerCertificate": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-servercertificate.html",
+      "Properties": {
+        "CertificateBody": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "CertificateChain": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Path": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "PrivateKey": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "ServerCertificateName": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": false,
@@ -75415,6 +76117,42 @@
           "Required": true,
           "Type": "List",
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IAM::VirtualMFADevice": {
+      "Attributes": {
+        "SerialNumber": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-virtualmfadevice.html",
+      "Properties": {
+        "Path": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Users": {
+          "DuplicatesAllowed": true,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "VirtualMfaDeviceName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -75996,6 +76734,36 @@
         }
       }
     },
+    "AWS::IoT::AccountAuditConfiguration": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-accountauditconfiguration.html",
+      "Properties": {
+        "AccountId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "AuditCheckConfigurations": {
+          "DuplicatesAllowed": false,
+          "Required": true,
+          "Type": "AuditCheckConfigurations",
+          "UpdateType": "Mutable"
+        },
+        "AuditNotificationTargetConfigurations": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "AuditNotificationTargetConfigurations",
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
     "AWS::IoT::Authorizer": {
       "Attributes": {
         "Arn": {
@@ -76093,6 +76861,77 @@
         }
       }
     },
+    "AWS::IoT::CustomMetric": {
+      "Attributes": {
+        "MetricArn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-custommetric.html",
+      "Properties": {
+        "DisplayName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "MetricName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "MetricType": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::Dimension": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-dimension.html",
+      "Properties": {
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "StringValues": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "Type": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::IoT::DomainConfiguration": {
       "Attributes": {
         "Arn": {
@@ -76157,6 +76996,44 @@
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::IoT::MitigationAction": {
+      "Attributes": {
+        "MitigationActionArn": {
+          "PrimitiveType": "String"
+        },
+        "MitigationActionId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-mitigationaction.html",
+      "Properties": {
+        "ActionName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "ActionParams": {
+          "DuplicatesAllowed": false,
+          "Required": true,
+          "Type": "ActionParams",
+          "UpdateType": "Mutable"
+        },
+        "RoleArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -76250,6 +77127,111 @@
           "PrimitiveType": "String",
           "Required": false,
           "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::IoT::ScheduledAudit": {
+      "Attributes": {
+        "ScheduledAuditArn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-scheduledaudit.html",
+      "Properties": {
+        "DayOfMonth": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "DayOfWeek": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "Frequency": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "ScheduledAuditName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "TargetCheckNames": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::IoT::SecurityProfile": {
+      "Attributes": {
+        "SecurityProfileArn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iot-securityprofile.html",
+      "Properties": {
+        "AdditionalMetricsToRetainV2": {
+          "DuplicatesAllowed": false,
+          "ItemType": "MetricToRetain",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "AlertTargets": {
+          "DuplicatesAllowed": false,
+          "ItemType": "AlertTarget",
+          "Required": false,
+          "Type": "Map",
+          "UpdateType": "Mutable"
+        },
+        "Behaviors": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Behavior",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "SecurityProfileDescription": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "SecurityProfileName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
+        "TargetArns": {
+          "DuplicatesAllowed": false,
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -76759,6 +77741,13 @@
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iotsitewise-assetmodel.html",
       "Properties": {
+        "AssetModelCompositeModels": {
+          "DuplicatesAllowed": false,
+          "ItemType": "AssetModelCompositeModel",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
         "AssetModelDescription": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
@@ -76887,13 +77876,16 @@
         },
         "PortalStartUrl": {
           "PrimitiveType": "String"
-        },
-        "PortalStatus": {
-          "Type": "PortalStatus"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iotsitewise-portal.html",
       "Properties": {
+        "PortalAuthMode": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Immutable"
+        },
         "PortalContactEmail": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
@@ -79801,9 +80793,6 @@
       "Attributes": {
         "Arn": {
           "PrimitiveType": "String"
-        },
-        "HlsIngest": {
-          "Type": "HlsIngest"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-mediapackage-channel.html",
@@ -82932,9 +83921,6 @@
         },
         "LastUpdatedTime": {
           "PrimitiveType": "String"
-        },
-        "Version": {
-          "Type": "DashboardVersion"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-quicksight-dashboard.html",
@@ -83013,9 +83999,6 @@
         },
         "LastUpdatedTime": {
           "PrimitiveType": "String"
-        },
-        "Version": {
-          "Type": "TemplateVersion"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-quicksight-template.html",
@@ -83079,9 +84062,6 @@
         },
         "Type": {
           "PrimitiveType": "String"
-        },
-        "Version": {
-          "Type": "ThemeVersion"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-quicksight-theme.html",
@@ -85209,9 +86189,6 @@
       "Attributes": {
         "NetworkOrigin": {
           "PrimitiveType": "String"
-        },
-        "PolicyStatus": {
-          "PrimitiveType": "Json"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3-accesspoint.html",
@@ -85439,6 +86416,137 @@
           "Required": false,
           "Type": "List",
           "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::AccessPoint": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-accesspoint.html",
+      "Properties": {
+        "Bucket": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Name": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Policy": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Json",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "VpcConfiguration": {
+          "DuplicatesAllowed": false,
+          "Required": true,
+          "Type": "VpcConfiguration",
+          "UpdateType": "Immutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::Bucket": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-bucket.html",
+      "Properties": {
+        "BucketName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "LifecycleConfiguration": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "LifecycleConfiguration",
+          "UpdateType": "Mutable"
+        },
+        "OutpostId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::BucketPolicy": {
+      "Attributes": {},
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-bucketpolicy.html",
+      "Properties": {
+        "Bucket": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "PolicyDocument": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "Json",
+          "Required": true,
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::S3Outposts::Endpoint": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "CidrBlock": {
+          "PrimitiveType": "String"
+        },
+        "CreationTime": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "NetworkInterfaces": {
+          "ItemType": "NetworkInterface",
+          "Type": "List"
+        },
+        "Status": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-s3outposts-endpoint.html",
+      "Properties": {
+        "OutpostId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "SecurityGroupId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "SubnetId": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
         }
       }
     },
@@ -85901,6 +87009,78 @@
         }
       }
     },
+    "AWS::SageMaker::Image": {
+      "Attributes": {
+        "ImageArn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sagemaker-image.html",
+      "Properties": {
+        "ImageDescription": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ImageDisplayName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": false,
+          "UpdateType": "Mutable"
+        },
+        "ImageName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "ImageRoleArn": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Mutable"
+        },
+        "Tags": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        }
+      }
+    },
+    "AWS::SageMaker::ImageVersion": {
+      "Attributes": {
+        "ContainerImage": {
+          "PrimitiveType": "String"
+        },
+        "ImageArn": {
+          "PrimitiveType": "String"
+        },
+        "ImageVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Version": {
+          "PrimitiveType": "Integer"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sagemaker-imageversion.html",
+      "Properties": {
+        "BaseImage": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "ImageName": {
+          "DuplicatesAllowed": false,
+          "PrimitiveType": "String",
+          "Required": true,
+          "UpdateType": "Immutable"
+        }
+      }
+    },
     "AWS::SageMaker::Model": {
       "Attributes": {
         "ModelName": {
@@ -85926,6 +87106,12 @@
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
           "Required": true,
+          "UpdateType": "Immutable"
+        },
+        "InferenceExecutionConfig": {
+          "DuplicatesAllowed": false,
+          "Required": false,
+          "Type": "InferenceExecutionConfig",
           "UpdateType": "Immutable"
         },
         "ModelName": {
@@ -86464,9 +87650,6 @@
         },
         "ProjectStatus": {
           "PrimitiveType": "String"
-        },
-        "ServiceCatalogProvisionedProductDetails": {
-          "PrimitiveType": "Json"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sagemaker-project.html",
@@ -86681,6 +87864,13 @@
           "Required": false,
           "UpdateType": "Immutable"
         },
+        "ReplicaRegions": {
+          "DuplicatesAllowed": false,
+          "ItemType": "ReplicaRegion",
+          "Required": false,
+          "Type": "List",
+          "UpdateType": "Mutable"
+        },
         "SecretString": {
           "DuplicatesAllowed": false,
           "PrimitiveType": "String",
@@ -86841,10 +88031,6 @@
       "Attributes": {
         "CloudformationStackArn": {
           "PrimitiveType": "String"
-        },
-        "Outputs": {
-          "PrimitiveItemType": "String",
-          "Type": "Map"
         },
         "ProvisionedProductId": {
           "PrimitiveType": "String"
@@ -87543,7 +88729,7 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Immutable"
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -87600,7 +88786,7 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Immutable"
+          "UpdateType": "Mutable"
         },
         "Vpc": {
           "DuplicatesAllowed": false,
@@ -87638,7 +88824,7 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Immutable"
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -87697,7 +88883,7 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List",
-          "UpdateType": "Immutable"
+          "UpdateType": "Mutable"
         }
       }
     },
@@ -91369,7 +92555,7 @@
         "aurora",
         "azuredb",
         "db2",
-        "documentdb",
+        "docdb",
         "dynamodb",
         "elasticsearch",
         "kafka",
@@ -92550,6 +93736,7 @@
         "application",
         "email-json",
         "email",
+        "firehose",
         "http",
         "https",
         "lambda",
