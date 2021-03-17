@@ -228,6 +228,8 @@ namespace Tests.LambdaSharp.Compiler {
 
         ILogger ISyntaxProcessorDependencyProvider.Logger => Logger;
 
+        public VersionInfo CoreServicesReferenceVersion => throw new NotImplementedException();
+
         bool ISyntaxProcessorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
             => throw new NotImplementedException();
 
@@ -262,5 +264,9 @@ namespace Tests.LambdaSharp.Compiler {
 
         bool ISyntaxProcessorDependencyProvider.TryGetValueExpression(string fullname, [NotNullWhen(true)] out AExpression? expression)
             => ValueExpressions.TryGetValue(fullname, out expression);
+
+        public Task<ITypeSystem> LoadCloudFormationSpecificationAsync(string region) => throw new NotImplementedException();
+
+        public void AddTypeSystem(ITypeSystem typeSystem) => throw new NotImplementedException();
     }
 }

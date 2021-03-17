@@ -260,6 +260,7 @@ namespace LambdaSharp.Tool {
                             return false;
                         }
 
+                        // load module manifest
                         var (candidateManifest, candidateManifestErrorReason) = LoadManifestFromLocationAsync(new ModuleLocation(bucketName, candidateModuleInfo, "<MISSING>")).GetAwaiter().GetResult();
                         if(candidateManifest == null) {
                             LogInfoVerbose($"... rejected v{candidateVersion}: {candidateManifestErrorReason}");

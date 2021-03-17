@@ -297,6 +297,7 @@ namespace LambdaSharp.Tool {
         public bool PromptsAsErrors { get; set; }
         public DateTime UtcNow { get; set; }
         public BuildPolicy BuildPolicy { get; set; }
+        public bool AllowImport => BuildPolicy == null;
 
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)

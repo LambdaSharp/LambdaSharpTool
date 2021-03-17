@@ -61,7 +61,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 LogError($"invalid module reference: {moduleReference}");
                 return false;
             }
-            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, moduleInfo.Origin, ModuleManifestDependencyType.Root, allowImport: false, showError: !deployOnlyIfExists);
+            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, moduleInfo.Origin, ModuleManifestDependencyType.Root, allowImport: Settings.AllowImport, showError: !deployOnlyIfExists);
             if(foundModuleLocation == null) {
 
                 // nothing to do; loader already emitted an error
@@ -123,7 +123,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // discover shared module dependencies and prompt for missing parameters
-                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false, allowDependencyUpgrades: allowDependencyUpgrades))
+                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: Settings.AllowImport, allowDependencyUpgrades: allowDependencyUpgrades))
                     .Where(dependency => dependency.Type == ModuleManifestDependencyType.Shared)
                     .ToList();
                 if(HasErrors) {
