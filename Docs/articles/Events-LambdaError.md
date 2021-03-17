@@ -118,14 +118,6 @@ The <code>AppName</code> property holds the application name.
 <i>Type</i>: String
 </dd>
 
-<dt><code>AppDomainName</code></dt>
-<dd>
-
-The <code>AppDomainName</code> property holds the application domain name.
-
-<i>Type</i>: String
-</dd>
-
 <dt><code>Platform</code></dt>
 <dd>
 

@@ -51,6 +51,7 @@ namespace LambdaSharp.Serialization {
             settings.IncludeFields = true;
             settings.NumberHandling = JsonNumberHandling.AllowReadingFromString;
             settings.WriteIndented = false;
+            settings.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             customizer?.Invoke(settings);
         }) { }
 

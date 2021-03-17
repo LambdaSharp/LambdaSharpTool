@@ -70,6 +70,8 @@ namespace LambdaSharp.Cloud.UpdateCloudFormationSpecFunction {
             using(var brotliStream = new BrotliStream(compressedJsonSpecificationStream, CompressionLevel.Optimal, leaveOpen: true))
             using(var streamWriter = new StreamWriter(brotliStream))
             using(var jsonTextWriter = new JsonTextWriter(streamWriter)) {
+
+                // NOTE (2021-02-28, bjorg): we use Newtonsoft.Json here, because the specification contains a JObject!
                 new JsonSerializer().Serialize(jsonTextWriter, specification.Document);
             }
             compressedJsonSpecificationStream.Position = 0;
