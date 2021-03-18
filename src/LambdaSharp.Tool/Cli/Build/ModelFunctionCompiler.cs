@@ -523,7 +523,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
 
                     // check if a lambda permission for the WebSocket already exists for this function
-                    if(!_builder.TryGetItem($"{webSocketRoute.Function.FullName}::WebSocketPermission", out var _)) {
+                    if(!_builder.TryGetItem($"{webSocketRoute.Function.FullName}::WebSocketPermission", out _)) {
 
                         // add lambda invocation permission resource
                         _builder.AddResource(
@@ -909,7 +909,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // check if a lambda permission for the REST API already exists for this function
-                if(!_builder.TryGetItem($"{route.Function.FullName}::RestApiPermission", out var _)) {
+                if(!_builder.TryGetItem($"{route.Function.FullName}::RestApiPermission", out _)) {
 
                     // add permission to API method to invoke lambda
                     _builder.AddResource(

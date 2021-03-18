@@ -25,6 +25,8 @@ namespace LambdaSharp.CloudFormation.Template {
     [JsonConverter(typeof(CloudFormationLiteralConverter))]
     public class CloudFormationLiteral : ACloudFormationExpression {
 
+        // TODO (2021-03-27, bjorg): support different literal types (e.g. string, number)
+
         //--- Constructors ---
         public CloudFormationLiteral(string value) => Value = value ?? throw new ArgumentNullException(nameof(value));
         public CloudFormationLiteral(int value) => Value = value.ToString();

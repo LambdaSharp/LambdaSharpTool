@@ -111,7 +111,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // import module dependencies
-            if(!await ImportDependencies(manifest)) {
+            if(!await ImportDependencies(manifest, allowImport: true)) {
                 return null;
             }
 
@@ -218,7 +218,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             return true;
         }
 
-        private async Task<bool> ImportDependencies(ModuleManifest manifest, bool allowImport = true) {
+        private async Task<bool> ImportDependencies(ModuleManifest manifest, bool allowImport) {
 
             // discover module dependencies
             var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport, allowDependencyUpgrades: false);
