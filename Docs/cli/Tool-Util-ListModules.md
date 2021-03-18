@@ -12,11 +12,11 @@ The `util list-modules` command is used to list all published LambdaSharp module
 The `util list-modules` command takes a single argument. The argument can either be the name of an S3 bucket or a module reference. If the argument is a module reference, only versions for the specified module are shown.
 
 ```bash
-lash list-modules lambdasharp
+lash util list-modules lambdasharp
 ```
 -OR-
 ```bash
-lash list-modules LambdaSharp.S3.IO@lambdasharp
+lash util list-modules LambdaSharp.S3.IO@lambdasharp
 ```
 
 ## Options
