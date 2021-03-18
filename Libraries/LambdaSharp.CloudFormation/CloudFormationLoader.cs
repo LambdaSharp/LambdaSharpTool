@@ -68,6 +68,7 @@ namespace LambdaSharp.CloudFormation {
                     log?.Invoke("downloading new CloudFormation specification");
 
                     // write new CloudFormation specification
+                    Directory.CreateDirectory(Path.GetDirectoryName(cloudFormationSpecFile));
                     using(var outputStream = File.OpenWrite(cloudFormationSpecFile)) {
                         await response.ResponseStream.CopyToAsync(outputStream);
                     }

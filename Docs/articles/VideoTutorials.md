@@ -6,6 +6,8 @@ keywords: video, tutorial, getting started, overview
 
 # Video Tutorials
 
+Subscribe to the [LambdaSharp YouTube channel](https://www.youtube.com/channel/UC9zH5HkC6dHvuFJR6_XZzFg) to stay up-to-date on the latest videos.
+
 ## Getting Started
 
 It's easy to get started building Serverless .NET application on AWS with LambdaSharp. In in this 10 minute tutorial, we will install the LambdaSharp CLI, create a configuration for it, and a deployment tier for your LambdaSharp modules. Along the way, I will explain what resources are part of the configuration and deployment tier and what purpose they play.

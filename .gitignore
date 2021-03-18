@@ -17,3 +17,4 @@ cloudformation.json
 .sandbox
 params.yml
 appsettings.Development.json
+src/CloudFormationResourceSpecification.json
