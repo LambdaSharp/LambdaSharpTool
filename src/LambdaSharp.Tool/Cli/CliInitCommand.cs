@@ -27,8 +27,8 @@ using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
 using LambdaSharp.Build;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
@@ -226,8 +226,10 @@ namespace LambdaSharp.Tool.Cli {
 
                     // local functions
                     async Task<bool> IsNewerCoreModuleVersionAvailable() {
+                        var coreModuleInfo = new ModuleInfo("LambdaSharp", "Core", settings.CoreServicesReferenceVersion, "lambdasharp");
                         var latestCoreModuleLocation = await new ModelManifestLoader(settings, "").ResolveInfoToLocationAsync(
-                            new ModuleInfo("LambdaSharp", "Core", settings.CoreServicesReferenceVersion, "lambdasharp"),
+                            coreModuleInfo,
+                            coreModuleInfo.Origin,
                             ModuleManifestDependencyType.Shared,
                             allowImport: true,
                             showError: false

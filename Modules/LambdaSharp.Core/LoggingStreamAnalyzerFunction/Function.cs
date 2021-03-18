@@ -695,7 +695,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                         DetailType = "LambdaMetrics",
                         Detail = LambdaSerializer.Serialize(metricsRecord)
                     };
-                    metricsEventRecord.SetTime(DateTimeOffset.FromUnixTimeMilliseconds(metricsRecord.Aws.Timestamp));
+                    metricsEventRecord.SetTime(DateTimeOffset.FromUnixTimeMilliseconds(metricsRecord.Aws?.Timestamp ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
                     SendEventRecord(owner, metricsEventRecord);
                     break;
                 }

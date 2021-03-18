@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using LambdaSharp.Build;
 using LambdaSharp.Modules;
 using LambdaSharp.Build.CSharp.Function;
+using LambdaSharp.Modules.Metadata;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -155,18 +156,23 @@ namespace LambdaSharp.Tool.Cli.Build {
                 function.Language = "csharp";
 
                 // build C# function
-                new FunctionBuilder(
-                    new FunctionBuilderDependencyProvider(_builder, Settings, _existingPackages),
-                    BuildEventsConfig
-                ).Build(
-                    function,
-                    noCompile,
-                    noAssemblyValidation,
-                    gitSha,
-                    gitBranch,
-                    buildConfiguration,
-                    forceBuild
-                );
+                StartLogPerformance($"FunctionBuilder.Build() for {function.FullName}");
+                try {
+                    new FunctionBuilder(
+                        new FunctionBuilderDependencyProvider(_builder, Settings, _existingPackages),
+                        BuildEventsConfig
+                    ).Build(
+                        function,
+                        noCompile,
+                        noAssemblyValidation,
+                        gitSha,
+                        gitBranch,
+                        buildConfiguration,
+                        forceBuild
+                    );
+                } finally {
+                    StopLogPerformance();
+                }
                 break;
             case ".js":
                 ProcessJavascript(

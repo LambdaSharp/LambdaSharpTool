@@ -8,6 +8,6 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp.CloudWatch\LambdaSharp.CloudWatch.csproj" />
+    <ProjectReference Include="..\..\..\src\LambdaSharp.EventBridge\LambdaSharp.EventBridge.csproj" />
   </ItemGroup>
 </Project>

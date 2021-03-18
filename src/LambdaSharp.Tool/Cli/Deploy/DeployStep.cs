@@ -22,8 +22,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
@@ -61,7 +61,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 LogError($"invalid module reference: {moduleReference}");
                 return false;
             }
-            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, ModuleManifestDependencyType.Root, allowImport: false, showError: !deployOnlyIfExists);
+            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, moduleInfo.Origin, ModuleManifestDependencyType.Root, allowImport: Settings.AllowImport, showError: !deployOnlyIfExists);
             if(foundModuleLocation == null) {
 
                 // nothing to do; loader already emitted an error
@@ -69,8 +69,9 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             // download module manifest
-            var manifest = await _loader.LoadManifestFromLocationAsync(foundModuleLocation);
+            var (manifest, manifestErrorReason) = await _loader.LoadManifestFromLocationAsync(foundModuleLocation);
             if(manifest == null) {
+                LogError(manifestErrorReason);
                 return false;
             }
 
@@ -122,7 +123,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // discover shared module dependencies and prompt for missing parameters
-                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false, allowDependencyUpgrades: allowDependencyUpgrades))
+                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: Settings.AllowImport, allowDependencyUpgrades: allowDependencyUpgrades))
                     .Where(dependency => dependency.Type == ModuleManifestDependencyType.Shared)
                     .ToList();
                 if(HasErrors) {

@@ -74,12 +74,12 @@
     "MacrosMyMacro": {
       "Type": "AWS::CloudFormation::Macro",
       "Properties": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}MyMacro"
+        },
         "Description": "My test macro",
         "FunctionName": {
           "Ref": "Function"
-        },
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}MyMacro"
         }
       }
     },

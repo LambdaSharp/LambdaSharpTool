@@ -18,11 +18,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.CloudFormation;
@@ -30,13 +30,13 @@ using Amazon.CloudFormation.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool {
     using ModuleInfo = LambdaSharp.Modules.ModuleInfo;
+    using JObject = Newtonsoft.Json.Linq.JObject;
+    using JToken = Newtonsoft.Json.Linq.JToken;
 
     public class ModelManifestLoader : AModelProcessor {
 
@@ -50,6 +50,13 @@ namespace LambdaSharp.Tool {
             public ModuleManifestDependencyType Type { get; set; }
         }
 
+        private class ModuleManifestVersions {
+
+            //--- Properties ---
+            public string Region { get; set; }
+            public List<VersionInfo> Versions { get; set; } = new List<VersionInfo>();
+        }
+
         //--- Class Fields ---
         private static HttpClient _httpClient = new HttpClient();
 
@@ -60,7 +67,7 @@ namespace LambdaSharp.Tool {
         private Dictionary<string, IAmazonS3> _s3ClientByBucketName = new Dictionary<string, IAmazonS3>();
 
         //--- Methods ---
-        public bool TryLoadFromFile(string filepath, out ModuleManifest manifest) {
+        public bool TryLoadManifestFromCloudFormationFile(string filepath, out ModuleManifest manifest) {
             JObject cloudformation;
             try {
 
@@ -68,112 +75,103 @@ namespace LambdaSharp.Tool {
                 var template = File.ReadAllText(filepath);
                 cloudformation = JObject.Parse(template);
             } catch(Exception) {
-                LogError($"invalid CloudFormation template: {filepath}");
                 manifest = null;
                 cloudformation = null;
                 return false;
             }
 
-            // extract manifest
-            manifest = GetManifest(cloudformation);
-            return manifest != null;
+            // extract manifest from cloudformation template
+            if(
+                cloudformation.TryGetValue("Metadata", out var metadataToken)
+                && (metadataToken is JObject metadata)
+                && metadata.TryGetValue(ModuleManifest.MetadataName, out var manifestToken)
+            ) {
+                manifest = manifestToken.ToObject<ModuleManifest>();
+                if(manifest.Version == ModuleManifest.CurrentVersion) {
+                    return true;
+                }
+                LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
+            } else {
+                LogError("CloudFormation file does not contain a LambdaSharp manifest");
+            }
+            manifest = null;
+            return false;
         }
 
-        public async Task<ModuleManifest> LoadManifestFromLocationAsync(ModuleLocation moduleLocation, bool errorIfMissing = true, bool allowCaching = false) {
-            var stopwatch = Stopwatch.StartNew();
+        public async Task<(ModuleManifest Manifest, string Reason)> LoadManifestFromLocationAsync(ModuleLocation moduleLocation) {
+            StartLogPerformance($"LoadManifestFromLocationAsync() for {moduleLocation.ModuleInfo}");
             var cached = false;
             try {
-                var cachedManifest = Path.Combine(Settings.GetOriginCacheDirectory(moduleLocation.ModuleInfo), moduleLocation.ModuleInfo.Version.ToString());
-                if(allowCaching && Settings.AllowCaching && !moduleLocation.ModuleInfo.Version.IsPreRelease() && File.Exists(cachedManifest)) {
-                    cached = true;
-                    return JsonConvert.DeserializeObject<ModuleManifest>(await File.ReadAllTextAsync(cachedManifest));
-                }
 
-                // download cloudformation template
-                var cloudformationText = await GetS3ObjectContentsAsync(moduleLocation.SourceBucketName, moduleLocation.ModuleTemplateKey);
-                if(cloudformationText == null) {
-                    if(errorIfMissing) {
-                        LogError($"could not load CloudFormation template for {moduleLocation.ModuleInfo}");
+                // attempt to load manifest from cache
+                var cachedManifestFilePath = GetCachedManifestFilePath(moduleLocation);
+                if(!Settings.ForceRefresh && (cachedManifestFilePath is not null) && File.Exists(cachedManifestFilePath)) {
+                    ModuleManifest result = null;
+                    try {
+                        result = JsonSerializer.Deserialize<ModuleManifest>(await File.ReadAllTextAsync(cachedManifestFilePath), Settings.JsonSerializerOptions);
+                        cached = true;
+                        return (Manifest: result, Reason: null);
+                    } catch {
+
+                        // cached manifest file is either corrupted or inaccessible; attempt to delete it
+                        try {
+                            File.Delete(cachedManifestFilePath);
+                        } catch {
+
+                            // nothing to do
+                        }
                     }
-                    return null;
                 }
 
-                // extract manifest
-                var cloudformation = JsonConvert.DeserializeObject<JObject>(cloudformationText);
-                var manifest = GetManifest(cloudformation);
-                if(manifest == null) {
-                    return null;
+                // download manifest from S3
+                var manifestText = await GetS3ObjectContentsAsync(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath);
+                if(manifestText == null) {
+                    return (Manifest: null, Reason: $"could not load module manifest for {moduleLocation.ModuleInfo}");
                 }
+                var manifest = JsonSerializer.Deserialize<ModuleManifest>(manifestText, Settings.JsonSerializerOptions);
 
                 // validate manifest
                 if(manifest.Version != ModuleManifest.CurrentVersion) {
-                    LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
-                    return null;
+                    return (Manifest: null, Reason: $"incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
                 }
-                return manifest;
+
+                // keep manifest if we have a valid file path for it
+                if(cachedManifestFilePath is not null) {
+                    try {
+                        await File.WriteAllTextAsync(cachedManifestFilePath, manifestText);
+                    } catch {
+
+                        // cached manifest file could not be written; nothing to do
+                    }
+                }
+                return (Manifest: manifest, Reason: null);
             } finally {
-                LogInfoPerformance($"LoadManifestFromLocationAsync() for {moduleLocation.ModuleInfo}", stopwatch.Elapsed, cached);
+                StopLogPerformance(cached);
             }
         }
 
-        public Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport, bool showError, bool allowCaching = false)
-            => ResolveInfoToLocationAsync(moduleInfo, moduleInfo.Origin, dependencyType, allowImport, showError, allowCaching);
-
         public async Task<ModuleLocation> ResolveInfoToLocationAsync(
             ModuleInfo moduleInfo,
-            string originBucketName,
+            string bucketName,
             ModuleManifestDependencyType dependencyType,
             bool allowImport,
-            bool showError,
-            bool allowCaching = false
+            bool showError
         ) {
-            if(originBucketName == null) {
-                throw new ArgumentNullException(nameof(originBucketName));
+            if(bucketName == null) {
+                throw new ArgumentNullException(nameof(bucketName));
             }
             LogInfoVerbose($"... resolving module {moduleInfo}");
-            var stopwatch = Stopwatch.StartNew();
+            StartLogPerformance($"ResolveInfoToLocationAsync() for {moduleInfo}");
             var cached = false;
             try {
 
-                // check if a cached manifest matches
-                var cachedDirectory = Path.Combine(Settings.GetOriginCacheDirectory(moduleInfo));
-                if(allowCaching && Settings.AllowCaching && Directory.Exists(cachedDirectory)) {
-                    var foundCached = Directory.GetFiles(cachedDirectory)
-                        .Select(found => VersionInfo.Parse(Path.GetFileName(found)))
-                        .Where(version => (moduleInfo.Version == null) || version.IsGreaterOrEqualThanVersion(moduleInfo.Version, strict: true));
-
-                    // NOTE (2019-08-12, bjorg): unless the module is shared, we filter the list of found versions to
-                    //  only contain versions that meet the module version constraint; for shared modules, we want to
-                    //  keep the latest version that is compatible with the tool and is equal-or-greater than the
-                    //  module version constraint.
-                    if((dependencyType != ModuleManifestDependencyType.Shared) && (moduleInfo.Version != null)) {
-                        foundCached = foundCached.Where(version => version.MatchesConstraint(moduleInfo.Version)).ToList();
-                    }
-
-                    // attempt to identify the newest module version compatible with the tool
-                    ModuleManifest manifest = null;
-                    var match = VersionInfo.FindLatestMatchingVersion(foundCached, moduleInfo.Version, candidate => {
-                        var candidateManifestText = File.ReadAllText(Path.Combine(Settings.GetOriginCacheDirectory(moduleInfo), candidate.ToString()));
-                        manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
-
-                        // check if module is compatible with this tool
-                        return VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(manifest.CoreServicesVersion, Settings.ToolVersion);
-                    });
-                    if(manifest != null) {
-                        cached = true;
-
-                        // TODO (2019-10-08, bjorg): what source bucket name should be used for cached manifests?
-                        return MakeModuleLocation(Settings.DeploymentBucketName, manifest);
-                    }
-                }
-
                 // check if module can be found in the deployment bucket
-                var result = await FindNewestModuleVersionAsync(Settings.DeploymentBucketName);
+                var result = await FindNewestModuleVersionInBucketAsync(Settings.DeploymentBucketName);
 
                 // check if the origin bucket needs to be checked
                 if(
                     allowImport
-                    && (Settings.DeploymentBucketName != originBucketName)
+                    && (Settings.DeploymentBucketName != bucketName)
                     && (
 
                         // no version has been found
@@ -190,7 +188,7 @@ namespace LambdaSharp.Tool {
                         || !moduleInfo.Version.Patch.HasValue
                     )
                 ) {
-                    var originResult = await FindNewestModuleVersionAsync(originBucketName);
+                    var originResult = await FindNewestModuleVersionInBucketAsync(bucketName);
 
                     // check if module found at origin should be kept instead
                     if(
@@ -222,97 +220,152 @@ namespace LambdaSharp.Tool {
                     return null;
                 }
                 LogInfoVerbose($"... selected module {moduleInfo.WithVersion(result.Version)} from {result.Origin}");
-
-                // cache found version
-                Directory.CreateDirectory(cachedDirectory);
-                await File.WriteAllTextAsync(Path.Combine(cachedDirectory, result.Version.ToString()), JsonConvert.SerializeObject(result.Manifest));
                 return MakeModuleLocation(result.Origin, result.Manifest);
             } finally {
-                LogInfoPerformance($"ResolveInfoToLocationAsync() for {moduleInfo}", stopwatch.Elapsed, cached);
+                StopLogPerformance(cached);
             }
 
-            async Task<(string Origin, VersionInfo Version, ModuleManifest Manifest)> FindNewestModuleVersionAsync(string bucketName) {
+            async Task<(string Origin, VersionInfo Version, ModuleManifest Manifest)> FindNewestModuleVersionInBucketAsync(string bucketName) {
+                StartLogPerformance($"FindNewestModuleVersionInBucketAsync() for s3://{bucketName}");
+                try {
 
-                // enumerate versions in bucket
-                var found = await FindModuleVersionsAsync(bucketName);
-                if(!found.Any()) {
-                    return (Origin: bucketName, Version: null, Manifest: null);
-                }
+                    // enumerate versions in bucket
+                    var found = await FindModuleVersionsInBucketAsync(bucketName);
+                    if(!found.Any()) {
+                        return (Origin: bucketName, Version: null, Manifest: null);
+                    }
 
-                // NOTE (2019-08-12, bjorg): if the module is nested, we filter the list of found versions to
-                //  only contain versions that meet the module version constraint; for shared modules, we want to
-                //  keep the latest version that is compatible with the tool and is equal-or-greater than the
-                //  module version constraint.
-                if((dependencyType == ModuleManifestDependencyType.Nested) && (moduleInfo.Version != null)) {
-                    found = found.Where(version => {
-                        if(!version.MatchesConstraint(moduleInfo.Version)) {
-                            LogInfoVerbose($"... rejected v{version}: does not match version constraint {moduleInfo.Version}");
+                    // NOTE (2019-08-12, bjorg): if the module is nested, we filter the list of found versions to
+                    //  only contain versions that meet the module version constraint; for shared modules, we want to
+                    //  keep the latest version that is compatible with the tool and is equal-or-greater than the
+                    //  module version constraint.
+                    if((dependencyType == ModuleManifestDependencyType.Nested) && (moduleInfo.Version != null)) {
+                        found = found.Where(version => {
+                            if(!version.MatchesConstraint(moduleInfo.Version)) {
+                                LogInfoVerbose($"... rejected v{version}: does not match version constraint {moduleInfo.Version}");
+                                return false;
+                            }
+                            return true;
+                        }).ToList();
+                    }
+
+                    // attempt to identify the newest module version compatible with the tool
+                    ModuleManifest manifest = null;
+                    var match = VersionInfo.FindLatestMatchingVersion(found, moduleInfo.Version, candidateVersion => {
+                        var candidateModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, candidateVersion, moduleInfo.Origin);
+
+                        // check if the module version is allowed by the build policy
+                        if(!(Settings.BuildPolicy?.Modules?.Allow?.Contains(candidateModuleInfo.ToString()) ?? true)) {
+                            LogInfoVerbose($"... rejected v{candidateVersion}: not allowed by build policy");
                             return false;
                         }
+
+                        // load module manifest
+                        var (candidateManifest, candidateManifestErrorReason) = LoadManifestFromLocationAsync(new ModuleLocation(bucketName, candidateModuleInfo, "<MISSING>")).GetAwaiter().GetResult();
+                        if(candidateManifest == null) {
+                            LogInfoVerbose($"... rejected v{candidateVersion}: {candidateManifestErrorReason}");
+                            return false;
+                        }
+
+                        // check if module is compatible with this tool
+                        if(!VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(candidateManifest.CoreServicesVersion, Settings.ToolVersion)) {
+                            LogInfoVerbose($"... rejected v{candidateVersion}: not compatible with tool version {Settings.ToolVersion}");
+                            return false;
+                        }
+
+                        // keep this manifest
+                        manifest = candidateManifest;
                         return true;
-                    }).ToList();
+                    });
+                    return (Origin: bucketName, Version: match, Manifest: manifest);
+                } finally {
+                    StopLogPerformance();
                 }
-
-                // attempt to identify the newest module version compatible with the tool
-                ModuleManifest manifest = null;
-                var match = VersionInfo.FindLatestMatchingVersion(found, moduleInfo.Version, candidateVersion => {
-                    var candidateModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, candidateVersion, moduleInfo.Origin);
-
-                    // check if the module version is allowed by the build policy
-                    if(!(Settings.BuildPolicy?.Modules?.Allow?.Contains(candidateModuleInfo.ToString()) ?? true)) {
-                        LogInfoVerbose($"... rejected v{candidateVersion}: not allowed by build policy");
-                        return false;
-                    }
-
-                    // check if module is compatible with this tool
-                    var candidateManifestText = GetS3ObjectContentsAsync(bucketName, candidateModuleInfo.VersionPath).GetAwaiter().GetResult();
-                    manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
-                    if(!VersionInfoCompatibility.IsModuleCoreVersionCompatibleWithToolVersion(manifest.CoreServicesVersion, Settings.ToolVersion)) {
-                        LogInfoVerbose($"... rejected v{candidateVersion}: not compatible with tool version {Settings.ToolVersion}");
-                        return false;
-                    }
-                    return true;
-                });
-                return (Origin: bucketName, Version: match, Manifest: manifest);
             }
 
-            async Task<IEnumerable<VersionInfo>> FindModuleVersionsAsync(string bucketName) {
+            async Task<IEnumerable<VersionInfo>> FindModuleVersionsInBucketAsync(string bucketName) {
+                StartLogPerformance($"FindModuleVersionsInBucketAsync() for s3://{bucketName}");
+                var cached = false;
+                try {
+                    var moduleOrigin = moduleInfo.Origin ?? Settings.DeploymentBucketName;
+                    List<VersionInfo> versions = null;
+                    string region = null;
 
-                // get bucket region specific S3 client
-                var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
-                if(s3Client == null) {
+                    // check if a cached version exists
+                    string cachedManifestVersionsFilePath = null;
+                    if(!Settings.ForceRefresh) {
+                        var cachedManifestFolder = GetCachedManifestDirectory(bucketName, moduleOrigin, moduleInfo.Namespace, moduleInfo.Name);
+                        if(cachedManifestFolder != null) {
+                            cachedManifestVersionsFilePath = Path.Combine(cachedManifestFolder, "versions.json");
 
-                    // nothing to do; GetS3ClientByBucketName already emitted an error
-                    return new List<VersionInfo>();
-                }
-
-                // enumerate versions in bucket
-                var versions = new List<VersionInfo>();
-                var request = new ListObjectsV2Request {
-                    BucketName = bucketName,
-                    Prefix = $"{moduleInfo.Origin ?? Settings.DeploymentBucketName}/{moduleInfo.Namespace}/{moduleInfo.Name}/",
-                    Delimiter = "/",
-                    MaxKeys = 100,
-                    RequestPayer = RequestPayer.Requester
-                };
-                do {
-                    try {
-                        var response = await s3Client.ListObjectsV2Async(request);
-                        versions.AddRange(response.S3Objects
-                            .Select(s3Object => s3Object.Key.Substring(request.Prefix.Length))
-                            .Select(found => VersionInfo.Parse(found))
-                            .Where(version => (moduleInfo.Version == null) || version.IsGreaterOrEqualThanVersion(moduleInfo.Version, strict: true))
-                        );
-                        request.ContinuationToken = response.NextContinuationToken;
-                    } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
-
-                        // show message that access was denied for this location
-                        LogInfoVerbose($"... access denied to {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
-                        return versions;
+                            // TODO (2021-02-24, bjorg): make ignoring the cached value after 10 minutes configurable
+                            if(File.Exists(cachedManifestVersionsFilePath) && (File.GetLastWriteTimeUtc(cachedManifestVersionsFilePath).AddMinutes(10) > DateTime.UtcNow)) {
+                                cached = true;
+                                var cachedManifestVersions = JsonSerializer.Deserialize<ModuleManifestVersions>(File.ReadAllText(cachedManifestVersionsFilePath), Settings.JsonSerializerOptions);
+                                region = cachedManifestVersions.Region;
+                                versions = cachedManifestVersions.Versions;
+                            }
+                        }
                     }
-                } while(request.ContinuationToken != null);
-                LogInfoVerbose($"... found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
-                return versions;
+
+                    // check if data needs to be fetched from S3 bucket
+                    if(versions == null) {
+
+                        // get bucket region specific S3 client
+                        var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
+                        if(s3Client == null) {
+
+                            // nothing to do; GetS3ClientByBucketName already emitted an error
+                            return new List<VersionInfo>();
+                        }
+
+                        // enumerate versions in bucket
+                        versions = new List<VersionInfo>();
+                        region = s3Client.Config.RegionEndpoint.SystemName;
+                        var request = new ListObjectsV2Request {
+                            BucketName = bucketName,
+                            Prefix = $"{moduleOrigin}/{moduleInfo.Namespace}/{moduleInfo.Name}/",
+                            Delimiter = "/",
+                            MaxKeys = 100,
+                            RequestPayer = RequestPayer.Requester
+                        };
+                        do {
+                            try {
+                                var response = await s3Client.ListObjectsV2Async(request);
+                                versions.AddRange(response.S3Objects
+                                    .Select(s3Object => s3Object.Key.Substring(request.Prefix.Length))
+                                    .Select(found => VersionInfo.Parse(found))
+                                );
+                                request.ContinuationToken = response.NextContinuationToken;
+                            } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
+
+                                // show message that access was denied for this location
+                                LogInfoVerbose($"... access denied to {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
+                                return Enumerable.Empty<VersionInfo>();
+                            }
+                        } while(request.ContinuationToken != null);
+
+                        // cache module versions listing
+                        if(cachedManifestVersionsFilePath != null) {
+                            try {
+                                File.WriteAllText(cachedManifestVersionsFilePath, JsonSerializer.Serialize(new ModuleManifestVersions {
+                                    Region = region,
+                                    Versions = versions
+                                }, Settings.JsonSerializerOptions));
+                            } catch {
+
+                                // nothing to do
+                            }
+                        }
+                    }
+
+                    // filter list down to matching versions
+                    versions = versions.Where(version => (moduleInfo.Version == null) || version.IsGreaterOrEqualThanVersion(moduleInfo.Version, strict: true)).ToList();
+                    LogInfoVerbose($"... found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{region}]");
+                    return versions;
+                } finally {
+                    StopLogPerformance(cached);
+                }
             }
 
             ModuleLocation MakeModuleLocation(string sourceBucketName, ModuleManifest manifest)
@@ -356,7 +409,7 @@ namespace LambdaSharp.Tool {
                     } else {
 
                         // resolve dependencies for dependency module
-                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo, dependency.Type, allowImport, showError: true);
+                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo, dependency.ModuleInfo.Origin, dependency.Type, allowImport, showError: true);
                         if(dependencyModuleLocation == null) {
 
                             // nothing to do; loader already emitted an error
@@ -364,10 +417,9 @@ namespace LambdaSharp.Tool {
                         }
 
                         // load manifest of dependency and add its dependencies
-                        var dependencyManifest = await LoadManifestFromLocationAsync(dependencyModuleLocation);
+                        var (dependencyManifest, dependencyManifestErrorReason) = await LoadManifestFromLocationAsync(dependencyModuleLocation);
                         if(dependencyManifest == null) {
-
-                            // error has already been reported
+                            LogError(dependencyManifestErrorReason);
                             continue;
                         }
                         var nestedDependency = new DependencyRecord {
@@ -468,7 +520,7 @@ namespace LambdaSharp.Tool {
                 && (metadataToken is JObject metadata)
             ) {
                 JToken nameMappingsToken;
-                if(metadata.TryGetValue("LambdaSharp::NameMappings", out nameMappingsToken)) {
+                if(metadata.TryGetValue(ModuleNameMappings.MetadataName, out nameMappingsToken)) {
                     var nameMappings = nameMappingsToken.ToObject<ModuleNameMappings>();
                     if(nameMappings.Version == ModuleNameMappings.CurrentVersion) {
                         return nameMappings;
@@ -476,7 +528,7 @@ namespace LambdaSharp.Tool {
                     LogWarn($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
                     return null;
                 } else if(
-                    metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
+                    metadata.TryGetValue(ModuleManifest.MetadataName, out var manifestToken)
                     && (manifestToken is JObject manifest)
                     && manifest.TryGetValue("ResourceNameMappings", out nameMappingsToken)
                 ) {
@@ -506,7 +558,7 @@ namespace LambdaSharp.Tool {
             if(
                 cloudformation.TryGetValue("Metadata", out var metadataToken)
                 && (metadataToken is JObject metadata)
-                && metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
+                && metadata.TryGetValue(ModuleManifest.MetadataName, out var manifestToken)
             ) {
                 var manifest = manifestToken.ToObject<ModuleManifest>();
                 if(manifest.Version != null) {
@@ -520,7 +572,7 @@ namespace LambdaSharp.Tool {
         }
 
         public async Task<(IEnumerable<ModuleLocation> ModuleLocations, int PrereleaseModuleCount)> ListManifestsAsync(string bucketName, string origin, bool includePreRelease = false) {
-            var stopwatch = Stopwatch.StartNew();
+            StartLogPerformance($"ListManifests() for s3://{origin}");
             try {
                 var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
                 if(s3Client == null) {
@@ -567,12 +619,38 @@ namespace LambdaSharp.Tool {
                 } while(request.Marker != null);
                 return (ModuleLocations: moduleLocations, PrereleaseModuleCount: prereleaseModuleCount);
             } finally {
-                LogInfoPerformance($"ListManifests() for s3://{origin}", stopwatch.Elapsed);
+                StopLogPerformance();
+            }
+        }
+
+        public void ResetCache(string bucketName, ModuleInfo moduleInfo) {
+
+            // remove cached module
+            var moduleLocation = new ModuleLocation(bucketName, moduleInfo, "<MISSING>");
+            var cachedManifestFilePath = GetCachedManifestFilePath(moduleLocation);
+            if(cachedManifestFilePath != null) {
+                try {
+                    File.Delete(cachedManifestFilePath);
+                } catch {
+
+                    // nothing to do
+                }
+            }
+
+            // remove cached list versions
+            var cachedManifestFolder = GetCachedManifestDirectory(bucketName, moduleInfo.Origin ?? bucketName, moduleInfo.Namespace, moduleInfo.Name);
+            if(cachedManifestFolder != null) {
+                try {
+                    File.Delete(Path.Combine(cachedManifestFolder, "versions.json"));
+                } catch {
+
+                    // nothing to do
+                }
             }
         }
 
         private async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
-            var stopwatch = Stopwatch.StartNew();
+            StartLogPerformance($"GetS3ObjectContentsAsync() for s3://{bucketName}/{key}");
             try {
 
                 // get bucket region specific S3 client
@@ -584,25 +662,8 @@ namespace LambdaSharp.Tool {
                 }
                 return await s3Client.GetS3ObjectContentsAsync(bucketName, key);
             } finally {
-                LogInfoPerformance($"GetS3ObjectContentsAsync() for s3://{bucketName}/{key}", stopwatch.Elapsed);
+                StopLogPerformance();
             }
-        }
-
-        private ModuleManifest GetManifest(JObject cloudformation) {
-            if(
-                cloudformation.TryGetValue("Metadata", out var metadataToken)
-                && (metadataToken is JObject metadata)
-                && metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
-            ) {
-                var manifest = manifestToken.ToObject<ModuleManifest>();
-                if(manifest.Version == ModuleManifest.CurrentVersion) {
-                    return manifest;
-                }
-                LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
-                return null;
-            }
-            LogError("CloudFormation file does not contain a LambdaSharp manifest");
-            return null;
         }
 
         private async Task<IAmazonS3> GetS3ClientByBucketNameAsync(string bucketName) {
@@ -630,10 +691,10 @@ namespace LambdaSharp.Tool {
             if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
                 LogWarn($"could not detect region for '{bucketName}' bucket");
 
-                // TODO: the 'x-amz-bucket-region' header is missing sporadically; leaving this code here to make it easier to diagnose
-                LogInfoVerbose($"... (DEBUG) S3 bucket '{bucketName}' region check response status: {headResponse.StatusCode}");
+                // HACKHACKHACK (2020-08-31, bjorg): the 'x-amz-bucket-region' header is missing sporadically; leaving this code here to make it easier to diagnose
+                LogInfo($"... (DEBUG) S3 bucket '{bucketName}' region check response status: {headResponse.StatusCode}");
                 foreach(var header in headResponse.Headers) {
-                    LogInfoVerbose($"... (DEBUG) S3 region check response header: {header.Key} = {string.Join(", ", header.Value)}");
+                    LogInfo($"... (DEBUG) S3 region check response header: {header.Key} = {string.Join(", ", header.Value)}");
                 }
                 return null;
             }
@@ -642,6 +703,36 @@ namespace LambdaSharp.Tool {
             result = new AmazonS3Client(RegionEndpoint.GetBySystemName(values.First()));
             _s3ClientByBucketName[bucketName] = result;
             return result;
-       }
+        }
+
+        private string GetCachedManifestFilePath(ModuleLocation moduleLocation) {
+
+            // never cache pre-release versions or when the module origin is not set
+            if(
+                moduleLocation.ModuleInfo.Version.IsPreRelease()
+                || (moduleLocation.ModuleInfo.Origin is null)
+            ) {
+                return null;
+            }
+
+            // ensure directory exists since it will be used
+            var cachedManifestFolder = GetCachedManifestDirectory(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.Namespace, moduleLocation.ModuleInfo.Name);
+            if(cachedManifestFolder == null) {
+                return null;
+            }
+            return Path.Combine(cachedManifestFolder, moduleLocation.ModuleInfo.Version.ToString());
+        }
+
+        private string GetCachedManifestDirectory(string sourceBucketName, string moduleOrigin, string moduleNamespace, string moduleName) {
+            var cachedManifestFolder = Path.Combine(Settings.ToolSettingsDirectory, "Manifests", sourceBucketName, moduleOrigin, moduleNamespace, moduleName);
+            try {
+                Directory.CreateDirectory(cachedManifestFolder);
+            } catch {
+
+                // let the optimal outcome not get in the way of a successful outcome
+                return null;
+            }
+            return cachedManifestFolder;
+        }
     }
 }

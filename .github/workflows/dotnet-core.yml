@@ -1,0 +1,46 @@
+name: LambdaSharp CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - v*
+      - WIP-v*
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.301
+
+      - name: Set LambdaSharp environment variable
+        run: echo "LAMBDASHARP=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      # CLI Tests
+      - name: Test LambdaSharp.CloudFormation
+        run: dotnet test --configuration Release Tests/Tests.LambdaSharp.CloudFormation
+
+      - name: Test LambdaSharp.Modules
+        run: dotnet test --configuration Release Tests/Tests.LambdaSharp.Modules
+
+      # - name: Test LambdaSharp.Compiler
+      #   run: dotnet test --configuration Release Tests/Tests.LambdaSharp.Compiler
+
+      # SDK Tests
+      - name: Test LambdaSharp
+        run: dotnet test --configuration Release Tests/Tests.LambdaSharp
+
+      - name: Test LambdaSharp.App.EventBus
+        run: dotnet test --configuration Release Modules/LambdaSharp.App.EventBus/Tests.LambdaSharp.App.EventBus
+
+      # Module Tests
+      - name: Test LambdaSharp.Core
+        run: dotnet test --configuration Release Modules/LambdaSharp.Core/Tests/Tests.ProcessLogEventsTests

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8EDC941788C9C6CA9808FA7E768BB198"
+      "Default": "789BE3573602CC521079FE73ACA59C7B"
     }
   },
   "Resources": {
@@ -564,16 +564,16 @@
     "ModuleRestApiItemsResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        },
         "ParentId": {
           "Fn::GetAtt": [
             "ModuleRestApi",
             "RootResourceId"
           ]
         },
-        "PathPart": "items",
-        "RestApiId": {
-          "Ref": "ModuleRestApi"
-        }
+        "PathPart": "items"
       }
     },
     "ModuleRestApiItemsResourceGET": {
@@ -704,13 +704,13 @@
     "ModuleRestApiItemsResourceIdResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        },
         "ParentId": {
           "Ref": "ModuleRestApiItemsResource"
         },
-        "PathPart": "{id}",
-        "RestApiId": {
-          "Ref": "ModuleRestApi"
-        }
+        "PathPart": "{id}"
       }
     },
     "ModuleRestApiItemsResourceIdResourceGET": {
@@ -868,14 +868,14 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment3970628808DB34C69DD5AC91B3EBCDB6": {
+    "ModuleRestApiDeploymentB14809CA6CEF83D20A18E512B527E439": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
-        "Description": {
-          "Fn::Sub": "${AWS::StackName} API [3970628808DB34C69DD5AC91B3EBCDB6]"
-        },
         "RestApiId": {
           "Ref": "ModuleRestApi"
+        },
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} API [B14809CA6CEF83D20A18E512B527E439]"
         }
       },
       "DependsOn": [
@@ -893,10 +893,14 @@
     "ModuleRestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
-        "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment3970628808DB34C69DD5AC91B3EBCDB6"
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
         },
         "Description": "Module REST API LATEST Stage",
+        "DeploymentId": {
+          "Ref": "ModuleRestApiDeploymentB14809CA6CEF83D20A18E512B527E439"
+        },
+        "StageName": "LATEST",
         "MethodSettings": [
           {
             "DataTraceEnabled": true,
@@ -906,10 +910,6 @@
             "ResourcePath": "/*"
           }
         ],
-        "RestApiId": {
-          "Ref": "ModuleRestApi"
-        },
-        "StageName": "LATEST",
         "TracingEnabled": {
           "Fn::If": [
             "XRayIsEnabled",
@@ -1163,7 +1163,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "8EDC941788C9C6CA9808FA7E768BB198",
+      "TemplateChecksum": "789BE3573602CC521079FE73ACA59C7B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -1263,7 +1263,7 @@
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
         "ModuleRestApiItemsResourceIdResourceOPTIONS": "Module::RestApi::ItemsResource::IdResource::OPTIONS",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment3970628808DB34C69DD5AC91B3EBCDB6": "Module::RestApi::Deployment3970628808DB34C69DD5AC91B3EBCDB6",
+        "ModuleRestApiDeploymentB14809CA6CEF83D20A18E512B527E439": "Module::RestApi::DeploymentB14809CA6CEF83D20A18E512B527E439",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {
