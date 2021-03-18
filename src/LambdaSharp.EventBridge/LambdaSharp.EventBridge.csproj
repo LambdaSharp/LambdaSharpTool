@@ -2,14 +2,14 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Deterministic>true</Deterministic>
-    <RootNamespace>LambdaSharp.CloudWatch</RootNamespace>
+    <RootNamespace>LambdaSharp.EventBridge</RootNamespace>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-    <PackageId>LambdaSharp.CloudWatch</PackageId>
+    <PackageId>LambdaSharp.EventBridge</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
     <Title>LambdaSharp (λ#) CloudWatch Event Lambda</Title>

@@ -8,7 +8,7 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.CloudWatch" Version="%%LAMBDASHARP_VERSION%%"/>
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp.CloudWatch\LambdaSharp.CloudWatch.csproj" />
+    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.EventBridge" Version="%%LAMBDASHARP_VERSION%%"/>
+    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp.EventBridge\LambdaSharp.EventBridge.csproj" />
   </ItemGroup>
 </Project>

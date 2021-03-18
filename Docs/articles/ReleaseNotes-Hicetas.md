@@ -143,12 +143,18 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.2.2) - TBD
 
+#### BREAKING CHANGES
+
+* SDK
+    * Renamed _LambdaSharp.CloudWatch_ to _LambdaSharp.EventBridge_ to align with new AWS branding for CloudWatch Events.
+
 #### Features
 
 * CLI
   * Added automatic, daily refresh of CloudFormation specification to surface latest capabilities. Use `--force-refresh` option to check for new CloudFormation specification more frequently.
   * Added caching of AWS profile information used for building, publishing, and deploying modules. Use `--force-refresh` option to bypass cache.
   * Removed `util download-cloudformation-spec` command since it is no longer needed to CloudFormation specification.
+  * Changed behavior for `deploy` to allow importing dependencies when no build policy is provided.
 
 ### (v0.8.2.1) - 2021-02-17
 
