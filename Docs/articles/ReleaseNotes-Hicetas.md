@@ -146,7 +146,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 #### BREAKING CHANGES
 
 * SDK
-    * Renamed _LambdaSharp.CloudWatch_ to _LambdaSharp.EventBridge_ to align with new AWS branding for CloudWatch Events.
+    * Renamed _LambdaSharp.CloudWatch_ assembly to _LambdaSharp.EventBridge_ to align with new AWS branding for CloudWatch Events.
 
 #### Features
 
