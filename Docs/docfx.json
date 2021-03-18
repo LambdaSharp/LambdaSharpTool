@@ -72,7 +72,7 @@
       "src": [
         {
           "files": [
-            "LambdaSharp.CloudWatch/LambdaSharp.CloudWatch.csproj"
+            "LambdaSharp.EventBridge/LambdaSharp.EventBridge.csproj"
           ],
           "exclude": [
             "**/obj/**",
@@ -81,7 +81,7 @@
           "src": "../src/"
         }
       ],
-      "dest": "sdk/LambdaSharp.CloudWatch",
+      "dest": "sdk/LambdaSharp.EventBridge",
       "filter": "filterConfig.yml",
       "force": true
     },

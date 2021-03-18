@@ -429,7 +429,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: deadLetterQueueCondition
                 );
             }
-            if(TryGetModuleVariable("LoggingStream", out var loggingStreamVariable, out var _)) {
+            if(TryGetModuleVariable("LoggingStream", out var loggingStreamVariable, out _)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "LoggingStream",
@@ -441,7 +441,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("LoggingStreamRole", out var loggingStreamRoleVariable, out var _)) {
+            if(TryGetModuleVariable("LoggingStreamRole", out var loggingStreamRoleVariable, out _)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "LoggingStreamRole",
@@ -771,11 +771,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 name: "LogGroupSubscription",
                                 description: null,
                                 scope: null,
-                                resource: new Humidifier.Logs.SubscriptionFilter {
-                                    DestinationArn = FnRef("Module::LoggingStream"),
-                                    FilterPattern = "-\"*** \"",
-                                    LogGroupName = FnRef($"{function.FullName}::LogGroup"),
-                                    RoleArn = FnRef("Module::LoggingStreamRole")
+                                resource: new Humidifier.CustomResource("AWS::Logs::SubscriptionFilter") {
+                                    ["DestinationArn"] = FnRef("Module::LoggingStream"),
+                                    ["FilterPattern"] = "-\"*** \"",
+                                    ["LogGroupName"] = FnRef($"{function.FullName}::LogGroup"),
+                                    ["RoleArn"] = FnRef("Module::LoggingStreamRole")
                                 },
                                 resourceExportAttribute: null,
                                 dependsOn: null,
@@ -809,11 +809,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 name: "LogGroupSubscription",
                                 description: null,
                                 scope: null,
-                                resource: new Humidifier.Logs.SubscriptionFilter {
-                                    DestinationArn = FnRef("Module::LoggingStream"),
-                                    FilterPattern = "-\"*** \"",
-                                    LogGroupName = FnRef($"{app.FullName}::LogGroup"),
-                                    RoleArn = FnRef("Module::LoggingStreamRole")
+                                resource: new Humidifier.CustomResource("AWS::Logs::SubscriptionFilter") {
+                                    ["DestinationArn"] = FnRef("Module::LoggingStream"),
+                                    ["FilterPattern"] = "-\"*** \"",
+                                    ["LogGroupName"] = FnRef($"{app.FullName}::LogGroup"),
+                                    ["RoleArn"] = FnRef("Module::LoggingStreamRole")
                                 },
                                 resourceExportAttribute: null,
                                 dependsOn: null,

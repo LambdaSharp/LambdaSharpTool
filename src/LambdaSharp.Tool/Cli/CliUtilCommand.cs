@@ -101,37 +101,6 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
-                // download cloudformation specification sub-command
-                cmd.Command("download-cloudformation-spec", subCmd => {
-                    subCmd.HelpOption();
-                    subCmd.Description = "Download CloudFormation JSON specification";
-
-                    // run command
-                    AddStandardCommandOptions(subCmd);
-                    subCmd.OnExecute(async () => {
-                        ExecuteCommandActions(subCmd);
-
-                        // determine destination folder
-                        var lambdaSharpFolder = System.Environment.GetEnvironmentVariable("LAMBDASHARP");
-                        string destinationZipLocation;
-                        string destinationJsonLocation;
-                        if(lambdaSharpFolder == null) {
-                            destinationZipLocation = null;
-                            destinationJsonLocation = Settings.CloudFormationResourceSpecificationCacheFilePath;
-                        } else {
-                            destinationZipLocation = Path.Combine(lambdaSharpFolder, "src", "LambdaSharp.Tool", "Resources", "CloudFormationResourceSpecification.json.gz");
-                            destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src", "CloudFormationResourceSpecification.json");
-                        }
-
-                        // run command
-                        await RefreshCloudFormationSpecAsync(
-                            "https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json",
-                            destinationZipLocation,
-                            destinationJsonLocation
-                        );
-                    });
-                });
-
                 // create JSON schema definition for API Gateway methods
                 cmd.Command("create-invoke-methods-schema", subCmd => {
                     subCmd.ShowInHelpText = false;
@@ -449,7 +418,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine();
 
             // initialize AWS profile
-            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
+            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion);
             var logsClient = new AmazonCloudWatchLogsClient(AWSConfigs.RegionEndpoint);
 
             // delete orphaned logs
@@ -574,7 +543,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine();
 
             // initialize AWS profile
-            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
+            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion);
             var cfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint);
             var lambdaClient = new AmazonLambdaClient(AWSConfigs.RegionEndpoint);
             var logsClient = new AmazonCloudWatchLogsClient(AWSConfigs.RegionEndpoint);

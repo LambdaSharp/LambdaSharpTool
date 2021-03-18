@@ -82,6 +82,9 @@ namespace LambdaSharp.Tool.Cli {
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename)
             => new ParameterFileReader(settings, filename).ReadInputParametersFiles();
 
+        public static CommandOption AddForceRefreshOption(CommandLineApplication cmd)
+            => cmd.Option("--force-refresh", "(optional) Always refresh manifests from their origin", CommandOptionType.NoValue);
+
         //--- Methods ---
         public void Register(CommandLineApplication app) {
 
@@ -106,6 +109,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
+                var forceRefreshOption = AddForceRefreshOption(cmd);
                 var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
@@ -114,6 +118,9 @@ namespace LambdaSharp.Tool.Cli {
                 AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
                     ExecuteCommandActions(cmd);
+
+                    // check if all references should be resolved from their origin (vs. cached)
+                    Settings.ForceRefresh = forceRefreshOption.HasValue();
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -218,6 +225,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
+                var forceRefreshOption = AddForceRefreshOption(cmd);
                 var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
@@ -226,6 +234,9 @@ namespace LambdaSharp.Tool.Cli {
                 AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
                     ExecuteCommandActions(cmd);
+
+                    // check if all references should be resolved from their origin (vs. cached)
+                    Settings.ForceRefresh = forceRefreshOption.HasValue();
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -370,6 +381,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
                 var forceBuildOption = AddForceBuildOption(cmd);
+                var forceRefreshOption = AddForceRefreshOption(cmd);
                 var buildPolicyOption = AddBuildPolicyOption(cmd);
 
                 // misc options
@@ -379,6 +391,9 @@ namespace LambdaSharp.Tool.Cli {
                 AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
                     ExecuteCommandActions(cmd);
+
+                    // check if all references should be resolved from their origin (vs. cached)
+                    Settings.ForceRefresh = forceRefreshOption.HasValue();
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();

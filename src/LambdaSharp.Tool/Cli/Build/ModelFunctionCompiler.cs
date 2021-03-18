@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Modules;
+using LambdaSharp.Modules.Metadata;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -179,10 +180,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         name: "RequestValidator",
                         description: null,
                         scope: null,
-                        resource: new Humidifier.ApiGateway.RequestValidator {
-                            RestApiId = FnRef(restApi.FullName),
-                            ValidateRequestBody = true,
-                            ValidateRequestParameters = true
+                        resource: new Humidifier.CustomResource("AWS::ApiGateway::RequestValidator") {
+                            ["RestApiId"] = FnRef(restApi.FullName),
+                            ["ValidateRequestBody"] = true,
+                            ["ValidateRequestParameters"] = true
                         },
                         resourceExportAttribute: null,
                         dependsOn: null,
@@ -198,9 +199,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 name: "LogGroup",
                 description: null,
                 scope: null,
-                resource: new Humidifier.Logs.LogGroup {
-                    LogGroupName = FnSub($"API-Gateway-Execution-Logs_${{{restApi.FullName}}}/${{Module::RestApi::StageName}}"),
-                    RetentionInDays = FnRef("Module::LogRetentionInDays")
+                resource: new Humidifier.CustomResource("AWS::Logs::LogGroup") {
+                    ["LogGroupName"] = FnSub($"API-Gateway-Execution-Logs_${{{restApi.FullName}}}/${{Module::RestApi::StageName}}"),
+                    ["RetentionInDays"] = FnRef("Module::LogRetentionInDays")
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
@@ -216,9 +217,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 name: "Deployment" + apiDeclarationsChecksum,
                 description: "Module REST API Deployment",
                 scope: null,
-                resource: new Humidifier.ApiGateway.Deployment {
-                    RestApiId = FnRef("Module::RestApi"),
-                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]")
+                resource: new Humidifier.CustomResource("AWS::ApiGateway::Deployment") {
+                    ["RestApiId"] = FnRef("Module::RestApi"),
+                    ["Description"] = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]")
                 },
                 resourceExportAttribute: null,
                 dependsOn: apiDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
@@ -243,12 +244,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                 name: "Stage",
                 description: "Module REST API Stage",
                 scope: null,
-                resource: new Humidifier.ApiGateway.Stage {
-                    RestApiId = FnRef("Module::RestApi"),
-                    Description =  FnSub("Module REST API ${Module::RestApi::StageName} Stage"),
-                    DeploymentId = FnRef(deployment.FullName),
-                    StageName = FnRef("Module::RestApi::StageName"),
-                    MethodSettings = new[] {
+                resource: new Humidifier.CustomResource("AWS::ApiGateway::Stage") {
+                    ["RestApiId"] = FnRef("Module::RestApi"),
+                    ["Description"] =  FnSub("Module REST API ${Module::RestApi::StageName} Stage"),
+                    ["DeploymentId"] = FnRef(deployment.FullName),
+                    ["StageName"] = FnRef("Module::RestApi::StageName"),
+                    ["MethodSettings"] = new[] {
                         new Humidifier.ApiGateway.StageTypes.MethodSetting {
                             DataTraceEnabled = true,
                             HttpMethod = "*",
@@ -257,7 +258,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             MetricsEnabled = true
                         }
                     }.ToList(),
-                    TracingEnabled = FnIf("XRayIsEnabled", true, false)
+                    ["TracingEnabled"] = FnIf("XRayIsEnabled", true, false)
                 },
                 resourceExportAttribute: null,
                 dependsOn: new[] { restLogGroup.FullName },
@@ -522,7 +523,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
 
                     // check if a lambda permission for the WebSocket already exists for this function
-                    if(!_builder.TryGetItem($"{webSocketRoute.Function.FullName}::WebSocketPermission", out var _)) {
+                    if(!_builder.TryGetItem($"{webSocketRoute.Function.FullName}::WebSocketPermission", out _)) {
 
                         // add lambda invocation permission resource
                         _builder.AddResource(
@@ -530,11 +531,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: "WebSocketPermission",
                             description: "WebSocket invocation permission",
                             scope: null,
-                            resource: new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                FunctionName = FnRef(webSocketRoute.Function.FullName),
-                                Principal = "apigateway.amazonaws.com",
-                                SourceArn = FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/*")
+                            resource: new Humidifier.CustomResource("AWS::Lambda::Permission") {
+                                ["Action"] = "lambda:InvokeFunction",
+                                ["FunctionName"] = FnRef(webSocketRoute.Function.FullName),
+                                ["Principal"] = "apigateway.amazonaws.com",
+                                ["SourceArn"] = FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/*")
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -616,8 +617,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 name: "LogGroup",
                 description: null,
                 scope: null,
-                resource: new Humidifier.Logs.LogGroup {
-                    RetentionInDays = FnRef("Module::LogRetentionInDays")
+                resource: new Humidifier.CustomResource("AWS::Logs::LogGroup") {
+                    ["RetentionInDays"] = FnRef("Module::LogRetentionInDays")
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
@@ -734,10 +735,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         name: "RequestModel",
                         description: null,
                         scope: null,
-                        resource: new Humidifier.ApiGateway.Model {
-                            ContentType = route.Source.RequestContentType,
-                            RestApiId = restApiId,
-                            Schema = route.Source.RequestSchema
+                        resource: new Humidifier.CustomResource("AWS::ApiGateway::Model") {
+                            ["ContentType"] = route.Source.RequestContentType,
+                            ["RestApiId"] = restApiId,
+                            ["Schema"] = route.Source.RequestSchema
                         },
                         resourceExportAttribute: null,
                         dependsOn: null,
@@ -850,10 +851,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         name: "ResponseModel",
                         description: null,
                         scope: null,
-                        resource: new Humidifier.ApiGateway.Model {
-                            ContentType = route.Source.ResponseContentType,
-                            RestApiId = restApiId,
-                            Schema = route.Source.ResponseSchema
+                        resource: new Humidifier.CustomResource("AWS::ApiGateway::Model") {
+                            ["ContentType"] = route.Source.ResponseContentType,
+                            ["RestApiId"] = restApiId,
+                            ["Schema"] = route.Source.ResponseSchema
                         },
                         resourceExportAttribute: null,
                         dependsOn: null,
@@ -908,7 +909,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // check if a lambda permission for the REST API already exists for this function
-                if(!_builder.TryGetItem($"{route.Function.FullName}::RestApiPermission", out var _)) {
+                if(!_builder.TryGetItem($"{route.Function.FullName}::RestApiPermission", out _)) {
 
                     // add permission to API method to invoke lambda
                     _builder.AddResource(
@@ -916,11 +917,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                         name: "RestApiPermission",
                         description: "RestApi invocation permission",
                         scope: null,
-                        resource: new Humidifier.Lambda.Permission {
-                            Action = "lambda:InvokeFunction",
-                            FunctionName = FnRef(route.Function.FullName),
-                            Principal = "apigateway.amazonaws.com",
-                            SourceArn = FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::RestApi}/${Module::RestApi::StageName}/*")
+                        resource: new Humidifier.CustomResource("AWS::Lambda::Permission") {
+                            ["Action"] = "lambda:InvokeFunction",
+                            ["FunctionName"] = FnRef(route.Function.FullName),
+                            ["Principal"] = "apigateway.amazonaws.com",
+                            ["SourceArn"] = FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::RestApi}/${Module::RestApi::StageName}/*")
                         },
                         resourceExportAttribute: null,
                         dependsOn: null,
@@ -964,10 +965,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 var partName = subRoute.Key.ToPascalIdentifier();
 
                 // create a new parent resource to attach methods or sub-resource to
-                var apiResourceResource = new Humidifier.ApiGateway.Resource {
-                    RestApiId = restApiId,
-                    ParentId = parentId,
-                    PathPart = subRoute.Key
+                var apiResourceResource = new Humidifier.CustomResource("AWS::ApiGateway::Resource") {
+                    ["RestApiId"] = restApiId,
+                    ["ParentId"] = parentId,
+                    ["PathPart"] = subRoute.Key
                 };
                 var resource = _builder.AddResource(
                     parent: parent,
@@ -1122,11 +1123,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}Subscription{suffix}",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.SNS.Subscription {
-                                Endpoint = FnGetAtt(function.FullName, "Arn"),
-                                Protocol = "lambda",
-                                TopicArn = arn,
-                                FilterPolicy = (topicSource.Filters != null)
+                            resource: new Humidifier.CustomResource("AWS::SNS::Subscription") {
+                                ["Endpoint"] = FnGetAtt(function.FullName, "Arn"),
+                                ["Protocol"] = "lambda",
+                                ["TopicArn"] = arn,
+                                ["FilterPolicy"] = (topicSource.Filters != null)
                                     ? JsonConvert.SerializeObject(topicSource.Filters)
                                     : null
                             },
@@ -1141,11 +1142,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}Permission{suffix}",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                FunctionName = FnRef(function.FullName),
-                                Principal = "sns.amazonaws.com",
-                                SourceArn = arn
+                            resource: new Humidifier.CustomResource("AWS::Lambda::Permission") {
+                                ["Action"] = "lambda:InvokeFunction",
+                                ["FunctionName"] = FnRef(function.FullName),
+                                ["Principal"] = "sns.amazonaws.com",
+                                ["SourceArn"] = arn
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -1170,9 +1171,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}ScheduleEvent",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Events.Rule {
-                                ScheduleExpression = scheduleSource.Expression,
-                                Targets = new[] {
+                            resource: new Humidifier.CustomResource("AWS::Events::Rule") {
+                                ["ScheduleExpression"] = scheduleSource.Expression,
+                                ["Targets"] = new[] {
                                     new Humidifier.Events.RuleTypes.Target {
                                         Id = id,
                                         Arn = FnGetAtt(function.FullName, "Arn"),
@@ -1202,11 +1203,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}Permission",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                FunctionName = FnRef(function.FullName),
-                                Principal = "events.amazonaws.com",
-                                SourceArn = FnGetAtt(schedule.FullName, "Arn")
+                            resource: new Humidifier.CustomResource("AWS::Lambda::Permission") {
+                                ["Action"] = "lambda:InvokeFunction",
+                                ["FunctionName"] = FnRef(function.FullName),
+                                ["Principal"] = "events.amazonaws.com",
+                                ["SourceArn"] = FnGetAtt(schedule.FullName, "Arn")
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -1227,12 +1228,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}Permission",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                FunctionName = FnRef(function.FullName),
-                                Principal = "s3.amazonaws.com",
-                                SourceAccount = FnRef("AWS::AccountId"),
-                                SourceArn = arn
+                            resource: new Humidifier.CustomResource("AWS::Lambda::Permission") {
+                                ["Action"] = "lambda:InvokeFunction",
+                                ["FunctionName"] = FnRef(function.FullName),
+                                ["Principal"] = "s3.amazonaws.com",
+                                ["SourceAccount"] = FnRef("AWS::AccountId"),
+                                ["SourceArn"] = arn
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -1285,11 +1286,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}EventMapping{suffix}",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.EventSourceMapping {
-                                BatchSize = sqsSource.BatchSize,
-                                Enabled = true,
-                                EventSourceArn = arn,
-                                FunctionName = FnRef(function.FullName)
+                            resource: new Humidifier.CustomResource("AWS::Lambda::EventSourceMapping") {
+                                ["BatchSize"] = sqsSource.BatchSize,
+                                ["Enabled"] = true,
+                                ["EventSourceArn"] = arn,
+                                ["FunctionName"] = FnRef(function.FullName)
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -1332,11 +1333,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}AlexaPermission",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                FunctionName = FnRef(function.FullName),
-                                Principal = "alexa-appkit.amazon.com",
-                                EventSourceToken = eventSourceToken
+                            resource: new Humidifier.CustomResource("AWS::Lambda::Permission") {
+                                ["Action"] = "lambda:InvokeFunction",
+                                ["FunctionName"] = FnRef(function.FullName),
+                                ["Principal"] = "alexa-appkit.amazon.com",
+                                ["EventSourceToken"] = eventSourceToken
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -1353,12 +1354,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}EventMapping{suffix}",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.EventSourceMapping {
-                                BatchSize = dynamoDbSource.BatchSize,
-                                StartingPosition = dynamoDbSource.StartingPosition,
-                                Enabled = true,
-                                EventSourceArn = arn,
-                                FunctionName = FnRef(function.FullName)
+                            resource: new Humidifier.CustomResource("AWS::Lambda::EventSourceMapping") {
+                                ["BatchSize"] = dynamoDbSource.BatchSize,
+                                ["StartingPosition"] = dynamoDbSource.StartingPosition,
+                                ["Enabled"] = true,
+                                ["EventSourceArn"] = arn,
+                                ["FunctionName"] = FnRef(function.FullName)
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -1375,12 +1376,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}EventMapping{suffix}",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.EventSourceMapping {
-                                BatchSize = kinesisSource.BatchSize,
-                                StartingPosition = kinesisSource.StartingPosition,
-                                Enabled = true,
-                                EventSourceArn = arn,
-                                FunctionName = FnRef(function.FullName)
+                            resource: new Humidifier.CustomResource("AWS::Lambda::EventSourceMapping") {
+                                ["BatchSize"] = kinesisSource.BatchSize,
+                                ["StartingPosition"] = kinesisSource.StartingPosition,
+                                ["Enabled"] = true,
+                                ["EventSourceArn"] = arn,
+                                ["FunctionName"] = FnRef(function.FullName)
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,
@@ -1408,10 +1409,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}Event",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Events.Rule {
-                                EventPattern = cloudWatchRuleSource.Pattern,
-                                EventBusName = cloudWatchRuleSource.EventBus,
-                                Targets = new[] {
+                            resource: new Humidifier.CustomResource("AWS::Events::Rule") {
+                                ["EventPattern"] = cloudWatchRuleSource.Pattern,
+                                ["EventBusName"] = cloudWatchRuleSource.EventBus,
+                                ["Targets"] = new[] {
                                     new Humidifier.Events.RuleTypes.Target {
                                         Id = id,
                                         Arn = FnGetAtt(function.FullName, "Arn")
@@ -1429,11 +1430,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             name: $"Source{sourceSuffix}Permission",
                             description: null,
                             scope: null,
-                            resource: new Humidifier.Lambda.Permission {
-                                Action = "lambda:InvokeFunction",
-                                FunctionName = FnRef(function.FullName),
-                                Principal = "events.amazonaws.com",
-                                SourceArn = FnGetAtt(rule.FullName, "Arn")
+                            resource: new Humidifier.CustomResource("AWS::Lambda::Permission") {
+                                ["Action"] = "lambda:InvokeFunction",
+                                ["FunctionName"] = FnRef(function.FullName),
+                                ["Principal"] = "events.amazonaws.com",
+                                ["SourceArn"] = FnGetAtt(rule.FullName, "Arn")
                             },
                             resourceExportAttribute: null,
                             dependsOn: null,

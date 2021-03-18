@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "70B3207D797B6B568822748CD9C8BB35"
+      "Default": "0AC21EF5C3C287AA44E09DAE7BA249EA"
     }
   },
   "Resources": {
@@ -571,16 +571,16 @@
     "ModuleRestApiSlackResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
+        },
         "ParentId": {
           "Fn::GetAtt": [
             "ModuleRestApi",
             "RootResourceId"
           ]
         },
-        "PathPart": "slack",
-        "RestApiId": {
-          "Ref": "ModuleRestApi"
-        }
+        "PathPart": "slack"
       }
     },
     "ModuleRestApiSlackResourcePOST": {
@@ -648,14 +648,14 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeploymentF3ABA82D93444A9202539F27ADC5EE53": {
+    "ModuleRestApiDeploymentFD79C2B352FB25A3D9DA664F62887DA4": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
-        "Description": {
-          "Fn::Sub": "${AWS::StackName} API [F3ABA82D93444A9202539F27ADC5EE53]"
-        },
         "RestApiId": {
           "Ref": "ModuleRestApi"
+        },
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} API [FD79C2B352FB25A3D9DA664F62887DA4]"
         }
       },
       "DependsOn": [
@@ -666,10 +666,14 @@
     "ModuleRestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
-        "DeploymentId": {
-          "Ref": "ModuleRestApiDeploymentF3ABA82D93444A9202539F27ADC5EE53"
+        "RestApiId": {
+          "Ref": "ModuleRestApi"
         },
         "Description": "Module REST API LATEST Stage",
+        "DeploymentId": {
+          "Ref": "ModuleRestApiDeploymentFD79C2B352FB25A3D9DA664F62887DA4"
+        },
+        "StageName": "LATEST",
         "MethodSettings": [
           {
             "DataTraceEnabled": true,
@@ -679,10 +683,6 @@
             "ResourcePath": "/*"
           }
         ],
-        "RestApiId": {
-          "Ref": "ModuleRestApi"
-        },
-        "StageName": "LATEST",
         "TracingEnabled": {
           "Fn::If": [
             "XRayIsEnabled",
@@ -947,7 +947,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "70B3207D797B6B568822748CD9C8BB35",
+      "TemplateChecksum": "0AC21EF5C3C287AA44E09DAE7BA249EA",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -1050,7 +1050,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "FunctionRestApiPermission": "Function::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeploymentF3ABA82D93444A9202539F27ADC5EE53": "Module::RestApi::DeploymentF3ABA82D93444A9202539F27ADC5EE53",
+        "ModuleRestApiDeploymentFD79C2B352FB25A3D9DA664F62887DA4": "Module::RestApi::DeploymentFD79C2B352FB25A3D9DA664F62887DA4",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

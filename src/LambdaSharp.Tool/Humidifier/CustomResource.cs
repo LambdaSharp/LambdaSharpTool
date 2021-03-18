@@ -40,7 +40,11 @@ namespace Humidifier {
 
             // resolve custom resource service token
             if(
-                !ResourceMapping.IsCloudFormationType(typeName)
+
+                // TODO (2021-02-25, bjorg): there needs to be a better way to detect if 'ServiceToken' needs to be added,
+                //  such as 2 distinct classes 'CustomResource' and 'AwsResource'
+                !typeName.StartsWith("AWS::", StringComparison.Ordinal)
+                && !typeName.StartsWith("Alexa::", StringComparison.Ordinal)
                 && !typeName.StartsWith("Custom::", StringComparison.Ordinal)
             ) {
                 if(!_properties.ContainsKey("ServiceToken")) {
@@ -112,15 +116,17 @@ namespace Humidifier {
             }
             set => _properties[(string)key] = value;
         }
-
-        //--- IEnumerable Members ---
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         void IDictionary.Add(object key, object value) => Add((string)key, value);
         void IDictionary.Clear() => _properties.Clear();
         bool IDictionary.Contains(object key) => _properties.ContainsKey((string)key);
         IDictionaryEnumerator IDictionary.GetEnumerator()
             => ((IDictionary)_properties.ToDictionary(kv => kv.Key, kv => kv.Value)).GetEnumerator();
         void IDictionary.Remove(object key) => _properties.Remove((string)key);
+
+        //--- IEnumerable Members ---
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        //--- ICollection Members ---
         void ICollection.CopyTo(Array array, int index)
             => ((IDictionary)_properties.ToDictionary(kv => kv.Key, kv => kv.Value)).CopyTo(array, index);
     }

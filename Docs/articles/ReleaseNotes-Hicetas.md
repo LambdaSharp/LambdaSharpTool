@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.2.1) - 2021-02-17
+# LambdaSharp "Hicetas" Release (v0.8.2.2) - 2021-03-17
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,6 +141,21 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
+### (v0.8.2.2) - 2021-03-17
+
+#### BREAKING CHANGES
+
+* SDK
+    * Renamed _LambdaSharp.CloudWatch_ assembly to _LambdaSharp.EventBridge_ to align with new AWS branding for CloudWatch Events.
+
+#### Features
+
+* CLI
+  * Added automatic, daily refresh of CloudFormation specification to surface latest capabilities. Use `--force-refresh` option to check for new CloudFormation specification more frequently.
+  * Added caching of AWS profile information used for building, publishing, and deploying modules. Use `--force-refresh` option to bypass cache.
+  * Removed `util download-cloudformation-spec` command since it is no longer needed to CloudFormation specification.
+  * Changed behavior for `deploy` to allow importing dependencies when no build policy is provided.
+
 ### (v0.8.2.1) - 2021-02-17
 
 #### Fixes
@@ -192,7 +207,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Added support for self-contained .NET 5 Lambda functions.
-  * Update Blazor WebAssembly app template to target .NET 5.
+  * Updated Blazor WebAssembly app template to target .NET 5.
   * Removed dependency on _Amazon.Lambda.Tools_. _Amazon.Lambda.Tools_ is no longer requires to build, publish, or deploy LambdaSharp modules.
   * Updated CloudFormation to v22.0.0.
   * Allowed resource types to have an empty or omitted `Attributes` section.

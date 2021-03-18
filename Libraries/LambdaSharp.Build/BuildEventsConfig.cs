@@ -37,10 +37,16 @@ namespace LambdaSharp.Build {
             Exception = exception;
         }
 
+        public BuildEventArgs(bool? cached) {
+            Message = "(no message)";
+            Cached = cached;
+        }
+
         //--- Properties ---
         public string Message { get; }
         public TimeSpan Duration { get; }
         public Exception? Exception { get; }
+        public bool? Cached { get; }
     }
 
     public class BuildEventsConfig {
@@ -53,7 +59,8 @@ namespace LambdaSharp.Build {
         public event EventHandler<BuildEventArgs>? OnLogWarnEvent;
         public event EventHandler<BuildEventArgs>? OnLogInfoEvent;
         public event EventHandler<BuildEventArgs>? OnLogInfoVerboseEvent;
-        public event EventHandler<BuildEventArgs>? OnLogInfoPerformanceEvent;
+        public event EventHandler<BuildEventArgs>? OnStartLogPerformanceEvent;
+        public event EventHandler<BuildEventArgs>? OnStopLogPerformanceEvent;
 
         //--- Methods ---
         public void LogError(object sender, string message) => OnLogErrorEvent?.Invoke(this, new BuildEventArgs(message));
@@ -61,7 +68,8 @@ namespace LambdaSharp.Build {
         public void LogWarn(object sender, string message) => OnLogWarnEvent?.Invoke(this, new BuildEventArgs(message));
         public void LogInfo(object sender, string message) => OnLogInfoEvent?.Invoke(this, new BuildEventArgs(message));
         public void LogInfoVerbose(object sender, string message) => OnLogInfoVerboseEvent?.Invoke(this, new BuildEventArgs(message));
-        public void LogInfoPerformance(object sender, string message, TimeSpan duration) => OnLogInfoPerformanceEvent?.Invoke(this, new BuildEventArgs(message, duration));
+        public void StartLogPerformance(object sender, string message) => OnStartLogPerformanceEvent?.Invoke(this, new BuildEventArgs(message));
+        public void StopLogPerformance(object sender, bool? cached = null) => OnStopLogPerformanceEvent?.Invoke(this, new BuildEventArgs(cached));
     }
 
     public abstract class ABuildEventsSource  {
@@ -78,6 +86,7 @@ namespace LambdaSharp.Build {
         protected void LogWarn(string message) => BuildEventsConfig.LogWarn(this, message);
         protected void LogInfo(string message) => BuildEventsConfig.LogInfo(this, message);
         protected void LogInfoVerbose(string message) => BuildEventsConfig.LogInfoVerbose(this, message);
-        protected void LogInfoPerformance(string message, TimeSpan duration) => BuildEventsConfig.LogInfoPerformance(this, message, duration);
+        protected void StartLogPerformance(string message) => BuildEventsConfig.StartLogPerformance(this, message);
+        protected void StopLogPerformance(bool? cached = null) => BuildEventsConfig.StopLogPerformance(this, cached);
     }
 }

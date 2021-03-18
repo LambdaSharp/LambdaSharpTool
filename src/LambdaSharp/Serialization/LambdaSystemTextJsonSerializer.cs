@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2020
+ * Copyright (C) 2018-2021
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,6 +45,7 @@ namespace LambdaSharp.Serialization {
             settings.IgnoreNullValues = true;
             settings.IncludeFields = true;
             settings.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+            settings.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             customizer?.Invoke(settings);
         }) { }
 

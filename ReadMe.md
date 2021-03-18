@@ -66,6 +66,9 @@ namespace MySampleModule.MyFunction {
 
     public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
+        //--- Constructors ---
+        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;

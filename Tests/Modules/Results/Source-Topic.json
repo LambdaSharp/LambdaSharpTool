@@ -643,11 +643,11 @@
             "Arn"
           ]
         },
-        "FilterPolicy": "{\"store\":[\"example_corp\"],\"event\":[{\"anything-but\":\"order_cancelled\"}],\"customer_interests\":[\"rugby\",\"football\",\"baseball\"],\"price_usd\":[{\"numeric\":[\">=\",\"100\"]}]}",
         "Protocol": "lambda",
         "TopicArn": {
           "Ref": "Topic"
-        }
+        },
+        "FilterPolicy": "{\"store\":[\"example_corp\"],\"event\":[{\"anything-but\":\"order_cancelled\"}],\"customer_interests\":[\"rugby\",\"football\",\"baseball\"],\"price_usd\":[{\"numeric\":[\">=\",\"100\"]}]}"
       }
     },
     "FunctionSource3Permission": {

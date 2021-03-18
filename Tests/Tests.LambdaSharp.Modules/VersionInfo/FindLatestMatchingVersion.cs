@@ -51,7 +51,6 @@ namespace Tests.LambdaSharp.Modules.VersionInfoTests {
 
         //--- Methods ---
 
-
         [Fact]
         public void Find_matching_prerelease_version() {
 

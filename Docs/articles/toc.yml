@@ -48,13 +48,16 @@
 - name: Debugging
   href: Debugging.md
 
+- name: JSON Serialization
+  href: JSON-Serialization.md
+
 - name: Samples
   href: Samples.md
 
 - name: Releases
   items:
 
-    - name: Hicetas (v0.8.2.1)
+    - name: Hicetas (v0.8.2.2)
       href: ReleaseNotes-Hicetas.md
 
     - name: Geminus (v0.7.0.17)
