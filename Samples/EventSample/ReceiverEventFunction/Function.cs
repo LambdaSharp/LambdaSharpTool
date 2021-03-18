@@ -20,7 +20,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using LambdaSharp;
-using LambdaSharp.CloudWatch;
+using LambdaSharp.EventBridge;
 
 namespace Sample.Event.ReceiverEventFunction {
 

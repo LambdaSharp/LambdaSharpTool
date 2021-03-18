@@ -27,7 +27,7 @@ using LambdaSharp.Logging;
 using LambdaSharp.Logging.Metrics;
 using LambdaSharp.Serialization;
 
-namespace LambdaSharp.CloudWatch {
+namespace LambdaSharp.EventBridge {
 
     /// <summary>
     /// The <see cref="ALambdaEventFunction{TEvent}"/> is the abstract base class for handling

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using LambdaSharp;
-using LambdaSharp.CloudWatch;
+using LambdaSharp.EventBridge;
 
 namespace %%ROOTNAMESPACE%% {
 
