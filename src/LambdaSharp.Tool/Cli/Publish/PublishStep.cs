@@ -211,6 +211,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
             imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease());
             if(imported) {
+                new ModelManifestLoader(Settings, manifest.GetFullName()).ResetCache(Settings.DeploymentBucketName, moduleInfo);
                 Console.WriteLine($"=> Imported {moduleLocation.ModuleInfo}");
             } else {
                 Console.WriteLine($"=> Nothing to do");
@@ -240,6 +241,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
                 // show message if any artifacts were imported
                 if(imported) {
+                    new ModelManifestLoader(Settings, manifest.GetFullName()).ResetCache(Settings.DeploymentBucketName, dependency.ModuleLocation.ModuleInfo);
                     Console.WriteLine($"=> Imported {dependency.ModuleLocation.ModuleInfo}");
                 }
             }
