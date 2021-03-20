@@ -202,14 +202,14 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // import module
             var imported = false;
             foreach(var artifact in manifest.Artifacts) {
-                imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, artifact, replace: forcePublish);
+                imported = imported | await ImportArtifact(moduleLocation.SourceBucketName, artifact, replace: forcePublish);
             }
 
             // don't import module manifest if any of the artifacts failed to import
             if(HasErrors) {
                 return false;
             }
-            imported = imported | await ImportS3Object(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease());
+            imported = imported | await ImportArtifact(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease());
             if(imported) {
                 new ModelManifestLoader(Settings, manifest.GetFullName()).ResetCache(Settings.DeploymentBucketName, moduleInfo);
                 Console.WriteLine($"=> Imported {moduleLocation.ModuleInfo}");
@@ -233,11 +233,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
                 // copy check-summed module artifacts (guaranteed immutable)
                 foreach(var artifact in dependency.Manifest.Artifacts) {
-                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, artifact);
+                    imported = imported | await ImportArtifact(dependency.ModuleLocation.ModuleInfo.Origin, artifact);
                 }
 
                 // copy version manifest
-                imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease());
+                imported = imported | await ImportArtifact(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease());
 
                 // show message if any artifacts were imported
                 if(imported) {
@@ -321,46 +321,51 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
         private Task<bool> DoesS3ObjectExistsAsync(string key) => Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, key);
 
-        private async Task<bool> ImportS3Object(string sourceBucket, string key, bool replace = false) {
-
-            // check if target object already exists
-            var found = false;
+        private async Task<bool> ImportArtifact(string sourceBucket, string key, bool replace = false) {
+            StartLogPerformance($"ImportArtifact() for s3://{sourceBucket}/{key}");
             try {
-                var existing = await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                    BucketName = Settings.DeploymentBucketName,
-                    Key = key,
-                    RequestPayer = RequestPayer.Requester
-                });
-                found = true;
 
-                // check if this object was uploaded locally and therefore should not be replaced
-                if(existing.Metadata[AMAZON_METADATA_ORIGIN] == Settings.DeploymentBucketName) {
-                    LogWarn($"skipping import of 's3://{sourceBucket}/{key}' because it was published locally");
-                    return false;
-                }
-            } catch { }
-            if(!found || replace) {
-                var request = new CopyObjectRequest {
-                    SourceBucket = sourceBucket,
-                    SourceKey = key,
-                    DestinationBucket = Settings.DeploymentBucketName,
-                    DestinationKey = key,
-                    MetadataDirective = Amazon.S3.S3MetadataDirective.COPY,
-                    RequestPayer = RequestPayer.Requester
-                };
-
-                // capture the origin of this object
-                request.Metadata[AMAZON_METADATA_ORIGIN] = sourceBucket;
+                // check if target object already exists
+                var found = false;
                 try {
-                    await Settings.S3Client.CopyObjectAsync(request);
-                } catch(AmazonS3Exception e) {
-                    LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket", e);
-                    return false;
+                    var existing = await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                        BucketName = Settings.DeploymentBucketName,
+                        Key = key,
+                        RequestPayer = RequestPayer.Requester
+                    });
+                    found = true;
+
+                    // check if this object was uploaded locally and therefore should not be replaced
+                    if(existing.Metadata[AMAZON_METADATA_ORIGIN] == Settings.DeploymentBucketName) {
+                        LogWarn($"skipping import of 's3://{sourceBucket}/{key}' because it was published locally");
+                        return false;
+                    }
+                } catch { }
+                if(!found || replace) {
+                    var request = new CopyObjectRequest {
+                        SourceBucket = sourceBucket,
+                        SourceKey = key,
+                        DestinationBucket = Settings.DeploymentBucketName,
+                        DestinationKey = key,
+                        MetadataDirective = Amazon.S3.S3MetadataDirective.COPY,
+                        RequestPayer = RequestPayer.Requester
+                    };
+
+                    // capture the origin of this object
+                    request.Metadata[AMAZON_METADATA_ORIGIN] = sourceBucket;
+                    try {
+                        await Settings.S3Client.CopyObjectAsync(request);
+                    } catch(AmazonS3Exception e) {
+                        LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket", e);
+                        return false;
+                    }
+                    _changesDetected = true;
+                    return true;
                 }
-                 _changesDetected = true;
-                return true;
-           }
-           return false;
+                return false;
+            } finally {
+                StopLogPerformance();
+            }
         }
     }
 }
