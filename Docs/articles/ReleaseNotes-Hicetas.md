@@ -154,6 +154,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Fixed an issue where cached module versions were not refreshed when importing a new module to the bucket.
+  * Fixed na issue where `--existing-s3-bucket-name` was not respected when `--quick-start` was used.
 
 ### (v0.8.2.2) - 2021-03-17
 

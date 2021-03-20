@@ -119,10 +119,16 @@ namespace LambdaSharp.Tool.Cli {
                     // set initialization parameters
                     var existingS3BucketName = existingS3BucketNameOption.Value();
                     if(quickStartOption.HasValue()) {
+
+                        // check if --core-services was specified, if not default to 'disabled'
                         coreServices = coreServicesOption.HasValue()
                             ? coreServices
                             : CoreServices.Disabled;
-                        existingS3BucketName = "";
+
+                        // check if --existing-s3-bucket-name was specified, if not default to ""
+                        existingS3BucketName = existingS3BucketNameOption.HasValue()
+                            ? existingS3BucketNameOption.Value()
+                            : "";
                     }
 
                     // begin tier initialization
