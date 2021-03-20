@@ -163,8 +163,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
             return manifest.ModuleInfo;
         }
 
-        public async Task<bool> DoImportAsync(ModuleInfo moduleInfo, bool forcePublish, string fromOrigin) {
-            if((fromOrigin ?? moduleInfo.Origin) == Settings.DeploymentBucketName) {
+        public async Task<bool> DoImportAsync(ModuleInfo moduleInfo, bool forcePublish, string fromBucket) {
+            if((fromBucket ?? moduleInfo.Origin) == Settings.DeploymentBucketName) {
                 LogWarn($"skipping import of {moduleInfo} because origin matches deployment bucket");
                 return true;
             }
@@ -180,7 +180,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // find manifest for module to import
-            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, fromOrigin ?? moduleInfo.Origin, ModuleManifestDependencyType.Root, allowImport: true, showError: true);
+            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, fromBucket ?? moduleInfo.Origin, ModuleManifestDependencyType.Root, allowImport: true, showError: true);
             if(moduleLocation == null) {
 
                 // nothing to do; loader already emitted an error
@@ -192,8 +192,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 return false;
             }
 
-            // import module dependencies only if `--from-origin` was NOT specified
-            if(!await ImportDependencies(manifest, allowImport: fromOrigin == null)) {
+            // import module dependencies only if `--from-bucket` was NOT specified
+            if(!await ImportDependencies(manifest, allowImport: fromBucket == null)) {
 
                 // error has already been reported
                 return false;

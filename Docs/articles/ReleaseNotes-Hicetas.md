@@ -145,6 +145,11 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * TODO: fix cached listing of bucket when writing to it
 
+#### Features
+
+* CLI
+  * Added `--from-bucket` as alias for `--from-origin` to make the intent clearer (`--from-origin` is still supported for backwards compatibility).
+
 ### (v0.8.2.2) - 2021-03-17
 
 #### BREAKING CHANGES
