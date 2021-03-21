@@ -14,8 +14,9 @@ The _LambdaSharp.Core_ module defines the core resources and resource types for 
 
 
 ## Resource Types
-1. [LambdaSharp::Registration::Module](LambdaSharp-Registration-Module.md)
+1. [LambdaSharp::Registration::App](LambdaSharp-Registration-App.md)
 1. [LambdaSharp::Registration::Function](LambdaSharp-Registration-Function.md)
+1. [LambdaSharp::Registration::Module](LambdaSharp-Registration-Module.md)
 
 
 ## Parameters
