@@ -166,9 +166,9 @@ wss://acme.execute-api.us-west-2.amazonaws.com/LATEST/?header=ewogICAgIkhvc3QiOi
 
 ### Protocol
 
-> TODO
+The WebSocket protocol has two types of interactions: actions and notifications. _Actions_ are similar to requests in that each action has exactly one response, called acknowledgements. _Acknowledgements_ are correlated to actions by the `RequestId` property. _Notifications_ can occur at any time and are commonly  triggered by a subscription rule.
 
-#### Request Syntax
+### Action Syntax
 
 Each request must have a `Action` property with a known value. The `Action` property indicates the shape of the request. In addition, must have a `RequestId` property to correlate responses from the WebSocket with their requests.
 
@@ -207,7 +207,7 @@ The unique identifier for the request.
 
 </dl>
 
-#### Success Response
+#### Acknowledge: Success
 
 A response to an action has `Ack` as its `Action` value. The `RequestId` must be used to correlate a response to an earlier request. The order in which responses are sent back is non-deterministic and the client must be able to associate responses correctly to pending requests.
 
@@ -221,7 +221,36 @@ A successful acknowledge response has `Ok` as its `Status` value.
 }
 ```
 
-#### Error Response
+<dl>
+
+<dt><code>Action</code></dt>
+<dd>
+
+The value is always <code>Ack</code>.
+
+<i>Type:</i> String
+</dd>
+
+<dt><code>RequestId</code></dt>
+<dd>
+
+The unique identifier for the request correlating it to a matching <em>Action</em>.
+
+<i>Type:</i> GUID
+</dd>
+
+<dt><code>Status</code></dt>
+<dd>
+
+The value is always <code>Ok</code>.
+
+<i>Type:</i> String
+</dd>
+
+</dl>
+
+
+#### Acknowledge: Error
 
 A response to an action has `Ack` as its `Action` value. The `RequestId` must be used to correlate a response to an earlier request. The order in which responses are sent back is non-deterministic and the client must be able to associate responses correctly to pending requests.
 
@@ -236,11 +265,45 @@ A failed acknowledge response has `Error` as its `Status` value. In addition, th
 }
 ```
 
+<dl>
+
+<dt><code>Action</code></dt>
+<dd>
+
+The value is always <code>Ack</code>.
+
+<i>Type:</i> String
+</dd>
+
+<dt><code>Message</code></dt>
+<dd>
+
+A description of the error that occurred.
+
+<i>Type:</i> String
+</dd>
+
+<dt><code>RequestId</code></dt>
+<dd>
+
+The unique identifier for the request correlating it to a matching <em>Action</em>.
+
+<i>Type:</i> GUID
+</dd>
+
+<dt><code>Status</code></dt>
+<dd>
+
+The value is always <code>Error</code>.
+
+<i>Type:</i> String
+</dd>
+
+</dl>
+
 ### Action: Hello
 
 The `Hello` action must be sent by the client as soon as the connection is opened. Failure to send the `Hello` action will cause the connection to be automatically closed by the WebSocket API.
-
-#### Request Syntax
 
 ```json
 {
