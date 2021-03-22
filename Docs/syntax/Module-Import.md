@@ -37,7 +37,7 @@ The <code>Allow</code> attribute can be either a comma-separated, single string 
 <dt><code>Description</code></dt>
 <dd>
 
-The <code>Description</code> attribute specifies the import parameter description. The description is shown as part of the module's exported values when the <code>Scope</code> includes <code>public</code>.
+The <code>Description</code> attribute specifies the import parameter description. The description is shown as part of the module's exported values when the <code>Scope</code> includes <code>stack</code> or <code>public</code>.
 
 <i>Required</i>: No
 
@@ -77,7 +77,7 @@ The <code>Module</code> attribute specifies the name of the module from which to
 <dt><code>Scope</code></dt>
 <dd>
 
-The <code>Scope</code> attribute specifies which functions need to have access to this item. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the item, then <code>all</code> can be used as a wildcard. In addition, the <code>public</code> can be used to export the item from the module.
+The <code>Scope</code> attribute specifies which functions need to have access to this item. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all functions need the item, then <code>all</code> can be used as a wildcard. In addition, <code>public</code> can be used to export the item from the module. Alternatively, <code>stack</code> can be used to make the item available only in a nested stack.
 
 <i>Required</i>: No
 

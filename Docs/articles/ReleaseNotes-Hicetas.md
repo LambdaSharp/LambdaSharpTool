@@ -143,12 +143,15 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.2.3) - TBD
 
-* TODO: fix cached listing of bucket when writing to it
+> TODO: use `stack` scope for nested module definitions
 
 #### Features
 
 * CLI
   * Added `--from-bucket` as alias for `--from-origin` to make the intent clearer (`--from-origin` is still supported for backwards compatibility).
+
+* Syntax
+  * Added `stack` as a scope keyword to make an item available in a nested stack, but not publicly available for import.
 
 #### Fixes
 

@@ -77,7 +77,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         }
 
                         // verify that all defined scope values are valid
-                        foreach(var unknownScope in item.Scope.Where(scope => (scope != "public") && !functionNames.Contains(scope))) {
+                        foreach(var unknownScope in item.Scope.Where(scope => (scope != "public") && (scope != "stack") && !functionNames.Contains(scope))) {
                             LogError($"unknown referenced function '{unknownScope}' in scope definition");
                         }
                     });
