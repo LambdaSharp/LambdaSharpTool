@@ -12,6 +12,7 @@ using LambdaSharp.App.EventBus.Records;
 using LambdaSharp.App.EventBus.Actions;
 using LambdaSharp.ApiGateway;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace LambdaSharp.App.EventBus.ListenerFunction {
 
@@ -150,7 +151,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         }
 
         // [Route("Hello")]
-        public async Task<AcknowledgeAction> HelloAsync(HelloAction action) {
+        public async Task HelloAsync(HelloAction action) {
             var connectionId = CurrentRequest.RequestContext.ConnectionId;
             LogInfo($"Hello: {connectionId}");
 
@@ -158,7 +159,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
-                return action.AcknowledgeError("Connection gone");
+                throw Abort(action.AcknowledgeError("Connection gone"));
             }
 
             // subscribe websocket to SNS topic notifications
@@ -171,7 +172,8 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
 
             // update connection record
             await _dataTable.UpdateConnectionRecordAsync(connection);
-            return action.AcknowledgeOk();
+
+            // NOTE (2021-03-23, bjorg): the `AcknowledgeAction` response is sent by the `BroadcastFunction` when the subscription is enabled
         }
 
         // [Route("Subscribe")]
@@ -223,5 +225,14 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
             return action.AcknowledgeOk();
         }
+
+        private Exception Abort(AcknowledgeAction acknowledgeAction)
+            => Abort(new APIGatewayProxyResponse {
+                StatusCode = 200,
+                Body = LambdaSerializer.Serialize(acknowledgeAction),
+                Headers = new Dictionary<string, string> {
+                    ["ContentType"] = "application/json"
+                }
+            });
     }
 }

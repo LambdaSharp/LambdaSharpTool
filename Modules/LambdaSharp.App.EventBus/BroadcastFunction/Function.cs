@@ -112,7 +112,7 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 // confirm subscription
                 await HttpClient.GetAsync(topicSubscription.SubscribeURL);
 
-                // send welcome action to websocket connection
+                // send `AcknowledgeAction` to websocket connection
                 await SendMessageToConnection(new AcknowledgeAction {
                     RequestId = requestId,
                     Status = "Ok"

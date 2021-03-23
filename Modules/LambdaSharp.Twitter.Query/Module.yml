@@ -72,7 +72,7 @@ Items:
   - Resource: TweetTopic
     Description: This topic publishes tweets that match the query
     Scope:
-      - output
+      - stack
       - QueryFunction
     Type: AWS::SNS::Topic
     Allow: Publish
