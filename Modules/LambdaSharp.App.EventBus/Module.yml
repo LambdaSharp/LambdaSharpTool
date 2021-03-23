@@ -47,17 +47,17 @@ Items:
 
   - Variable: EventTopicArn
     Description: SNS topic ARN for broadcasting events to the app event bus
-    Scope: public
+    Scope: stack
     Value: !Ref EventTopic
 
   - Variable: Url
     Description: WebSocket URL for connecting to the app event bus
-    Scope: public
+    Scope: stack
     Value: !Ref Module::WebSocket::Url
 
   - Variable: ApiKey
     Description: App event bus API Key
-    Scope: public
+    Scope: stack
     Value:
       Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
 
@@ -75,6 +75,9 @@ Items:
 
       - WebSocket: $disconnect
         Invoke: CloseConnection
+
+      - WebSocket: $default
+        Invoke: UnrecognizedAction
 
       - WebSocket: Hello
         Invoke: Hello

@@ -95,7 +95,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
 
             // create new connection record
-            await _dataTable.CreateConnectionAsync(new ConnectionRecord {
+            await _dataTable.CreateConnectionRecordAsync(new ConnectionRecord {
                 ConnectionId = request.RequestContext.ConnectionId,
                 ApplicationId = header.Id,
                 Bearer = request.RequestContext.Authorizer?.Claims
@@ -110,7 +110,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             LogInfo($"Disconnected: {request.RequestContext.ConnectionId}");
 
             // retrieve websocket connection record
-            var connection = await _dataTable.GetConnectionAsync(request.RequestContext.ConnectionId);
+            var connection = await _dataTable.GetConnectionRecordAsync(request.RequestContext.ConnectionId);
             if(connection == null) {
                 LogInfo("Connection was already removed");
                 return;
@@ -132,27 +132,33 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 Task.Run(async () => {
 
                     // fetch all rules associated with websocket connection
-                    var rules = await _dataTable.GetConnectionRulesAsync(request.RequestContext.ConnectionId);
+                    var rules = await _dataTable.GetAllRuleRecordAsync(request.RequestContext.ConnectionId);
 
                     // delete rules
-                    await _dataTable.DeleteAllRulesAsync(rules);
+                    await _dataTable.DeleteAllRuleRecordAsync(rules);
                 }),
 
                 // delete websocket connection record
-                _dataTable.DeleteConnectionAsync(connection.ConnectionId)
+                _dataTable.DeleteConnectionRecordAsync(connection.ConnectionId)
             });
         }
 
+        // [Route("$default")]
+        public async Task<AcknowledgeAction> UnrecognizedActionAsync(UnrecognizedAction action) {
+            LogInfo($"Unrecognized action: {action.Action ?? "<null>"}");
+            return action.AcknowledgeError("Unrecognized action");
+        }
+
         // [Route("Hello")]
-        public async Task HelloAsync(HelloAction action) {
+        public async Task<AcknowledgeAction> HelloAsync(HelloAction action) {
             var connectionId = CurrentRequest.RequestContext.ConnectionId;
             LogInfo($"Hello: {connectionId}");
 
             // retrieve websocket connection record
-            var connection = await _dataTable.GetConnectionAsync(connectionId);
+            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
-                return;
+                return action.AcknowledgeError("Connection gone");
             }
 
             // subscribe websocket to SNS topic notifications
@@ -164,7 +170,8 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             })).SubscriptionArn;
 
             // update connection record
-            await _dataTable.UpdateConnectionAsync(connection);
+            await _dataTable.UpdateConnectionRecordAsync(connection);
+            return action.AcknowledgeOk();
         }
 
         // [Route("Subscribe")]
@@ -174,23 +181,14 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
 
             // validate request
             if(string.IsNullOrEmpty(action.Rule)) {
-                return new AcknowledgeAction {
-                    RequestId = action.RequestId,
-                    Status = "Error",
-                    Message = "Missing or invalid rule name"
-                };
+                return action.AcknowledgeError("Missing or invalid rule name");
             }
 
             // retrieve websocket connection record
-            var connection = await _dataTable.GetConnectionAsync(connectionId);
+            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
-                return new AcknowledgeAction {
-                    RequestId = action.RequestId,
-                    Rule = action.Rule,
-                    Status = "Error",
-                    Message = "Connection gone"
-                };
+                return action.AcknowledgeError("Connection gone");
             }
 
             // validate pattern
@@ -202,25 +200,16 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 // nothing to do
             }
             if(!validPattern) {
-                return new AcknowledgeAction {
-                    RequestId = action.RequestId,
-                    Rule = action.Rule,
-                    Status = "Error",
-                    Message = "Invalid pattern"
-                };
+                return action.AcknowledgeError("Invalid pattern");
             }
 
             // create or update event rule
-            await _dataTable.CreateOrUpdateRuleAsync(new RuleRecord {
+            await _dataTable.CreateOrUpdateRuleRecordAsync(new RuleRecord {
                 Rule = action.Rule,
                 Pattern = action.Pattern,
                 ConnectionId = connection.ConnectionId
             });
-            return new AcknowledgeAction {
-                RequestId = action.RequestId,
-                Rule = action.Rule,
-                Status = "Ok"
-            };
+            return action.AcknowledgeOk();
         }
 
         // [Route("Unsubscribe")]
@@ -230,13 +219,9 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             if(action.Rule != null) {
 
                 // delete event rule
-                await _dataTable.DeleteRuleAsync(connectionId, action.Rule);
+                await _dataTable.DeleteRuleRecordAsync(connectionId, action.Rule);
             }
-            return new AcknowledgeAction {
-                RequestId = action.RequestId,
-                Rule = action.Rule,
-                Status = "Ok"
-            };
+            return action.AcknowledgeOk();
         }
     }
 }

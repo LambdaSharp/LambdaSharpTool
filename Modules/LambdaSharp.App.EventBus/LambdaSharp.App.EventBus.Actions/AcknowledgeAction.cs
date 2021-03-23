@@ -22,7 +22,7 @@ namespace LambdaSharp.App.EventBus.Actions {
     /// The <see cref="AcknowledgeAction"/> class is used to respond to a
     /// LambdaSharp App EventBus action.
     /// </summary>
-    public sealed class AcknowledgeAction : ARuleAction {
+    public sealed class AcknowledgeAction : AAction {
 
         //--- Constructors ---
 

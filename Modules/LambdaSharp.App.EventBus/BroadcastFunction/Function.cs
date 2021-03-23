@@ -159,7 +159,7 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 LogError(e, "invalid message");
                 return BadRequest();
             }
-            var rules = await _dataTable.GetConnectionRulesAsync(connectionId);
+            var rules = await _dataTable.GetAllRuleRecordAsync(connectionId);
             var matchedRules = rules
                 .Where(rule => {
                     try {
@@ -204,7 +204,7 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 };
         }
 
-        private async Task SendMessageToConnection(AnAction action, string connectionId) {
+        private async Task SendMessageToConnection(AAction action, string connectionId) {
             var json = LambdaSerializer.Serialize<object>(action);
             if(DebugLoggingEnabled) {
                 LogDebug($"Post to connection: {connectionId}\n{{0}}", json);
