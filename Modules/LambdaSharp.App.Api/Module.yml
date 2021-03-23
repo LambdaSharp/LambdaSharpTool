@@ -36,7 +36,7 @@ Items:
 
   - Parameter: RootPath
     Description: Name of root resource for app API
-    Scope: public
+    Scope: stack
     Type: String
     AllowedPattern: "^[a-zA-Z0-9\\._\\-]+$"
     ConstraintDescription: Must be non-empty sequence of alphanumeric characters, periods ('.'), underscores ('_'), or dashes ('-').
@@ -82,32 +82,32 @@ Items:
     Value: !Equals [ !Ref EventSource, "" ]
 
   ###
-  # Module Exports
+  # Stack Outputs
   ###
 
   - Variable: DomainName
     Description: App API domain name
-    Scope: public
+    Scope: stack
     Value: !Sub "${RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
 
   - Variable: CloudFrontOriginPath
     Description: App API origin path for CloudFront
-    Scope: public
+    Scope: stack
     Value: !Sub "/${RestApiStage}"
 
   - Variable: CloudFrontPathPattern
     Description: App API path pattern for CloudFront
-    Scope: public
+    Scope: stack
     Value: !Sub "${RootPath}/*"
 
   - Variable: Url
     Description: App API URL
-    Scope: public
+    Scope: stack
     Value: !Sub "https://${DomainName}/${RestApiStage}/${RootPath}"
 
   - Variable: ApiKey
     Description: App API Key
-    Scope: public
+    Scope: stack
     Value:
       Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
 

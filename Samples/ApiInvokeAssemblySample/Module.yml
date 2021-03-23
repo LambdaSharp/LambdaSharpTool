@@ -46,5 +46,5 @@ Items:
 
   - Variable: ApiUrl
     Description: API Gateway URL
-    Scope: public
+    Scope: stack
     Value: !Ref Module::RestApi::Url
