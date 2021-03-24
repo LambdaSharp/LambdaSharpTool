@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -30,21 +31,17 @@ namespace LambdaSharp.App.EventBus {
     public abstract class ADataTable {
 
         //--- Class Fields ---
-        private readonly static PutItemOperationConfig CreateItemConfig = new PutItemOperationConfig {
-            ConditionalExpression = new Expression {
-                ExpressionStatement = "attribute_not_exists(#PK)",
-                ExpressionAttributeNames = {
-                    ["#PK"] = "PK"
-                }
+        private readonly static Expression ItemDoesNotExistCondition = new Expression {
+            ExpressionStatement = "attribute_not_exists(#PK)",
+            ExpressionAttributeNames = {
+                ["#PK"] = "PK"
             }
         };
 
-        private readonly static PutItemOperationConfig UpdateItemConfig = new PutItemOperationConfig {
-            ConditionalExpression = new Expression {
-                ExpressionStatement = "attribute_exists(#PK)",
-                ExpressionAttributeNames = {
-                    ["#PK"] = "PK"
-                }
+        private readonly static Expression ItemExistsCondition = new Expression {
+            ExpressionStatement = "attribute_exists(#PK)",
+            ExpressionAttributeNames = {
+                ["#PK"] = "PK"
             }
         };
 
@@ -58,71 +55,81 @@ namespace LambdaSharp.App.EventBus {
             return results;
         }
 
-        protected static T Deserialize<T>(Document record)
-            => (record != null)
-                ? JsonSerializer.Deserialize<T>(record.ToJson())
-                : default;
-
 
         //--- Fields ---
-        private readonly IAmazonDynamoDB _dynamoDbClient;
-        private readonly Table _table;
+
+        protected JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
+            IgnoreNullValues = true,
+            WriteIndented = false,
+            Converters = {
+                new JsonStringEnumConverter()
+            }
+        };
 
         //--- Constructors ---
         public ADataTable(string tableName, IAmazonDynamoDB dynamoDbClient) {
             TableName = tableName ?? throw new System.ArgumentNullException(nameof(tableName));
-            _dynamoDbClient = dynamoDbClient ?? new AmazonDynamoDBClient();
-            _table = Table.LoadTable(dynamoDbClient, tableName);
+            DynamoDbClient = dynamoDbClient ?? new AmazonDynamoDBClient();
+            Table = Table.LoadTable(dynamoDbClient, tableName);
         }
 
         //--- Properties ---
-        public string TableName { get; }
+        protected  IAmazonDynamoDB DynamoDbClient { get; }
+        protected Table Table { get; }
+        protected string TableName { get; }
 
         //--- Methods ---
         protected Task<Document> GetItemAsync(string pk, string sk, CancellationToken cancellationToken)
-            => _table.GetItemAsync(pk, sk, cancellationToken);
+            => Table.GetItemAsync(pk, sk, cancellationToken);
 
         protected Task<IEnumerable<Document>> SearchBeginsWith(string pk, string skPrefix, CancellationToken cancellationToken) {
             var filter = new QueryFilter();
             filter.AddCondition("PK", QueryOperator.Equal, new DynamoDBEntry[] { pk });
             filter.AddCondition("SK", QueryOperator.BeginsWith, new DynamoDBEntry[] { skPrefix });
-            var search = _table.Query(new QueryOperationConfig {
+            var search = Table.Query(new QueryOperationConfig {
                 Filter = filter
             });
             return DoSearchAsync(search, cancellationToken);
         }
 
-        protected Task CreateOrUpdateItemsAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken) {
-            var document = Document.FromJson(JsonSerializer.Serialize(item));
-            document["_Type"] = item.GetType().Name;
-            document["_Modified"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
-            document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
-            return _table.PutItemAsync(document, cancellationToken);
-        }
+        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken)
+            => CreateOrUpdateItemAsync(item, pk, sk, condition: null, cancellationToken);
 
-        protected Task CreateItemsAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken) {
-            var document = Document.FromJson(JsonSerializer.Serialize(item));
-            document["_Type"] = item.GetType().Name;
-            document["_Modified"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
-            document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
-            return _table.PutItemAsync(document, CreateItemConfig, cancellationToken);
-        }
+        protected Task CreateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken)
+            => CreateOrUpdateItemAsync(item, pk, sk, ItemDoesNotExistCondition, cancellationToken);
 
-        protected Task UpdateItemsAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken) {
-            var document = Document.FromJson(JsonSerializer.Serialize(item));
+        protected Task UpdateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken)
+            => CreateOrUpdateItemAsync(item, pk, sk, ItemExistsCondition, cancellationToken);
+
+        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, Expression condition, CancellationToken cancellationToken) {
+            var document = Serialize(item);
             document["_Type"] = item.GetType().Name;
             document["_Modified"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
             document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
-            return _table.PutItemAsync(document, UpdateItemConfig, cancellationToken);
+
+            // add operation condition when provided
+            PutItemOperationConfig operationConfig = null;
+            if(condition != null) {
+                operationConfig = new PutItemOperationConfig {
+                    ConditionalExpression = condition
+                };
+            }
+            return Table.PutItemAsync(document, operationConfig, cancellationToken);
         }
 
         protected Task DeleteItemAsync(string pk, string sk, CancellationToken cancellationToken)
-            => _table.DeleteItemAsync(pk, sk, cancellationToken);
+            => Table.DeleteItemAsync(pk, sk, cancellationToken);
 
         protected Task DeleteItemsAsync(IEnumerable<(string PK, string SK)> keys, CancellationToken cancellationToken)
-            => Task.WhenAll(keys.Select(key => _table.DeleteItemAsync(key.PK, key.SK, cancellationToken)));
+            => Task.WhenAll(keys.Select(key => Table.DeleteItemAsync(key.PK, key.SK, cancellationToken)));
+
+        protected Document Serialize<T>(T item)
+            => Document.FromJson(JsonSerializer.Serialize(item, JsonSerializerOptions));
+
+        protected T Deserialize<T>(Document record)
+            => (record != null)
+                ? JsonSerializer.Deserialize<T>(record.ToJson(), JsonSerializerOptions)
+                : default;
     }
 }

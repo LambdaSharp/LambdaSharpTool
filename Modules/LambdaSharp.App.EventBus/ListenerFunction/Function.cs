@@ -98,6 +98,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             // create new connection record
             await _dataTable.CreateConnectionRecordAsync(new ConnectionRecord {
                 ConnectionId = request.RequestContext.ConnectionId,
+                State = ConnectionState.New,
                 ApplicationId = header.Id,
                 Bearer = request.RequestContext.Authorizer?.Claims
             });
@@ -110,12 +111,15 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         public async Task CloseConnectionAsync(APIGatewayProxyRequest request) {
             LogInfo($"Disconnected: {request.RequestContext.ConnectionId}");
 
-            // retrieve websocket connection record
+            // retrieve connection record
             var connection = await _dataTable.GetConnectionRecordAsync(request.RequestContext.ConnectionId);
             if(connection == null) {
                 LogInfo("Connection was already removed");
                 return;
             }
+
+            // indicate connection is closed
+            await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Closed);
 
             // clean-up resources associated with websocket connection
             await Task.WhenAll(new Task[] {
@@ -123,9 +127,11 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 // unsubscribe from SNS topic notifications
                 Task.Run(async () => {
                     if(connection.SubscriptionArn != null) {
-                        await _snsClient.UnsubscribeAsync(new UnsubscribeRequest {
-                            SubscriptionArn = connection.SubscriptionArn
-                        });
+                        try {
+                            await _snsClient.UnsubscribeAsync(connection.SubscriptionArn);
+                        } catch(Exception e) {
+                            LogErrorAsWarning(e, "failed to unsubscribe (subscription ARN: {0})", connection.SubscriptionArn);
+                        }
                     }
                 }),
 
@@ -137,17 +143,17 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
 
                     // delete rules
                     await _dataTable.DeleteAllRuleRecordAsync(rules);
-                }),
-
-                // delete websocket connection record
-                _dataTable.DeleteConnectionRecordAsync(connection.ConnectionId)
+                })
             });
+
+            // delete websocket connection record
+            await _dataTable.DeleteConnectionRecordAsync(connection.ConnectionId);
         }
 
         // [Route("$default")]
         public async Task<AcknowledgeAction> UnrecognizedActionAsync(UnrecognizedAction action) {
             LogInfo($"Unrecognized action: {action.Action ?? "<null>"}");
-            return action.AcknowledgeError("Unrecognized action");
+            return action.AcknowledgeError("unrecognized action");
         }
 
         // [Route("Hello")]
@@ -155,23 +161,37 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             var connectionId = CurrentRequest.RequestContext.ConnectionId;
             LogInfo($"Hello: {connectionId}");
 
-            // retrieve websocket connection record
+            // retrieve connection record
             var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
-                throw Abort(action.AcknowledgeError("Connection gone"));
+                throw Abort(action.AcknowledgeError("connection gone"));
+            }
+            if(connection.State == ConnectionState.Failed) {
+                LogInfo("Connection is in failed state");
+                throw Abort(action.AcknowledgeError("connection reset required"));
+            }
+            if(connection.State != ConnectionState.New) {
+                LogInfo("Client has already announced itself (state: {0})", connection.State);
+                throw Abort(action.AcknowledgeError("client is already announced"));
+            }
+            if(!await _dataTable.UpdateConnectionRecordStateAsync(connection, ConnectionState.Pending)) {
+                LogInfo($"Unable to update connection state from '{connection.State}' to '{ConnectionState.Pending}'");
+                throw Abort(action.AcknowledgeError("client is already being announced"));
             }
 
             // subscribe websocket to SNS topic notifications
-            connection.SubscriptionArn = (await _snsClient.SubscribeAsync(new SubscribeRequest {
-                Protocol = "https",
-                Endpoint = $"{_broadcastApiUrl}?ws={connectionId}&token={_httpApiToken}&rid={action.RequestId}",
-                ReturnSubscriptionArn = true,
-                TopicArn = _eventTopicArn
-            })).SubscriptionArn;
-
-            // update connection record
-            await _dataTable.UpdateConnectionRecordAsync(connection);
+            try {
+                await _snsClient.SubscribeAsync(new SubscribeRequest {
+                    Protocol = "https",
+                    Endpoint = $"{_broadcastApiUrl}?ws={connectionId}&token={_httpApiToken}&rid={action.RequestId}",
+                    TopicArn = _eventTopicArn
+                });
+            } catch(Exception e) {
+                LogError(e, "failed to subscribe to SNS topic");
+                await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
+                throw Abort(action.AcknowledgeError("internal error"));
+            }
 
             // NOTE (2021-03-23, bjorg): the `AcknowledgeAction` response is sent by the `BroadcastFunction` when the subscription is enabled
         }
@@ -183,18 +203,26 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
 
             // validate request
             if(string.IsNullOrEmpty(action.Rule)) {
-                return action.AcknowledgeError("Missing or invalid rule name");
+                return action.AcknowledgeError("missing or invalid rule name");
             }
 
-            // retrieve websocket connection record
+            // retrieve connection record
             var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
-                return action.AcknowledgeError("Connection gone");
+                return action.AcknowledgeError("connection gone");
+            }
+            if(connection.State == ConnectionState.Failed) {
+                LogInfo("Connection is in failed state");
+                throw Abort(action.AcknowledgeError("connection reset required"));
             }
             if(connection.SubscriptionArn == null) {
-                LogInfo("Client has not announced itself yet");
-                return action.AcknowledgeError("Client is unannounced");
+                LogInfo("Client has not announced itself");
+                return action.AcknowledgeError("client is unannounced");
+            }
+            if(connection.State != ConnectionState.Open) {
+                LogInfo("Connection is not open (state: {0})", connection.State);
+                throw Abort(action.AcknowledgeError("action not allowed"));
             }
 
             // validate pattern
@@ -206,7 +234,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 // nothing to do
             }
             if(!validPattern) {
-                return action.AcknowledgeError("Invalid pattern");
+                return action.AcknowledgeError("invalid pattern");
             }
 
             // create or update event rule
@@ -225,18 +253,26 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
 
             // validate request
             if(string.IsNullOrEmpty(action.Rule)) {
-                return action.AcknowledgeError("Missing or invalid rule name");
+                return action.AcknowledgeError("missing or invalid rule name");
             }
 
-            // retrieve websocket connection record
+            // retrieve connection record
             var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
-                return action.AcknowledgeError("Connection gone");
+                return action.AcknowledgeError("connection gone");
+            }
+            if(connection.State == ConnectionState.Failed) {
+                LogInfo("Connection is in failed state");
+                throw Abort(action.AcknowledgeError("connection reset required"));
             }
             if(connection.SubscriptionArn == null) {
-                LogInfo("Client has not announced itself yet");
-                return action.AcknowledgeError("Client is unannounced");
+                LogInfo("Client has not announced itself");
+                return action.AcknowledgeError("client is unannounced");
+            }
+            if(connection.State != ConnectionState.Open) {
+                LogInfo("Connection is not open (state: {0})", connection.State);
+                throw Abort(action.AcknowledgeError("action not allowed"));
             }
 
             // delete event rule

@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 using LambdaSharp.App.EventBus.Records;
 
 namespace LambdaSharp.App.EventBus {
@@ -51,7 +52,7 @@ namespace LambdaSharp.App.EventBus {
             => Deserialize<ConnectionRecord>(await GetItemAsync(CONNECTION_PREFIX + connectionId, INFO, cancellationToken));
 
         public Task CreateConnectionRecordAsync(ConnectionRecord record, CancellationToken cancellationToken = default)
-            => CreateItemsAsync(
+            => CreateItemAsync(
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
@@ -59,12 +60,93 @@ namespace LambdaSharp.App.EventBus {
             );
 
         public Task UpdateConnectionRecordAsync(ConnectionRecord record, CancellationToken cancellationToken = default)
-            => UpdateItemsAsync(
+            => UpdateItemAsync(
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
                 cancellationToken
             );
+
+        public async Task<bool> SetConnectionRecordStateAsync(ConnectionRecord record, ConnectionState state, CancellationToken cancellationToken = default) {
+            try {
+                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue> {
+                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
+                        ["SK"] = new AttributeValue(INFO)
+                    },
+                    UpdateExpression = "SET #State = :state",
+                    ExpressionAttributeNames = {
+                        ["#State"] = "State"
+                    },
+                    ExpressionAttributeValues = {
+                        [":state"] = new AttributeValue(state.ToString())
+                    }
+                });
+                record.State = state;
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateConnectionRecordStateAsync(ConnectionRecord record, ConnectionState state, CancellationToken cancellationToken = default) {
+            try {
+                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue> {
+                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
+                        ["SK"] = new AttributeValue(INFO)
+                    },
+                    ConditionExpression = "#State = :expectedState",
+                    UpdateExpression = "SET #State = :state",
+                    ExpressionAttributeNames = {
+                        ["#State"] = "State"
+                    },
+                    ExpressionAttributeValues = {
+                        [":expectedState"] = new AttributeValue(record.State.ToString()),
+                        [":state"] = new AttributeValue(state.ToString())
+                    }
+                });
+                record.State = state;
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateConnectionRecordStateAndSubscriptionAsync(
+            ConnectionRecord record,
+            ConnectionState state,
+            string subscriptionArn,
+            CancellationToken cancellationToken = default
+        ) {
+            try {
+                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue> {
+                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
+                        ["SK"] = new AttributeValue(INFO)
+                    },
+                    ConditionExpression = "#State = :expectedState",
+                    UpdateExpression = "SET #State = :state, #ARN = :arn",
+                    ExpressionAttributeNames = {
+                        ["#State"] = "State",
+                        ["#ARN"] = "SubscriptionArn"
+                    },
+                    ExpressionAttributeValues = {
+                        [":expectedState"] = new AttributeValue(record.State.ToString()),
+                        [":state"] = new AttributeValue(state.ToString()),
+                        [":arn"] = new AttributeValue(subscriptionArn)
+                    }
+                });
+                record.State = state;
+                record.SubscriptionArn = subscriptionArn;
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
 
         public Task DeleteConnectionRecordAsync(string connectionId, CancellationToken cancellationToken = default)
             => DeleteItemAsync(
@@ -76,7 +158,7 @@ namespace LambdaSharp.App.EventBus {
 
         #region Rule Record
         public Task CreateOrUpdateRuleRecordAsync(RuleRecord record, CancellationToken cancellationToken = default)
-            => CreateOrUpdateItemsAsync(
+            => CreateOrUpdateItemAsync(
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: RULE_PREFIX + record.Rule,
