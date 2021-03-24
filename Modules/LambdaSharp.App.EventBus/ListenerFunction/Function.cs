@@ -192,6 +192,10 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 LogInfo("Connection was removed");
                 return action.AcknowledgeError("Connection gone");
             }
+            if(connection.SubscriptionArn == null) {
+                LogInfo("Client has not announced itself yet");
+                return action.AcknowledgeError("Client is unannounced");
+            }
 
             // validate pattern
             var validPattern = false;
@@ -218,11 +222,25 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         public async Task<AcknowledgeAction> UnsubscribeAsync(UnsubscribeAction action) {
             var connectionId = CurrentRequest.RequestContext.ConnectionId;
             LogInfo($"Unsubscribe request from: {connectionId}");
-            if(action.Rule != null) {
 
-                // delete event rule
-                await _dataTable.DeleteRuleRecordAsync(connectionId, action.Rule);
+            // validate request
+            if(string.IsNullOrEmpty(action.Rule)) {
+                return action.AcknowledgeError("Missing or invalid rule name");
             }
+
+            // retrieve websocket connection record
+            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+            if(connection == null) {
+                LogInfo("Connection was removed");
+                return action.AcknowledgeError("Connection gone");
+            }
+            if(connection.SubscriptionArn == null) {
+                LogInfo("Client has not announced itself yet");
+                return action.AcknowledgeError("Client is unannounced");
+            }
+
+            // delete event rule
+            await _dataTable.DeleteRuleRecordAsync(connectionId, action.Rule);
             return action.AcknowledgeOk();
         }
 

@@ -376,7 +376,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     webSocketResources.Add(route.FullName, routeResource);
 
                     // add optional request/response models
-                    if(!webSocketRoute.Source.RouteKey.StartsWith("$", StringComparison.Ordinal)) {
+                    if(
+                        !webSocketRoute.Source.RouteKey.Equals("$connect", StringComparison.Ordinal)
+                        && !webSocketRoute.Source.RouteKey.Equals("$disconnect", StringComparison.Ordinal)
+                    ) {
 
                         // add request model
                         switch(webSocketRoute.Source.RequestSchema) {

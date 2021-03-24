@@ -42,7 +42,7 @@ Items:
     Value: !Equals [ !Ref DevMode, "Enabled" ]
 
   ###
-  # Module Exports
+  # Stack Outputs
   ###
 
   - Variable: EventTopicArn

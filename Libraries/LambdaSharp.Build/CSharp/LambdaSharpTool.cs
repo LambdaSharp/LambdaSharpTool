@@ -256,12 +256,14 @@ namespace LambdaSharp.Build.CSharp {
                         Type = type.FullName,
                         Method = methodName,
                         OperationName = operationName,
-                        RequestContentType = requestSchemaAndContentType?.Item2,
-                        RequestSchema = requestSchemaAndContentType?.Item1,
+                        RequestContentType = requestSchemaAndContentType.TypeName,
+                        RequestSchema = requestSchemaAndContentType.Schema,
                         RequestSchemaName = requestParameter?.ParameterType.FullName,
-                        UriParameters  = uriParameters.Any() ? new Dictionary<string, bool>(uriParameters) : null,
-                        ResponseContentType = responseSchemaAndContentType?.Item2,
-                        ResponseSchema = responseSchemaAndContentType?.Item1,
+                        UriParameters  = uriParameters.Any()
+                            ? new Dictionary<string, bool>(uriParameters)
+                            : null,
+                        ResponseContentType = responseSchemaAndContentType.TypeName,
+                        ResponseSchema = responseSchemaAndContentType.Schema,
                         ResponseSchemaName = responseType?.FullName
                     };
 
@@ -302,11 +304,11 @@ namespace LambdaSharp.Build.CSharp {
             }
 
             // local functions
-            async Task<Tuple<object, string?>> AddSchema(string methodReference, string parameterName, Type? messageType) {
+            async Task<(object Schema, string? TypeName)> AddSchema(string methodReference, string parameterName, Type? messageType) {
 
                 // check if there is no request type
                 if(messageType == null) {
-                    return Tuple.Create((object)"Void", (string?)null);
+                    return (Schema: "Void", TypeName: null);
                 }
 
                 // check if there is no response type
@@ -314,7 +316,7 @@ namespace LambdaSharp.Build.CSharp {
                     (messageType == typeof(void))
                     || (messageType == typeof(Task))
                 ) {
-                    return Tuple.Create((object)"Void", (string?)null);
+                    return (Schema: "Void", TypeName: null);
                 }
 
                 // check if request/response type is not supported
@@ -335,7 +337,7 @@ namespace LambdaSharp.Build.CSharp {
                     (messageType == typeof(object))
                     || (messageType == typeof(Newtonsoft.Json.Linq.JObject))
                 ) {
-                    return Tuple.Create((object)"Object", (string?)"application/json");
+                    return (Schema: "Object", TypeName: "application/json");
                 }
 
                 // check if request/response is not a proxy request/response
@@ -366,9 +368,12 @@ namespace LambdaSharp.Build.CSharp {
                     }
 
                     // return JSON schema document
-                    return Tuple.Create((object)(JsonToNativeConverter.ParseObject(schema.ToJson()) ?? throw new InvalidDataException("schema is not a valid JSON object")), (string?)"application/json");
+                    return (
+                        Schema: JsonToNativeConverter.ParseObject(schema.ToJson()) ?? throw new InvalidDataException("schema is not a valid JSON object"),
+                        TypeName: "application/json"
+                    );
                 }
-                return Tuple.Create((object)"Proxy", (string?)null);
+                return (Schema: "Proxy", TypeName: null);
             }
         }
 
