@@ -224,6 +224,7 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 // send keep-alive action to websocket connection
                 LogInfo("KeepAlive tick");
                 await SendMessageToConnection(new KeepAliveAction(), connectionId);
+                await _dataTable.TouchConnectionRecordAsync(connection);
                 return Success("Ok");
             }
 

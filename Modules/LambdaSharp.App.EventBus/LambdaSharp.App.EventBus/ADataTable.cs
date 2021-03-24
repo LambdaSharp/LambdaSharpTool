@@ -118,6 +118,33 @@ namespace LambdaSharp.App.EventBus {
             return Table.PutItemAsync(document, operationConfig, cancellationToken);
         }
 
+        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, string ls1sk, CancellationToken cancellationToken)
+            => CreateOrUpdateItemAsync(item, pk, sk, ls1sk, condition: null, cancellationToken);
+
+        protected Task CreateItemAsync<T>(T item, string pk, string sk, string ls1sk, CancellationToken cancellationToken)
+            => CreateOrUpdateItemAsync(item, pk, sk, ls1sk, ItemDoesNotExistCondition, cancellationToken);
+
+        protected Task UpdateItemAsync<T>(T item, string pk, string sk, string ls1sk, CancellationToken cancellationToken)
+            => CreateOrUpdateItemAsync(item, pk, sk, ls1sk, ItemExistsCondition, cancellationToken);
+
+        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, string ls1sk, Expression condition, CancellationToken cancellationToken) {
+            var document = Serialize(item);
+            document["_Type"] = item.GetType().Name;
+            document["_Modified"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
+            document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
+            document["LS1SK"] = ls1sk ?? throw new ArgumentNullException(nameof(ls1sk));
+
+            // add operation condition when provided
+            PutItemOperationConfig operationConfig = null;
+            if(condition != null) {
+                operationConfig = new PutItemOperationConfig {
+                    ConditionalExpression = condition
+                };
+            }
+            return Table.PutItemAsync(document, operationConfig, cancellationToken);
+        }
+
         protected Task DeleteItemAsync(string pk, string sk, CancellationToken cancellationToken)
             => Table.DeleteItemAsync(pk, sk, cancellationToken);
 

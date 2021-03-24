@@ -32,6 +32,7 @@ namespace LambdaSharp.App.EventBus {
         //--- Constants ---
         private const string VALID_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private const string CONNECTION_PREFIX = "WS#";
+        private const string TOUCH_PREFIX = "TOUCH#";
         private const string RULE_PREFIX = "RULE#";
         private const string INFO = "INFO";
 
@@ -56,6 +57,7 @@ namespace LambdaSharp.App.EventBus {
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
+                ls1sk: TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 cancellationToken
             );
 
@@ -64,6 +66,7 @@ namespace LambdaSharp.App.EventBus {
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
+                ls1sk: TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 cancellationToken
             );
 
@@ -75,12 +78,18 @@ namespace LambdaSharp.App.EventBus {
                         ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
                         ["SK"] = new AttributeValue(INFO)
                     },
-                    UpdateExpression = "SET #State = :state",
+                    UpdateExpression = "SET #State = :state, #LS1SK = :stateSortKey, #Modified = :modified",
                     ExpressionAttributeNames = {
-                        ["#State"] = "State"
+                        ["#State"] = nameof(record.State),
+                        ["#LS1SK"] = "LS1SK",
+                        ["#Modified"] = "_Modified"
                     },
                     ExpressionAttributeValues = {
-                        [":state"] = new AttributeValue(state.ToString())
+                        [":state"] = new AttributeValue(state.ToString()),
+                        [":stateSortKey"] = new AttributeValue(TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+                        [":modified"] = new AttributeValue {
+                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
+                        }
                     }
                 });
                 record.State = state;
@@ -99,13 +108,19 @@ namespace LambdaSharp.App.EventBus {
                         ["SK"] = new AttributeValue(INFO)
                     },
                     ConditionExpression = "#State = :expectedState",
-                    UpdateExpression = "SET #State = :state",
+                    UpdateExpression = "SET #State = :state, #LS1SK = :stateSortKey, #Modified = :modified",
                     ExpressionAttributeNames = {
-                        ["#State"] = "State"
+                        ["#State"] = nameof(record.State),
+                        ["#LS1SK"] = "LS1SK",
+                        ["#Modified"] = "_Modified"
                     },
                     ExpressionAttributeValues = {
                         [":expectedState"] = new AttributeValue(record.State.ToString()),
-                        [":state"] = new AttributeValue(state.ToString())
+                        [":state"] = new AttributeValue(state.ToString()),
+                        [":stateSortKey"] = new AttributeValue(TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+                        [":modified"] = new AttributeValue {
+                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
+                        }
                     }
                 });
                 record.State = state;
@@ -129,19 +144,49 @@ namespace LambdaSharp.App.EventBus {
                         ["SK"] = new AttributeValue(INFO)
                     },
                     ConditionExpression = "#State = :expectedState",
-                    UpdateExpression = "SET #State = :state, #ARN = :arn",
+                    UpdateExpression = "SET #State = :state, #ARN = :arn, #LS1SK = :stateSortKey, #Modified = :modified",
                     ExpressionAttributeNames = {
-                        ["#State"] = "State",
-                        ["#ARN"] = "SubscriptionArn"
+                        ["#State"] = nameof(record.State),
+                        ["#ARN"] = nameof(record.SubscriptionArn),
+                        ["#LS1SK"] = "LS1SK",
+                        ["#Modified"] = "_Modified"
                     },
                     ExpressionAttributeValues = {
                         [":expectedState"] = new AttributeValue(record.State.ToString()),
                         [":state"] = new AttributeValue(state.ToString()),
-                        [":arn"] = new AttributeValue(subscriptionArn)
+                        [":stateSortKey"] = new AttributeValue(TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+                        [":arn"] = new AttributeValue(subscriptionArn),
+                        [":modified"] = new AttributeValue {
+                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
+                        }
                     }
                 });
                 record.State = state;
                 record.SubscriptionArn = subscriptionArn;
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
+
+        public async Task<bool> TouchConnectionRecordAsync(ConnectionRecord record) {
+            try {
+                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue> {
+                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
+                        ["SK"] = new AttributeValue(INFO)
+                    },
+                    UpdateExpression = "SET #Modified = :modified",
+                    ExpressionAttributeNames = {
+                        ["#Modified"] = "_Modified"
+                    },
+                    ExpressionAttributeValues = {
+                        [":modified"] = new AttributeValue {
+                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
+                        }
+                    }
+                });
                 return true;
             } catch(ConditionalCheckFailedException) {
                 return false;
