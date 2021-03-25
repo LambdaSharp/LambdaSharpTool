@@ -84,7 +84,6 @@ namespace LambdaSharp.App.EventBus {
                     },
                     ExpressionAttributeValues = {
                         [":state"] = new AttributeValue(state.ToString()),
-                        [":stateSortKey"] = new AttributeValue(TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
                         [":modified"] = new AttributeValue {
                             N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
                         }
@@ -114,7 +113,6 @@ namespace LambdaSharp.App.EventBus {
                     ExpressionAttributeValues = {
                         [":expectedState"] = new AttributeValue(record.State.ToString()),
                         [":state"] = new AttributeValue(state.ToString()),
-                        [":stateSortKey"] = new AttributeValue(TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
                         [":modified"] = new AttributeValue {
                             N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
                         }
@@ -150,7 +148,6 @@ namespace LambdaSharp.App.EventBus {
                     ExpressionAttributeValues = {
                         [":expectedState"] = new AttributeValue(record.State.ToString()),
                         [":state"] = new AttributeValue(state.ToString()),
-                        [":stateSortKey"] = new AttributeValue(TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
                         [":arn"] = new AttributeValue(subscriptionArn),
                         [":modified"] = new AttributeValue {
                             N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
