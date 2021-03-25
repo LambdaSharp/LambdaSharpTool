@@ -21,7 +21,7 @@ using System.Text.Json.Serialization;
 
 namespace LambdaSharp.App.EventBus.BroadcastFunction {
 
-    public sealed class CloudWatchEventPayload {
+    public sealed class EventBridgeventPayload {
 
         //--- Properties ---
 
