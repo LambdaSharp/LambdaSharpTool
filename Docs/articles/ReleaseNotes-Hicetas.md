@@ -143,21 +143,33 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.2.3) - TBD
 
-> TODO: use `stack` scope for nested module definitions
-
 #### Features
 
 * CLI
   * Added `--from-bucket` as alias for `--from-origin` to make the intent clearer (`--from-origin` is still supported for backwards compatibility).
 
 * Syntax
-  * Added `stack` as a scope keyword to make an item available in a nested stack, but not publicly available for import.
+  * Added `stack` as a scope keyword to make an item available from a nested stack, but not publicly available for import.
 
 #### Fixes
 
 * CLI
-  * Fixed an issue where cached module versions were not refreshed when importing a new module to the bucket.
-  * Fixed na issue where `--existing-s3-bucket-name` was not respected when `--quick-start` was used.
+  * Fixed an issue where cached module versions were not refreshed when importing a new module to a bucket.
+  * Fixed an issue where `--existing-s3-bucket-name` was not respected when `--quick-start` was used.
+  * Fixed an issue where performance statistics were no longer shown for externally invoked tools.
+
+* Modules
+  * _LambdaSharp.App.Api_
+    * Use `stack` scope outputs variables instead of `public` scope to prevent them being accidentally imported.
+  * _LambdaSharp.App.Bucket_
+    * Use `stack` scope outputs variables instead of `public` scope to prevent them being accidentally imported.
+  * _LambdaSharp.App.EventBus_
+    * Enforce stricter adherence to protocol with client.
+    * Respond to unknown actions with an error instead of silently ignoring them.
+    * Use `stack` scope outputs variables instead of `public` scope to prevent them being accidentally imported.
+
+* SDK
+  * Fixed an issue where the `$default` WebSocket route could not respond with a custom payload.
 
 ### (v0.8.2.2) - 2021-03-17
 
