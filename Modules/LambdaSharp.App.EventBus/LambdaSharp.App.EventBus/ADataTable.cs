@@ -82,10 +82,10 @@ namespace LambdaSharp.App.EventBus {
         protected Task<Document> GetItemAsync(string pk, string sk, CancellationToken cancellationToken)
             => Table.GetItemAsync(pk, sk, cancellationToken);
 
-        protected Task<IEnumerable<Document>> SearchBeginsWith(string pk, string skPrefix, CancellationToken cancellationToken) {
+        protected Task<IEnumerable<Document>> Search(string pk, QueryOperator skOperator, string skValue, CancellationToken cancellationToken) {
             var filter = new QueryFilter();
             filter.AddCondition("PK", QueryOperator.Equal, new DynamoDBEntry[] { pk });
-            filter.AddCondition("SK", QueryOperator.BeginsWith, new DynamoDBEntry[] { skPrefix });
+            filter.AddCondition("SK", skOperator, new DynamoDBEntry[] { skValue });
             var search = Table.Query(new QueryOperationConfig {
                 Filter = filter
             });
@@ -107,33 +107,6 @@ namespace LambdaSharp.App.EventBus {
             document["_Modified"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
             document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
-
-            // add operation condition when provided
-            PutItemOperationConfig operationConfig = null;
-            if(condition != null) {
-                operationConfig = new PutItemOperationConfig {
-                    ConditionalExpression = condition
-                };
-            }
-            return Table.PutItemAsync(document, operationConfig, cancellationToken);
-        }
-
-        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, string ls1sk, CancellationToken cancellationToken)
-            => CreateOrUpdateItemAsync(item, pk, sk, ls1sk, condition: null, cancellationToken);
-
-        protected Task CreateItemAsync<T>(T item, string pk, string sk, string ls1sk, CancellationToken cancellationToken)
-            => CreateOrUpdateItemAsync(item, pk, sk, ls1sk, ItemDoesNotExistCondition, cancellationToken);
-
-        protected Task UpdateItemAsync<T>(T item, string pk, string sk, string ls1sk, CancellationToken cancellationToken)
-            => CreateOrUpdateItemAsync(item, pk, sk, ls1sk, ItemExistsCondition, cancellationToken);
-
-        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, string ls1sk, Expression condition, CancellationToken cancellationToken) {
-            var document = Serialize(item);
-            document["_Type"] = item.GetType().Name;
-            document["_Modified"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
-            document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
-            document["LS1SK"] = ls1sk ?? throw new ArgumentNullException(nameof(ls1sk));
 
             // add operation condition when provided
             PutItemOperationConfig operationConfig = null;

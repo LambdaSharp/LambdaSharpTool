@@ -15,7 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.App.EventBus
-Description: Connect LambdaSharp app to CloudWatch EventBridge
+Description: Connect LambdaSharp app to Amazon EventBridge
 Pragmas:
   - Overrides:
       Module::WebSocket.RouteSelectionExpression: $request.body.Action
@@ -146,7 +146,7 @@ Items:
       Target: !GetAtt  BroadcastFunction.Arn
 
   - Function: BroadcastFunction
-    Description: Lambda function for broadcasting CloudWatch events to a WebSocket connection
+    Description: Lambda function for broadcasting EventBridge events to a WebSocket connection
     Memory: 1792
     Timeout: 30
 
@@ -187,7 +187,7 @@ Items:
   ###
 
   - Resource: DataTable
-    Description: DynamoDB table for storing webSocket connection information and CloudWatch event rules
+    Description: DynamoDB table for storing webSocket connection information and EventBridge rules
     Scope:
       - ListenerFunction
       - BroadcastFunction
@@ -202,24 +202,9 @@ Items:
         - AttributeName: SK
           AttributeType: S
 
-        - AttributeName: LS1SK
-          AttributeType: S
-
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
 
         - AttributeName: SK
           KeyType: RANGE
-
-      LocalSecondaryIndexes:
-        - IndexName: LS1
-          KeySchema:
-            - AttributeName: PK
-              KeyType: HASH
-
-            - AttributeName: LS1SK
-              KeyType: RANGE
-
-          Projection:
-            ProjectionType: ALL

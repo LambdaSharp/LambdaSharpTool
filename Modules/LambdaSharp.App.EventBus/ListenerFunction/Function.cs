@@ -54,7 +54,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             _httpApiToken = config.ReadText("HttpApiInvocationToken");
             _clientApiKey = config.ReadText("ClientApiKey");
 
-            // initialize AWS clients
+            // initialize clients
             _snsClient = new AmazonSimpleNotificationServiceClient();
             _dataTable = new DataTable(dataTableName, new AmazonDynamoDBClient());
         }

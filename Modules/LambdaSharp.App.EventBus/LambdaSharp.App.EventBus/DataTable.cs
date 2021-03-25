@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.App.EventBus.Records;
 
@@ -57,7 +58,6 @@ namespace LambdaSharp.App.EventBus {
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
-                ls1sk: TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 cancellationToken
             );
 
@@ -66,7 +66,6 @@ namespace LambdaSharp.App.EventBus {
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
-                ls1sk: TOUCH_PREFIX + DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 cancellationToken
             );
 
@@ -78,10 +77,9 @@ namespace LambdaSharp.App.EventBus {
                         ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
                         ["SK"] = new AttributeValue(INFO)
                     },
-                    UpdateExpression = "SET #State = :state, #LS1SK = :stateSortKey, #Modified = :modified",
+                    UpdateExpression = "SET #State = :state, #Modified = :modified",
                     ExpressionAttributeNames = {
                         ["#State"] = nameof(record.State),
-                        ["#LS1SK"] = "LS1SK",
                         ["#Modified"] = "_Modified"
                     },
                     ExpressionAttributeValues = {
@@ -108,10 +106,9 @@ namespace LambdaSharp.App.EventBus {
                         ["SK"] = new AttributeValue(INFO)
                     },
                     ConditionExpression = "#State = :expectedState",
-                    UpdateExpression = "SET #State = :state, #LS1SK = :stateSortKey, #Modified = :modified",
+                    UpdateExpression = "SET #State = :state, #Modified = :modified",
                     ExpressionAttributeNames = {
                         ["#State"] = nameof(record.State),
-                        ["#LS1SK"] = "LS1SK",
                         ["#Modified"] = "_Modified"
                     },
                     ExpressionAttributeValues = {
@@ -144,11 +141,10 @@ namespace LambdaSharp.App.EventBus {
                         ["SK"] = new AttributeValue(INFO)
                     },
                     ConditionExpression = "#State = :expectedState",
-                    UpdateExpression = "SET #State = :state, #ARN = :arn, #LS1SK = :stateSortKey, #Modified = :modified",
+                    UpdateExpression = "SET #State = :state, #ARN = :arn, #Modified = :modified",
                     ExpressionAttributeNames = {
                         ["#State"] = nameof(record.State),
                         ["#ARN"] = nameof(record.SubscriptionArn),
-                        ["#LS1SK"] = "LS1SK",
                         ["#Modified"] = "_Modified"
                     },
                     ExpressionAttributeValues = {
@@ -163,30 +159,6 @@ namespace LambdaSharp.App.EventBus {
                 });
                 record.State = state;
                 record.SubscriptionArn = subscriptionArn;
-                return true;
-            } catch(ConditionalCheckFailedException) {
-                return false;
-            }
-        }
-
-        public async Task<bool> TouchConnectionRecordAsync(ConnectionRecord record) {
-            try {
-                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
-                    TableName = TableName,
-                    Key = new Dictionary<string, AttributeValue> {
-                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
-                        ["SK"] = new AttributeValue(INFO)
-                    },
-                    UpdateExpression = "SET #Modified = :modified",
-                    ExpressionAttributeNames = {
-                        ["#Modified"] = "_Modified"
-                    },
-                    ExpressionAttributeValues = {
-                        [":modified"] = new AttributeValue {
-                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
-                        }
-                    }
-                });
                 return true;
             } catch(ConditionalCheckFailedException) {
                 return false;
@@ -217,9 +189,10 @@ namespace LambdaSharp.App.EventBus {
             );
 
         public async Task<IEnumerable<RuleRecord>> GetAllRuleRecordAsync(string connectionId, CancellationToken cancellationToken = default)
-            => (await SearchBeginsWith(
+            => (await Search(
                 pk: CONNECTION_PREFIX + connectionId,
-                skPrefix: RULE_PREFIX,
+                skOperator: QueryOperator.BeginsWith,
+                skValue: RULE_PREFIX,
                 cancellationToken
             )).Select(document => Deserialize<RuleRecord>(document)).ToList();
 
@@ -229,6 +202,5 @@ namespace LambdaSharp.App.EventBus {
                 SK: RULE_PREFIX + record.Rule
             )), cancellationToken);
         #endregion
-
     }
 }
