@@ -132,7 +132,62 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
-            // add module variables
+            // add overridable logging retention variable
+            if(!_builder.TryGetOverride("Module::LogRetentionInDays", out var logRetentionInDays)) {
+                logRetentionInDays = 30;
+            }
+            _builder.AddVariable(
+                parent: moduleItem,
+                name: "LogRetentionInDays",
+                description: "Number days CloudWatch Log streams are retained for",
+                type: "Number",
+                scope: null,
+                value: logRetentionInDays,
+                allow: null,
+                encryptionContext: null
+            );
+
+            // create module IAM role used by all functions
+            _builder.TryGetOverride("Module::Role.PermissionsBoundary", out var rolePermissionsBoundary);
+            var moduleRoleItem = _builder.AddResource(
+                parent: moduleItem,
+                name: "Role",
+                description: null,
+                scope: null,
+                resource: new Humidifier.IAM.Role {
+                    AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
+                        Version = "2012-10-17",
+                        Statement = new[] {
+                            new Humidifier.Statement {
+                                Sid = "ModuleLambdaPrincipal",
+                                Effect = "Allow",
+                                Principal = new Humidifier.Principal {
+                                    Service = "lambda.amazonaws.com"
+                                },
+                                Action = "sts:AssumeRole"
+                            }
+                        }.ToList()
+                    },
+                    PermissionsBoundary = rolePermissionsBoundary,
+                    Policies = new[] {
+                        new Humidifier.IAM.Policy {
+                            PolicyName = FnSub("${AWS::StackName}ModulePolicy"),
+                            PolicyDocument = new Humidifier.PolicyDocument {
+                                Version = "2012-10-17",
+                                Statement = new List<Humidifier.Statement>()
+                            }
+                        }
+                    }.ToList()
+                },
+                resourceExportAttribute: null,
+                dependsOn: null,
+                condition: null,
+                pragmas: null,
+                deletionPolicy: null
+            );
+            moduleRoleItem.DiscardIfNotReachable = true;
+
+            // add deployment variables
             var deploymentItem = _builder.AddVariable(
                 parent: null,
                 name: "Deployment",
@@ -143,8 +198,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 allow: null,
                 encryptionContext: null
             );
-
-            // add deployment variables
             _builder.AddVariable(
                 parent: deploymentItem,
                 name: "Tier",
@@ -192,61 +245,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 value: FnRef("DeploymentBucketName"),
-                allow: null,
-                encryptionContext: null
-            );
-
-            // create module IAM role used by all functions
-            _builder.TryGetOverride("Module::Role.PermissionsBoundary", out var rolePermissionsBoundary);
-            var moduleRoleItem = _builder.AddResource(
-                parent: moduleItem,
-                name: "Role",
-                description: null,
-                scope: null,
-                resource: new Humidifier.IAM.Role {
-                    AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
-                        Version = "2012-10-17",
-                        Statement = new[] {
-                            new Humidifier.Statement {
-                                Sid = "ModuleLambdaPrincipal",
-                                Effect = "Allow",
-                                Principal = new Humidifier.Principal {
-                                    Service = "lambda.amazonaws.com"
-                                },
-                                Action = "sts:AssumeRole"
-                            }
-                        }.ToList()
-                    },
-                    PermissionsBoundary = rolePermissionsBoundary,
-                    Policies = new[] {
-                        new Humidifier.IAM.Policy {
-                            PolicyName = FnSub("${AWS::StackName}ModulePolicy"),
-                            PolicyDocument = new Humidifier.PolicyDocument {
-                                Version = "2012-10-17",
-                                Statement = new List<Humidifier.Statement>()
-                            }
-                        }
-                    }.ToList()
-                },
-                resourceExportAttribute: null,
-                dependsOn: null,
-                condition: null,
-                pragmas: null,
-                deletionPolicy: null
-            );
-            moduleRoleItem.DiscardIfNotReachable = true;
-
-            // add overridable logging retention variable
-            if(!_builder.TryGetOverride("Module::LogRetentionInDays", out var logRetentionInDays)) {
-                logRetentionInDays = 30;
-            }
-            _builder.AddVariable(
-                parent: moduleItem,
-                name: "LogRetentionInDays",
-                description: "Number days CloudWatch Log streams are retained for",
-                type: "Number",
-                scope: null,
-                value: logRetentionInDays,
                 allow: null,
                 encryptionContext: null
             );
