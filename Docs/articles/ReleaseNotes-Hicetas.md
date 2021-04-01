@@ -168,6 +168,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
     * Enforce stricter adherence to protocol with client.
     * Respond to unknown actions with an error instead of silently ignoring them.
     * Use `stack` scope outputs variables instead of `public` scope to prevent them being accidentally imported.
+    * Added `WebSocketApiId` as output value so that the WebSocket API can be referenced from the parent stack.
 
 * SDK
   * Fixed an issue where the `$default` WebSocket route could not respond with a custom payload.

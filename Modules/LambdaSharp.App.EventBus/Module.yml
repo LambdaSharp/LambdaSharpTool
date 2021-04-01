@@ -61,6 +61,11 @@ Items:
     Value:
       Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
 
+  - Variable: WebSocketApiId
+    Description: WebSocket API identifier
+    Scope: stack
+    Value: !Ref Module::WebSocket
+
   ###
   # WebSocket Connection Listening
   ###
