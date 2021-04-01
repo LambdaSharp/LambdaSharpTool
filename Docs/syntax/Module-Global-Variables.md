@@ -53,6 +53,7 @@ The following resources and variables are defined when a module contains a funct
 |Variable                      |Type                          |Definition                                    |
 |------------------------------|------------------------------|----------------------------------------------|
 |`Module::RestApi`             |AWS::ApiGateway::RestApi      |REST API resource
+|`Module::RestApi::CorsOrigin` |String                        |CORS Origin for REST API; is `!Ref AWS::NoValue` when not set
 |`Module::RestApi::Deployment` |AWS::ApiGateway::Deployment   |Deployment for the REST API; this resource changes whenever a REST API resource or method is modified
 |`Module::RestApi::DomainName` |String                        |Domain name of theREST API
 |`Module::RestApi::Stage`      |AWS::ApiGateway::Stage        |Stage for deploying REST API; the stage name is always `LATEST`

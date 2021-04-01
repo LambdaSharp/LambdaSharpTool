@@ -150,6 +150,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * Syntax
   * Added `stack` as a scope keyword to make an item available from a nested stack, but not publicly available for import.
+  * Added `Module::RestApi::CorsOrigin` as a referenceable variable to the module environment.
 
 #### Fixes
 
