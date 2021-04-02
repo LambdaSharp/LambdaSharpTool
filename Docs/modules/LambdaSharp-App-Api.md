@@ -209,7 +209,13 @@ The <code>RootPath</code> outputs contains the root path for the app API.
 
 ## REST API
 
-The API key is computed by concatenating the app version identifier with the colon character (i.e. `':'`) and the CloudFormation stack identifier, and then applying a base 64 encoding to the result. When `DevMode` is enabled, the API key only uses the CloudFormation stack identifier.
+The REST API endpoint can be found in the `Url` output value of the nested stack.
+
+### Authentication
+
+The REST API expects a `X-Api-Key` header in the request to validate access to the API.
+
+The API key is computed by concatenating `AppVersionId` with the colon character (i.e. `':'`) and the CloudFormation stack identifier, and then applying a base 64 encoding to the result. When `DevMode` is enabled, the API key only uses the CloudFormation stack identifier.
 
 To compute the effective API key, base 64 decode the `ApiKey` output value and concatenate it to the app version identifier:
 ```javascript

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.App.EventBus
-Description: Connect LambdaSharp app to CloudWatch EventBridge
+Description: Connect LambdaSharp app to Amazon EventBridge
 Pragmas:
   - Overrides:
       Module::WebSocket.RouteSelectionExpression: $request.body.Action
@@ -42,24 +42,29 @@ Items:
     Value: !Equals [ !Ref DevMode, "Enabled" ]
 
   ###
-  # Module Exports
+  # Stack Outputs
   ###
 
   - Variable: EventTopicArn
     Description: SNS topic ARN for broadcasting events to the app event bus
-    Scope: public
+    Scope: stack
     Value: !Ref EventTopic
 
   - Variable: Url
     Description: WebSocket URL for connecting to the app event bus
-    Scope: public
+    Scope: stack
     Value: !Ref Module::WebSocket::Url
 
   - Variable: ApiKey
     Description: App event bus API Key
-    Scope: public
+    Scope: stack
     Value:
       Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
+
+  - Variable: WebSocketApiId
+    Description: WebSocket API identifier
+    Scope: stack
+    Value: !Ref Module::WebSocket
 
   ###
   # WebSocket Connection Listening
@@ -67,7 +72,7 @@ Items:
 
   - Function: ListenerFunction
     Description: Lambda function listening on the WebSocket connection
-    Memory: 256
+    Memory: 1792
     Timeout: 30
     Sources:
       - WebSocket: $connect
@@ -75,6 +80,9 @@ Items:
 
       - WebSocket: $disconnect
         Invoke: CloseConnection
+
+      - WebSocket: $default
+        Invoke: UnrecognizedAction
 
       - WebSocket: Hello
         Invoke: Hello
@@ -143,8 +151,8 @@ Items:
       Target: !GetAtt  BroadcastFunction.Arn
 
   - Function: BroadcastFunction
-    Description: Lambda function for broadcasting CloudWatch events to a WebSocket connection
-    Memory: 256
+    Description: Lambda function for broadcasting EventBridge events to a WebSocket connection
+    Memory: 1792
     Timeout: 30
 
   - Resource: BroadcastFunctionPermission
@@ -184,7 +192,7 @@ Items:
   ###
 
   - Resource: DataTable
-    Description: DynamoDB table for storing webSocket connection information and CloudWatch event rules
+    Description: DynamoDB table for storing webSocket connection information and EventBridge rules
     Scope:
       - ListenerFunction
       - BroadcastFunction

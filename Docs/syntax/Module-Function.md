@@ -140,7 +140,7 @@ The <code>Runtime</code> attribute specifies the Lambda runtime to use to run th
 <dt><code>Scope</code></dt>
 <dd>
 
-The <code>Scope</code> attribute specifies which functions need to have access to this item. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the item, then <code>all</code> can be used as a wildcard. In addition, the <code>public</code> can be used to export the item from the module.
+The <code>Scope</code> attribute specifies which functions need to have access to this item. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all functions need the item, then <code>all</code> can be used as a wildcard. In addition, <code>public</code> can be used to export the item from the module. Alternatively, <code>stack</code> can be used to make the item available only in a nested stack.
 
 <i>Required</i>: No
 

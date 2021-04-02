@@ -23,7 +23,7 @@ namespace LambdaSharp.App.EventBus.Actions {
     /// <summary>
     /// The <see cref="EventAction"/> class describes a LambdaSharp App EventBus event.
     /// </summary>
-    public sealed class EventAction : AnAction {
+    public sealed class EventAction : AAction {
 
         //--- Constructors ---
 

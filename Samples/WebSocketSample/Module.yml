@@ -55,5 +55,5 @@ Items:
 
   - Variable: WebSocketUrl
     Description: WebSocket URL
-    Scope: public
+    Scope: stack
     Value: !Ref Module::WebSocket::Url

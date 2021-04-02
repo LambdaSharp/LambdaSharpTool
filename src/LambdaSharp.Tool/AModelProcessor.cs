@@ -51,6 +51,8 @@ namespace LambdaSharp.Tool {
             BuildEventsConfig.OnLogWarnEvent += (sender, args) => LogWarn(args.Message);
             BuildEventsConfig.OnLogInfoEvent += (sender, args) => LogInfo(args.Message);
             BuildEventsConfig.OnLogInfoVerboseEvent += (sender, args) => LogInfoVerbose(args.Message);
+            BuildEventsConfig.OnStartLogPerformanceEvent += (sender, args) => StartLogPerformance(args.Message);
+            BuildEventsConfig.OnStopLogPerformanceEvent += (sender, args) => StopLogPerformance(args.Cached);
         }
 
         //--- Properties ---

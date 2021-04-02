@@ -1,0 +1,34 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  # String Value
+  - Variable: SimpleValue
+    Scope: stack
+    Description: SimpleValue description
+    Value: this is a value
+
+  # List-to-String Value Conversion
+  - Variable: ManyValues
+    Scope: stack
+    Description: ManyValues description
+    Value:
+      - first value
+      - second value
+
+  # Exported Value
+  - Variable: OutputExpressionValue
+    Scope: stack
+    Value: !Sub "${SimpleValue} with extra stuff"
+
+  # Conditional Exported Value
+  - Parameter: MyParameter
+    Type: String
+    Default: "Hello"
+
+  - Condition: MyCondition
+    Value: !Equals [ !Ref MyParameter, "Hello" ]
+
+  - Variable: PublicConditionalValue
+    Scope: stack
+    Value: !If [ MyCondition, "Hello world!", !Ref AWS::NoValue ]
