@@ -52,21 +52,21 @@ Items:
     Value: !Equals [ !Ref ContentEncoding, "DEFAULT" ]
 
   ###
-  # Module Exports
+  # Stack Outputs
   ###
 
   - Variable: Arn
-    Scope: public
+    Scope: stack
     Description: App assets S3 bucket ARN
     Value: !GetAtt Bucket.Arn
 
   - Variable: DomainName
-    Scope: public
+    Scope: stack
     Description: App assets S3 bucket domain name
     Value: !GetAtt Bucket.DomainName
 
   - Variable: WebsiteUrl
-    Scope: public
+    Scope: stack
     Description: App assets S3 bucket website URL
     Value: !GetAtt Bucket.WebsiteURL
 

@@ -22,7 +22,7 @@ namespace LambdaSharp.App.EventBus.Actions {
     /// The <see cref="SubscribeAction"/> class is used to subscribe to an
     /// event pattern on the LambdaSharp App EventBus.
     /// </summary>
-    public sealed class SubscribeAction : ARuleAction {
+    public sealed class SubscribeAction : AAction {
 
         //--- Constructors ---
 
@@ -32,6 +32,11 @@ namespace LambdaSharp.App.EventBus.Actions {
         public SubscribeAction() => Action = "Subscribe";
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="Rule"/> property holds the subscription rule name.
+        /// </summary>
+        public string Rule { get; set; }
 
         /// <summary>
         /// The <see cref="Pattern"/> property holds the JSON-serialized event pattern to match.

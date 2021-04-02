@@ -24,8 +24,6 @@ using System.Threading.Tasks;
 using LambdaSharp.ApiGateway;
 using LambdaSharp.Logging;
 
-// TODO (2020-12-28, bjorg): how do we know what serializer to use for this assembly?
-
 namespace ApiInvokeSample.Shared {
 
     public class CaptureEventRequest {

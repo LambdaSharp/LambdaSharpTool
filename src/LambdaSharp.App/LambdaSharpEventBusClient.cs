@@ -308,7 +308,7 @@ namespace LambdaSharp.App {
             return subscription;
         }
 
-        internal async Task SendMessageAsync<T>(T message) where T : AnAction {
+        internal async Task SendMessageAsync<T>(T message) where T : AAction {
             if(_disposalTokenSource.IsCancellationRequested) {
                 throw new OperationCanceledException();
             }
@@ -318,7 +318,7 @@ namespace LambdaSharp.App {
             await _webSocket.SendAsync(buffer, WebSocketMessageType.Text, endOfMessage: true, _disposalTokenSource.Token);
         }
 
-        internal async Task SendMessageAndWaitForAcknowledgeAsync<T>(T message) where T : AnAction {
+        internal async Task SendMessageAndWaitForAcknowledgeAsync<T>(T message) where T : AAction {
             if(_disposalTokenSource.IsCancellationRequested) {
                 throw new OperationCanceledException();
             }

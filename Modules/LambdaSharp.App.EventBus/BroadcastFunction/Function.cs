@@ -23,13 +23,18 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Amazon.ApiGatewayManagementApi;
 using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.SNSEvents;
 using Amazon.Runtime;
+using Amazon.SimpleNotificationService;
 using LambdaSharp.App.EventBus.Actions;
+using LambdaSharp.App.EventBus.Records;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.App.EventBus.BroadcastFunction {
@@ -37,17 +42,21 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
     public sealed class Function : ALambdaFunction<APIGatewayHttpApiV2ProxyRequest, APIGatewayHttpApiV2ProxyResponse> {
 
         //--- Fields ---
+        private IAmazonSimpleNotificationService _snsClient;
         private IAmazonApiGatewayManagementApi _amaClient;
         private DataTable _dataTable;
         private string _eventTopicArn;
         private string _keepAliveRuleArn;
         private string _httpApiToken;
+        private XmlNamespaceManager _xmlNamespaces;
 
         //--- Constructors ---
         public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
+            _xmlNamespaces = new XmlNamespaceManager(new NameTable());
+            _xmlNamespaces.AddNamespace("sns", "http://sns.amazonaws.com/doc/2010-03-31/");
 
             // read configuration settings
             var dataTableName = config.ReadDynamoDBTableName("DataTable");
@@ -56,7 +65,8 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
             _keepAliveRuleArn = config.ReadText("KeepAliveRuleArn");
             _httpApiToken = config.ReadText("HttpApiInvocationToken");
 
-            // initialize AWS clients
+            // initialize clients
+            _snsClient = new AmazonSimpleNotificationServiceClient();
             _amaClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig {
                 ServiceURL = webSocketUrl
             });
@@ -68,8 +78,8 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
 
             // validate invocation method
             if(request.RequestContext.Http.Method != "POST") {
-                LogInfo("Unsupported request method {0}", request.RequestContext.Http.Method);
-                return BadRequest();
+                LogWarn("Unsupported request method {0}", request.RequestContext.Http.Method);
+                return BadRequestResponse();
             }
 
             // validate request token
@@ -77,8 +87,8 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 !request.QueryStringParameters.TryGetValue("token", out var token)
                 || (token != _httpApiToken)
             ) {
-                LogInfo("Missing or invalid request token");
-                return BadRequest();
+                LogWarn("Missing or invalid request token");
+                return BadRequestResponse();
             }
 
             // validate request websocket
@@ -86,8 +96,8 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 !request.QueryStringParameters.TryGetValue("ws", out var connectionId)
                 || string.IsNullOrEmpty(connectionId)
             ) {
-                LogInfo("Invalid websocket connection id");
-                return BadRequest();
+                LogWarn("Invalid websocket connection id");
+                return BadRequestResponse();
             }
 
             // validate request id
@@ -95,116 +105,37 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 !request.QueryStringParameters.TryGetValue("rid", out var requestId)
                 || string.IsNullOrEmpty(requestId)
             ) {
-                LogInfo("Invalid request id");
-                return BadRequest();
+                LogWarn("Invalid request id");
+                return BadRequestResponse();
             }
 
             // check if request is a subscription confirmation
             var topicSubscription = LambdaSerializer.Deserialize<TopicSubscriptionPayload>(request.Body);
             if(topicSubscription.Type == "SubscriptionConfirmation") {
-
-                // confirm it's for the expected topic ARN
-                if(topicSubscription.TopicArn != _eventTopicArn) {
-                    LogWarn("Wrong Topic ARN for subscription confirmation (Expected: {0}, Received: {1})", _eventTopicArn, topicSubscription.TopicArn);
-                    return BadRequest();
-                }
-
-                // confirm subscription
-                await HttpClient.GetAsync(topicSubscription.SubscribeURL);
-
-                // send welcome action to websocket connection
-                await SendMessageToConnection(new AcknowledgeAction {
-                    RequestId = requestId,
-                    Status = "Ok"
-                }, connectionId);
-                return Success("Confirmed");
+                return await ConfirmSubscription(connectionId, requestId, topicSubscription);
             }
 
             // validate SNS message
             var snsMessage = LambdaSerializer.Deserialize<SNSEvent.SNSMessage>(request.Body);
             if(snsMessage.Message == null) {
                 LogWarn("Invalid SNS message received: {0}", request.Body);
-                return BadRequest();
+                return BadRequestResponse();
             }
 
-            // validate CloudWatch event
-            var cloudWatchEvent = LambdaSerializer.Deserialize<CloudWatchEventPayload>(snsMessage.Message);
+            // validate EventBridge event
+            var eventBridgeEvent = LambdaSerializer.Deserialize<EventBridgeventPayload>(snsMessage.Message);
             if(
-                (cloudWatchEvent.Source == null)
-                || (cloudWatchEvent.DetailType == null)
-                || (cloudWatchEvent.Resources == null)
+                (eventBridgeEvent.Source == null)
+                || (eventBridgeEvent.DetailType == null)
+                || (eventBridgeEvent.Resources == null)
             ) {
-                LogInfo("Invalid CloudWatch event received: {0}", snsMessage.Message);
-                return BadRequest();
+                LogInfo("Invalid EventBridge event received: {0}", snsMessage.Message);
+                return BadRequestResponse();
             }
-
-            // check if the keep-alive event was received
-            if(
-                (cloudWatchEvent.Source == "aws.events")
-                && (cloudWatchEvent.DetailType == "Scheduled Event")
-                && (cloudWatchEvent.Resources.Count == 1)
-                && (cloudWatchEvent.Resources[0] == _keepAliveRuleArn)
-            ) {
-
-                // send keep-alive action to websocket connection
-                await SendMessageToConnection(new KeepAliveAction(), connectionId);
-                return Success("Ok");
-            }
-
-            // determine what rules are matching
-            JObject evt;
-            try {
-                evt = JObject.Parse(snsMessage.Message);
-            } catch(Exception e) {
-                LogError(e, "invalid message");
-                return BadRequest();
-            }
-            var rules = await _dataTable.GetConnectionRulesAsync(connectionId);
-            var matchedRules = rules
-                .Where(rule => {
-                    try {
-                        var pattern = JObject.Parse(rule.Pattern);
-                        return EventPatternMatcher.IsMatch(evt, pattern);
-                    } catch(Exception e) {
-                        LogError(e, "invalid event pattern: {0}", rule.Pattern);
-                        return false;
-                    }
-                }).Select(rule => rule.Rule)
-                .ToList();
-            if(matchedRules.Any()) {
-                await SendMessageToConnection(
-                    new EventAction {
-                        Rules = matchedRules,
-                        Source = cloudWatchEvent.Source,
-                        Type = cloudWatchEvent.DetailType,
-                        Event = snsMessage.Message
-                    },
-                    connectionId
-                );
-            }
-            return Success("Ok");
-
-            // local functions
-            APIGatewayHttpApiV2ProxyResponse Success(string message)
-                => new APIGatewayHttpApiV2ProxyResponse {
-                    Body = message,
-                    Headers = new Dictionary<string, string> {
-                        ["Content-Type"] = "text/plain"
-                    },
-                    StatusCode = (int)HttpStatusCode.OK
-                };
-
-            APIGatewayHttpApiV2ProxyResponse BadRequest()
-                => new APIGatewayHttpApiV2ProxyResponse {
-                    Body = "Bad Request",
-                    Headers = new Dictionary<string, string> {
-                        ["Content-Type"] = "text/plain"
-                    },
-                    StatusCode = (int)HttpStatusCode.BadRequest
-                };
+            return await DispatchEvent(connectionId, snsMessage.Message);
         }
 
-        private async Task SendMessageToConnection(AnAction action, string connectionId) {
+        private async Task SendActionToConnection(AAction action, string connectionId) {
             var json = LambdaSerializer.Serialize<object>(action);
             if(DebugLoggingEnabled) {
                 LogDebug($"Post to connection: {connectionId}\n{{0}}", json);
@@ -226,5 +157,180 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 LogErrorAsWarning(e, "PostToConnectionAsync() failed on connection {0}", connectionId);
             }
         }
+
+        private async Task<APIGatewayHttpApiV2ProxyResponse> ConfirmSubscription(string connectionId, string requestId, TopicSubscriptionPayload topicSubscription) {
+
+            // confirm it's for the expected topic ARN
+            if(topicSubscription.TopicArn != _eventTopicArn) {
+                LogWarn("Wrong Topic ARN for subscription confirmation (Expected: {0}, Received: {1})", _eventTopicArn, topicSubscription.TopicArn);
+                return BadRequestResponse();
+            }
+
+            // retrieve connection record
+            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+            if(connection == null) {
+                await SendActionToConnection(new AcknowledgeAction {
+                    RequestId = requestId,
+                    Status = "Error",
+                    Message = "connection gone"
+                }, connectionId);
+                return InternalServerErrorResponse();
+            }
+            if(connection.State == ConnectionState.Failed) {
+                LogInfo("Connection is in failed state");
+                return SuccessResponse("Failed state");
+            }
+            if(connection.State != ConnectionState.Pending) {
+                LogWarn("Connection is not in pending state (state: {0})", connection.State);
+                return BadRequestResponse();
+            }
+
+            // confirm subscription
+            string subscriptionArn;
+            try {
+                using var response = await HttpClient.GetAsync(topicSubscription.SubscribeURL);
+                var xmlResponse = XDocument.Parse(await response.Content.ReadAsStringAsync());
+                subscriptionArn = xmlResponse.Document
+                    .XPathSelectElement("sns:ConfirmSubscriptionResponse/sns:ConfirmSubscriptionResult/sns:SubscriptionArn", _xmlNamespaces)
+                    ?.Value ?? throw new InvalidOperationException("missing subscription ARN");
+                LogInfo("Subscription confirmed: {0}", subscriptionArn);
+            } catch(Exception e) {
+                LogError(e, "Unable to confirm subscription (topic: {0}, url: {1})", topicSubscription.TopicArn, topicSubscription.SubscribeURL);
+
+                // mark connection as failed and report error
+                await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
+                await SendActionToConnection(new AcknowledgeAction {
+                    RequestId = requestId,
+                    Status = "Error",
+                    Message = "internal error"
+                }, connectionId);
+                return InternalServerErrorResponse();
+            }
+            if(!await _dataTable.UpdateConnectionRecordStateAndSubscriptionAsync(connection, ConnectionState.Open, subscriptionArn)) {
+
+                // unsubscribe since we couldn't save the subscription ARN
+                try {
+                    await _snsClient.UnsubscribeAsync(subscriptionArn);
+                } catch(Exception e) {
+                    LogErrorAsWarning(e, "failed to unsubscribe (subscription ARN: {0})", connection.SubscriptionArn);
+                }
+
+                // mark connection as failed and report error
+                await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
+                await SendActionToConnection(new AcknowledgeAction {
+                    RequestId = requestId,
+                    Status = "Error",
+                    Message = "internal error"
+                }, connectionId);
+                return InternalServerErrorResponse();
+            }
+
+            // send `AcknowledgeAction` to websocket connection
+            await SendActionToConnection(new AcknowledgeAction {
+                RequestId = requestId,
+                Status = "Ok"
+            }, connectionId);
+            return SuccessResponse("Confirmed");
+        }
+
+        private async Task<APIGatewayHttpApiV2ProxyResponse> DispatchEvent(string connectionId, string message) {
+
+            // validate EventBridge event
+            var eventBridgeEvent = LambdaSerializer.Deserialize<EventBridgeventPayload>(message);
+            if(
+                (eventBridgeEvent.Source == null)
+                || (eventBridgeEvent.DetailType == null)
+                || (eventBridgeEvent.Resources == null)
+            ) {
+                LogInfo("Invalid EventBridge event received: {0}", message);
+                return BadRequestResponse();
+            }
+
+            // check if the keep-alive event was received
+            if(
+                (eventBridgeEvent.Source == "aws.events")
+                && (eventBridgeEvent.DetailType == "Scheduled Event")
+                && (eventBridgeEvent.Resources?.Count == 1)
+                && (eventBridgeEvent.Resources[0] == _keepAliveRuleArn)
+            ) {
+
+                // retrieve connection record
+                var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+                if(connection == null) {
+                    return SuccessResponse("Gone");
+                }
+                if(connection.State != ConnectionState.Open) {
+                    return SuccessResponse("Ignored");
+                }
+
+                // send keep-alive action to websocket connection
+                LogInfo("KeepAlive tick");
+                await SendActionToConnection(new KeepAliveAction(), connectionId);
+                return SuccessResponse("Ok");
+            }
+
+            // determine what rules are matching the event
+            JObject evt;
+            try {
+                evt = JObject.Parse(message);
+            } catch(Exception e) {
+                LogError(e, "invalid message");
+                return BadRequestResponse();
+            }
+            var rules = await _dataTable.GetAllRuleRecordAsync(connectionId);
+            var matchedRules = rules
+                .Where(rule => {
+                    try {
+                        var pattern = JObject.Parse(rule.Pattern);
+                        return EventPatternMatcher.IsMatch(evt, pattern);
+                    } catch(Exception e) {
+                        LogError(e, "invalid event pattern: {0}", rule.Pattern);
+                        return false;
+                    }
+                }).Select(rule => rule.Rule)
+                .ToList();
+            if(matchedRules.Any()) {
+                LogInfo($"Event matched {matchedRules.Count():N0} rules: {string.Join(", ", matchedRules)}");
+                await SendActionToConnection(
+                    new EventAction {
+                        Rules = matchedRules,
+                        Source = eventBridgeEvent.Source,
+                        Type = eventBridgeEvent.DetailType,
+                        Event = message
+                    },
+                    connectionId
+                );
+            } else {
+                LogInfo("Event matched no rules");
+            }
+            return SuccessResponse("Ok");
+        }
+
+        private APIGatewayHttpApiV2ProxyResponse SuccessResponse(string message)
+            => new APIGatewayHttpApiV2ProxyResponse {
+                Body = message,
+                Headers = new Dictionary<string, string> {
+                    ["Content-Type"] = "text/plain"
+                },
+                StatusCode = (int)HttpStatusCode.OK
+            };
+
+        private APIGatewayHttpApiV2ProxyResponse BadRequestResponse()
+            => new APIGatewayHttpApiV2ProxyResponse {
+                Body = "Bad Request",
+                Headers = new Dictionary<string, string> {
+                    ["Content-Type"] = "text/plain"
+                },
+                StatusCode = (int)HttpStatusCode.BadRequest
+            };
+
+        private APIGatewayHttpApiV2ProxyResponse InternalServerErrorResponse()
+            => new APIGatewayHttpApiV2ProxyResponse {
+                Body = "Internal Error",
+                Headers = new Dictionary<string, string> {
+                    ["Content-Type"] = "text/plain"
+                },
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
     }
 }

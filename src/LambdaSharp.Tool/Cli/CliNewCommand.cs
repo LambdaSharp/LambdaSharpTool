@@ -713,7 +713,7 @@ namespace LambdaSharp.Tool.Cli {
             InsertModuleItemsLines(moduleFile, new[] {
                 $"  - Variable: {appName}WebsiteUrl",
                 $"    Description: {appName} Website URL",
-                $"    Scope: public",
+                $"    Scope: stack",
                 $"    Value: !GetAtt {appName}::Bucket.Outputs.WebsiteUrl"
             });
         }

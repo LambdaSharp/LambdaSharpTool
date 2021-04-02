@@ -97,6 +97,6 @@ Items:
 
   - Variable: WebsiteUrl
     Description: Website URL
-    Scope: public
+    Scope: stack
     Value: !GetAtt WebsiteBucket.WebsiteURL
 ```

@@ -26,6 +26,6 @@ Items:
 
   - Variable: WebsiteUrl
     Description: Website URL
-    Scope: public
+    Scope: stack
     Value: !Ref MyBlazorApp::BucketWebsiteUrl
 ```

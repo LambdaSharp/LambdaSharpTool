@@ -67,6 +67,7 @@ namespace LambdaSharp.Tool.Model {
         public bool HasSecretType => Type == "Secret";
         public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool IsPublic => Scope.Contains("public");
+        public bool IsStackOutput => Scope.Contains("stack");
 
         //--- Methods ---
         public virtual object GetExportReference() => Reference;

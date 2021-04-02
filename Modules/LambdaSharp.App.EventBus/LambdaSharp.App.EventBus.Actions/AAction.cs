@@ -21,10 +21,10 @@ using System;
 namespace LambdaSharp.App.EventBus.Actions {
 
     /// <summary>
-    /// The abstract <see cref="AnAction"/> class is the used by all
+    /// The abstract <see cref="AAction"/> class is the used by all
     /// LambdaSharp App EventBus actions.
     /// </summary>
-    public abstract class AnAction {
+    public abstract class AAction {
 
         //--- Properties ---
 
@@ -38,5 +38,27 @@ namespace LambdaSharp.App.EventBus.Actions {
         /// used to reference the action in an acknowledgment.
         /// </summary>
         public string RequestId { get; set; } = Guid.NewGuid().ToString();
+
+        //--- Methods ---
+
+        /// <summary>
+        /// The <see cref="AcknowledgeOk()"/> method creates a successful acknowledgement to this action.
+        /// </summary>
+        public AcknowledgeAction AcknowledgeOk() => new AcknowledgeAction {
+            Action = "Ack",
+            RequestId = RequestId,
+            Status = "Ok"
+        };
+
+        /// <summary>
+        /// The <see cref="AcknowledgeError(string)"/> method creates a failed acknowledgement to this action.
+        /// </summary>
+        /// <param name="message"></param>
+        public AcknowledgeAction AcknowledgeError(string message) => new AcknowledgeAction {
+            Action = "Ack",
+            RequestId = RequestId,
+            Status = "Error",
+            Message = message
+        };
     }
 }
