@@ -19,8 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -35,9 +37,10 @@ namespace LambdaSharp.Tool.Cli {
             app.Command("debug", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Debug a LambdaSharp function";
-                var entrypointOption = cmd.Option("--entrypoint <ASSEMBLY-NAME>::<CLASS-NAME>::<FUNCTION-NAME>", "", CommandOptionType.SingleValue);
-                var environmentOption = cmd.Option("--environment <FILEPATH>", "", CommandOptionType.SingleValue);
-                var payloadOption = cmd.Option("--payload <FILEPATH>", "", CommandOptionType.SingleValue);
+                var assemblyPathOption = cmd.Option("--assembly <ASSEMBLY>", "", CommandOptionType.SingleValue);
+                var classNameOption = cmd.Option("--class", "", CommandOptionType.SingleValue);
+                var environmentPathOption = cmd.Option("--environment <FILE>", "", CommandOptionType.SingleValue);
+                var payloadPathOption = cmd.Option("--payload <FILE>", "", CommandOptionType.SingleValue);
 
                 // TODO:
                 //  * build project for debugging
@@ -46,26 +49,97 @@ namespace LambdaSharp.Tool.Cli {
                 //  * instantiate class (assume ALambdaFunction base class)
                 //  * invoke `Task InitializeAsync(LambdaConfig config)`
                 //  * invoke `Task<Stream> ProcessMessageStreamAsync(Stream stream)`
+
+                // misc options
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
+                cmd.OnExecute(async () => {
+                    ExecuteCommandActions(cmd);
+
+                    // read settings and validate them
+                    var settings = await initSettingsCallback();
+                    if(settings == null) {
+                        return;
+                    }
+
+                    // load assembly
+                    if(!assemblyPathOption.HasValue()) {
+                        LogError("missing assembly information");
+                        return;
+                    }
+                    Assembly assembly;
+                    try {
+                        var assemblyPath = Path.Combine(Directory.GetCurrentDirectory(), assemblyPathOption.Value());
+                        assembly = Assembly.LoadFrom(assemblyPath);
+                    } catch(Exception e) {
+                        LogError($"unable to load assembly: {assemblyPathOption.Value()}", e);
+                        return;
+                    }
+
+                    // resolve function class
+                    if(!classNameOption.HasValue()) {
+                        LogError("missing class name information");
+                        return;
+                    }
+                    Type functionType;
+                    try {
+                        functionType = assembly.GetType(classNameOption.Value(), throwOnError: true);
+                    } catch(Exception e) {
+                        LogError($"unable to resolve class name: {classNameOption.Value()}", e);
+                        return;
+                    }
+
+                    // load environment variables
+                    if(!environmentPathOption.HasValue()) {
+                        LogError("missing environment variables information");
+                        return;
+                    }
+                    Dictionary<string, string> environmentVariables;
+                    try {
+                        environmentVariables = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(environmentPathOption.Value()));
+                    } catch(Exception e) {
+                        LogError($"unable to load environment variables: {environmentPathOption.Value()}", e);
+                        return;
+                    }
+
+                    // load payload
+                    if(!payloadPathOption.HasValue()) {
+                        LogError("missing payload information");
+                        return;
+                    }
+                    string payload;
+                    try {
+                        payload = File.ReadAllText(payloadPathOption.Value());
+                    } catch(Exception e) {
+                        LogError($"unable to load payload: {payloadPathOption.Value()}", e);
+                        return;
+                    }
+
+                    await DebugAsync(settings, assembly, functionType, environmentVariables, payload);
+                });
             });
         }
 
-        public async Task DebugAsync(Settings settings, string project, string className, Dictionary<string, string> environment, string payload) {
-            throw new NotImplementedException();
-        }
-
         public Task<Stream> DebugAsync(Settings settings, Assembly assembly, Type functionType, Dictionary<string, string> environmentVariables, string payload) {
-            var debugLambdaFunctionDependencyProviderType = assembly.GetType("LambdaSharp.Debug.DebugLambdaFunctionDependencyProvider");
-            var debugLambdaContextType = assembly.GetType("LambdaSharp.Debug.DebugLambdaContext");
+            var lambdaSharpAssemblyName = assembly.GetReferencedAssemblies().First(referencedAssembly => referencedAssembly.Name == "LambdaSharp");
+            var lambdaSharpAssembly = Assembly.Load(lambdaSharpAssemblyName);
+
+            // TODO: the dependency provider depends on the function type!
+            var debugLambdaFunctionDependencyProviderType = lambdaSharpAssembly.GetType("LambdaSharp.Debug.DebugLambdaFunctionDependencyProvider", throwOnError: true);
+            var debugLambdaContextType = lambdaSharpAssembly.GetType("LambdaSharp.Debug.DebugLambdaContext", throwOnError: true);
 
             // create function
-            var provider = Activator.CreateInstance(debugLambdaFunctionDependencyProviderType, environmentVariables);
-            var function = Activator.CreateInstance(functionType, provider);
-            var context = Activator.CreateInstance(debugLambdaContextType);
+            dynamic function = Activator.CreateInstance(functionType);
+            dynamic provider = Activator.CreateInstance(debugLambdaFunctionDependencyProviderType, environmentVariables);
+            function.Provider = provider;
+
+            // create invocation context
+            dynamic context = Activator.CreateInstance(debugLambdaContextType, provider);
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(payload));
             return DebugAsync(settings, function, context, stream);
         }
 
-        public Task<Stream> DebugAsync(Settings settings, dynamic function, object context, Stream stream)
+        public Task<Stream> DebugAsync(Settings settings, dynamic function, dynamic context, Stream stream)
             => function.FunctionHandlerAsync(stream, context);
     }
 }

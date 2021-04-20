@@ -33,7 +33,7 @@ namespace LambdaSharp.Debug {
 
         //--- Constructors ---
         public DebugLambdaFunctionDependencyProvider(Dictionary<string, string> environmentVariables) {
-            _configSource = new LambdaDictionarySource(environmentVariables ?? throw new ArgumentNullException(nameof(environmentVariables)));
+            _configSource = new LambdaDictionaryEnvironmentSource(environmentVariables ?? throw new ArgumentNullException(nameof(environmentVariables)));
         }
 
         //--- Properties ---
@@ -51,19 +51,15 @@ namespace LambdaSharp.Debug {
             throw new NotImplementedException();
         }
 
-        public void Log(string message) => Console.WriteLine($"LAMBDA => {message}");
+        public void Log(string message) => Console.Write($"LAMBDA => {message.Replace("\r", "").Replace("\n", Environment.NewLine)}");
 
-        public IEnumerable<KeyValuePair<string, string>> GetEnvironmentVariables() {
-            throw new NotImplementedException();
-        }
-
-        public Task<string> ReadTextFromFile(string filepath) => Task.FromResult((string)null);
+        public Task<string?> ReadTextFromFile(string filepath) => Task.FromResult((string?)null);
 
         public Task SendEventAsync(DateTimeOffset timestamp, string eventbus, string source, string detailType, string detail, IEnumerable<string> resources, CancellationToken cancellationToken = default) {
             throw new NotImplementedException();
         }
 
-        public Task SendMessageToQueueAsync(string queueUrl, string message, IEnumerable<KeyValuePair<string, string>> messageAttributes = null, CancellationToken cancellationToken = default) {
+        public Task SendMessageToQueueAsync(string queueUrl, string message, IEnumerable<KeyValuePair<string, string>>? messageAttributes = null, CancellationToken cancellationToken = default) {
             throw new NotImplementedException();
         }
     }

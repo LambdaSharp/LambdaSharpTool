@@ -22,20 +22,13 @@ using LambdaSharp.Logging.ErrorReports.Models;
 
 namespace LambdaSharp.Records.ErrorReports {
 
-    internal class LogErrorReportGenerator : ILambdaErrorReportGenerator {
-
-        //--- Fields ---
-        private readonly ILambdaFunctionDependencyProvider _provider;
-
-        //--- Constructors ---
-        public LogErrorReportGenerator(ILambdaFunctionDependencyProvider provider)
-            => _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+    internal class ConsoleErrorReportGenerator : ILambdaErrorReportGenerator {
 
         //--- Methods ---
         public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object[] args) {
             var message = LambdaErrorReportGenerator.FormatMessage(format, args) ?? exception?.Message;
             if(message != null) {
-                _provider.Log($"*** {level.ToString().ToUpperInvariant()}: {message}\n{PrintException()}");
+                Console.WriteLine($"*** {level.ToString().ToUpperInvariant()}: {message}\n{PrintException()}");
             }
             return null;
 

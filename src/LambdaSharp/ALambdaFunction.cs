@@ -259,7 +259,7 @@ namespace LambdaSharp {
         /// </exception>
         protected ALambdaFunction(ILambdaFunctionDependencyProvider? provider) {
             Provider = provider ?? new LambdaFunctionDependencyProvider();
-            ErrorReportGenerator = new LogErrorReportGenerator(Provider);
+            ErrorReportGenerator = new ConsoleErrorReportGenerator();
 
             // initialize function fields from configuration
             _started = UtcNow;
@@ -272,7 +272,7 @@ namespace LambdaSharp {
         /// satisfy its required dependencies.
         /// </summary>
         /// <value>The <see cref="ILambdaFunctionDependencyProvider"/> instance.</value>
-        protected ILambdaFunctionDependencyProvider Provider { get; }
+        public ILambdaFunctionDependencyProvider Provider { get; set; }
 
         /// <summary>
         /// Retrieves the current date-time in UTC timezone.
