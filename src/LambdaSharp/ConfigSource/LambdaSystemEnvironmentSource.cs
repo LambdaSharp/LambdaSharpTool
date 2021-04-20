@@ -23,7 +23,7 @@ using System.Linq;
 namespace LambdaSharp.ConfigSource {
 
     /// <summary>
-    /// The <see cref="LambdaDictionarySource"/> class is an implementation of
+    /// The <see cref="LambdaSystemEnvironmentSource"/> class is an implementation of
     /// <see cref="ILambdaConfigSource"/> interface that reads configuration values from
     /// system environment variables. Nested sections are represented by a '_' character
     /// in the system environment variable name.
@@ -33,9 +33,7 @@ namespace LambdaSharp.ConfigSource {
         //--- Constructors ---
 
         /// <summary>
-        /// The <see cref="LambdaDictionarySource(IEnumerable{KeyValuePair{string,string}})"/> constructor creates
-        /// a new <see cref="LambdaDictionarySource"/> instance from a collection of key-value pairs. Nested sections
-        /// are represented by a '_' character in the system environment variable name.
+        /// The <see cref="LambdaSystemEnvironmentSource()"/> constructor creates a new <see cref="LambdaSystemEnvironmentSource"/> instance.
         /// </summary>
         public LambdaSystemEnvironmentSource() { }
 
