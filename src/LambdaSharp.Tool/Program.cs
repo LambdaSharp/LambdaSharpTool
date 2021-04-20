@@ -73,6 +73,7 @@ namespace LambdaSharp.Tool {
             new CliEncryptCommand().Register(app);
             new CliUtilCommand().Register(app);
             new CliNukeCommand().Register(app);
+            new CliDebugCommand().Register(app);
 
             // no command
             app.OnExecute(() => {
@@ -122,6 +123,9 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public static void ResetBeepTimer() => _beepStopwatch.Reset();
+        public static void ResetBeepTimer() {
+            _beepStopwatch.Reset();
+            _beepStopwatch.Start();
+        }
     }
 }

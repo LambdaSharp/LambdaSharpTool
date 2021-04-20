@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -29,7 +28,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Amazon.XRay.Recorder.Handlers.System.Net;
 using LambdaSharp.ConfigSource;
 using LambdaSharp.Exceptions;
 using LambdaSharp.Logging;
@@ -533,10 +531,7 @@ namespace LambdaSharp {
         /// <param name="envSource">The <see cref="ILambdaConfigSource"/> instance from which to read the configuration settings.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         protected virtual async Task InitializePrologueAsync(ILambdaConfigSource envSource) {
-
-            // register X-RAY for AWS SDK clients (function tracing must be enabled in CloudFormation)
-            Amazon.XRay.Recorder.Handlers.AwsSdk.AWSSDKHandler.RegisterXRayForAllServices();
-            HttpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
+            HttpClient = Provider.HttpClient;
 
             // read Lambda runtime environment variables
             _functionId = envSource.Read("AWS_LAMBDA_FUNCTION_NAME");
@@ -566,8 +561,9 @@ namespace LambdaSharp {
             };
 
             // read optional git-info file
-            if(File.Exists("git-info.json")) {
-                var git = LambdaSerializerSettings.LambdaSharpSerializer.Deserialize<GitInfo>(File.ReadAllText("git-info.json"));
+            var gitInfo = await Provider.ReadTextFromFile("git-info.json");
+            if(gitInfo != null) {
+                var git = LambdaSerializerSettings.LambdaSharpSerializer.Deserialize<GitInfo>(gitInfo);
                 _gitSha = git.SHA;
                 _gitBranch = git.Branch;
                 info["GIT-SHA"] = _gitSha;
@@ -592,7 +588,7 @@ namespace LambdaSharp {
             );
 
             // convert environment variables to lambda parameters
-            Config = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
+            Config = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables(envSource)));
         }
 
         /// <summary>
@@ -727,15 +723,11 @@ namespace LambdaSharp {
             System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
         }
 
-        private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
+        private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables(ILambdaConfigSource configSource) {
             var parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach(DictionaryEntry? envVar in Environment.GetEnvironmentVariables()) {
-                if(envVar == null) {
-                    continue;
-                }
-                var key = envVar.Value.Key as string;
-                var value = envVar.Value.Value as string;
-                if((key == null) || (value == null)) {
+            foreach(var key in configSource.ReadAllKeys()) {
+                var value = configSource.Read(key);
+                if(value == null) {
                     continue;
                 }
                 if(key.StartsWith("STR_", StringComparison.Ordinal)) {

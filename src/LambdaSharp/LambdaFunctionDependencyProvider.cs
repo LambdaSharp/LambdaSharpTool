@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.CloudWatchEvents;
@@ -29,6 +30,7 @@ using Amazon.KeyManagementService.Model;
 using Amazon.Lambda.Core;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Amazon.XRay.Recorder.Handlers.System.Net;
 using LambdaSharp.ConfigSource;
 
 namespace LambdaSharp {
@@ -51,6 +53,7 @@ namespace LambdaSharp {
         private readonly Func<DateTime> _nowCallback;
         private readonly Action<string> _logCallback;
         private readonly bool _debugLoggingEnabled;
+        private readonly HttpClient _httpClient;
 
         //--- Constructors ---
 
@@ -71,7 +74,8 @@ namespace LambdaSharp {
             IAmazonKeyManagementService? kmsClient = null,
             IAmazonSQS? sqsClient = null,
             IAmazonCloudWatchEvents? eventsClient = null,
-            bool? debugLoggingEnabled = null
+            bool? debugLoggingEnabled = null,
+            HttpClient? httpClient = null
         ) {
             _nowCallback = utcNowCallback ?? (() => DateTime.UtcNow);
             _logCallback = logCallback ?? LambdaLogger.Log;
@@ -79,6 +83,10 @@ namespace LambdaSharp {
             KmsClient = kmsClient ?? new AmazonKeyManagementServiceClient();
             SqsClient = sqsClient ?? new AmazonSQSClient();
             EventsClient = eventsClient ?? new AmazonCloudWatchEventsClient();
+
+            // register X-RAY for AWS SDK clients (function tracing must be enabled in CloudFormation)
+            Amazon.XRay.Recorder.Handlers.AwsSdk.AWSSDKHandler.RegisterXRayForAllServices();
+            _httpClient = httpClient ?? new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
 
             // determine if debug logging is enabled
             if(debugLoggingEnabled.HasValue) {
@@ -129,6 +137,8 @@ namespace LambdaSharp {
         /// </summary>
         public bool DebugLoggingEnabled => _debugLoggingEnabled;
 
+        public HttpClient HttpClient => _httpClient;
+
         //--- Methods ---
 
         /// <summary>
@@ -137,6 +147,12 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="message">Message to write to the log stream.</param>
         public virtual void Log(string message) => _logCallback(message);
+
+        public virtual Task<string?> ReadTextFromFile(string filepath) {
+            return File.Exists(filepath)
+                ? File.ReadAllTextAsync(filepath)
+                : Task.FromResult((string?)null);
+        }
 
         /// <summary>
         /// Decrypt a sequence of bytes with an optional encryption context. The Lambda function

@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using LambdaSharp.ConfigSource;
@@ -53,6 +54,8 @@ namespace LambdaSharp {
         /// <value>Boolean indicating if requests and responses are logged</value>
         bool DebugLoggingEnabled { get; }
 
+        HttpClient HttpClient { get; }
+
         //--- Methods --
 
         /// <summary>
@@ -61,6 +64,8 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="message">Message to write to the log stream.</param>
         void Log(string message);
+
+        Task<string?> ReadTextFromFile(string filepath);
 
         /// <summary>
         /// Decrypt a sequence of bytes with an optional encryption context. The Lambda function

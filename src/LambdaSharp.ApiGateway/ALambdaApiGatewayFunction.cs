@@ -121,8 +121,9 @@ namespace LambdaSharp.ApiGateway {
 
             // read optional api-gateway-mappings file
             _directory = new ApiGatewayInvocationTargetDirectory(CreateInvocationTargetInstance, LambdaSerializer);
-            if(File.Exists("api-mappings.json")) {
-                var mappings = LambdaSerializerSettings.LambdaSharpSerializer.Deserialize<ApiGatewayInvocationMappings>(File.ReadAllText("api-mappings.json"));
+            var apiMappings = await Provider.ReadTextFromFile("api-mappings.json");
+            if(apiMappings != null) {
+                var mappings = LambdaSerializerSettings.LambdaSharpSerializer.Deserialize<ApiGatewayInvocationMappings>(apiMappings);
                 if(mappings.Mappings == null) {
                     throw new InvalidDataException("missing 'Mappings' property in 'api-mappings.json' file");
                 }
