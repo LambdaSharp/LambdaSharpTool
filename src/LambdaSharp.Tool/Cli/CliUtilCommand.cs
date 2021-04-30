@@ -256,7 +256,7 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.Description = "Show Processed YAML Parameters File";
 
                     // command options
-                    var filePathArgument = subCmd.Argument("<FILEPATH>", "Path for YAML parameters file");
+                    var filePathArgument = subCmd.Argument("<FILE>", "Path for YAML parameters file");
                     var initSettingsCallback = CreateSettingsInitializer(subCmd);
                     AddStandardCommandOptions(subCmd);
 

@@ -122,6 +122,9 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public static void ResetBeepTimer() => _beepStopwatch.Reset();
+        public static void ResetBeepTimer() {
+            _beepStopwatch.Reset();
+            _beepStopwatch.Start();
+        }
     }
 }

@@ -21,3 +21,7 @@ Items:
   - Function: MyFunction
     Memory: 256
     Timeout: 30
+    Properties:
+      Environment:
+        Variables:
+          DEBUG_LOGGING_ENABLED: "true"

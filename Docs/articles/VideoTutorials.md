@@ -37,3 +37,9 @@ This presentation covers some of the serverless design patterns, such as CQRS (C
 This presentation dives into the details of how modules are published. It shows how artifacts from the build process are copied to the deployment bucket. As well as how to stage builds for validation, before publishing the approved artifacts. It is a deep-dive into one of the most critical features in LambdaSharp to ensure a safe development process for production environments. Code samples can be found at: https://github.com/LambdaSharp/ServerlessPatterns-PublishingAndSharing
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/d7J0cyhCZUc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Serverless .NET Patterns: Deployment Configuration
+
+In this presentation, I cover configuration management for your serverless solutions. We dive into the various CloudFormation parameter types, as well as the parameter file format for LambdaSharp modules. We also explore--with code samples--how to read values from a JSON configuration file, the parameter store, and how to securely encode sensitive infrastructure information. Code samples can be found at: https://github.com/LambdaSharp/ServerlessPatterns-DeploymentConfiguration
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/shVf1jjz83E" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
