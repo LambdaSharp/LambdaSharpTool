@@ -35,7 +35,7 @@ namespace LambdaSharp.Tool.Cli {
         //--- Constants ---
         private const int MAX_ITERATIONS = 100;
 
-        //--- Methods --
+        //--- Methods ---
         public void Register(CommandLineApplication app) {
 
             // nuke a deployment tier

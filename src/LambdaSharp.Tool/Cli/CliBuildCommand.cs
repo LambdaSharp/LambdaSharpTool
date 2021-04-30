@@ -77,7 +77,7 @@ namespace LambdaSharp.Tool.Cli {
             => cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
 
         public static CommandOption AddBuildPolicyOption(CommandLineApplication cmd)
-            => cmd.Option("--build-policy <FILEPATH>", "(optional) Provide build policy document file path", CommandOptionType.SingleValue);
+            => cmd.Option("--build-policy <FILE>", "(optional) Provide build policy document file path", CommandOptionType.SingleValue);
 
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename)
             => new ParameterFileReader(settings, filename).ReadInputParametersFiles();
