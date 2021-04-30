@@ -143,6 +143,12 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.2.4) - 2021-04-30
 
+### Features
+
+* Modules
+  * _LambdaSharp.S3.Subscriber_
+    * Added `ResourceHandlerRole` as export value from module to allow dependent stacks to import it and add policies to it when needed.
+
 #### Fixes
 
 * CLI
@@ -150,6 +156,10 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * SDK
   * Fixed a possible `NullReferenceException` when module info is not set for a Lambda function.
+
+* Modules
+  * _LambdaSharp.S3.Subscriber_
+    * Fixed an issue where buckets in another region or inaccessible would cause an _internal error_ rather than respond with an informative message.
 
 * Samples
   * Enabled debug output for _Sample.Debug_ module.

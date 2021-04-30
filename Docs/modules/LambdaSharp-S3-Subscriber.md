@@ -20,4 +20,15 @@ This module requires no parameters.
 
 ## Output Values
 
-This module has no output values.
+<dl>
+
+<dt><code>ResourceHandlerRole</code></dt>
+<dd>
+
+The <code>ResourceHandlerRole</code> output contains the module IAM role ARN. This enables other modules to give additional permissions to the resource handler when required.
+
+<i>Type:</i> AWS::IAM::Role
+</dd>
+
+</dl>
+
