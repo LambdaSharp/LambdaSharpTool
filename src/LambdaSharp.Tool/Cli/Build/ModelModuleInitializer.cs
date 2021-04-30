@@ -488,7 +488,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 },
                 timeout: "30",
                 memory: "128",
-                code: DecryptSecretFunctionCode
+                code: DecryptSecretFunctionCode,
+                dependsOn: null
             ).DiscardIfNotReachable = true;
 
             // add LambdaSharp Deployment Settings

@@ -145,6 +145,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### Features
 
+* CLI
+  * Added `DependsOn` property for `Function` declarations.
+
 * Modules
   * _LambdaSharp.S3.Subscriber_
     * Added `ResourceHandlerRole` as export value from module to allow dependent stacks to import it and add policies to it when needed.
