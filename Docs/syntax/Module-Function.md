@@ -30,11 +30,21 @@ Properties:
   ResourceProperties
 Sources:
   - SourceDefinition
+DependsOn:
+  - String
 ```
 
 ## Properties
 
 <dl>
+
+<dt><code>DependsOn</code></dt>
+<dd>
+
+The <code>DependsOn</code> attribute identifies items that must be created prior. For additional information, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html">CloudFormation DependsOn Attribute</a>.
+
+<i>Type</i>: List of String
+</dd>
 
 <dt><code>Description</code></dt>
 <dd>
