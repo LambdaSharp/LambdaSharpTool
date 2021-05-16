@@ -15,7 +15,7 @@
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 
-    <PackageReference Include="TweetinviAPI" Version="4.0.3" />
+    <PackageReference Include="TweetinviAPI" Version="5.0.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp.Schedule\LambdaSharp.Schedule.csproj" />
