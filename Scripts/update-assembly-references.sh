@@ -6,7 +6,9 @@ fi
 
 cd $LAMBDASHARP
 regex='PackageReference Include="([^"]*)" Version="([^"]*)"'
-find . -name "*.csproj" | while read proj
+
+# find all C# projects, except those in the Tests/Legacy folder
+find . -name "*.csproj" -not -path "./Tests/Legacy/*" | while read proj
 do
   while read line
   do
