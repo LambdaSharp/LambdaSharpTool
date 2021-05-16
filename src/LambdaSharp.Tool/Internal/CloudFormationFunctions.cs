@@ -87,7 +87,7 @@ namespace LambdaSharp.Tool.Internal {
 
         //--- Methods ---
         public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
-            if((reader.Current is SequenceStart sequenceStart) && SupportedTags.Contains(sequenceStart.Tag.Value)) {
+            if((reader.Current is SequenceStart sequenceStart) && sequenceStart.Tag.IsLocal && SupportedTags.Contains(sequenceStart.Tag.Value)) {
 
                 // deserialize parameter list
                 INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
@@ -98,7 +98,7 @@ namespace LambdaSharp.Tool.Internal {
                     };
                     return true;
                 }
-            } else if((reader.Current is MappingStart mapStart) && (mapStart.Tag == "!Transform")) {
+            } else if((reader.Current is MappingStart mapStart) && mapStart.Tag.IsLocal && (mapStart.Tag.Value == "!Transform")) {
 
                 // deserialize parameter map
                 INodeDeserializer nested = new DictionaryNodeDeserializer(new DefaultObjectFactory());
@@ -109,7 +109,7 @@ namespace LambdaSharp.Tool.Internal {
                     };
                     return true;
                 }
-            } else if((reader.Current is Scalar scalar) && SupportedTags.Contains(scalar.Tag.Value)) {
+            } else if((reader.Current is Scalar scalar) && scalar.Tag.IsLocal && SupportedTags.Contains(scalar.Tag.Value)) {
 
                 // deserialize single parameter
                 INodeDeserializer nested = new ScalarNodeDeserializer();
