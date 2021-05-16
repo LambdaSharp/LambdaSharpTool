@@ -87,12 +87,12 @@ namespace LambdaSharp.Tool.Internal {
 
         //--- Methods ---
         public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
-            if((reader.Current is SequenceStart sequenceStart) && SupportedTags.Contains(sequenceStart.Tag)) {
+            if((reader.Current is SequenceStart sequenceStart) && SupportedTags.Contains(sequenceStart.Tag.Value)) {
 
                 // deserialize parameter list
                 INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
                 if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)) {
-                    var key = TagToFunctionName(sequenceStart.Tag);
+                    var key = TagToFunctionName(sequenceStart.Tag.Value);
                     value = new Dictionary<string, object> {
                         [key] = value
                     };
@@ -103,18 +103,18 @@ namespace LambdaSharp.Tool.Internal {
                 // deserialize parameter map
                 INodeDeserializer nested = new DictionaryNodeDeserializer(new DefaultObjectFactory());
                 if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)) {
-                    var key = TagToFunctionName(mapStart.Tag);
+                    var key = TagToFunctionName(mapStart.Tag.Value);
                     value = new Dictionary<string, object> {
                         [key] = value
                     };
                     return true;
                 }
-            } else if((reader.Current is Scalar scalar) && SupportedTags.Contains(scalar.Tag)) {
+            } else if((reader.Current is Scalar scalar) && SupportedTags.Contains(scalar.Tag.Value)) {
 
                 // deserialize single parameter
                 INodeDeserializer nested = new ScalarNodeDeserializer();
                 if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)) {
-                    var key = TagToFunctionName(scalar.Tag);
+                    var key = TagToFunctionName(scalar.Tag.Value);
 
                     // special case for !GetAtt as the single parameter must be converted into a parameter list
                     if(key == "Fn::GetAtt") {

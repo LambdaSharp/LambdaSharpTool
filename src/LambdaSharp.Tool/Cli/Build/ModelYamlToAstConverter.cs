@@ -63,7 +63,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // parse YAML token stream into module AST
             try {
                 return new DeserializerBuilder()
-                    .WithNamingConvention(new PascalCaseNamingConvention())
+                    .WithNamingConvention(PascalCaseNamingConvention.Instance)
                     .WithNodeDeserializer(new CloudFormationFunctionNodeDeserializer())
                     .WithCloudFormationFunctions()
                     .Build()
