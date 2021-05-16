@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Deterministic>true</Deterministic>
@@ -13,7 +13,7 @@
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.1.7" />
 
     <!-- TODO (2021-01-02, bjorg): remove Newtonsoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Shared\Actions\*.cs" />
