@@ -120,6 +120,7 @@ namespace LambdaSharp.Modules {
                         (libraryVersion.Build == 0)
                         || (libraryVersion.Build == 1)
                         || (libraryVersion.Build == 2)
+                        || (libraryVersion.Build == 3)
                     );
                 break;
             case "net5":
@@ -128,7 +129,10 @@ namespace LambdaSharp.Modules {
                 // .NET 5 projects require 0.8.2.*
                 valid = (libraryVersion.Major == 0)
                     && (libraryVersion.Minor == 8)
-                    && (libraryVersion.Build == 2);
+                    && (
+                        (libraryVersion.Build == 2)
+                        || (libraryVersion.Build == 3)
+                    );
                 break;
             default:
                 throw new VersionInfoCompatibilityUnsupportedFrameworkException(projectFramework);
