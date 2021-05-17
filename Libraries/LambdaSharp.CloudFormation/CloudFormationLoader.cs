@@ -86,12 +86,7 @@ namespace LambdaSharp.CloudFormation {
                             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                         }));
                     }
-                } catch(AmazonS3Exception e) when(
-                    (e.InnerException is Amazon.Runtime.Internal.HttpErrorResponseException httpException)
-
-                    // TODO: see if 'e.StatusCode' works instead
-                    && (httpException.Response.StatusCode == HttpStatusCode.NotModified)
-                ) {
+                } catch(AmazonS3Exception e) when(e.StatusCode == HttpStatusCode.NotModified) {
                     log?.Invoke("CloudFormation specification is up-to-date");
                     cached = true;
 
