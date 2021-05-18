@@ -162,7 +162,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return outputMap;
                 }
             case YamlScalar inputScalar:
-                if(inputScalar.Scalar.Tag == "!Include") {
+                if(inputScalar.Scalar.Tag.IsLocal && (inputScalar.Scalar.Tag.Value == "!Include")) {
                     return Include(inputScalar.Scalar.Value);
                 }
                 return inputScalar;

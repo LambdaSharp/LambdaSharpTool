@@ -113,7 +113,7 @@ namespace LambdaSharp.Modules {
                 break;
             case "netcoreapp3.1":
 
-                // .NET Core 3.1 projects (Lambda) require 0.8.0.*, 0.8.1.*, or 0.8.2.*
+                // .NET Core 3.1 projects (Lambda) require 0.8.0.*, 0.8.1.*, 0.8.2.*, or 0.8.3.*
                 valid = (libraryVersion.Major == 0)
                     && (libraryVersion.Minor == 8)
                     && (
@@ -126,7 +126,7 @@ namespace LambdaSharp.Modules {
             case "net5":
             case "net5.0":
 
-                // .NET 5 projects require 0.8.2.*
+                // .NET 5 projects require 0.8.2.*, or 0.8.3.*
                 valid = (libraryVersion.Major == 0)
                     && (libraryVersion.Minor == 8)
                     && (
