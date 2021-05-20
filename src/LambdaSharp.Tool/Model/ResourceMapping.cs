@@ -40,7 +40,7 @@ namespace LambdaSharp.Tool.Model {
             using(var iamResource = assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.IAM-Mappings.yml"))
             using(var reader = new StreamReader(iamResource, Encoding.UTF8)) {
                 var deserializer = new DeserializerBuilder()
-                    .WithNamingConvention(new NullNamingConvention())
+                    .WithNamingConvention(NullNamingConvention.Instance)
                     .Build();
                 _iamMappings = deserializer.Deserialize<IDictionary<string, IDictionary<string, IList<string>>>>(reader);
             }

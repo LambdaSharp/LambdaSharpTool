@@ -30,7 +30,7 @@ Items:
 
   - Function: UpdateCloudFormationSpecFunction
     Description: Function for updating the CloudFormation specification
-    Memory: 1792
+    Memory: 1769
     Timeout: 300
     Sources:
       - Schedule: rate(6 hours)
@@ -38,7 +38,7 @@ Items:
 
   - Function: UpdateIamSpecFunction
     Description: Function for updating the IAM specification
-    Memory: 1792
+    Memory: 1769
     Timeout: 300
     Sources:
       - Schedule: rate(1 day)
