@@ -72,7 +72,7 @@ Items:
 
   - Function: ListenerFunction
     Description: Lambda function listening on the WebSocket connection
-    Memory: 1792
+    Memory: 1769
     Timeout: 30
     Sources:
       - WebSocket: $connect
@@ -152,7 +152,7 @@ Items:
 
   - Function: BroadcastFunction
     Description: Lambda function for broadcasting EventBridge events to a WebSocket connection
-    Memory: 1792
+    Memory: 1769
     Timeout: 30
 
   - Resource: BroadcastFunctionPermission
