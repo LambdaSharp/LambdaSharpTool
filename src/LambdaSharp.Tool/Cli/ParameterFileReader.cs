@@ -61,7 +61,7 @@ namespace LambdaSharp.Tool.Cli {
 
             //--- Methods ---
             public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
-                if(reader.Current is NodeEvent node) {
+                if((reader.Current is NodeEvent node) && node.Tag.IsLocal) {
                     switch(node.Tag.Value) {
                     case "!GetConfig":
                         return GetConfig(node, reader, expectedType, nestedObjectDeserializer, out value);
