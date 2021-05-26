@@ -1290,7 +1290,8 @@ namespace LambdaSharp.Tool.Model {
             string timeout,
             string memory,
             string code,
-            IList<string> dependsOn
+            IList<string> dependsOn,
+            object role
         ) {
 
             // create function resource
@@ -1304,7 +1305,7 @@ namespace LambdaSharp.Tool.Model {
                 Runtime = Amazon.Lambda.Runtime.Nodejs12X.ToString(),
                 MemorySize = memory,
                 Handler = "index.handler",
-                Role = FnGetAtt("Module::Role", "Arn"),
+                Role = role,
                 Environment = new Humidifier.Lambda.FunctionTypes.Environment {
                     Variables = new Dictionary<string, dynamic>()
                 },

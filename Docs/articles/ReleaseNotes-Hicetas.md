@@ -152,6 +152,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Fixed a regression in the parameters file processing.
+  * Fixed a circular dependency when the `DecryptSecretFunction` was used to initialize a resource that was then scoped to a Lambda function.
 
 ### (v0.8.3.0) - 2018-05-18
 
