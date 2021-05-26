@@ -143,6 +143,11 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.3.1) - TBD
 
+#### Features
+
+* Samples
+  * Added `Samples/SecretSample` module showing how to use KMS encrypted values with Secret Manager and the access it from a Lambda function.
+
 #### Fixes
 
 * CLI
