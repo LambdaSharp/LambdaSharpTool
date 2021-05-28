@@ -8,6 +8,12 @@ fi
 
 cd $LAMBDASHARP
 
+UNCOMMITTED=$(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l)
+if [ $UNCOMMITTED -ne "0" ]; then
+    echo "ERROR: found $UNCOMMITTED uncommitted files"
+    exit 1
+fi
+
 # Check if any "TODO:" comments are present (using ripgrep: https://github.com/BurntSushi/ripgrep)
 if rg -q 'TODO:' -g '!*.{js,map,sh}'; then
     echo "ERROR: found files with 'TODO:' comment"
@@ -45,6 +51,11 @@ if ! git diff-index --quiet HEAD -- Tests/; then
     exit 1
 fi
 
+UNCOMMITTED=$(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l)
+if [ $UNCOMMITTED -ne "0" ]; then
+    echo "ERROR: found $UNCOMMITTED uncommitted files"
+    exit 1
+fi
 
 echo "************************"
 echo "*** Init LambdaSharp ***"

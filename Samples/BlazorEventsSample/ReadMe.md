@@ -34,6 +34,6 @@ Items:
 
   - Variable: MyBlazorAppWebsiteUrl
     Description: MyBlazorApp Website URL
-    Scope: public
+    Scope: stack
     Value: !GetAtt MyBlazorApp::Bucket.Outputs.WebsiteUrl
 ```

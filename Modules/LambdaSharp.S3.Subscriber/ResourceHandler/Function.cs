@@ -75,10 +75,15 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
             var bucketName = properties.BucketName;
-            var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
-                BucketName = bucketName
-            });
-            Add(config.LambdaFunctionConfigurations, properties);
+            GetBucketNotificationResponse config;
+            try {
+                config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
+                    BucketName = bucketName
+                });
+                Add(config.LambdaFunctionConfigurations, properties);
+            } catch(AmazonS3Exception e) {
+                throw Abort(e.Message);
+            }
 
             // attempt to update bucket notification configuration
             var attempts = 0;
@@ -113,20 +118,26 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
         }
 
         public override async Task<Response<S3SubscriptionAttributes>> ProcessDeleteResourceAsync(Request<S3SubscriptionProperties> request, CancellationToken cancellationToken) {
-            var properties = request.ResourceProperties;
 
-            // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = properties.BucketName;
-            var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
-                BucketName = bucketName
-            });
-            Remove(config.LambdaFunctionConfigurations, properties);
-            await _s3Client.PutBucketNotificationAsync(new PutBucketNotificationRequest {
-                BucketName = bucketName,
-                LambdaFunctionConfigurations = config.LambdaFunctionConfigurations,
-                QueueConfigurations = config.QueueConfigurations,
-                TopicConfigurations = config.TopicConfigurations
-            });
+            // only attempt delete operation if a physical resource ID is present
+            if(request.HasPhysicalResourceId()) {
+                var properties = request.ResourceProperties;
+
+                // extract bucket name from arn (arn:aws:s3:::bucket_name)
+                var bucketName = properties.BucketName;
+                var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
+                    BucketName = bucketName
+                });
+                Remove(config.LambdaFunctionConfigurations, properties);
+                await _s3Client.PutBucketNotificationAsync(new PutBucketNotificationRequest {
+                    BucketName = bucketName,
+                    LambdaFunctionConfigurations = config.LambdaFunctionConfigurations,
+                    QueueConfigurations = config.QueueConfigurations,
+                    TopicConfigurations = config.TopicConfigurations
+                });
+            } else {
+                LogInfo("no physical ID provided; ignoring DELETE operation");
+            }
             return new Response<S3SubscriptionAttributes>();
         }
 

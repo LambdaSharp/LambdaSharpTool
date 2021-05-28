@@ -595,7 +595,8 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                         runtime: runtime,
                         memory: node.Memory,
                         handler: handler,
-                        properties: ParseToDictionary("Properties", node.Properties)
+                        properties: ParseToDictionary("Properties", node.Properties),
+                        dependsOn: ConvertToStringList(node.DependsOn)
                     );
                 });
                 break;

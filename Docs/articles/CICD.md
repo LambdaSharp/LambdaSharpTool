@@ -248,7 +248,7 @@ fi
 
 ### Import module artifacts to deployment tier
 
-With the deployment tier upgraded, the previously built modules can now be imported. The following command copies the CloudFormation templates and artifacts produced by the _Build_ phase to the deployment tier bucket. All module dependencies must be imported explicitly when using the `--from-origin` option.
+With the deployment tier upgraded, the previously built modules can now be imported. The following command copies the CloudFormation templates and artifacts produced by the _Build_ phase to the deployment tier bucket. All module dependencies must be imported explicitly when using the `--from-bucket` option.
 
 > NOTE: `lash publish` can import multiple modules at once.
 
@@ -256,7 +256,7 @@ With the deployment tier upgraded, the previously built modules can now be impor
 lash publish ${LASH_OPTIONS} \
     --tier ${DEPLOYMENT_TIER} \
     --prompts-as-errors \
-    --from-origin ${BUILD_BUCKET} \
+    --from-bucket ${BUILD_BUCKET} \
     My.Module@${MODULE_ORIGIN}
 ```
 

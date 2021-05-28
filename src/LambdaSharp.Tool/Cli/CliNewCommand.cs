@@ -95,7 +95,7 @@ namespace LambdaSharp.Tool.Cli {
                     inputFileOption.ShowInHelpText = false;
                     var functionTypeOption = subCmd.Option("--type|-t <TYPE>", $"(optional) Function type (one of: {string.Join(", ", _functionTypes).ToLowerInvariant()}; default: prompt)", CommandOptionType.SingleValue);
                     var functionTimeoutOption = subCmd.Option("--timeout <SECONDS>", "(optional) Function timeout in seconds (default: 30)", CommandOptionType.SingleValue);
-                    var functionMemoryOption = subCmd.Option("--memory <MB>", "(optional) Function memory in megabytes (default: 256)", CommandOptionType.SingleValue);
+                    var functionMemoryOption = subCmd.Option("--memory <MB>", "(optional) Function memory in megabytes (default: 1769)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(() => {
@@ -118,7 +118,7 @@ namespace LambdaSharp.Tool.Cli {
                             LogError("invalid value for --timeout option");
                             return;
                         }
-                        if(!int.TryParse(functionMemoryOption.Value() ?? "256", out var functionMemory)) {
+                        if(!int.TryParse(functionMemoryOption.Value() ?? "1769", out var functionMemory)) {
                             LogError("invalid value for --memory option");
                             return;
                         }
@@ -387,7 +387,7 @@ namespace LambdaSharp.Tool.Cli {
                             workingDirectory,
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
                             "csharp",
-                            functionMemory: 256,
+                            functionMemory: 1769,
                             functionTimeout: 30,
                             FunctionType.Unknown
                         );
@@ -713,7 +713,7 @@ namespace LambdaSharp.Tool.Cli {
             InsertModuleItemsLines(moduleFile, new[] {
                 $"  - Variable: {appName}WebsiteUrl",
                 $"    Description: {appName} Website URL",
-                $"    Scope: public",
+                $"    Scope: stack",
                 $"    Value: !GetAtt {appName}::Bucket.Outputs.WebsiteUrl"
             });
         }

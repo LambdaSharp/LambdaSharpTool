@@ -22,7 +22,7 @@ namespace LambdaSharp.App.EventBus.Actions {
     /// The <see cref="HelloAction"/> class is used by the LambdaSharp
     /// App EventBus client to announce the app.
     /// </summary>
-    public sealed class HelloAction : AnAction {
+    public sealed class HelloAction : AAction {
 
         //--- Constructors ---
 

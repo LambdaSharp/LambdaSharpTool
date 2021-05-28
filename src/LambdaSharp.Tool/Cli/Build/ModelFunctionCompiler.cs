@@ -138,28 +138,65 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
-            // recursively create resources as needed
-            var apiDeclarations = new Dictionary<string, object>();
+            // add CORS Origin variable
             _builder.TryGetOverride("Module::RestApi::CorsOrigin", out var moduleRestApiCorsOrigin);
+            object moduleRestApiCorsOriginExpression;
             if(moduleRestApiCorsOrigin != null) {
+                _builder.AddVariable(
+                    parent: restApi,
+                    name: "CorsOrigin",
+                    description: "CORS Origin for REST API",
+                    type: "String",
+                    scope: null,
+                    value: moduleRestApiCorsOrigin,
+                    allow: null,
+                    encryptionContext: null
+                );
+
+                // NOTE (2021-04-01, bjorg): we should always assign the CORS_ORIGIN environment variable even
+                //  when the we know the value is `!Ref AWS::NoValue`. The `lash` compiler should be smart enough
+                //  to remove these properties again and simplify the datastructure accordingly.
 
                 // add CORS origin value to Lambda environment variables
                 foreach(var restApiRoute in _restApiRoutes) {
+
+                    // check if Environment needs to be initialized
                     if(restApiRoute.Function.Function.Environment == null) {
                         restApiRoute.Function.Function.Environment = new Humidifier.Lambda.FunctionTypes.Environment();
                     }
+
+                    // check if Environment.Variables needs to be initialized
                     if(restApiRoute.Function.Function.Environment.Variables == null) {
                         restApiRoute.Function.Function.Environment.Variables = new Dictionary<string, dynamic>();
                     }
+
+                    // add CORS_ORIGIN environment variable to Lambda function
                     restApiRoute.Function.Function.Environment.Variables.TryAdd("CORS_ORIGIN", moduleRestApiCorsOrigin);
                 }
 
                 // convert into a quoted expression
-                moduleRestApiCorsOrigin = FnSub("'${CorsOrigin}'", new Dictionary<string, object> {
+                moduleRestApiCorsOriginExpression = FnSub("'${CorsOrigin}'", new Dictionary<string, object> {
                     ["CorsOrigin"] = moduleRestApiCorsOrigin
                 });
+            } else {
+
+                // add placeholder variable
+                _builder.AddVariable(
+                    parent: restApi,
+                    name: "CorsOrigin",
+                    description: "CORS Origin for REST API",
+                    type: "String",
+                    scope: null,
+                    value: FnRef("AWS::NoValue"),
+                    allow: null,
+                    encryptionContext: null
+                );
+                moduleRestApiCorsOriginExpression = null;
             }
-            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiDeclarations, moduleRestApiCorsOrigin);
+
+            // recursively create resources as needed
+            var apiDeclarations = new Dictionary<string, object>();
+            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiDeclarations, moduleRestApiCorsOriginExpression);
 
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
             string apiDeclarationsChecksum = string.Join("\n", apiDeclarations
@@ -376,7 +413,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     webSocketResources.Add(route.FullName, routeResource);
 
                     // add optional request/response models
-                    if(!webSocketRoute.Source.RouteKey.StartsWith("$", StringComparison.Ordinal)) {
+                    if(
+                        !webSocketRoute.Source.RouteKey.Equals("$connect", StringComparison.Ordinal)
+                        && !webSocketRoute.Source.RouteKey.Equals("$disconnect", StringComparison.Ordinal)
+                    ) {
 
                         // add request model
                         switch(webSocketRoute.Source.RequestSchema) {

@@ -5,6 +5,9 @@
   href: LambdaSharp-Core.md
   items:
 
+    - name: LambdaSharp::Registration::App
+      href: LambdaSharp-Registration-App.md
+
     - name: LambdaSharp::Registration::Function
       href: LambdaSharp-Registration-Function.md
 

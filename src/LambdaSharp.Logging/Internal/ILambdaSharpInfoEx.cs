@@ -27,19 +27,21 @@ namespace LambdaSharp.Logging.Internal {
 
         //--- Class Methods ---
         private static void ParseModuleInfoString(string moduleInfo, out string? moduleNamespace, out string? moduleName, out string? moduleVersion, out string? moduleOrigin) {
+            moduleNamespace = null;
+            moduleName = null;
+            moduleVersion = null;
+            moduleOrigin = null;
 
             // try parsing module reference
+            if(moduleInfo == null) {
+                return;
+            }
             var match = ModuleKeyPattern.Match(moduleInfo);
             if(match.Success) {
                 moduleNamespace = GetMatchValue("Namespace");
                 moduleName = GetMatchValue("Name");
                 moduleOrigin = GetMatchValue("Origin");
                 moduleVersion = GetMatchValue("Version");
-            } else {
-                moduleNamespace = null;
-                moduleName = null;
-                moduleVersion = null;
-                moduleOrigin = null;
             }
 
             // local function

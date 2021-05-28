@@ -13,7 +13,7 @@ Parameter values are provided at module deployment time. Optionally, parameters 
 
 Variables hold intermediate results that can be shared with other item definitions in the module. Variables are inlined during compilation and don't appear in the final output unless shared publicly.
 
-Parameters, variables, and resources can be shared with other modules by making them `public`. These can then be imported using cross-module references.
+Parameters, variables, and resources can be shared with other modules by making them `public`. These can then be imported using cross-module references. Alternatively, they can be scoped as `stack`, which makes them only available in a nested stack.
 
 Functions can be wired up to respond to various event sources, such as SQS, SNS, API Gateway, or even Slack Commands. Functions can be implemented using C# or Javascript.
 

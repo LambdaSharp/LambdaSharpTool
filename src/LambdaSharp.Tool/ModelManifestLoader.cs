@@ -297,9 +297,10 @@ namespace LambdaSharp.Tool {
                         var cachedManifestFolder = GetCachedManifestDirectory(bucketName, moduleOrigin, moduleInfo.Namespace, moduleInfo.Name);
                         if(cachedManifestFolder != null) {
                             cachedManifestVersionsFilePath = Path.Combine(cachedManifestFolder, "versions.json");
-
-                            // TODO (2021-02-24, bjorg): make ignoring the cached value after 10 minutes configurable
-                            if(File.Exists(cachedManifestVersionsFilePath) && (File.GetLastWriteTimeUtc(cachedManifestVersionsFilePath).AddMinutes(10) > DateTime.UtcNow)) {
+                            if(
+                                File.Exists(cachedManifestVersionsFilePath)
+                                && (File.GetLastWriteTimeUtc(cachedManifestVersionsFilePath).Add(Settings.CachedManifestListingExpiration) > DateTime.UtcNow)
+                            ) {
                                 cached = true;
                                 var cachedManifestVersions = JsonSerializer.Deserialize<ModuleManifestVersions>(File.ReadAllText(cachedManifestVersionsFilePath), Settings.JsonSerializerOptions);
                                 region = cachedManifestVersions.Region;

@@ -77,7 +77,7 @@ namespace LambdaSharp.Tool.Cli {
             => cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
 
         public static CommandOption AddBuildPolicyOption(CommandLineApplication cmd)
-            => cmd.Option("--build-policy <FILEPATH>", "(optional) Provide build policy document file path", CommandOptionType.SingleValue);
+            => cmd.Option("--build-policy <FILE>", "(optional) Provide build policy document file path", CommandOptionType.SingleValue);
 
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename)
             => new ParameterFileReader(settings, filename).ReadInputParametersFiles();
@@ -210,7 +210,11 @@ namespace LambdaSharp.Tool.Cli {
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
                 var moduleOriginOption = AddModuleOriginOption(cmd);
+                var fromBucketOption = cmd.Option("--from-bucket <BUCKET>", "(optional) Use specified S3 bucket to import module from instead of module origin", CommandOptionType.SingleValue);
+
+                // NOTE (2021-03-20, bjorg): we keep the old option for backwards compatibility
                 var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Use specified origin to import module instead of module origin", CommandOptionType.SingleValue);
+                fromOriginOption.ShowInHelpText = false;
 
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to module or artifacts folder (default: Module.yml)", multipleValues: true);
@@ -339,7 +343,7 @@ namespace LambdaSharp.Tool.Cli {
                                     break;
                                 }
                             } else if(moduleInfo != null) {
-                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromOriginOption.Value())) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromBucketOption.Value() ?? fromOriginOption.Value())) {
                                     break;
                                 }
                             }
@@ -368,7 +372,11 @@ namespace LambdaSharp.Tool.Cli {
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
                 var moduleOriginOption = AddModuleOriginOption(cmd);
+                var fromBucketOption = cmd.Option("--from-bucket <BUCKET>", "(optional) Use specified S3 bucket to import module from instead of module origin", CommandOptionType.SingleValue);
+
+                // NOTE (2021-03-20, bjorg): we keep the old option for backwards compatibility
                 var fromOriginOption = cmd.Option("--from-origin <ORIGIN>", "(optional) Use specified origin to import module instead of module origin", CommandOptionType.SingleValue);
+                fromOriginOption.ShowInHelpText = false;
 
                 // build options
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
@@ -511,7 +519,7 @@ namespace LambdaSharp.Tool.Cli {
                                     break;
                                 }
                             } else if(!noImportOption.HasValue() && (moduleInfo.Origin != null)) {
-                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromOriginOption.Value())) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue(), fromBucketOption.Value() ?? fromOriginOption.Value())) {
                                     break;
                                 }
                             }

@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.2.2) - 2021-03-17
+# LambdaSharp "Hicetas" Release (v0.8.3.0) - 2021-05-18
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -140,6 +140,85 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 
 ## Releases
+
+### (v0.8.3.0) - 2018-05-18
+
+### Features
+
+* All
+  * Updated _Amazon.Lambda.*_ assembly references to v2.0.*
+  * Updated _AWSSDK.*_ assembly references to v3.7.*
+
+* CLI
+  * Improved error/warning message to distinguish outdated vs. unexpected references to the _LambdaSharp_ assembly.
+
+* Modules
+  * _LambdaSharp.Twitter.Query_
+    * Updated _TweetinviAPI_ assembly references to v5.0.4
+
+#### Fixes
+
+* Modules
+  * _LambdaSharp.App.EventBus_
+    * Corrected Lambda memory to use 1769 MB.
+  * _LambdaSharp.Core_
+    * Corrected Lambda memory to use 1769 MB.
+
+### (v0.8.2.4) - 2021-04-30
+
+### Features
+
+* CLI
+  * Added `DependsOn` property for `Function` declarations.
+
+* Modules
+  * _LambdaSharp.S3.Subscriber_
+    * Added `ResourceHandlerRole` as export value from module to allow dependent stacks to import it and add policies to it when needed.
+
+#### Fixes
+
+* CLI
+  * Fixed a regression that caused the _Beep_ sound not to be played anymore after a long operation.
+
+* SDK
+  * Fixed a possible `NullReferenceException` when module info is not set for a Lambda function.
+
+* Modules
+  * _LambdaSharp.S3.Subscriber_
+    * Fixed an issue where buckets in another region or inaccessible would cause an _internal error_ rather than respond with an informative message.
+
+* Samples
+  * Enabled debug output for _Sample.Debug_ module.
+
+### (v0.8.2.3) - 2021-04-01
+
+#### Features
+
+* CLI
+  * Added `--from-bucket` as alias for `--from-origin` to make the intent clearer (`--from-origin` is still supported for backwards compatibility).
+
+* Syntax
+  * Added `stack` as a scope keyword to make an item available from a nested stack, but not publicly available for import.
+  * Added `Module::RestApi::CorsOrigin` as a referenceable variable to the module environment.
+
+#### Fixes
+
+* CLI
+  * Fixed an issue where cached module versions were not refreshed when importing a new module to a bucket.
+  * Fixed an issue where `--existing-s3-bucket-name` was not respected when `--quick-start` was used.
+  * Fixed an issue where performance statistics were no longer shown for externally invoked tools.
+  * Fixed an issue where the `$default` WebSocket route could not respond with a custom payload.
+
+* Modules
+  * _LambdaSharp.App.Api_
+    * Use `stack` scope outputs variables instead of `public` scope to prevent them being accidentally imported.
+  * _LambdaSharp.App.Bucket_
+    * Use `stack` scope outputs variables instead of `public` scope to prevent them being accidentally imported.
+  * _LambdaSharp.App.EventBus_
+    * Enforce stricter adherence to protocol with client.
+    * Respond to unknown actions with an error instead of silently ignoring them.
+    * Use `stack` scope outputs variables instead of `public` scope to prevent them being accidentally imported.
+    * Added `WebSocketApiId` as output value so that the WebSocket API can be referenced from the parent stack.
 
 ### (v0.8.2.2) - 2021-03-17
 
