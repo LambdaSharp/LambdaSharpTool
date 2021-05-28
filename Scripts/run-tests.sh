@@ -8,6 +8,7 @@ VERSION_PREFIX="1.0.0"
 
 if [ -z "$1" ]; then
 
+    # run all unit tests
     for i in `find $LAMBDASHARP/ -name Tests.*.csproj`; do
         pushd $(dirname $(realpath $i)) > /dev/null 2>&1
         dotnet test --configuration Release
@@ -30,8 +31,17 @@ if [ -z "$1" ]; then
         exit $?
     fi
 
-    # delete only generated output files
-    find $LAMBDASHARP/Tests/Modules/ -maxdepth 1 -name *.yml | xargs -l basename | sed 's/.yml/.json/' | xargs -I{} rm $LAMBDASHARP/Tests/Modules/Results/{} > /dev/null 2>&1
+    # evaluate module parameters for each test file
+    find $LAMBDASHARP/Tests/ParameterFiles/ -maxdepth 1 -name *.yml \
+        | xargs -L 1 dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/net5.0/LambdaSharp.Tool.dll util show-parameters --quiet
+
+    # delete generated output CloudFormation template files
+    find $LAMBDASHARP/Tests/Modules/ -maxdepth 1 -name *.yml \
+        | xargs -l basename \
+        | sed 's/.yml/.json/' \
+        | xargs -I{} rm $LAMBDASHARP/Tests/Modules/Results/{} > /dev/null 2>&1
+
+    # generate CloudFormation template for each test module
     dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/net5.0/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
         --no-beep \
