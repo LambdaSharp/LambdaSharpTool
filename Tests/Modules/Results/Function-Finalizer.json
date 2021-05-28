@@ -53,7 +53,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F3C33CE1360E0FC5323DABC8E19DCCCF"
+      "Default": "D99C54862D3F2AB0C29C397C631E2567"
     }
   },
   "Resources": {
@@ -101,17 +101,6 @@
                 "UseCoreServices",
                 {
                   "Ref": "ModuleRoleDeadLetterQueuePolicy"
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            },
-            "STR_MODULE_ROLE_SECRETSPOLICY": {
-              "Fn::If": [
-                "ModuleRoleSecretsPolicyCondition",
-                {
-                  "Ref": "ModuleRoleSecretsPolicy"
                 },
                 {
                   "Ref": "AWS::NoValue"
@@ -170,17 +159,6 @@
               "UseCoreServices",
               {
                 "Ref": "ModuleRoleDeadLetterQueuePolicy"
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          },
-          {
-            "Fn::If": [
-              "ModuleRoleSecretsPolicyCondition",
-              {
-                "Ref": "ModuleRoleSecretsPolicy"
               },
               {
                 "Ref": "AWS::NoValue"
@@ -255,6 +233,39 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
+                {
+                  "Sid": "DeploymentSecrets",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "SecretsHasValue",
+                      {
+                        "Fn::Split": [
+                          ",",
+                          {
+                            "Ref": "Secrets"
+                          }
+                        ]
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  },
+                  "NotResource": {
+                    "Fn::If": [
+                      "SecretsHasValue",
+                      {
+                        "Ref": "AWS::NoValue"
+                      },
+                      "*"
+                    ]
+                  }
+                },
                 {
                   "Sid": "LogStream",
                   "Effect": "Allow",
@@ -379,41 +390,6 @@
         ]
       }
     },
-    "ModuleRoleSecretsPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Condition": "ModuleRoleSecretsPolicyCondition",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "Secrets",
-              "Effect": "Allow",
-              "Action": [
-                "kms:Decrypt",
-                "kms:Encrypt"
-              ],
-              "Resource": {
-                "Fn::Split": [
-                  ",",
-                  {
-                    "Ref": "Secrets"
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "PolicyName": {
-          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
-        },
-        "Roles": [
-          {
-            "Ref": "ModuleRole"
-          }
-        ]
-      }
-    },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegistrationModule",
       "Condition": "UseCoreServices",
@@ -460,6 +436,18 @@
     }
   },
   "Conditions": {
+    "SecretsHasValue": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Secrets"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "XRayIsEnabled": {
       "Fn::Not": [
         {
@@ -508,18 +496,6 @@
                   ]
                 }
               ]
-            },
-            ""
-          ]
-        }
-      ]
-    },
-    "ModuleRoleSecretsPolicyCondition": {
-      "Fn::Not": [
-        {
-          "Fn::Equals": [
-            {
-              "Ref": "Secrets"
             },
             ""
           ]
@@ -595,7 +571,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "F3C33CE1360E0FC5323DABC8E19DCCCF",
+      "TemplateChecksum": "D99C54862D3F2AB0C29C397C631E2567",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -662,7 +638,6 @@
         "FinalizerInvocation": "Finalizer::Invocation",
         "ModuleRole": "Module::Role",
         "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
-        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ModuleRegistration": "Module::Registration"
       },
       "TypeNameMappings": {

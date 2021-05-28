@@ -1290,7 +1290,8 @@ namespace LambdaSharp.Tool.Model {
             string timeout,
             string memory,
             string code,
-            IList<string> dependsOn
+            IList<string> dependsOn,
+            object role
         ) {
 
             // create function resource
@@ -1304,7 +1305,7 @@ namespace LambdaSharp.Tool.Model {
                 Runtime = Amazon.Lambda.Runtime.Nodejs12X.ToString(),
                 MemorySize = memory,
                 Handler = "index.handler",
-                Role = FnGetAtt("Module::Role", "Arn"),
+                Role = role,
                 Environment = new Humidifier.Lambda.FunctionTypes.Environment {
                     Variables = new Dictionary<string, dynamic>()
                 },
@@ -1418,24 +1419,27 @@ namespace LambdaSharp.Tool.Model {
             } else {
 
                 // add role resource statement
-                var statement = new Humidifier.Statement {
+                AddRoleStatement(new Humidifier.Statement {
                     Sid = name.ToIdentifier(),
                     Effect = "Allow",
                     Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
                     Action = allowStatements.Distinct().OrderBy(text => text).ToList()
-                };
-
-                // check if an existing statement is being updated
-                for(var i = 0; i < _resourceStatements.Count; ++i) {
-                    if(_resourceStatements[i].Sid == name) {
-                        _resourceStatements[i] = statement;
-                        return;
-                    }
-                }
-
-                // add new statement
-                _resourceStatements.Add(statement);
+                });
             }
+        }
+
+        public void AddRoleStatement(Humidifier.Statement statement) {
+
+            // check if an existing statement is being updated
+            for(var i = 0; i < _resourceStatements.Count; ++i) {
+                if(_resourceStatements[i].Sid == statement.Sid) {
+                    _resourceStatements[i] = statement;
+                    return;
+                }
+            }
+
+            // add new statement
+            _resourceStatements.Add(statement);
         }
 
         public void VisitAll(ModuleVisitorDelegate visitor) {
