@@ -70,7 +70,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1FD28946648756B786C43EC7E67C1AD9"
+      "Default": "98539D2D986EA6FDAB667412AA63ADD1"
     }
   },
   "Resources": {
@@ -197,17 +197,6 @@
                   "Ref": "AWS::NoValue"
                 }
               ]
-            },
-            "STR_MODULE_ROLE_SECRETSPOLICY": {
-              "Fn::If": [
-                "ModuleRoleSecretsPolicyCondition",
-                {
-                  "Ref": "ModuleRoleSecretsPolicy"
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
             }
           }
         },
@@ -263,6 +252,39 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
+                {
+                  "Sid": "DeploymentSecrets",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "SecretsHasValue",
+                      {
+                        "Fn::Split": [
+                          ",",
+                          {
+                            "Ref": "Secrets"
+                          }
+                        ]
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  },
+                  "NotResource": {
+                    "Fn::If": [
+                      "SecretsHasValue",
+                      {
+                        "Ref": "AWS::NoValue"
+                      },
+                      "*"
+                    ]
+                  }
+                },
                 {
                   "Sid": "LogStream",
                   "Effect": "Allow",
@@ -379,41 +401,6 @@
         },
         "PolicyName": {
           "Fn::Sub": "${AWS::StackName}ModuleRoleDeadLetterQueue"
-        },
-        "Roles": [
-          {
-            "Ref": "ModuleRole"
-          }
-        ]
-      }
-    },
-    "ModuleRoleSecretsPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Condition": "ModuleRoleSecretsPolicyCondition",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "Secrets",
-              "Effect": "Allow",
-              "Action": [
-                "kms:Decrypt",
-                "kms:Encrypt"
-              ],
-              "Resource": {
-                "Fn::Split": [
-                  ",",
-                  {
-                    "Ref": "Secrets"
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "PolicyName": {
-          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
         },
         "Roles": [
           {
@@ -592,6 +579,18 @@
         "value"
       ]
     },
+    "SecretsHasValue": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Secrets"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "XRayIsEnabled": {
       "Fn::Not": [
         {
@@ -714,18 +713,6 @@
         }
       ]
     },
-    "ModuleRoleSecretsPolicyCondition": {
-      "Fn::Not": [
-        {
-          "Fn::Equals": [
-            {
-              "Ref": "Secrets"
-            },
-            ""
-          ]
-        }
-      ]
-    },
     "FunctionRegistrationCondition": {
       "Fn::And": [
         {
@@ -831,7 +818,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "1FD28946648756B786C43EC7E67C1AD9",
+      "TemplateChecksum": "98539D2D986EA6FDAB667412AA63ADD1",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [
@@ -924,7 +911,6 @@
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
-        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ModuleRegistration": "Module::Registration",
         "FunctionRegistration": "Function::Registration",
         "FunctionLogGroupSubscription": "Function::LogGroupSubscription"
