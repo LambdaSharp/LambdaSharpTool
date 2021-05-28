@@ -1419,24 +1419,27 @@ namespace LambdaSharp.Tool.Model {
             } else {
 
                 // add role resource statement
-                var statement = new Humidifier.Statement {
+                AddRoleStatement(new Humidifier.Statement {
                     Sid = name.ToIdentifier(),
                     Effect = "Allow",
                     Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
                     Action = allowStatements.Distinct().OrderBy(text => text).ToList()
-                };
-
-                // check if an existing statement is being updated
-                for(var i = 0; i < _resourceStatements.Count; ++i) {
-                    if(_resourceStatements[i].Sid == name) {
-                        _resourceStatements[i] = statement;
-                        return;
-                    }
-                }
-
-                // add new statement
-                _resourceStatements.Add(statement);
+                });
             }
+        }
+
+        public void AddRoleStatement(Humidifier.Statement statement) {
+
+            // check if an existing statement is being updated
+            for(var i = 0; i < _resourceStatements.Count; ++i) {
+                if(_resourceStatements[i].Sid == statement.Sid) {
+                    _resourceStatements[i] = statement;
+                    return;
+                }
+            }
+
+            // add new statement
+            _resourceStatements.Add(statement);
         }
 
         public void VisitAll(ModuleVisitorDelegate visitor) {
