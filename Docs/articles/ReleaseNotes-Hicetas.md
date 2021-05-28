@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.3.0) - 2021-05-18
+# LambdaSharp "Hicetas" Release (v0.8.3.1) - 2021-05-28
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,9 +141,25 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.3.0) - 2018-05-18
+### (v0.8.3.1) - 2021-05-28
 
-### Features
+#### Features
+
+* CLI
+  * Simplified the mechanism for dynamically allowing operations on KMS keys passed in via `Secrets` parameter.
+
+* Samples
+  * Added `Samples/SecretSample` module showing how to use KMS encrypted values with Secret Manager and the access it from a Lambda function.
+
+#### Fixes
+
+* CLI
+  * Fixed a regression in the parameters file processing.
+  * Fixed a circular dependency when the `DecryptSecretFunction` was used to initialize a resource that was then scoped to a Lambda function.
+
+### (v0.8.3.0) - 2021-05-18
+
+#### Features
 
 * All
   * Updated _Amazon.Lambda.*_ assembly references to v2.0.*
