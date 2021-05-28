@@ -1,0 +1,2 @@
+TierTestMemory: !GetConfig [ "params-json-config.json", "tier.test.memory" ]
+TierDevMemory: !GetConfig [ "params-json-config.json", "tier.dev.memory" ]
