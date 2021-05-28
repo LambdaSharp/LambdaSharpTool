@@ -25,8 +25,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.1" />
+
+    <!-- TODO (2021-05-16, bjorg): upgrade Microsoft.Extensions.Logging to 5.x -->
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.10" />
-    <PackageReference Include="System.Net.Http.Json" Version="3.2.1" />
+
+    <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.Logging\LambdaSharp.Logging.csproj" />

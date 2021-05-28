@@ -91,6 +91,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Parameters"
             },
             ["Function"] = new[] {
+                "DependsOn",
                 "Description",
                 "Environment",
                 "Handler",
@@ -315,6 +316,7 @@ namespace LambdaSharp.Tool.Model.AST {
          * Properties: map
          * Sources: list<function-source>
          * Pragmas: list<any>
+         * DependsOn: string -or- list<string>
          */
         public string Function { get; set; }
         public string Memory { get; set; }

@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.2.3) - 2021-04-01
+# LambdaSharp "Hicetas" Release (v0.8.3.1) - TBD
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -140,6 +140,68 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 
 ## Releases
+
+### (v0.8.3.1) - TBD
+
+#### Features
+
+* Samples
+  * Added `Samples/SecretSample` module showing how to use KMS encrypted values with Secret Manager and the access it from a Lambda function.
+
+#### Fixes
+
+* CLI
+  * Fixed a regression in the parameters file processing.
+  * Fixed a circular dependency when the `DecryptSecretFunction` was used to initialize a resource that was then scoped to a Lambda function.
+
+### (v0.8.3.0) - 2018-05-18
+
+#### Features
+
+* All
+  * Updated _Amazon.Lambda.*_ assembly references to v2.0.*
+  * Updated _AWSSDK.*_ assembly references to v3.7.*
+
+* CLI
+  * Improved error/warning message to distinguish outdated vs. unexpected references to the _LambdaSharp_ assembly.
+
+* Modules
+  * _LambdaSharp.Twitter.Query_
+    * Updated _TweetinviAPI_ assembly references to v5.0.4
+
+#### Fixes
+
+* Modules
+  * _LambdaSharp.App.EventBus_
+    * Corrected Lambda memory to use 1769 MB.
+  * _LambdaSharp.Core_
+    * Corrected Lambda memory to use 1769 MB.
+
+### (v0.8.2.4) - 2021-04-30
+
+### Features
+
+* CLI
+  * Added `DependsOn` property for `Function` declarations.
+
+* Modules
+  * _LambdaSharp.S3.Subscriber_
+    * Added `ResourceHandlerRole` as export value from module to allow dependent stacks to import it and add policies to it when needed.
+
+#### Fixes
+
+* CLI
+  * Fixed a regression that caused the _Beep_ sound not to be played anymore after a long operation.
+
+* SDK
+  * Fixed a possible `NullReferenceException` when module info is not set for a Lambda function.
+
+* Modules
+  * _LambdaSharp.S3.Subscriber_
+    * Fixed an issue where buckets in another region or inaccessible would cause an _internal error_ rather than respond with an informative message.
+
+* Samples
+  * Enabled debug output for _Sample.Debug_ module.
 
 ### (v0.8.2.3) - 2021-04-01
 

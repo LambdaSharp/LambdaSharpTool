@@ -8,7 +8,7 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.APIGateway" Version="3.5.2.22" />
+    <PackageReference Include="AWSSDK.APIGateway" Version="3.7.0.21" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp.Finalizer\LambdaSharp.Finalizer.csproj" />

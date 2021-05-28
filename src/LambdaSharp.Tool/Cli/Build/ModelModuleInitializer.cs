@@ -251,7 +251,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
-            _builder.AddParameter(
+            var secretsParameter = _builder.AddParameter(
                 name: "Secrets",
                 section: section,
                 label: "Comma-separated list of additional KMS secret keys",
@@ -273,6 +273,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null,
                 pragmas: null,
                 deletionPolicy: null
+            );
+            var secretsHasValueCondition = _builder.AddCondition(
+                parent: secretsParameter,
+                name: "HasValue",
+                description: "",
+                value: FnNot(FnEquals(FnRef("Secrets"), ""))
             );
             _builder.AddParameter(
                 name: "XRayTracing",
@@ -453,6 +459,26 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // add KMS permissions for secrets in module
+            _builder.AddRoleStatement(
+                new Humidifier.Statement {
+                    Sid = "DeploymentSecrets",
+                    Effect = "Allow",
+                    Resource = FnIf(
+                        secretsHasValueCondition.FullName,
+                        FnSplit(",", FnRef(secretsParameter.FullName)),
+                        FnRef("AWS::NoValue")
+                    ),
+                    NotResource = FnIf(
+                        secretsHasValueCondition.FullName,
+                        FnRef("AWS::NoValue"),
+                        "*"
+                    ),
+                    Action = new List<string> {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    }
+                }
+            );
             if(_builder.Secrets.Any()) {
                 _builder.AddGrant(
                     name: "EmbeddedSecrets",
@@ -467,18 +493,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // add decryption function for secret parameters and values
-            var decryptSecretFunctionEnvironment = new Dictionary<string, object> {
-                ["MODULE_ROLE_SECRETSPOLICY"] = FnIf(
-                    "Module::Role::SecretsPolicy::Condition",
-                    FnRef("Module::Role::SecretsPolicy"),
-                    FnRef("AWS::NoValue")
-                )
-            };
-            _builder.AddInlineFunction(
+            var decryptSecretFunction = _builder.AddInlineFunction(
                 parent: moduleItem,
                 name: "DecryptSecretFunction",
                 description: "Module secret decryption function",
-                environment: decryptSecretFunctionEnvironment,
+                environment: null,
                 sources: null,
                 condition: null,
                 pragmas: new[] {
@@ -488,8 +507,81 @@ namespace LambdaSharp.Tool.Cli.Build {
                 },
                 timeout: "30",
                 memory: "128",
-                code: DecryptSecretFunctionCode
-            ).DiscardIfNotReachable = true;
+                code: DecryptSecretFunctionCode,
+                dependsOn: null,
+                role: FnGetAtt("Module::DecryptSecretFunction::Role", "Arn")
+            );
+            decryptSecretFunction.DiscardIfNotReachable = true;
+
+            // add custom role decryption function
+            var decryptSecretFunctionPolicyStatements = new List<Humidifier.Statement> {
+                new Humidifier.Statement {
+                    Sid = "DeploymentSecrets",
+                    Effect = "Allow",
+                    Resource = FnIf(
+                        secretsHasValueCondition.FullName,
+                        FnSplit(",", FnRef(secretsParameter.FullName)),
+                        FnRef("AWS::NoValue")
+                    ),
+                    NotResource = FnIf(
+                        secretsHasValueCondition.FullName,
+                        FnRef("AWS::NoValue"),
+                        "*"
+                    ),
+                    Action = new List<string> {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    }
+                }
+            };
+            if(_builder.Secrets.Any()) {
+                decryptSecretFunctionPolicyStatements.Add(new Humidifier.Statement {
+                    Sid = "EmbeddedSecrets",
+                    Effect = "Allow",
+                    Resource = _builder.Secrets.ToList(),
+                    Action = new List<string> {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    }
+                });
+            }
+            var decryptSecretFunctionRoleItem = _builder.AddResource(
+                parent: decryptSecretFunction,
+                name: "Role",
+                description: null,
+                scope: null,
+                resource: new Humidifier.IAM.Role {
+                    AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
+                        Version = "2012-10-17",
+                        Statement = new[] {
+                            new Humidifier.Statement {
+                                Sid = "ModuleLambdaPrincipal",
+                                Effect = "Allow",
+                                Principal = new Humidifier.Principal {
+                                    Service = "lambda.amazonaws.com"
+                                },
+                                Action = "sts:AssumeRole"
+                            }
+                        }.ToList()
+                    },
+                    PermissionsBoundary = rolePermissionsBoundary,
+                    Policies = new[] {
+                        new Humidifier.IAM.Policy {
+                            PolicyName = FnSub("${AWS::StackName}DecryptSecretFunction"),
+                            PolicyDocument = new Humidifier.PolicyDocument {
+                                Version = "2012-10-17",
+                                Statement = decryptSecretFunctionPolicyStatements
+                            }
+                        }
+                    }.ToList()
+                },
+                resourceExportAttribute: null,
+                dependsOn: null,
+                condition: null,
+                pragmas: null,
+                deletionPolicy: null
+            );
+            decryptSecretFunctionRoleItem.DiscardIfNotReachable = true;
 
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
@@ -607,18 +699,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null,
                 pragmas: null,
                 deletionPolicy: null
-            );
-
-            // add conditional KMS permissions for secrets parameter
-            _builder.AddGrant(
-                name: "Secrets",
-                awsType: null,
-                reference: FnSplit(",", FnRef("Secrets")),
-                allow: new List<string> {
-                    "kms:Decrypt",
-                    "kms:Encrypt"
-                },
-                condition: FnNot(FnEquals(FnRef("Secrets"), ""))
             );
 
             // permissions needed for writing to log streams (but not for creating log groups!)

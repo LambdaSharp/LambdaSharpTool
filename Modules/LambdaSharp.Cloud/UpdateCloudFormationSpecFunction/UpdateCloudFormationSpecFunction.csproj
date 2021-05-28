@@ -8,10 +8,10 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp.Schedule\LambdaSharp.Schedule.csproj"/>
-    <ProjectReference Include="..\LambdaSharp.CloudFormation.Converter\LambdaSharp.CloudFormation.Converter.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.Schedule\LambdaSharp.Schedule.csproj" />
+    <ProjectReference Include="..\LambdaSharp.CloudFormation.Converter\LambdaSharp.CloudFormation.Converter.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.5.8.8"/>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.0.23" />
   </ItemGroup>
 </Project>

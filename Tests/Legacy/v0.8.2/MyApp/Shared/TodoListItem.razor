@@ -1,0 +1,27 @@
+@*
+ * Todo item control for Sample Todo App
+ *@
+
+<li class="list-group-item">
+    <div class="form-group row p-auto">
+        <div class="col-1">
+            <input type="checkbox" checked="@Todo.Completed" @onchange="args => OnCheckedChanged((bool)args.Value)"/>
+        </div>
+        <div class="col-11" >
+            @Todo.Description
+        </div>
+    </div>
+</li>
+
+@code {
+
+    //--- Properties ---
+    [Parameter] public TodoItem Todo { get; set; }
+    [Parameter] public Action<bool> StatusChanged { get; set; }
+
+    //--- Methods ---
+    private void OnCheckedChanged(bool isChecked) {
+        Todo.Completed = isChecked;
+        StatusChanged?.Invoke(isChecked);
+    }
+}

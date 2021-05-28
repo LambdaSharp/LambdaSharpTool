@@ -92,7 +92,7 @@ namespace LambdaSharp.CloudFormation.Converter {
             using var decompressedMemoryStream = new MemoryStream();
             await decompressionStream.CopyToAsync(decompressedMemoryStream);
             var text = Encoding.UTF8.GetString(decompressedMemoryStream.ToArray());
-            var spec = JsonConvert.DeserializeObject<ExtendedCloudFormationSpecification>(text);
+            var spec = JsonConvert.DeserializeObject<ExtendedCloudFormationSpecification>(text) ?? throw new InvalidOperationException("ExtendedCloudFormationSpecification is null");
 
             // apply all patches to original specification
             if(!_globalExtendedSpecifications.Any()) {
