@@ -23,31 +23,84 @@ using LambdaSharp.CloudFormation.Builder.Expressions;
 
 namespace LambdaSharp.CloudFormation.Builder {
 
-    public class NullValueException : Exception {
-
-        //--- Constructors ---
-        public NullValueException() { }
-        public NullValueException(string message) : base(message) { }
-    }
-
     [AttributeUsage(AttributeTargets.Property)]
     internal class InspectAttribute : Attribute { }
 
     public class CloudFormationBuilderTemplate : ACloudFormationBuilderNode {
 
-        //--- Properties ---
-
-        // TODO: should probably be the literal type
-        public string? AWSTemplateFormatVersion { get; set; }
-        public string? Description { get; set; }
-        public List<CloudFormationBuilderLiteral> Transforms { get; set; } = new List<CloudFormationBuilderLiteral>();
-        public List<CloudFormationBuilderParameter> Parameters { get; set; } = new List<CloudFormationBuilderParameter>();
-        public List<CloudFormationBuilderMapping> Mappings { get; set; } = new List<CloudFormationBuilderMapping>();
-        public List<CloudFormationBuilderCondition> Conditions { get; set; } = new List<CloudFormationBuilderCondition>();
-        public List<CloudFormationBuilderResource> Resources { get; set; } = new List<CloudFormationBuilderResource>();
-        public List<CloudFormationBuilderOutput> Outputs { get; set; } = new List<CloudFormationBuilderOutput>();
-
         // TODO
         // public Dictionary<string, ACloudFormationExpression> Metadata { get; set; } = new Dictionary<string, ACloudFormationExpression>();
+
+        //--- Fields ---
+        private CloudFormationBuilderLiteral? _version;
+        private CloudFormationBuilderLiteral? _description;
+        private CloudFormationBuilderList<CloudFormationBuilderLiteral>? _transforms;
+        private CloudFormationBuilderList<CloudFormationBuilderParameter>? _parameters;
+        private CloudFormationBuilderList<CloudFormationBuilderMapping>? _mappings;
+        private CloudFormationBuilderList<CloudFormationBuilderCondition>? _conditions;
+        private CloudFormationBuilderList<CloudFormationBuilderResource>? _resources;
+        private CloudFormationBuilderList<CloudFormationBuilderOutput>? _outputs;
+
+        //--- Properties ---
+
+        [Inspect]
+        public CloudFormationBuilderLiteral? AWSTemplateFormatVersion {
+            get => _version;
+            set => _version = Adopt(value);
+        }
+
+        [Inspect]
+        public CloudFormationBuilderLiteral? Description {
+            get => _description;
+            set => _description = Adopt(value);
+        }
+
+        [Inspect]
+        public CloudFormationBuilderList<CloudFormationBuilderLiteral>? Transforms {
+            get => _transforms;
+            set => _transforms = Adopt(value);
+        }
+
+        [Inspect]
+        public CloudFormationBuilderList<CloudFormationBuilderParameter>? Parameters {
+            get => _parameters;
+            set => _parameters = Adopt(value);
+        }
+
+        [Inspect]
+        public CloudFormationBuilderList<CloudFormationBuilderMapping>? Mappings {
+            get => _mappings;
+            set => _mappings = Adopt(value);
+        }
+
+        [Inspect]
+        public CloudFormationBuilderList<CloudFormationBuilderCondition>? Conditions {
+            get => _conditions;
+            set => _conditions = Adopt(value);
+        }
+
+        [Inspect]
+        public CloudFormationBuilderList<CloudFormationBuilderResource>? Resources {
+            get => _resources;
+            set => _resources = Adopt(value);
+        }
+
+        [Inspect]
+        public CloudFormationBuilderList<CloudFormationBuilderOutput>? Outputs {
+            get => _outputs;
+            set => _outputs = Adopt(value);
+        }
+
+        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderTemplate {
+            SourceLocation = SourceLocation,
+            AWSTemplateFormatVersion = AWSTemplateFormatVersion,
+            Description = Description,
+            Transforms = Transforms,
+            Parameters = Parameters,
+            Mappings = Mappings,
+            Conditions = Conditions,
+            Resources = Resources,
+            Outputs = Outputs
+        };
     }
 }

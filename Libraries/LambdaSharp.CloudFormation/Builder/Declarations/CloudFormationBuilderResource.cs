@@ -68,5 +68,15 @@ namespace LambdaSharp.CloudFormation.Builder.Declarations {
             get => _deletionPolicy;
             set => _deletionPolicy = Adopt(value);
         }
+
+        //--- Methods ---
+        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderResource(LogicalId) {
+            SourceLocation = SourceLocation,
+            Condition = Condition,
+            Type = Type,
+            Properties = Properties,
+            DependsOn = DependsOn,
+            DeletionPolicy = DeletionPolicy
+        };
     }
 }

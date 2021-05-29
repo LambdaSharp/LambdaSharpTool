@@ -26,7 +26,7 @@ namespace LambdaSharp.CloudFormation.Builder {
         //--- Extension Methods ---
 
         // TODO: generalize to ASyntaxNode
-        public static T Clone<T>(this T node) where T : ACloudFormationBuilderExpression {
+        public static T Clone<T>(this T node) where T : ACloudFormationBuilderNode {
             var result = (T)node.CloneNode();
             result.SourceLocation = node.SourceLocation;
             return result;

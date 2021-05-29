@@ -30,8 +30,5 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
 
         //--- Abstract Properties ---
         public abstract CloudFormationBuilderValueType ExpressionValueType { get; }
-
-        //--- Abstract Methods ---
-        public abstract ACloudFormationBuilderNode CloneNode();
     }
 }

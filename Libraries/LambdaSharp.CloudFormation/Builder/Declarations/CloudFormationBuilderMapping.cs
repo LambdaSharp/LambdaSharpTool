@@ -35,5 +35,11 @@ namespace LambdaSharp.CloudFormation.Builder.Declarations {
             get => _value;
             set => _value = Adopt(value);
         }
+
+        //--- Methods ---
+        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderMapping(LogicalId) {
+            SourceLocation = SourceLocation,
+            Value = Value
+        };
     }
 }

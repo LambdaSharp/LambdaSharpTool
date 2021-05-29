@@ -16,20 +16,24 @@
  * limitations under the License.
  */
 
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Reporting;
 
-namespace LambdaSharp.CloudFormation.Builder.Declarations {
+namespace LambdaSharp.CloudFormation.Builder.Validators {
 
-    public abstract class ACloudFormationBuilderDeclaration : ACloudFormationBuilderNode {
-
-        //--- Constructors ---
-        protected ACloudFormationBuilderDeclaration(CloudFormationBuilderLiteral logicalId) {
-            LogicalId = Adopt(logicalId ?? throw new System.ArgumentNullException(nameof(logicalId)));
-        }
+    internal interface ISyntaxProcessorDependencyProvider {
 
         //--- Properties ---
+        IReport Report { get; }
+    }
 
-        [Inspect]
-        public CloudFormationBuilderLiteral LogicalId { get; }
+    internal abstract class ASyntaxProcessor {
+
+        //--- Constructors ---
+        public ASyntaxProcessor(ISyntaxProcessorDependencyProvider provider)
+            => Provider = provider ?? throw new System.ArgumentNullException(nameof(provider));
+
+        //--- Properties ---
+        protected ISyntaxProcessorDependencyProvider Provider { get; }
+        protected IReport Report => Provider.Report;
     }
 }

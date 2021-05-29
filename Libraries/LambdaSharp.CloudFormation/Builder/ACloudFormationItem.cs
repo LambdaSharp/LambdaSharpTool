@@ -62,6 +62,9 @@ namespace LambdaSharp.CloudFormation.Builder {
         public ACloudFormationBuilderNode? Parent { get; private set; }
         public SourceLocation SourceLocation { get; set; } = SourceLocation.Empty;
 
+        //--- Abstract Methods ---
+        public abstract ACloudFormationBuilderNode CloneNode();
+
         //--- Methods ---
         public void Inspect(Action<ACloudFormationBuilderNode> inspector) => Inspect(inspector, exitInspector: null);
 

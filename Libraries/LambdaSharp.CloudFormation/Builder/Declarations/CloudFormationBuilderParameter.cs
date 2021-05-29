@@ -20,7 +20,7 @@ using LambdaSharp.CloudFormation.Builder.Expressions;
 
 namespace LambdaSharp.CloudFormation.Builder.Declarations {
 
-    public sealed class CloudFormationBuilderParameter : ACloudFormationBuilderNode {
+    public sealed class CloudFormationBuilderParameter : ACloudFormationBuilderDeclaration {
 
         //--- Fields ---
         private CloudFormationBuilderLiteral? _type;
@@ -33,6 +33,9 @@ namespace LambdaSharp.CloudFormation.Builder.Declarations {
         private CloudFormationBuilderLiteral? _maxValue;
         private CloudFormationBuilderLiteral? _minLength;
         private CloudFormationBuilderLiteral? _minValue;
+
+        //--- Constructors ---
+        public CloudFormationBuilderParameter(CloudFormationBuilderLiteral logicalId) : base(logicalId) { }
 
         //--- Properties ---
 
@@ -95,5 +98,20 @@ namespace LambdaSharp.CloudFormation.Builder.Declarations {
             get => _minValue;
             set => _minValue = Adopt(value);
         }
+
+        //--- Methods ---
+        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderParameter(LogicalId) {
+            SourceLocation = SourceLocation,
+            Type = Type,
+            NoEcho = NoEcho,
+            Default = Default,
+            ConstraintDescription = ConstraintDescription,
+            AllowedPattern = AllowedPattern,
+            AllowedValues = AllowedValues,
+            MaxLength = MaxLength,
+            MaxValue = MaxValue,
+            MinLength = MinLength,
+            MinValue = MinValue
+        };
     }
 }

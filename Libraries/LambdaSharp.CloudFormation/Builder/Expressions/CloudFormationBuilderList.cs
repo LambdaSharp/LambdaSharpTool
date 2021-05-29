@@ -23,16 +23,18 @@ using System.Linq;
 
 namespace LambdaSharp.CloudFormation.Builder.Expressions {
 
-    public class CloudFormationBuilderList : ACloudFormationBuilderExpression, IEnumerable, IEnumerable<ACloudFormationBuilderExpression> {
+    public class CloudFormationBuilderList<TExpression> : ACloudFormationBuilderExpression, IEnumerable, IEnumerable<TExpression>
+        where TExpression : ACloudFormationBuilderNode
+    {
 
         //--- Fields ---
-        private readonly List<ACloudFormationBuilderExpression> _items;
+        private readonly List<TExpression> _items;
 
         //--- Constructors ---
         public CloudFormationBuilderList( )
-            => _items = new List<ACloudFormationBuilderExpression>();
+            => _items = new List<TExpression>();
 
-        public CloudFormationBuilderList(IEnumerable<ACloudFormationBuilderExpression> items)
+        public CloudFormationBuilderList(IEnumerable<TExpression> items)
             => _items = items.Select(item => Adopt(item)).ToList();
 
         //--- Properties ---
@@ -40,7 +42,7 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
         public int Count => _items.Count;
 
         //--- Operators ---
-        public ACloudFormationBuilderExpression this[int index] {
+        public TExpression this[int index] {
             get => _items[index];
             set {
                 if(!object.ReferenceEquals(_items[index], value)) {
@@ -51,7 +53,7 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
         }
 
         //--- Methods ---
-        public void Add(ACloudFormationBuilderExpression expression) => _items.Add(Adopt(expression));
+        public void Add(TExpression expression) => _items.Add(Adopt(expression));
 
         public override void Inspect(Action<ACloudFormationBuilderNode>? entryInspector, Action<ACloudFormationBuilderNode>? exitInspector) {
             entryInspector?.Invoke(this);
@@ -66,20 +68,32 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
                 var value = this[i];
                 var newValue = value.Substitute(inspector) ?? throw new NullValueException();
                 if(!object.ReferenceEquals(value, newValue)) {
-                    this[i] = (ACloudFormationBuilderExpression)newValue;
+                    this[i] = (TExpression)newValue;
                 }
             }
             return inspector(this);
         }
 
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderList(_items.Select(item => item.Clone())) {
+        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderList<TExpression>(this.Select(item => item.Clone())) {
             SourceLocation = SourceLocation
         };
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 
-        //--- IEnumerable<ACloudFormationBuilderExpression> Members ---
-        IEnumerator<ACloudFormationBuilderExpression> IEnumerable<ACloudFormationBuilderExpression>.GetEnumerator() => _items.GetEnumerator();
+        //--- IEnumerable<TExpression> Members ---
+        IEnumerator<TExpression> IEnumerable<TExpression>.GetEnumerator() => _items.GetEnumerator();
     }
+
+    public class CloudFormationBuilderList : CloudFormationBuilderList<ACloudFormationBuilderExpression> {
+
+        //--- Constructors ---
+        public CloudFormationBuilderList( ) { }
+        public CloudFormationBuilderList(IEnumerable<ACloudFormationBuilderExpression> items) : base(items) { }
+
+        //--- Methods ---
+        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderList(this.Select(item => item.Clone())) {
+            SourceLocation = SourceLocation
+        };
+   }
 }

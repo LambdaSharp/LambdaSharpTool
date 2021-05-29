@@ -16,20 +16,14 @@
  * limitations under the License.
  */
 
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using System;
 
-namespace LambdaSharp.CloudFormation.Builder.Declarations {
+namespace LambdaSharp.CloudFormation.Builder {
 
-    public abstract class ACloudFormationBuilderDeclaration : ACloudFormationBuilderNode {
+    public class NullValueException : Exception {
 
         //--- Constructors ---
-        protected ACloudFormationBuilderDeclaration(CloudFormationBuilderLiteral logicalId) {
-            LogicalId = Adopt(logicalId ?? throw new System.ArgumentNullException(nameof(logicalId)));
-        }
-
-        //--- Properties ---
-
-        [Inspect]
-        public CloudFormationBuilderLiteral LogicalId { get; }
+        public NullValueException() { }
+        public NullValueException(string message) : base(message) { }
     }
 }
