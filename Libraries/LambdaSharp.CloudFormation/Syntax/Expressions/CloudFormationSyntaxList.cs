@@ -21,24 +21,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LambdaSharp.CloudFormation.Builder.Expressions {
+namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
-    public class CloudFormationBuilderList<TExpression> : ACloudFormationBuilderExpression, IEnumerable, IEnumerable<TExpression>
-        where TExpression : ACloudFormationBuilderNode
+    public class CloudFormationSyntaxList<TExpression> : ACloudFormationSyntaxExpression, IEnumerable, IEnumerable<TExpression>
+        where TExpression : ACloudFormationSyntaxNode
     {
 
         //--- Fields ---
         private readonly List<TExpression> _items;
 
         //--- Constructors ---
-        public CloudFormationBuilderList( )
+        public CloudFormationSyntaxList( )
             => _items = new List<TExpression>();
 
-        public CloudFormationBuilderList(IEnumerable<TExpression> items)
+        public CloudFormationSyntaxList(IEnumerable<TExpression> items)
             => _items = items.Select(item => Adopt(item)).ToList();
 
         //--- Properties ---
-        public override CloudFormationBuilderValueType ExpressionValueType => CloudFormationBuilderValueType.List;
+        public override CloudFormationSyntaxValueType ExpressionValueType => CloudFormationSyntaxValueType.List;
         public int Count => _items.Count;
 
         //--- Operators ---
@@ -55,7 +55,7 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
         //--- Methods ---
         public void Add(TExpression expression) => _items.Add(Adopt(expression));
 
-        public override void Inspect(Action<ACloudFormationBuilderNode>? entryInspector, Action<ACloudFormationBuilderNode>? exitInspector) {
+        public override void Inspect(Action<ACloudFormationSyntaxNode>? entryInspector, Action<ACloudFormationSyntaxNode>? exitInspector) {
             entryInspector?.Invoke(this);
             foreach(var item in _items) {
                 item.Inspect(entryInspector, exitInspector);
@@ -63,7 +63,7 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
             exitInspector?.Invoke(this);
         }
 
-        public override ACloudFormationBuilderNode Substitute(Func<ACloudFormationBuilderNode, ACloudFormationBuilderNode> inspector) {
+        public override ACloudFormationSyntaxNode Substitute(Func<ACloudFormationSyntaxNode, ACloudFormationSyntaxNode> inspector) {
             for(var i = 0; i < Count; ++i) {
                 var value = this[i];
                 var newValue = value.Substitute(inspector) ?? throw new NullValueException();
@@ -74,7 +74,7 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
             return inspector(this);
         }
 
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderList<TExpression>(this.Select(item => item.Clone())) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxList<TExpression>(this.Select(item => item.Clone())) {
             SourceLocation = SourceLocation
         };
 
@@ -85,14 +85,14 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
         IEnumerator<TExpression> IEnumerable<TExpression>.GetEnumerator() => _items.GetEnumerator();
     }
 
-    public class CloudFormationBuilderList : CloudFormationBuilderList<ACloudFormationBuilderExpression> {
+    public class CloudFormationSyntaxList : CloudFormationSyntaxList<ACloudFormationSyntaxExpression> {
 
         //--- Constructors ---
-        public CloudFormationBuilderList( ) { }
-        public CloudFormationBuilderList(IEnumerable<ACloudFormationBuilderExpression> items) : base(items) { }
+        public CloudFormationSyntaxList( ) { }
+        public CloudFormationSyntaxList(IEnumerable<ACloudFormationSyntaxExpression> items) : base(items) { }
 
         //--- Methods ---
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderList(this.Select(item => item.Clone())) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxList(this.Select(item => item.Clone())) {
             SourceLocation = SourceLocation
         };
    }

@@ -17,22 +17,19 @@
  */
 
 using System.Collections.Generic;
-using LambdaSharp.CloudFormation.Builder.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder {
+namespace LambdaSharp.CloudFormation.Syntax {
 
-    public static class ACloudFormationBuilderItemEx {
+    public static class ACloudFormationSyntaxItemEx {
 
         //--- Extension Methods ---
-
-        // TODO: generalize to ASyntaxNode
-        public static T Clone<T>(this T node) where T : ACloudFormationBuilderNode {
+        public static T Clone<T>(this T node) where T : ACloudFormationSyntaxNode {
             var result = (T)node.CloneNode();
             result.SourceLocation = node.SourceLocation;
             return result;
         }
 
-        public static IEnumerable<ACloudFormationBuilderNode> GetParents(this ACloudFormationBuilderNode node) {
+        public static IEnumerable<ACloudFormationSyntaxNode> GetParents(this ACloudFormationSyntaxNode node) {
             for(var parent = node.Parent; !(parent is null); parent = parent.Parent) {
                 yield return parent;
             }

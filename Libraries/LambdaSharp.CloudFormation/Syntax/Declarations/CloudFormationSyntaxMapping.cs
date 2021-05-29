@@ -16,20 +16,30 @@
  * limitations under the License.
  */
 
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder.Declarations {
+namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
-    public abstract class ACloudFormationBuilderDeclaration : ACloudFormationBuilderNode {
+    public class CloudFormationSyntaxMapping : ACloudFormationSyntaxDeclaration {
+
+        //--- Fields ---
+        private CloudFormationSyntaxMap? _value;
 
         //--- Constructors ---
-        protected ACloudFormationBuilderDeclaration(CloudFormationBuilderLiteral logicalId) {
-            LogicalId = Adopt(logicalId ?? throw new System.ArgumentNullException(nameof(logicalId)));
-        }
+        public CloudFormationSyntaxMapping(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
 
         //--- Properties ---
 
         [Inspect]
-        public CloudFormationBuilderLiteral LogicalId { get; }
+        public CloudFormationSyntaxMap? Value {
+            get => _value;
+            set => _value = Adopt(value);
+        }
+
+        //--- Methods ---
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxMapping(LogicalId) {
+            SourceLocation = SourceLocation,
+            Value = Value
+        };
     }
 }

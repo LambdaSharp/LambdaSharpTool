@@ -17,25 +17,25 @@
  */
 
 using System;
-using LambdaSharp.CloudFormation.Builder.Functions;
+using LambdaSharp.CloudFormation.Syntax.Functions;
 
-namespace LambdaSharp.CloudFormation.Builder.Expressions {
+namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
-    public class CloudFormationBuilderFunctionInvocation : ACloudFormationBuilderExpression {
+    public class CloudFormationSyntaxFunctionInvocation : ACloudFormationSyntaxExpression {
 
         //--- Constructors ---
-        public CloudFormationBuilderFunctionInvocation(ACloudFormationBuilderFunction function, ACloudFormationBuilderExpression argument) {
+        public CloudFormationSyntaxFunctionInvocation(ACloudFormationSyntaxFunction function, ACloudFormationSyntaxExpression argument) {
             Function = function ?? throw new ArgumentNullException(nameof(function));
             Argument = Adopt(argument ?? throw new ArgumentNullException(nameof(argument)));
         }
 
         //--- Properties ---
-        public ACloudFormationBuilderFunction Function { get; }
-        public ACloudFormationBuilderExpression Argument { get; }
-        public override CloudFormationBuilderValueType ExpressionValueType => Function.ReturnValueType;
+        public ACloudFormationSyntaxFunction Function { get; }
+        public ACloudFormationSyntaxExpression Argument { get; }
+        public override CloudFormationSyntaxValueType ExpressionValueType => Function.ReturnValueType;
 
         //--- Methods ---
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderFunctionInvocation(Function, Argument) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxFunctionInvocation(Function, Argument) {
             SourceLocation = SourceLocation
         };
     }

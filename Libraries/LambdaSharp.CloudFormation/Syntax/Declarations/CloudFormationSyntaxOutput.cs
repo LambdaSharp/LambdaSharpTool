@@ -16,69 +16,69 @@
  * limitations under the License.
  */
 
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder.Declarations {
+namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
-    public class CloudFormationBuilderOutputExport : ACloudFormationBuilderNode {
+    public class CloudFormationSyntaxOutputExport : ACloudFormationSyntaxNode {
 
         //--- Fields ---
-        private ACloudFormationBuilderExpression? _name;
+        private ACloudFormationSyntaxExpression? _name;
 
         //--- Properties ---
 
         [Inspect]
-        public ACloudFormationBuilderExpression? Name {
+        public ACloudFormationSyntaxExpression? Name {
             get => _name;
             set => _name = Adopt(value);
         }
 
         //--- Methods ---
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderOutputExport {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxOutputExport {
             SourceLocation = SourceLocation,
             Name = Name
         };
     }
 
-    public class CloudFormationBuilderOutput : ACloudFormationBuilderDeclaration {
+    public class CloudFormationSyntaxOutput : ACloudFormationSyntaxDeclaration {
 
         //--- Fields ---
-        private CloudFormationBuilderLiteral? _description;
-        private ACloudFormationBuilderExpression? _value;
-        private CloudFormationBuilderLiteral? _condition;
-        private CloudFormationBuilderOutputExport? _export;
+        private CloudFormationSyntaxLiteral? _description;
+        private ACloudFormationSyntaxExpression? _value;
+        private CloudFormationSyntaxLiteral? _condition;
+        private CloudFormationSyntaxOutputExport? _export;
 
         //--- Constructors ---
-        public CloudFormationBuilderOutput(CloudFormationBuilderLiteral logicalId) : base(logicalId) { }
+        public CloudFormationSyntaxOutput(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
 
         //--- Properties ---
 
         [Inspect]
-        public CloudFormationBuilderLiteral? Description {
+        public CloudFormationSyntaxLiteral? Description {
             get => _description;
             set => _description = Adopt(value);
         }
 
         [Inspect]
-        public ACloudFormationBuilderExpression? Value {
+        public ACloudFormationSyntaxExpression? Value {
             get => _value;
             set => _value = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? Condition {
+        public CloudFormationSyntaxLiteral? Condition {
             get => _condition;
             set => _condition = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderOutputExport? Export {
+        public CloudFormationSyntaxOutputExport? Export {
             get => _export;
             set => _export = Adopt(value);
         }
 
         //--- Methods ---
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderOutput(LogicalId) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxOutput(LogicalId) {
             SourceLocation = SourceLocation,
             Description = Description,
             Value = Value,

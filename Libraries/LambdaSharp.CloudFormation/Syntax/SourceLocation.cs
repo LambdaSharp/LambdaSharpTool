@@ -19,7 +19,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace LambdaSharp.CloudFormation.Builder {
+namespace LambdaSharp.CloudFormation.Syntax {
 
     public class SourceLocation {
 

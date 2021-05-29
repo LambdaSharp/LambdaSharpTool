@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder.Functions {
+namespace LambdaSharp.CloudFormation.Syntax.Functions {
 
-    public abstract class ACloudFormationBuilderFunction {
+    public abstract class ACloudFormationSyntaxFunction {
 
         //--- Constructors ---
-        protected ACloudFormationBuilderFunction(string functionName, CloudFormationBuilderValueType returnValueType) {
+        protected ACloudFormationSyntaxFunction(string functionName, CloudFormationSyntaxValueType returnValueType) {
             FunctionName = functionName ?? throw new System.ArgumentNullException(nameof(functionName));
             ReturnValueType = returnValueType;
         }
@@ -31,7 +31,7 @@ namespace LambdaSharp.CloudFormation.Builder.Functions {
         //--- Properties ---
         public string FunctionName { get; }
 
-        public CloudFormationBuilderValueType ReturnValueType { get; }
+        public CloudFormationSyntaxValueType ReturnValueType { get; }
 
         // TODO:
         //  * does the function take a literal, list, or map?
@@ -40,9 +40,9 @@ namespace LambdaSharp.CloudFormation.Builder.Functions {
         //  * if map, what are the allowed/required keys
     }
 
-    public class CloudFormationBuilderIntrinsicFunction : ACloudFormationBuilderFunction {
+    public class CloudFormationSyntaxIntrinsicFunction : ACloudFormationSyntaxFunction {
 
         //--- Constructors ---
-        public CloudFormationBuilderIntrinsicFunction(string functionName, CloudFormationBuilderValueType returnValueType) : base(functionName, returnValueType) { }
+        public CloudFormationSyntaxIntrinsicFunction(string functionName, CloudFormationSyntaxValueType returnValueType) : base(functionName, returnValueType) { }
     }
 }

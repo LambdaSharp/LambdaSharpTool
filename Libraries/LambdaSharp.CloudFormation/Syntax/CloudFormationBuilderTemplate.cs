@@ -18,80 +18,80 @@
 
 using System;
 using System.Collections.Generic;
-using LambdaSharp.CloudFormation.Builder.Declarations;
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Syntax.Declarations;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder {
+namespace LambdaSharp.CloudFormation.Syntax {
 
     [AttributeUsage(AttributeTargets.Property)]
     internal class InspectAttribute : Attribute { }
 
-    public class CloudFormationBuilderTemplate : ACloudFormationBuilderNode {
+    public class CloudFormationSyntaxTemplate : ACloudFormationSyntaxNode {
 
         // TODO
         // public Dictionary<string, ACloudFormationExpression> Metadata { get; set; } = new Dictionary<string, ACloudFormationExpression>();
 
         //--- Fields ---
-        private CloudFormationBuilderLiteral? _version;
-        private CloudFormationBuilderLiteral? _description;
-        private CloudFormationBuilderList<CloudFormationBuilderLiteral>? _transforms;
-        private CloudFormationBuilderList<CloudFormationBuilderParameter>? _parameters;
-        private CloudFormationBuilderList<CloudFormationBuilderMapping>? _mappings;
-        private CloudFormationBuilderList<CloudFormationBuilderCondition>? _conditions;
-        private CloudFormationBuilderList<CloudFormationBuilderResource>? _resources;
-        private CloudFormationBuilderList<CloudFormationBuilderOutput>? _outputs;
+        private CloudFormationSyntaxLiteral? _version;
+        private CloudFormationSyntaxLiteral? _description;
+        private CloudFormationSyntaxList<CloudFormationSyntaxLiteral>? _transforms;
+        private CloudFormationSyntaxList<CloudFormationSyntaxParameter>? _parameters;
+        private CloudFormationSyntaxList<CloudFormationSyntaxMapping>? _mappings;
+        private CloudFormationSyntaxList<CloudFormationSyntaxCondition>? _conditions;
+        private CloudFormationSyntaxList<CloudFormationSyntaxResource>? _resources;
+        private CloudFormationSyntaxList<CloudFormationSyntaxOutput>? _outputs;
 
         //--- Properties ---
 
         [Inspect]
-        public CloudFormationBuilderLiteral? AWSTemplateFormatVersion {
+        public CloudFormationSyntaxLiteral? AWSTemplateFormatVersion {
             get => _version;
             set => _version = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? Description {
+        public CloudFormationSyntaxLiteral? Description {
             get => _description;
             set => _description = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList<CloudFormationBuilderLiteral>? Transforms {
+        public CloudFormationSyntaxList<CloudFormationSyntaxLiteral>? Transforms {
             get => _transforms;
             set => _transforms = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList<CloudFormationBuilderParameter>? Parameters {
+        public CloudFormationSyntaxList<CloudFormationSyntaxParameter>? Parameters {
             get => _parameters;
             set => _parameters = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList<CloudFormationBuilderMapping>? Mappings {
+        public CloudFormationSyntaxList<CloudFormationSyntaxMapping>? Mappings {
             get => _mappings;
             set => _mappings = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList<CloudFormationBuilderCondition>? Conditions {
+        public CloudFormationSyntaxList<CloudFormationSyntaxCondition>? Conditions {
             get => _conditions;
             set => _conditions = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList<CloudFormationBuilderResource>? Resources {
+        public CloudFormationSyntaxList<CloudFormationSyntaxResource>? Resources {
             get => _resources;
             set => _resources = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList<CloudFormationBuilderOutput>? Outputs {
+        public CloudFormationSyntaxList<CloudFormationSyntaxOutput>? Outputs {
             get => _outputs;
             set => _outputs = Adopt(value);
         }
 
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderTemplate {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxTemplate {
             SourceLocation = SourceLocation,
             AWSTemplateFormatVersion = AWSTemplateFormatVersion,
             Description = Description,

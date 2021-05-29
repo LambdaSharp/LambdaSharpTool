@@ -22,25 +22,25 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace LambdaSharp.CloudFormation.Builder.Expressions {
+namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
-    public class CloudFormationBuilderMap : ACloudFormationBuilderExpression, IEnumerable, IEnumerable<CloudFormationBuilderMap.KeyValuePair> {
+    public class CloudFormationSyntaxMap : ACloudFormationSyntaxExpression, IEnumerable, IEnumerable<CloudFormationSyntaxMap.KeyValuePair> {
 
         //--- Types ---
         public class KeyValuePair {
 
             //--- Constructors ---
-            public KeyValuePair(CloudFormationBuilderLiteral key, ACloudFormationBuilderExpression value) {
+            public KeyValuePair(CloudFormationSyntaxLiteral key, ACloudFormationSyntaxExpression value) {
                 Key = key;
                 Value = value;
             }
 
             //--- Properties ---
-            public CloudFormationBuilderLiteral Key { get; }
-            public ACloudFormationBuilderExpression Value { get; private set; }
+            public CloudFormationSyntaxLiteral Key { get; }
+            public ACloudFormationSyntaxExpression Value { get; private set; }
 
             //--- Methods ---
-            public void SetValue(ACloudFormationBuilderExpression value)
+            public void SetValue(ACloudFormationSyntaxExpression value)
                 => Value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
@@ -48,13 +48,13 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
         private readonly List<KeyValuePair> _pairs = new List<KeyValuePair>();
 
         //--- Constructors ---
-        public CloudFormationBuilderMap() => _pairs = new List<KeyValuePair>();
+        public CloudFormationSyntaxMap() => _pairs = new List<KeyValuePair>();
 
-        public CloudFormationBuilderMap(IEnumerable<KeyValuePair> pairs)
+        public CloudFormationSyntaxMap(IEnumerable<KeyValuePair> pairs)
             => _pairs = pairs.Select(pair => new KeyValuePair(Adopt(pair.Key), Adopt(pair.Value))).ToList();
 
         //--- Operators ---
-        public ACloudFormationBuilderExpression this[CloudFormationBuilderLiteral key] {
+        public ACloudFormationSyntaxExpression this[CloudFormationSyntaxLiteral key] {
             get {
                 if(key == null) {
                     throw new ArgumentNullException(nameof(key));
@@ -85,10 +85,10 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
         }
 
         //--- Properties ---
-        public override CloudFormationBuilderValueType ExpressionValueType => CloudFormationBuilderValueType.Map;
+        public override CloudFormationSyntaxValueType ExpressionValueType => CloudFormationSyntaxValueType.Map;
 
         //--- Methods ---
-         public bool TryGetValue(string key, [NotNullWhen(true)] out ACloudFormationBuilderExpression? value) {
+         public bool TryGetValue(string key, [NotNullWhen(true)] out ACloudFormationSyntaxExpression? value) {
             var found = _pairs.FirstOrDefault(pair => pair.Key.Value == key);
             value = found?.Value;
             return value != null;
@@ -103,7 +103,7 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
 
         public bool ContainsKey(string key) => _pairs.Any(pair => pair.Key.Value == key);
 
-        public override void Inspect(Action<ACloudFormationBuilderNode>? entryInspector, Action<ACloudFormationBuilderNode>? exitInspector) {
+        public override void Inspect(Action<ACloudFormationSyntaxNode>? entryInspector, Action<ACloudFormationSyntaxNode>? exitInspector) {
             entryInspector?.Invoke(this);
             foreach(var pair in _pairs) {
                 pair.Key.Inspect(entryInspector, exitInspector);
@@ -112,14 +112,14 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
             exitInspector?.Invoke(this);
         }
 
-        public override ACloudFormationBuilderNode Substitute(Func<ACloudFormationBuilderNode, ACloudFormationBuilderNode> inspector) {
+        public override ACloudFormationSyntaxNode Substitute(Func<ACloudFormationSyntaxNode, ACloudFormationSyntaxNode> inspector) {
             foreach(var pair in new List<KeyValuePair>(_pairs)) {
-                this[pair.Key] = (ACloudFormationBuilderExpression)(pair.Value.Substitute(inspector) ?? throw new NullValueException());
+                this[pair.Key] = (ACloudFormationSyntaxExpression)(pair.Value.Substitute(inspector) ?? throw new NullValueException());
             }
             return inspector(this);
         }
 
-        public T? GetOrCreate<T>(string key, Action<ACloudFormationBuilderExpression> error) where T : ACloudFormationBuilderExpression, new() {
+        public T? GetOrCreate<T>(string key, Action<ACloudFormationSyntaxExpression> error) where T : ACloudFormationSyntaxExpression, new() {
             if(error == null) {
                 throw new ArgumentNullException(nameof(error));
             }
@@ -134,7 +134,7 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
                 var result = new T {
                     SourceLocation = SourceLocation
                 };
-                var keyLiteral = new CloudFormationBuilderLiteral(key) {
+                var keyLiteral = new CloudFormationSyntaxLiteral(key) {
                     SourceLocation = new SourceLocation()
                 };
                 this[keyLiteral] = Adopt(result);
@@ -142,14 +142,14 @@ namespace LambdaSharp.CloudFormation.Builder.Expressions {
             }
         }
 
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderMap(_pairs.Select(pair => new KeyValuePair(pair.Key.Clone(), pair.Value.Clone()))) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxMap(_pairs.Select(pair => new KeyValuePair(pair.Key.Clone(), pair.Value.Clone()))) {
             SourceLocation = SourceLocation
         };
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();
 
-        //--- IEnumerable<ACloudFormationBuilderExpression> Members ---
+        //--- IEnumerable<ACloudFormationSyntaxExpression> Members ---
          IEnumerator<KeyValuePair> IEnumerable<KeyValuePair>.GetEnumerator() => _pairs.GetEnumerator();
    }
 }

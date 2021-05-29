@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.CloudFormation.Builder;
+using LambdaSharp.CloudFormation.Syntax;
 using LambdaSharp.CloudFormation.Reporting;
 using LambdaSharp.CloudFormation.Template;
 

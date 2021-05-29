@@ -18,36 +18,36 @@
 
 using System;
 
-namespace LambdaSharp.CloudFormation.Builder.Expressions {
+namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
-    public sealed class CloudFormationBuilderLiteral : ACloudFormationBuilderExpression {
+    public sealed class CloudFormationSyntaxLiteral : ACloudFormationSyntaxExpression {
 
         //--- Fields ---
         private readonly object _value;
-        private readonly CloudFormationBuilderValueType _type;
+        private readonly CloudFormationSyntaxValueType _type;
 
         //--- Constructors ---
-        public CloudFormationBuilderLiteral(string value) {
+        public CloudFormationSyntaxLiteral(string value) {
             _value = value ?? throw new ArgumentNullException(nameof(value));
-            _type = CloudFormationBuilderValueType.String;
+            _type = CloudFormationSyntaxValueType.String;
         }
 
-        public CloudFormationBuilderLiteral(int value) {
+        public CloudFormationSyntaxLiteral(int value) {
             _value = value;
-            _type = CloudFormationBuilderValueType.Number;
+            _type = CloudFormationSyntaxValueType.Number;
         }
 
-        private CloudFormationBuilderLiteral(object value, CloudFormationBuilderValueType type) {
+        private CloudFormationSyntaxLiteral(object value, CloudFormationSyntaxValueType type) {
             _value = value ?? throw new ArgumentNullException(nameof(value));
             _type = type;
         }
 
         //--- Properties ---
-        public override CloudFormationBuilderValueType ExpressionValueType => _type;
+        public override CloudFormationSyntaxValueType ExpressionValueType => _type;
         public string Value => _value.ToString() ?? throw new NullValueException();
 
         //--- Methods ---
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderLiteral(_value, _type) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxLiteral(_value, _type) {
             SourceLocation = SourceLocation
         };
     }

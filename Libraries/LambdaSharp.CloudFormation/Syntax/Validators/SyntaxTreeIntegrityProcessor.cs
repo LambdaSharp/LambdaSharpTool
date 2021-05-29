@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using LambdaSharp.CloudFormation.Reporting;
 
-namespace LambdaSharp.CloudFormation.Builder.Validators {
+namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
     /// <summary>
     /// The <see cref="SyntaxTreeIntegrityProcessor"/> class checks the basic data-structure integrity of the syntax tree.
@@ -38,7 +38,7 @@ namespace LambdaSharp.CloudFormation.Builder.Validators {
         public SyntaxTreeIntegrityProcessor(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void ValidateIntegrity(CloudFormationBuilderTemplate template) {
+        public void ValidateIntegrity(CloudFormationSyntaxTemplate template) {
             var found = new HashSet<object>();
             template.Inspect(node => {
 

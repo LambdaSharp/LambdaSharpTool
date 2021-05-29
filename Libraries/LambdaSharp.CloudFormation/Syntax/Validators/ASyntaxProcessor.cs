@@ -16,14 +16,24 @@
  * limitations under the License.
  */
 
-using System;
+using LambdaSharp.CloudFormation.Reporting;
 
-namespace LambdaSharp.CloudFormation.Builder {
+namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
-    public class NullValueException : Exception {
+    internal interface ISyntaxProcessorDependencyProvider {
+
+        //--- Properties ---
+        IReport Report { get; }
+    }
+
+    internal abstract class ASyntaxProcessor {
 
         //--- Constructors ---
-        public NullValueException() { }
-        public NullValueException(string message) : base(message) { }
+        public ASyntaxProcessor(ISyntaxProcessorDependencyProvider provider)
+            => Provider = provider ?? throw new System.ArgumentNullException(nameof(provider));
+
+        //--- Properties ---
+        protected ISyntaxProcessorDependencyProvider Provider { get; }
+        protected IReport Report => Provider.Report;
     }
 }

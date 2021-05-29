@@ -16,19 +16,14 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.CloudFormation.Builder.Expressions {
+using System;
 
-    public enum CloudFormationBuilderValueType {
-        Undefined,
-        String,
-        Number,
-        List,
-        Map
-    }
+namespace LambdaSharp.CloudFormation.Syntax {
 
-    public abstract class ACloudFormationBuilderExpression : ACloudFormationBuilderNode {
+    public class NullValueException : Exception {
 
-        //--- Abstract Properties ---
-        public abstract CloudFormationBuilderValueType ExpressionValueType { get; }
+        //--- Constructors ---
+        public NullValueException() { }
+        public NullValueException(string message) : base(message) { }
     }
 }

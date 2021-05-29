@@ -16,18 +16,18 @@
  * limitations under the License.
  */
 
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder.Declarations {
+namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
-    public class CloudFormationBuilderResource : ACloudFormationBuilderDeclaration {
+    public class CloudFormationSyntaxResource : ACloudFormationSyntaxDeclaration {
 
         //--- Fields ---
-        private CloudFormationBuilderLiteral? _type;
-        private CloudFormationBuilderLiteral? _condition;
-        private CloudFormationBuilderMap? _properties;
-        private CloudFormationBuilderList? _dependsOn;
-        private CloudFormationBuilderLiteral? _deletionPolicy;
+        private CloudFormationSyntaxLiteral? _type;
+        private CloudFormationSyntaxLiteral? _condition;
+        private CloudFormationSyntaxMap? _properties;
+        private CloudFormationSyntaxList? _dependsOn;
+        private CloudFormationSyntaxLiteral? _deletionPolicy;
 
         // TODO: Metadata: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-metadata.html
         // TODO: CreationPolicy: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-creationpolicy.html
@@ -35,42 +35,42 @@ namespace LambdaSharp.CloudFormation.Builder.Declarations {
         // TODO: UpdateReplacePolicy: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
 
         //--- Constructors ---
-        public CloudFormationBuilderResource(CloudFormationBuilderLiteral logicalId) : base(logicalId) { }
+        public CloudFormationSyntaxResource(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
 
         //--- Properties ---
 
         [Inspect]
-        public CloudFormationBuilderLiteral? Condition {
+        public CloudFormationSyntaxLiteral? Condition {
             get => _condition;
             set => _condition = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? Type {
+        public CloudFormationSyntaxLiteral? Type {
             get => _type;
             set => _type = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderMap? Properties {
+        public CloudFormationSyntaxMap? Properties {
             get => _properties;
             set => _properties = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList? DependsOn {
+        public CloudFormationSyntaxList? DependsOn {
             get => _dependsOn;
             set => _dependsOn = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? DeletionPolicy {
+        public CloudFormationSyntaxLiteral? DeletionPolicy {
             get => _deletionPolicy;
             set => _deletionPolicy = Adopt(value);
         }
 
         //--- Methods ---
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderResource(LogicalId) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxResource(LogicalId) {
             SourceLocation = SourceLocation,
             Condition = Condition,
             Type = Type,

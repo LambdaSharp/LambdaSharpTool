@@ -16,91 +16,91 @@
  * limitations under the License.
  */
 
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder.Declarations {
+namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
-    public sealed class CloudFormationBuilderParameter : ACloudFormationBuilderDeclaration {
+    public sealed class CloudFormationSyntaxParameter : ACloudFormationSyntaxDeclaration {
 
         //--- Fields ---
-        private CloudFormationBuilderLiteral? _type;
-        private CloudFormationBuilderLiteral? _noEcho;
-        private CloudFormationBuilderLiteral? _default;
-        private CloudFormationBuilderLiteral? _constraintDescription;
-        private CloudFormationBuilderLiteral? _allowedPattern;
-        private CloudFormationBuilderList? _allowedValues;
-        private CloudFormationBuilderLiteral? _maxLength;
-        private CloudFormationBuilderLiteral? _maxValue;
-        private CloudFormationBuilderLiteral? _minLength;
-        private CloudFormationBuilderLiteral? _minValue;
+        private CloudFormationSyntaxLiteral? _type;
+        private CloudFormationSyntaxLiteral? _noEcho;
+        private CloudFormationSyntaxLiteral? _default;
+        private CloudFormationSyntaxLiteral? _constraintDescription;
+        private CloudFormationSyntaxLiteral? _allowedPattern;
+        private CloudFormationSyntaxList? _allowedValues;
+        private CloudFormationSyntaxLiteral? _maxLength;
+        private CloudFormationSyntaxLiteral? _maxValue;
+        private CloudFormationSyntaxLiteral? _minLength;
+        private CloudFormationSyntaxLiteral? _minValue;
 
         //--- Constructors ---
-        public CloudFormationBuilderParameter(CloudFormationBuilderLiteral logicalId) : base(logicalId) { }
+        public CloudFormationSyntaxParameter(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
 
         //--- Properties ---
 
         [Inspect]
-        public CloudFormationBuilderLiteral? Type {
+        public CloudFormationSyntaxLiteral? Type {
             get => _type;
             set => _type = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? NoEcho {
+        public CloudFormationSyntaxLiteral? NoEcho {
             get => _noEcho;
             set => _noEcho = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? Default {
+        public CloudFormationSyntaxLiteral? Default {
             get => _default;
             set => _default = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? ConstraintDescription {
+        public CloudFormationSyntaxLiteral? ConstraintDescription {
             get => _constraintDescription;
             set => _constraintDescription = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? AllowedPattern {
+        public CloudFormationSyntaxLiteral? AllowedPattern {
             get => _allowedPattern;
             set => _allowedPattern = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderList? AllowedValues {
+        public CloudFormationSyntaxList? AllowedValues {
             get => _allowedValues;
             set => _allowedValues = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? MaxLength {
+        public CloudFormationSyntaxLiteral? MaxLength {
             get => _maxLength;
             set => _maxLength = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? MaxValue {
+        public CloudFormationSyntaxLiteral? MaxValue {
             get => _maxValue;
             set => _maxValue = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? MinLength {
+        public CloudFormationSyntaxLiteral? MinLength {
             get => _minLength;
             set => _minLength = Adopt(value);
         }
 
         [Inspect]
-        public CloudFormationBuilderLiteral? MinValue {
+        public CloudFormationSyntaxLiteral? MinValue {
             get => _minValue;
             set => _minValue = Adopt(value);
         }
 
         //--- Methods ---
-        public override ACloudFormationBuilderNode CloneNode() => new CloudFormationBuilderParameter(LogicalId) {
+        public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxParameter(LogicalId) {
             SourceLocation = SourceLocation,
             Type = Type,
             NoEcho = NoEcho,

@@ -20,22 +20,22 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using LambdaSharp.CloudFormation.Builder.Declarations;
-using LambdaSharp.CloudFormation.Builder.Expressions;
+using LambdaSharp.CloudFormation.Syntax.Declarations;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
-namespace LambdaSharp.CloudFormation.Builder {
+namespace LambdaSharp.CloudFormation.Syntax {
 
     // TODO: !Transform is probably NOT a function since it modifies it surroundings as well
 
-    public abstract class ACloudFormationBuilderNode {
+    public abstract class ACloudFormationSyntaxNode {
 
         //--- Class Methods ---
         [return: NotNullIfNotNull("node")]
-        public static ACloudFormationBuilderNode? SetParent(ACloudFormationBuilderNode? child, ACloudFormationBuilderNode? parent) {
+        public static ACloudFormationSyntaxNode? SetParent(ACloudFormationSyntaxNode? child, ACloudFormationSyntaxNode? parent) {
             if(child != null) {
 
                 // declaration nodes must have another declaration node as their parent
-                if((parent != null) && (child is ACloudFormationBuilderDeclaration) && !(parent is ACloudFormationBuilderDeclaration)) {
+                if((parent != null) && (child is ACloudFormationSyntaxDeclaration) && !(parent is ACloudFormationSyntaxDeclaration)) {
                     throw new ApplicationException("declarations must have another declaration as parent");
                 }
 
@@ -43,7 +43,7 @@ namespace LambdaSharp.CloudFormation.Builder {
                 if(!object.ReferenceEquals(child.Parent, parent)) {
 
                     // check if node needs to be cloned
-                    if((parent != null) && (child is ACloudFormationBuilderExpression expression) && (child.Parent != null)) {
+                    if((parent != null) && (child is ACloudFormationSyntaxExpression expression) && (child.Parent != null)) {
                         child = expression.Clone();
                     }
 
@@ -56,20 +56,20 @@ namespace LambdaSharp.CloudFormation.Builder {
         }
 
         [return: NotNullIfNotNull("node")]
-        public static ACloudFormationBuilderNode? Orphan(ACloudFormationBuilderNode? node) => SetParent(node, parent: null);
+        public static ACloudFormationSyntaxNode? Orphan(ACloudFormationSyntaxNode? node) => SetParent(node, parent: null);
 
         //--- Properties ---
-        public ACloudFormationBuilderNode? Parent { get; private set; }
+        public ACloudFormationSyntaxNode? Parent { get; private set; }
         public SourceLocation SourceLocation { get; set; } = SourceLocation.Empty;
 
         //--- Abstract Methods ---
-        public abstract ACloudFormationBuilderNode CloneNode();
+        public abstract ACloudFormationSyntaxNode CloneNode();
 
         //--- Methods ---
-        public void Inspect(Action<ACloudFormationBuilderNode> inspector) => Inspect(inspector, exitInspector: null);
+        public void Inspect(Action<ACloudFormationSyntaxNode> inspector) => Inspect(inspector, exitInspector: null);
 
-        public virtual void Inspect(Action<ACloudFormationBuilderNode>? entryInspector, Action<ACloudFormationBuilderNode>? exitInspector) {
-            var node = this as ACloudFormationBuilderNode;
+        public virtual void Inspect(Action<ACloudFormationSyntaxNode>? entryInspector, Action<ACloudFormationSyntaxNode>? exitInspector) {
+            var node = this as ACloudFormationSyntaxNode;
             if(node != null) {
                 entryInspector?.Invoke(node);
             }
@@ -77,12 +77,12 @@ namespace LambdaSharp.CloudFormation.Builder {
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
                 .Where(property =>
                     (property.GetCustomAttribute<InspectAttribute>() != null)
-                    && typeof(ACloudFormationBuilderNode).IsAssignableFrom(property.PropertyType)
+                    && typeof(ACloudFormationSyntaxNode).IsAssignableFrom(property.PropertyType)
                 )
             ) {
 
                 // skip null values
-                var value = (ACloudFormationBuilderNode?)property.GetValue(this);
+                var value = (ACloudFormationSyntaxNode?)property.GetValue(this);
                 if(value == null) {
                     continue;
                 }
@@ -102,22 +102,22 @@ namespace LambdaSharp.CloudFormation.Builder {
                 }
             });
 
-        public virtual ACloudFormationBuilderNode Substitute(Func<ACloudFormationBuilderNode, ACloudFormationBuilderNode> inspector) {
+        public virtual ACloudFormationSyntaxNode Substitute(Func<ACloudFormationSyntaxNode, ACloudFormationSyntaxNode> inspector) {
             foreach(var property in GetType()
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
                 .Where(property =>
                     (property.GetCustomAttribute<InspectAttribute>() != null)
-                    && typeof(ACloudFormationBuilderNode).IsAssignableFrom(property.PropertyType)
+                    && typeof(ACloudFormationSyntaxNode).IsAssignableFrom(property.PropertyType)
                 )
             ) {
 
                 // only visit properties of type ISyntaxNode
-                if(!typeof(ACloudFormationBuilderNode).IsAssignableFrom(property.PropertyType)) {
+                if(!typeof(ACloudFormationSyntaxNode).IsAssignableFrom(property.PropertyType)) {
                     continue;
                 }
 
                 // skip null values
-                var value = (ACloudFormationBuilderNode?)property.GetValue(this);
+                var value = (ACloudFormationSyntaxNode?)property.GetValue(this);
                 if(value == null) {
                     continue;
                 }
@@ -139,7 +139,7 @@ namespace LambdaSharp.CloudFormation.Builder {
 
 
         [return: NotNullIfNotNull("node") ]
-        public T? Adopt<T>(T? node) where T : ACloudFormationBuilderNode => (T?)SetParent(node, this);
+        public T? Adopt<T>(T? node) where T : ACloudFormationSyntaxNode => (T?)SetParent(node, this);
 
         protected virtual void ParentChanged() { }
     }

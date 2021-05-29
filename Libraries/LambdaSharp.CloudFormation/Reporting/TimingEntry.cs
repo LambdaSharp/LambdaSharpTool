@@ -17,7 +17,7 @@
  */
 
 using System;
-using LambdaSharp.CloudFormation.Builder;
+using LambdaSharp.CloudFormation.Syntax;
 
 namespace LambdaSharp.CloudFormation.Reporting {
 
