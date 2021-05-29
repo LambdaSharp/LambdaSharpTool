@@ -22,5 +22,5 @@ using LambdaSharp.CloudFormation.Template.Serialization;
 namespace LambdaSharp.CloudFormation.Template {
 
     [JsonConverter(typeof(CloudFormationExpressionConverter))]
-    public class ACloudFormationExpression { }
+    public abstract class ACloudFormationExpression { }
 }
