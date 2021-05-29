@@ -72,26 +72,26 @@ namespace LambdaSharp.CloudFormation {
                     using(var outputStream = File.OpenWrite(cloudFormationSpecFile)) {
                         await response.ResponseStream.CopyToAsync(outputStream);
                     }
-
-                    // check if we need to update the LambdaSharp developer copy
-                    var lambdaSharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
-                    if(lambdaSharpDirectory != null) {
-                        log?.Invoke("updating LambdaSharp contributor CloudFormation specification");
-                        using var specFile = File.OpenRead(cloudFormationSpecFile);
-                        using var decompressionStream = new BrotliStream(specFile, CompressionMode.Decompress);
-                        var document = await JsonSerializer.DeserializeAsync<object>(decompressionStream);
-                        await File.WriteAllTextAsync(Path.Combine(lambdaSharpDirectory, "src", "CloudFormationResourceSpecification.json"), JsonSerializer.Serialize(document, new JsonSerializerOptions {
-                            WriteIndented = true,
-                            IgnoreNullValues = true,
-                            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                        }));
-                    }
                 } catch(AmazonS3Exception e) when(e.StatusCode == HttpStatusCode.NotModified) {
                     log?.Invoke("CloudFormation specification is up-to-date");
                     cached = true;
 
                     // touch CloudFormation specification to avoid check until is expires again in 24 hours
                     File.SetLastWriteTimeUtc(cloudFormationSpecFile, now);
+                }
+
+                // check if we need to update the LambdaSharp developer copy
+                var lambdaSharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
+                if(lambdaSharpDirectory != null) {
+                    log?.Invoke("updating LambdaSharp contributor CloudFormation specification");
+                    using var specFile = File.OpenRead(cloudFormationSpecFile);
+                    using var decompressionStream = new BrotliStream(specFile, CompressionMode.Decompress);
+                    var document = await JsonSerializer.DeserializeAsync<object>(decompressionStream);
+                    await File.WriteAllTextAsync(Path.Combine(lambdaSharpDirectory, "src", "CloudFormationResourceSpecification.json"), JsonSerializer.Serialize(document, new JsonSerializerOptions {
+                        WriteIndented = true,
+                        IgnoreNullValues = true,
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    }));
                 }
             } else {
                 cached = true;
