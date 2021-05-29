@@ -35,5 +35,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         //--- Properties ---
         protected ISyntaxProcessorDependencyProvider Provider { get; }
         protected IReport Report => Provider.Report;
+
+        //--- Methods ---
+        protected void Add(IReportEntry entry) => Report.Add(entry);
     }
 }

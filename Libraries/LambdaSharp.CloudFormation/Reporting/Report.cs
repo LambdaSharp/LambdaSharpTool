@@ -33,6 +33,9 @@ namespace LambdaSharp.CloudFormation.Reporting {
 
         //--- Methods ---
         public void Add(IReportEntry entry) {
+            if(entry is null) {
+                throw new System.ArgumentNullException(nameof(entry));
+            }
             if(!_entries.Contains(entry)) {
                 _entries.Add(entry);
             }
