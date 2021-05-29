@@ -26,7 +26,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Declarations {
         private CloudFormationSyntaxLiteral? _type;
         private CloudFormationSyntaxLiteral? _condition;
         private CloudFormationSyntaxMap? _properties;
-        private CloudFormationSyntaxList? _dependsOn;
+        private CloudFormationSyntaxList<CloudFormationSyntaxLiteral>? _dependsOn;
         private CloudFormationSyntaxLiteral? _deletionPolicy;
 
         // TODO: Metadata: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-metadata.html
@@ -58,7 +58,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Declarations {
         }
 
         [Inspect]
-        public CloudFormationSyntaxList? DependsOn {
+        public CloudFormationSyntaxList<CloudFormationSyntaxLiteral>? DependsOn {
             get => _dependsOn;
             set => _dependsOn = Adopt(value);
         }

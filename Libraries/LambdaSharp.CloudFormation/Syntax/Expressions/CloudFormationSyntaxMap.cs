@@ -35,6 +35,11 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
                 Value = value;
             }
 
+            public void Deconstruct(out CloudFormationSyntaxLiteral key, out ACloudFormationSyntaxExpression value) {
+                key = Key;
+                value = Value;
+            }
+
             //--- Properties ---
             public CloudFormationSyntaxLiteral Key { get; }
             public ACloudFormationSyntaxExpression Value { get; private set; }
