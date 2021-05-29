@@ -18,7 +18,7 @@
 
 using System;
 using System.Collections.Generic;
-using LambdaSharp.CloudFormation;
+using LambdaSharp.CloudFormation.Validation;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.SyntaxProcessors {

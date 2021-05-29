@@ -19,7 +19,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace LambdaSharp.CloudFormation {
+namespace LambdaSharp.CloudFormation.Validation {
 
     public static class CloudFormationValidationRules {
 
