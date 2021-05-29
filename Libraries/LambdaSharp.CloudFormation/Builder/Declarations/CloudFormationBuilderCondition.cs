@@ -16,24 +16,22 @@
  * limitations under the License.
  */
 
-using System;
-using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.CloudFormation.Builder.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.CloudFormation.Builder.Declarations {
 
-    [SyntaxDeclarationKeyword("Mapping")]
-    public sealed class MappingDeclaration : AItemDeclaration {
+    public class CloudFormationBuilderCondition : ACloudFormationBuilderDeclaration {
 
         //--- Fields ---
-        private ObjectExpression? _value;
+        private ACloudFormationBuilderExpression? _value;
 
         //--- Constructors ---
-        public MappingDeclaration(LiteralExpression itemName) : base(itemName) { }
+        public CloudFormationBuilderCondition(CloudFormationBuilderLiteral logicalId) : base(logicalId) { }
 
         //--- Properties ---
 
-        [SyntaxRequired]
-        public ObjectExpression? Value {
+        [Inspect]
+        public ACloudFormationBuilderExpression? Value {
             get => _value;
             set => _value = Adopt(value);
         }
