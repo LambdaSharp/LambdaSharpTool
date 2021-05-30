@@ -372,7 +372,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                         if(State.TryGetResource(dependsOn.Value, out var resource)) {
 
                             // track dependency
-                            State.AddDependency(node, resource);
+                            State.AddDependency(dependsOn, resource);
                         } else {
                             Add(Errors.ResourceDependsOnNotFound(dependsOn.Value, dependsOn.SourceLocation));
                         }
@@ -391,7 +391,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                     if(State.TryGetCondition(node.StringArgument, out var condition)) {
 
                         // track dependency
-                        State.AddDependency(node.ParentDeclaration, condition);
+                        State.AddDependency(node, condition);
                     } else {
                         Add(Errors.ConditionNotFound(node.StringArgument, node.Argument.SourceLocation));
                     }
@@ -402,7 +402,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                     if(State.TryGetResource(node.StringArgument, out var resource)) {
 
                         // track dependency
-                        State.AddDependency(node.ParentDeclaration, resource);
+                        State.AddDependency(node, resource);
                     } else {
                         Add(Errors.GetAttResourceNotFound(node.StringArgument, node.Argument.SourceLocation));
                     }
@@ -413,7 +413,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                     if(State.TryGetMapping(node.StringArgument, out var mapping)) {
 
                         // track dependency
-                        State.AddDependency(node.ParentDeclaration, mapping);
+                        State.AddDependency(node, mapping);
                     } else {
                         Add(Errors.FindInMapMappingNotFound(node.StringArgument, node.Argument.SourceLocation));
                     }
@@ -427,7 +427,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                         if(State.TryGetParameter(node.StringArgument, out var parameter)) {
 
                             // track dependency
-                            State.AddDependency(node.ParentDeclaration, parameter);
+                            State.AddDependency(node, parameter);
                         } else if(State.TryGetResource(node.StringArgument, out resource)) {
 
                             // conditions cannot refer to resources
@@ -441,11 +441,11 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                         if(State.TryGetParameter(node.StringArgument, out var parameter)) {
 
                             // track dependency
-                            State.AddDependency(node.ParentDeclaration, parameter);
+                            State.AddDependency(node, parameter);
                         } else if(State.TryGetResource(node.StringArgument, out resource)) {
 
                             // track dependency
-                            State.AddDependency(node.ParentDeclaration, resource);
+                            State.AddDependency(node, resource);
                         } else {
                             Add(Errors.RefParameterOrResourceNotFound(node.StringArgument, node.Argument.SourceLocation));
                         }
@@ -504,7 +504,10 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                 // recurse into every dependency, until we exhaust the tree or find a circular dependency
                 visited.Add(declaration);
                 foreach(var dependency in State.GetDependencies(declaration)) {
-                    Visit(dependency, visited);
+
+                    // TODO: need to take conditions into account
+
+                    Visit(dependency.Declaration, visited);
                 }
                 visited.Remove(declaration);
             }

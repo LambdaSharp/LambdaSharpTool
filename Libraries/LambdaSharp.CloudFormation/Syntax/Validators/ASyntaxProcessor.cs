@@ -21,6 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LambdaSharp.CloudFormation.Reporting;
 using LambdaSharp.CloudFormation.Syntax.Declarations;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
@@ -28,6 +29,33 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
         //--- Properties ---
         IReport Report { get; }
+    }
+
+    internal class DependencyRecord {
+
+        //--- Types ---
+        internal readonly struct Condition {
+
+            //--- Fields ---
+            public readonly bool IfTrueCondition;
+            public readonly CloudFormationSyntaxLiteral ConditionName;
+
+            //--- Constructors ---
+            public Condition(bool ifTrueCondition, CloudFormationSyntaxLiteral conditionName) {
+                IfTrueCondition = ifTrueCondition;
+                ConditionName = conditionName ?? throw new System.ArgumentNullException(nameof(conditionName));
+            }
+        }
+
+        //--- Constructors ---
+        public DependencyRecord(ACloudFormationSyntaxDeclaration dependency, List<Condition> conditions) {
+            Declaration = dependency ?? throw new System.ArgumentNullException(nameof(dependency));
+            Conditions = conditions ?? throw new System.ArgumentNullException(nameof(conditions));
+        }
+
+        //--- Properties ---
+        public ACloudFormationSyntaxDeclaration Declaration { get; }
+        public List<Condition> Conditions { get; }
     }
 
     internal sealed class SyntaxProcessorState {
@@ -38,8 +66,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         private readonly Dictionary<string, CloudFormationSyntaxMapping> _mappings = new Dictionary<string, CloudFormationSyntaxMapping>();
         private readonly Dictionary<string, CloudFormationSyntaxResource> _resources = new Dictionary<string, CloudFormationSyntaxResource>();
         private readonly Dictionary<string, CloudFormationSyntaxOutput> _outputs = new Dictionary<string, CloudFormationSyntaxOutput>();
-        private readonly Dictionary<ACloudFormationSyntaxDeclaration, HashSet<ACloudFormationSyntaxDeclaration>> _dependencies = new Dictionary<ACloudFormationSyntaxDeclaration, HashSet<ACloudFormationSyntaxDeclaration>>();
-        private readonly Dictionary<ACloudFormationSyntaxDeclaration, HashSet<ACloudFormationSyntaxDeclaration>> _reverseDependencies = new Dictionary<ACloudFormationSyntaxDeclaration, HashSet<ACloudFormationSyntaxDeclaration>>();
+        private readonly Dictionary<ACloudFormationSyntaxDeclaration, List<DependencyRecord>> _dependencies = new Dictionary<ACloudFormationSyntaxDeclaration, List<DependencyRecord>>();
+        private readonly Dictionary<ACloudFormationSyntaxDeclaration, List<DependencyRecord>> _reverseDependencies = new Dictionary<ACloudFormationSyntaxDeclaration, List<DependencyRecord>>();
 
         //--- Constructors ---
         public SyntaxProcessorState(CloudFormationSyntaxTemplate template) => Template = template ?? throw new System.ArgumentNullException(nameof(template));
@@ -64,27 +92,67 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         public bool TryGetResource(string name, [NotNullWhen(true)] out CloudFormationSyntaxResource? resource) => _resources.TryGetValue(name, out resource);
         public bool TryGetOutput(string name, [NotNullWhen(true)] out CloudFormationSyntaxOutput? output) => _outputs.TryGetValue(name, out output);
 
-        public void AddDependency(ACloudFormationSyntaxDeclaration from, ACloudFormationSyntaxDeclaration to) {
+        public void AddDependency(ACloudFormationSyntaxExpression expression, ACloudFormationSyntaxDeclaration dependency) {
+            var fromDeclaration = expression.ParentDeclaration;
+            var parents = expression.Parents;
+
+            // collect conditions for the dependency
+            var conditions = new List<DependencyRecord.Condition>();
+            var current = expression;
+            var parent = expression.Parent;
+            while(parent is ACloudFormationSyntaxExpression parentExpression) {
+
+                // check if parent is an invocation of 'Fn::If'
+                if(
+                    (parent is CloudFormationSyntaxFunctionInvocation parentFunctionInvocation)
+                    && (parentFunctionInvocation.Function.FunctionName == "Fn::If")
+                ) {
+
+                    // validate 'Fn::If' invocation has the right shape
+                    if(
+                        (parentFunctionInvocation.Argument is CloudFormationSyntaxList argumentList)
+                        && (argumentList.Count == 3)
+                        && (argumentList[0] is CloudFormationSyntaxLiteral conditionName)
+                    ) {
+
+                        // check if current expression is in the 'true' branch of the condition
+                        var ifTrueCondition = object.ReferenceEquals(argumentList[1], current);
+                        conditions.Add(new DependencyRecord.Condition(ifTrueCondition, conditionName));
+                    } else {
+
+                        // nothing to do; invalid 'Fn::If' invocation is reported during expression validation
+                    }
+                }
+
+                // move up the tree
+                current = parentExpression;
+                parent = current.Parent;
+            }
+
+            // check if parent declaration is a resource with a condition
+            if((fromDeclaration is CloudFormationSyntaxResource resource) && (resource.Condition != null)) {
+                conditions.Add(new DependencyRecord.Condition(ifTrueCondition: true, resource.Condition));
+            }
 
             // add dependency
-            if(!(_dependencies.TryGetValue(from, out var dependents))) {
-                dependents = new HashSet<ACloudFormationSyntaxDeclaration>();
-                _dependencies.Add(from, dependents);
+            if(!(_dependencies.TryGetValue(fromDeclaration, out var dependents))) {
+                dependents = new List<DependencyRecord>();
+                _dependencies.Add(fromDeclaration, dependents);
             }
-            dependents.Add(to);
+            dependents.Add(new DependencyRecord(dependency, conditions));
 
             // add reverse dependency
-            if(!(_reverseDependencies.TryGetValue(to, out var reverseDependents))) {
-                reverseDependents = new HashSet<ACloudFormationSyntaxDeclaration>();
-                _reverseDependencies.Add(to, reverseDependents);
+            if(!(_reverseDependencies.TryGetValue(dependency, out var reverseDependents))) {
+                reverseDependents = new List<DependencyRecord>();
+                _reverseDependencies.Add(dependency, reverseDependents);
             }
-            reverseDependents.Add(from);
+            reverseDependents.Add(new DependencyRecord(fromDeclaration, conditions));
         }
 
-        public IEnumerable<ACloudFormationSyntaxDeclaration> GetDependencies(ACloudFormationSyntaxDeclaration declaration)
+        public IEnumerable<DependencyRecord> GetDependencies(ACloudFormationSyntaxDeclaration declaration)
             => _dependencies.TryGetValue(declaration, out var dependencies)
                 ? dependencies
-                : Enumerable.Empty<ACloudFormationSyntaxDeclaration>();
+                : Enumerable.Empty<DependencyRecord>();
     }
 
     internal abstract class ASyntaxProcessor {
