@@ -1,0 +1,14 @@
+Parameters:
+  First:
+    Type: String
+
+Conditions:
+  AreEqual: !Equals [ !Ref FirstTopic, !Ref Second ]
+
+Resources:
+  FirstTopic:
+    Type: AWS::SNS::Topic
+
+  SecondTopic:
+    Type: AWS::SNS::Topic
+    Condition: AreEqual
