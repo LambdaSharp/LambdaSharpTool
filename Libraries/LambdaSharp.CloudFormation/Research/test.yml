@@ -1,14 +1,25 @@
 Parameters:
   First:
     Type: String
+  Second:
+    Type: String
+
+Mappings:
+  MyMapping:
+    FirstValue1:
+      SecondValue1: 1-1
+      SecondValue2: 1-2
+    FirstValue2:
+      SecondValue1: 2-1
+      SecondValue2: 2-2
+    FirstValue3:
+      SecondValue1: 3-1
+      SecondValue2: 3-2
 
 Conditions:
-  AreEqual: !Equals [ !Ref FirstTopic, !Ref Second ]
+  MyCondition: !Equals [ !FindInMap [ MyMapping, !Ref First, !Ref Second ], Hello ]
 
 Resources:
   FirstTopic:
     Type: AWS::SNS::Topic
-
-  SecondTopic:
-    Type: AWS::SNS::Topic
-    Condition: AreEqual
+    Condition: MyCondition
