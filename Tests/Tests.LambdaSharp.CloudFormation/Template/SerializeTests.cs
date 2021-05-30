@@ -19,11 +19,10 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using FluentAssertions;
-using LambdaSharp.CloudFormation;
 using LambdaSharp.CloudFormation.Template;
 using Xunit;
 
-namespace Tests.LambdaSharp.CloudFormation {
+namespace Tests.LambdaSharp.CloudFormation.Template {
 
     public class SerializeTests {
 
