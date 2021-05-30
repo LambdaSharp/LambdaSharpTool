@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
+using System.Runtime.CompilerServices;
 using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
-    public class CloudFormationSyntaxResource : ACloudFormationSyntaxDeclaration {
+    public sealed class CloudFormationSyntaxResource : ACloudFormationSyntaxDeclaration {
 
         //--- Fields ---
         private CloudFormationSyntaxLiteral? _type;
@@ -35,7 +36,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Declarations {
         // TODO: UpdateReplacePolicy: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
 
         //--- Constructors ---
-        public CloudFormationSyntaxResource(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
+        public CloudFormationSyntaxResource(CloudFormationSyntaxLiteral logicalId, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) : base(logicalId, filePath, lineNumber) { }
 
         //--- Properties ---
 

@@ -59,6 +59,10 @@ namespace LambdaSharp.CloudFormation.Syntax {
         [return: NotNullIfNotNull("node")]
         public static ACloudFormationSyntaxNode? Orphan(ACloudFormationSyntaxNode? node) => SetParent(node, parent: null);
 
+        //--- Constructors ---
+        protected ACloudFormationSyntaxNode(string filePath, int lineNumber)
+            => SourceLocation = new SourceLocation(filePath, lineNumber);
+
         //--- Properties ---
         public ACloudFormationSyntaxNode? Parent { get; private set; }
         public SourceLocation SourceLocation { get; set; } = SourceLocation.Empty;

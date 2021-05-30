@@ -16,14 +16,18 @@
  * limitations under the License.
  */
 
+using System.Runtime.CompilerServices;
 using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
-    public class CloudFormationSyntaxOutputExport : ACloudFormationSyntaxNode {
+    public sealed class CloudFormationSyntaxOutputExport : ACloudFormationSyntaxNode {
 
         //--- Fields ---
         private ACloudFormationSyntaxExpression? _name;
+
+        //--- Constructors ---
+        public CloudFormationSyntaxOutputExport([CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) : base(filePath, lineNumber) { }
 
         //--- Properties ---
 
@@ -40,7 +44,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Declarations {
         };
     }
 
-    public class CloudFormationSyntaxOutput : ACloudFormationSyntaxDeclaration {
+    public sealed class CloudFormationSyntaxOutput : ACloudFormationSyntaxDeclaration {
 
         //--- Fields ---
         private CloudFormationSyntaxLiteral? _description;
@@ -49,7 +53,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Declarations {
         private CloudFormationSyntaxOutputExport? _export;
 
         //--- Constructors ---
-        public CloudFormationSyntaxOutput(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
+        public CloudFormationSyntaxOutput(CloudFormationSyntaxLiteral logicalId, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) : base(logicalId, filePath, lineNumber) { }
 
         //--- Properties ---
 

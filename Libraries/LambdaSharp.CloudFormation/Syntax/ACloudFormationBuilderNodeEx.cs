@@ -20,7 +20,7 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.CloudFormation.Syntax {
 
-    public static class ACloudFormationSyntaxItemEx {
+    public static class ACloudFormationSyntaxNodeEx {
 
         //--- Extension Methods ---
         public static T Clone<T>(this T node) where T : ACloudFormationSyntaxNode {

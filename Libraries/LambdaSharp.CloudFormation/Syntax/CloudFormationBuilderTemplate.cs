@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using LambdaSharp.CloudFormation.Syntax.Declarations;
 using LambdaSharp.CloudFormation.Syntax.Expressions;
 
@@ -40,6 +41,9 @@ namespace LambdaSharp.CloudFormation.Syntax {
         private CloudFormationSyntaxList<CloudFormationSyntaxCondition>? _conditions;
         private CloudFormationSyntaxList<CloudFormationSyntaxResource>? _resources;
         private CloudFormationSyntaxList<CloudFormationSyntaxOutput>? _outputs;
+
+        //--- Constructors ---
+        public CloudFormationSyntaxTemplate([CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) : base(filePath, lineNumber) { }
 
         //--- Properties ---
 

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Runtime.CompilerServices;
 using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Declarations {
@@ -35,7 +36,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Declarations {
         private CloudFormationSyntaxLiteral? _minValue;
 
         //--- Constructors ---
-        public CloudFormationSyntaxParameter(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
+        public CloudFormationSyntaxParameter(CloudFormationSyntaxLiteral logicalId, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) : base(logicalId, filePath, lineNumber) { }
 
         //--- Properties ---
 

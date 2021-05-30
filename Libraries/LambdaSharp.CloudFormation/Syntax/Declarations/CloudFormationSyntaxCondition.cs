@@ -16,17 +16,18 @@
  * limitations under the License.
  */
 
+using System.Runtime.CompilerServices;
 using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
-    public class CloudFormationSyntaxCondition : ACloudFormationSyntaxDeclaration {
+    public sealed class CloudFormationSyntaxCondition : ACloudFormationSyntaxDeclaration {
 
         //--- Fields ---
         private ACloudFormationSyntaxExpression? _value;
 
         //--- Constructors ---
-        public CloudFormationSyntaxCondition(CloudFormationSyntaxLiteral logicalId) : base(logicalId) { }
+        public CloudFormationSyntaxCondition(CloudFormationSyntaxLiteral logicalId, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) : base(logicalId, filePath, lineNumber) { }
 
         //--- Properties ---
 

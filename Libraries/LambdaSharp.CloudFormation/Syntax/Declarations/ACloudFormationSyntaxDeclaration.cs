@@ -23,7 +23,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Declarations {
     public abstract class ACloudFormationSyntaxDeclaration : ACloudFormationSyntaxNode {
 
         //--- Constructors ---
-        protected ACloudFormationSyntaxDeclaration(CloudFormationSyntaxLiteral logicalId) {
+        protected ACloudFormationSyntaxDeclaration(CloudFormationSyntaxLiteral logicalId, string filePath, int lineNumber = 0)
+            : base(filePath, lineNumber)
+        {
             LogicalId = Adopt(logicalId ?? throw new System.ArgumentNullException(nameof(logicalId)));
         }
 

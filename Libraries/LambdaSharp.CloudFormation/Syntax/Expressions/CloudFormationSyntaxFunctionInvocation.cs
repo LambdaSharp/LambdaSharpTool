@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using LambdaSharp.CloudFormation.Syntax.Functions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Expressions {
@@ -24,7 +25,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
     public class CloudFormationSyntaxFunctionInvocation : ACloudFormationSyntaxExpression {
 
         //--- Constructors ---
-        public CloudFormationSyntaxFunctionInvocation(ACloudFormationSyntaxFunction function, ACloudFormationSyntaxExpression argument) {
+        public CloudFormationSyntaxFunctionInvocation(ACloudFormationSyntaxFunction function, ACloudFormationSyntaxExpression argument, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
+        {
             Function = function ?? throw new ArgumentNullException(nameof(function));
             Argument = Adopt(argument ?? throw new ArgumentNullException(nameof(argument)));
         }

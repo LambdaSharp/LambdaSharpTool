@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
@@ -31,10 +32,12 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
         private readonly List<TExpression> _items;
 
         //--- Constructors ---
-        public CloudFormationSyntaxList( )
+        public CloudFormationSyntaxList([CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
             => _items = new List<TExpression>();
 
-        public CloudFormationSyntaxList(IEnumerable<TExpression> items)
+        public CloudFormationSyntaxList(IEnumerable<TExpression> items, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
             => _items = items.Select(item => Adopt(item)).ToList();
 
         //--- Properties ---

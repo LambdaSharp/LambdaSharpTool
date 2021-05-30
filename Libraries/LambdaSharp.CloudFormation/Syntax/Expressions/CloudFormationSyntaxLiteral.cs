@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
@@ -27,17 +28,23 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
         private readonly CloudFormationSyntaxValueType _type;
 
         //--- Constructors ---
-        public CloudFormationSyntaxLiteral(string value) {
+        public CloudFormationSyntaxLiteral(string value, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
+        {
             _value = value ?? throw new ArgumentNullException(nameof(value));
             _type = CloudFormationSyntaxValueType.String;
         }
 
-        public CloudFormationSyntaxLiteral(int value) {
+        public CloudFormationSyntaxLiteral(int value, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
+        {
             _value = value;
             _type = CloudFormationSyntaxValueType.Number;
         }
 
-        private CloudFormationSyntaxLiteral(object value, CloudFormationSyntaxValueType type) {
+        private CloudFormationSyntaxLiteral(object value, CloudFormationSyntaxValueType type, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
+        {
             _value = value ?? throw new ArgumentNullException(nameof(value));
             _type = type;
         }

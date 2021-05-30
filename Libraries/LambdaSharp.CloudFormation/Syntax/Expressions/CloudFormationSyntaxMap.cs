@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
@@ -53,9 +54,12 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
         private readonly List<KeyValuePair> _pairs = new List<KeyValuePair>();
 
         //--- Constructors ---
-        public CloudFormationSyntaxMap() => _pairs = new List<KeyValuePair>();
+        public CloudFormationSyntaxMap([CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
+            => _pairs = new List<KeyValuePair>();
 
-        public CloudFormationSyntaxMap(IEnumerable<KeyValuePair> pairs)
+        public CloudFormationSyntaxMap(IEnumerable<KeyValuePair> pairs, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : base(filePath, lineNumber)
             => _pairs = pairs.Select(pair => new KeyValuePair(Adopt(pair.Key), Adopt(pair.Value))).ToList();
 
         //--- Operators ---
@@ -139,10 +143,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
                 var result = new T {
                     SourceLocation = SourceLocation
                 };
-                var keyLiteral = new CloudFormationSyntaxLiteral(key) {
-                    SourceLocation = new SourceLocation()
-                };
-                this[keyLiteral] = Adopt(result);
+                this[new CloudFormationSyntaxLiteral(key)] = Adopt(result);
                 return result;
             }
         }

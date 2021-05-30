@@ -31,6 +31,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
     public abstract class ACloudFormationSyntaxExpression : ACloudFormationSyntaxNode {
 
+        //--- Constructors ---
+        protected ACloudFormationSyntaxExpression(string filePath, int lineNumber) : base(filePath, lineNumber) { }
+
         //--- Abstract Properties ---
         public abstract CloudFormationSyntaxValueType ExpressionValueType { get; }
 
