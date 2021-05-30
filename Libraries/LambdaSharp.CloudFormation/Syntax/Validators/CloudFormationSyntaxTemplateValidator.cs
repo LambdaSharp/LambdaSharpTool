@@ -17,14 +17,13 @@
  */
 
 using System;
-using System.Collections.Generic;
 using LambdaSharp.CloudFormation.Reporting;
-using LambdaSharp.CloudFormation.Syntax.Declarations;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
     // TODO:
     //  - can a condition and a resource have the same name?
+    //  - validate that the keys in a map are unique
 
     public sealed class CloudFormationSyntaxTemplateValidator {
 

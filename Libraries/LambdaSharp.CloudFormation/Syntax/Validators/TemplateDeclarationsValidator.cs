@@ -26,12 +26,34 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
-    internal class TemplateDeclarationsValidator : ASyntaxProcessor {
+    internal class Constants {
 
         //--- Constants ---
-        private const string AWS_TEMPLATE_FORMAT_VERSION = "2010-09-09";
-        private const int MAX_TEMPLATE_DESCRIPTION_LENGTH = 1024;
-        private const int MAX_PARAMETER_VALUE_LENGTH = 4_000;
+        public const string AWS_TEMPLATE_FORMAT_VERSION = "2010-09-09";
+    }
+
+    internal class Limits {
+
+        // NOTE: AWS CloudFormation quotas: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html
+
+        //--- Constants ---
+        public const int MAX_TEMPLATE_DESCRIPTION_LENGTH = 1024;
+        public const int MAX_PARAMETER_VALUE_LENGTH = 4096;
+
+        // TODO: use these limits
+        public const int MAX_PARAMETERS_COUNT = 200;
+        public const int MAX_PARAMETER_NAME_LENGTH = 255;
+        public const int MAX_MAPPINGS_COUNT = 200;
+        public const int MAX_MAPPING_NAME_LENGTH = 255;
+        public const int MAX_MAPPING_ATTRIBUTE_COUNT = 200;
+        public const int MAX_OUTPUTS_COUNT = 200;
+        public const int MAX_OUTPUT_NAME_LENGTH = 255;
+        public const int MAX_RESOURCE_COUNT = 500;
+        public const int MAX_RESOURCE_NAME_LENGTH = 255;
+    }
+
+
+    internal class TemplateDeclarationsValidator : ASyntaxProcessor {
 
         //--- Constructors ---
         public TemplateDeclarationsValidator(SyntaxProcessorState state, ISyntaxProcessorDependencyProvider provider) : base(state, provider) { }
@@ -42,8 +64,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
             if(!(template.AWSTemplateFormatVersion is null)) {
                 if(template.AWSTemplateFormatVersion.ExpressionValueType != CloudFormationSyntaxValueType.String) {
                     Add(Errors.ExpectedStringValue(template.AWSTemplateFormatVersion.SourceLocation));
-                } else if(template.AWSTemplateFormatVersion.Value != AWS_TEMPLATE_FORMAT_VERSION) {
-                    Add(Errors.TemplateVersionIsNotValid(AWS_TEMPLATE_FORMAT_VERSION, template.AWSTemplateFormatVersion.SourceLocation));
+                } else if(template.AWSTemplateFormatVersion.Value != Constants.AWS_TEMPLATE_FORMAT_VERSION) {
+                    Add(Errors.TemplateVersionIsNotValid(Constants.AWS_TEMPLATE_FORMAT_VERSION, template.AWSTemplateFormatVersion.SourceLocation));
                 }
             }
 
@@ -51,14 +73,14 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
             if(!(template.Description is null)) {
                 if(template.Description.ExpressionValueType != CloudFormationSyntaxValueType.String) {
                     Add(Errors.ExpectedStringValue(template.Description.SourceLocation));
-                } else if(((string)template.Description.Value).Length > MAX_TEMPLATE_DESCRIPTION_LENGTH) {
-                    Add(Errors.TemplateDescriptionTooLong(MAX_TEMPLATE_DESCRIPTION_LENGTH, template.Description.SourceLocation));
+                } else if(((string)template.Description.Value).Length > Limits.MAX_TEMPLATE_DESCRIPTION_LENGTH) {
+                    Add(Errors.TemplateDescriptionTooLong(Limits.MAX_TEMPLATE_DESCRIPTION_LENGTH, template.Description.SourceLocation));
                 }
             }
 
             // validate there is at least one resource
             if(template.Resources is null) {
-                Add(Errors.TemplateResourcesSectionMissing(template.SourceLocation.NotExact()));
+                Add(Errors.TemplateResourcesSectionMissing(template.SourceLocation.Approx()));
             } else if(!template.Resources.Any()) {
                 Add(Errors.TemplateResourcesTooShort(template.Resources.SourceLocation));
             }
@@ -103,7 +125,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // type is a required value
             if(resource.Type is null) {
-                Add(Errors.ResourceMissingType(resource.SourceLocation.NotExact()));
+                Add(Errors.ResourceMissingType(resource.SourceLocation.Approx()));
             } else if(resource.Type.ExpressionValueType != CloudFormationSyntaxValueType.String) {
                 Add(Errors.ResourceTypeExpectedString(resource.SourceLocation));
             }
@@ -133,7 +155,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // value cannot be null
             if(condition.Value is null) {
-                Add(Errors.ConditionMissingValue(condition.SourceLocation.NotExact()));
+                Add(Errors.ConditionMissingValue(condition.SourceLocation.Approx()));
             }
         }
 
@@ -142,12 +164,12 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // value cannot be null
             if(output.Value is null) {
-                Add(Errors.OutputMissingValue(output.SourceLocation.NotExact()));
+                Add(Errors.OutputMissingValue(output.SourceLocation.Approx()));
             }
 
             // export name cannot be null when export is defined
             if(!(output.Export is null) && (output.Export.Name is null)) {
-                Add(Errors.OutputExportMissingName(output.Export.SourceLocation.NotExact()));
+                Add(Errors.OutputExportMissingName(output.Export.SourceLocation.Approx()));
             }
 
             // condition must be a string
@@ -161,15 +183,18 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // value cannot be null
             if(mapping.Value is null) {
-                Add(Errors.MappingMissingValue(mapping.SourceLocation.NotExact()));
+                Add(Errors.MappingMissingValue(mapping.SourceLocation.Approx()));
             } else {
+                var reportCount = Provider.Report.Entries.Count();
 
                 // validate level 1 map entries
                 foreach(var (level1Key, level1Value) in mapping.Value) {
 
                     // level 1 key cannot be null
                     if(level1Key is null) {
-                        Add(Errors.MappingLevel1KeyMissing(mapping.SourceLocation.NotExact()));
+                        Add(Errors.MappingLevel1KeyMissing(mapping.SourceLocation.Approx()));
+                    } else if(!CloudFormationValidationRules.IsValidCloudFormationName(level1Key.Value)) {
+                        Add(Errors.MappingKeyMustBeAlphanumeric(level1Key.SourceLocation));
                     }
 
                     // level 1 value must be a map
@@ -180,7 +205,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
                             // key cannot be null
                             if(level2Key is null) {
-                                Add(Errors.MappingLevel2KeyMissing(level1Map.SourceLocation.NotExact()));
+                                Add(Errors.MappingLevel2KeyMissing(level1Map.SourceLocation.Approx()));
+                            } else if(!CloudFormationValidationRules.IsValidCloudFormationName(level2Key.Value)) {
+                                Add(Errors.MappingKeyMustBeAlphanumeric(level2Key.SourceLocation));
                             }
 
                             // level 2 value must a literal
@@ -189,9 +216,33 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                             }
                         }
                     } else if(level1Value is null) {
-                        Add(Errors.MappingLevel1ValueMissing(mapping.SourceLocation.NotExact()));
+                        Add(Errors.MappingLevel1ValueMissing(mapping.SourceLocation.Approx()));
                     } else {
                         Add(Errors.MappingLevel1ValueExpectedMap(level1Value.SourceLocation));
+                    }
+                }
+
+                // if no errors were detected on the mapping, validate mapping structure
+                if(reportCount == Provider.Report.Entries.Count()) {
+
+                    // collect all defined level-2 keys
+                    var allLevel2Keys = new HashSet<string>(
+                        mapping.Value
+                            .Select(kv => kv.Value)
+                            .OfType<CloudFormationSyntaxMap>()
+                            .SelectMany(map => map.Keys)
+                            .Select(literal => literal.Value)
+                    );
+
+                    // check if level-2 keys are consistent
+                    foreach(var (level1Key, level1Value) in mapping.Value) {
+                        var level2KeysFound = new HashSet<string>(allLevel2Keys);
+                        foreach(var (level2Key, level2Value) in (CloudFormationSyntaxMap)level1Value) {
+                            level2KeysFound.Remove(level2Key.Value);
+                        }
+                        foreach(var missingKey in level2KeysFound.OrderBy(key => key)) {
+                            Add(Errors.MappingLevel2KeyMissing(missingKey, level1Value.SourceLocation.Approx()));
+                        }
                     }
                 }
             }
@@ -202,7 +253,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // type is a required value
             if(parameter.Type is null) {
-                Add(Errors.ParameterMissingType(parameter.SourceLocation.NotExact()));
+                Add(Errors.ParameterMissingType(parameter.SourceLocation.Approx()));
             } else if(parameter.Type.ExpressionValueType != CloudFormationSyntaxValueType.String) {
                 Add(Errors.ParameterTypeExpectedString(parameter.SourceLocation));
             }
@@ -257,8 +308,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                         Add(Errors.MinLengthMustBeAnInteger(parameter.MinLength.SourceLocation));
                     } else if(minLength < 0) {
                         Add(Errors.MinLengthMustBeNonNegative(parameter.MinLength.SourceLocation));
-                    } else if(minLength > MAX_PARAMETER_VALUE_LENGTH) {
-                        Add(Errors.MinLengthTooLarge(MAX_PARAMETER_VALUE_LENGTH, parameter.MinLength.SourceLocation));
+                    } else if(minLength > Limits.MAX_PARAMETER_VALUE_LENGTH) {
+                        Add(Errors.MinLengthTooLarge(Limits.MAX_PARAMETER_VALUE_LENGTH, parameter.MinLength.SourceLocation));
                     }
                 }
                 if(parameter.MaxLength != null) {
@@ -266,8 +317,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                         Add(Errors.MaxLengthMustBeAnInteger(parameter.MaxLength.SourceLocation));
                     } else if(maxLength <= 0) {
                         Add(Errors.MaxLengthMustBePositive(parameter.MaxLength.SourceLocation));
-                    } else if(maxLength > MAX_PARAMETER_VALUE_LENGTH) {
-                        Add(Errors.MaxLengthTooLarge(MAX_PARAMETER_VALUE_LENGTH, parameter.MaxLength.SourceLocation));
+                    } else if(maxLength > Limits.MAX_PARAMETER_VALUE_LENGTH) {
+                        Add(Errors.MaxLengthTooLarge(Limits.MAX_PARAMETER_VALUE_LENGTH, parameter.MaxLength.SourceLocation));
                     }
                 }
                 if(
@@ -301,7 +352,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // check if name exists and is a string
             if(declaration.LogicalId is null) {
-                Add(Errors.DeclarationMissingName(declaration.SourceLocation.NotExact()));
+                Add(Errors.DeclarationMissingName(declaration.SourceLocation.Approx()));
                 return;
             }
             if(declaration.LogicalId.ExpressionValueType != CloudFormationSyntaxValueType.String) {

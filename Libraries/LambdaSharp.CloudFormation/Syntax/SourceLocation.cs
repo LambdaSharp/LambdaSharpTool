@@ -51,7 +51,7 @@ namespace LambdaSharp.CloudFormation.Syntax {
         public SourceLocation WithExact(bool exact)
             => new SourceLocation(FilePath, LineStart, LineEnd, ColumnStart, ColumnEnd, exact);
 
-        public SourceLocation NotExact() => WithExact(exact: false);
+        public SourceLocation Approx() => WithExact(exact: false);
 
         public override string ToString() {
             if(FilePath == "") {

@@ -95,6 +95,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
         //--- Properties ---
         public override CloudFormationSyntaxValueType ExpressionValueType => CloudFormationSyntaxValueType.Map;
+        public IEnumerable<CloudFormationSyntaxLiteral> Keys => _pairs.Select(pair => pair.Key);
 
         //--- Methods ---
          public bool TryGetValue(string key, [NotNullWhen(true)] out ACloudFormationSyntaxExpression? value) {

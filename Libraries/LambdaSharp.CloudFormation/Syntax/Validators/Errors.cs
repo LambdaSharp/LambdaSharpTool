@@ -53,10 +53,12 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         #region Mapping Declaration
         public static IReportEntry MappingMissingValue(SourceLocation location) => ReportEntry.Error("value missing for mapping", location);
         public static IReportEntry MappingLevel1KeyMissing(SourceLocation location) => ReportEntry.Error("level 1 key missing for mapping", location);
+        public static IReportEntry MappingKeyMustBeAlphanumeric(SourceLocation location) => ReportEntry.Error("key must be alphanumeric", location);
         public static IReportEntry MappingLevel1ValueMissing(SourceLocation location) => ReportEntry.Error("level 1 value missing for mapping", location);
         public static IReportEntry MappingLevel1ValueExpectedMap(SourceLocation location) => ReportEntry.Error("level 1 value must be a map", location);
         public static IReportEntry MappingLevel2KeyMissing(SourceLocation location) => ReportEntry.Error("level 2 key missing for mapping", location);
         public static IReportEntry MappingLevel2ValueExpectedLiteral(SourceLocation location) => ReportEntry.Error("level 2 value must be a literal", location);
+        public static IReportEntry MappingLevel2KeyMissing(string name, SourceLocation location) => ReportEntry.Error($"level 2 key '{name}' is missing", location);
         #endregion
 
         #region Parameter Declaration
