@@ -24,7 +24,8 @@ namespace LambdaSharp.CloudFormation.Reporting {
     public interface IReport {
 
         //--- Properties ---
-        bool HasErrors { get; }
+        bool HasErrors => Entries.Any(entry => entry.IsError);
+        IEnumerable<IReportEntry> Entries { get; }
 
         //--- Methods ---
         void Add(IReportEntry entry);
@@ -35,12 +36,8 @@ namespace LambdaSharp.CloudFormation.Reporting {
         //--- Fields ---
         private readonly List<IReportEntry> _entries = new List<IReportEntry>();
 
-        //--- Properties ---
-        public bool HasErrors => _entries.OfType<ReportEntry>().Any(entry => entry.Severity switch {
-            "ERROR" => true,
-            "FATAL" => true,
-            _ => false
-        });
+        //--- Public ---
+        public IEnumerable<IReportEntry> Entries => _entries;
 
         //--- Methods ---
         public void Add(IReportEntry entry) {
@@ -50,32 +47,6 @@ namespace LambdaSharp.CloudFormation.Reporting {
             if(!_entries.Contains(entry)) {
                 _entries.Add(entry);
             }
-        }
-
-        private string RenderEntry(IReportEntry entry) {
-
-            // begin message with severity level
-            var result = entry.Severity;
-
-            // append optional entry code
-            if(entry.Code > 0) {
-                result += entry.Code;
-            }
-
-            // append entry message
-            result += ": {entry.Message}";
-
-            // append entry file location
-            if(string.IsNullOrEmpty(entry.Location.FilePath)) {
-                result += $" @ ";
-                if(!entry.Location.Exact) {
-
-                    // add hint that file location is approximate
-                    result += "(approx) ";
-                }
-                result += $"{entry.Location.FilePath}({entry.Location.LineStart},{entry.Location.ColumnStart})";
-            }
-            return result;
         }
     }
 }

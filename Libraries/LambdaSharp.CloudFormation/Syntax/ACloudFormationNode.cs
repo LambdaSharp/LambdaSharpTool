@@ -35,11 +35,6 @@ namespace LambdaSharp.CloudFormation.Syntax {
         public static ACloudFormationSyntaxNode? SetParent(ACloudFormationSyntaxNode? child, ACloudFormationSyntaxNode? parent) {
             if(child != null) {
 
-                // declaration nodes must have another declaration node as their parent
-                if((parent != null) && (child is ACloudFormationSyntaxDeclaration) && !(parent is ACloudFormationSyntaxDeclaration)) {
-                    throw new ApplicationException("declarations must have another declaration as parent");
-                }
-
                 // check if parent is changing
                 if(!object.ReferenceEquals(child.Parent, parent)) {
 

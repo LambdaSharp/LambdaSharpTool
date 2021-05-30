@@ -31,6 +31,7 @@ namespace LambdaSharp.CloudFormation.Reporting {
         public string Message { get; }
         public string Severity => "VERBOSE";
         public SourceLocation Location => SourceLocation.Empty;
+        public bool IsError => false;
 
         //--- Methods ---
         public override bool Equals(object? obj)

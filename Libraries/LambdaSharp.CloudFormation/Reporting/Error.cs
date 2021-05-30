@@ -28,6 +28,34 @@ namespace LambdaSharp.CloudFormation.Reporting {
         string Message { get; }
         string Severity { get; }
         SourceLocation Location { get; }
+        bool IsError { get; }
+
+        //--- Methods ---
+        string Render() {
+
+            // begin message with severity level
+            var result = Severity;
+
+            // append optional entry code
+            if(Code > 0) {
+                result += Code;
+            }
+
+            // append entry message
+            result += $": {Message}";
+
+            // append entry file location
+            if(!string.IsNullOrEmpty(Location.FilePath)) {
+                result += $" @ ";
+                if(!Location.Exact) {
+
+                    // add hint that file location is approximate
+                    result += "(approx) ";
+                }
+                result += $"{Location.FilePath}({Location.LineStart},{Location.ColumnStart})";
+            }
+            return result;
+        }
     }
 
     public sealed class ReportEntry : IReportEntry {
@@ -51,6 +79,12 @@ namespace LambdaSharp.CloudFormation.Reporting {
         public string Message { get; }
         public string Severity { get; }
         public SourceLocation Location { get; }
+
+        public bool IsError => Severity switch {
+            "ERROR" => true,
+            "FATAL" => true,
+            _ => false
+        };
 
         //--- Methods ---
         public override bool Equals(object? obj) => (obj is ReportEntry other) && Equals(other);

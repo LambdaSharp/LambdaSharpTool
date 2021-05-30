@@ -39,6 +39,7 @@ namespace LambdaSharp.CloudFormation.Reporting {
         public string Description { get; }
         public TimeSpan Duration { get; }
         public bool? Cached { get; }
+        public bool IsError => false;
 
         //--- Methods ---
         public override bool Equals(object? obj)

@@ -27,7 +27,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         public static IReportEntry CannotUseReservedName(string name, SourceLocation location) => ReportEntry.Error($"cannot use reserved name '{name}'", location);
         public static IReportEntry ExpectedStringValue(SourceLocation location) => ReportEntry.Error("must be a string value", location);
         public static IReportEntry TemplateDescriptionTooLong(int maxDescriptionLength, SourceLocation location) => ReportEntry.Error($"template description cannot exceed {maxDescriptionLength:N0} bytes", location);
-        public static IReportEntry TemplateVersionIsNotValid(SourceLocation location) => ReportEntry.Error("template version is not valid", location);
+        public static IReportEntry TemplateVersionIsNotValid(string expectedVersion, SourceLocation location) => ReportEntry.Error($"template version is not valid (expected: {expectedVersion})", location);
         public static IReportEntry TemplateResourcesSectionMissing(SourceLocation location) => ReportEntry.Error("template is missing the resources section", location);
         public static IReportEntry TemplateResourcesTooShort(SourceLocation location) => ReportEntry.Error("template resources section must contain at least one resource", location);
         public static IReportEntry DeclarationMissingName(SourceLocation location) => ReportEntry.Error("name missing for declaration", location);

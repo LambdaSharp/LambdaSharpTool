@@ -29,6 +29,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
     internal class TemplateDeclarationsValidator : ASyntaxProcessor {
 
         //--- Constants ---
+        private const string AWS_TEMPLATE_FORMAT_VERSION = "2010-09-09";
         private const int MAX_TEMPLATE_DESCRIPTION_LENGTH = 1024;
         private const int MAX_PARAMETER_VALUE_LENGTH = 4_000;
 
@@ -41,8 +42,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
             if(!(template.AWSTemplateFormatVersion is null)) {
                 if(template.AWSTemplateFormatVersion.ExpressionValueType != CloudFormationSyntaxValueType.String) {
                     Add(Errors.ExpectedStringValue(template.AWSTemplateFormatVersion.SourceLocation));
-                } else if(template.AWSTemplateFormatVersion.Value != "2010-09-09") {
-                    Add(Errors.TemplateVersionIsNotValid(template.AWSTemplateFormatVersion.SourceLocation));
+                } else if(template.AWSTemplateFormatVersion.Value != AWS_TEMPLATE_FORMAT_VERSION) {
+                    Add(Errors.TemplateVersionIsNotValid(AWS_TEMPLATE_FORMAT_VERSION, template.AWSTemplateFormatVersion.SourceLocation));
                 }
             }
 
@@ -57,9 +58,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // validate there is at least one resource
             if(template.Resources is null) {
-                Add(Errors.TemplateResourcesSectionMissing(template.SourceLocation));
+                Add(Errors.TemplateResourcesSectionMissing(template.SourceLocation.NotExact()));
             } else if(!template.Resources.Any()) {
-                Add(Errors.TemplateResourcesTooShort(template.SourceLocation));
+                Add(Errors.TemplateResourcesTooShort(template.Resources.SourceLocation));
             }
 
             // validate parameters
