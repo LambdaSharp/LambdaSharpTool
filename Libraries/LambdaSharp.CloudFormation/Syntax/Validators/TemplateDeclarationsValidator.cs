@@ -22,6 +22,7 @@ using LambdaSharp.CloudFormation.Validation;
 using LambdaSharp.CloudFormation.Syntax.Declarations;
 using LambdaSharp.CloudFormation.Syntax.Expressions;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
@@ -91,6 +92,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             // TODO: validate metadata
             // TODO: validate transform
+
+            VisitDeclarations(template);
+            DetectCircularReferences(template);
         }
 
         private void ValidateResource(CloudFormationSyntaxResource resource) {
@@ -153,8 +157,6 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
         private void ValidateMapping(CloudFormationSyntaxMapping mapping) {
             ValidateDeclarationName(mapping);
-
-            // TODO: confirm map structure
 
             // value cannot be null
             if(mapping.Value is null) {
@@ -316,6 +318,183 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
                 // declaration uses a reserved name
                 Add(Errors.CannotUseReservedName(value, declaration.LogicalId.SourceLocation));
+            }
+        }
+
+        private void VisitDeclarations(CloudFormationSyntaxTemplate template) {
+
+            // record all declarations in context
+            template.InspectType<ACloudFormationSyntaxDeclaration>(node => {
+                switch(node) {
+                case CloudFormationSyntaxParameter parameter:
+                    if(!Provider.Parameters.TryAdd(parameter.LogicalId.Value, parameter)) {
+                        Add(Errors.DuplicateParameterDeclaration(parameter.LogicalId.Value, parameter.LogicalId.SourceLocation));
+                    }
+                    if(Provider.Resources.ContainsKey(parameter.LogicalId.Value)) {
+                        Add(Errors.AmbiguousParameterDeclaration(parameter.LogicalId.Value, parameter.LogicalId.SourceLocation));
+                    }
+                    break;
+                case CloudFormationSyntaxResource resource:
+                    if(!Provider.Resources.TryAdd(resource.LogicalId.Value, resource)) {
+                        Add(Errors.DuplicateResourceDeclaration(resource.LogicalId.Value, resource.LogicalId.SourceLocation));
+                    }
+                    if(Provider.Parameters.ContainsKey(resource.LogicalId.Value)) {
+                        Add(Errors.AmbiguousResourceDeclaration(resource.LogicalId.Value, resource.LogicalId.SourceLocation));
+                    }
+                    break;
+                case CloudFormationSyntaxOutput output:
+                    if(!Provider.Outputs.TryAdd(output.LogicalId.Value, output)) {
+                        Add(Errors.DuplicateOutputDeclaration(output.LogicalId.Value, output.LogicalId.SourceLocation));
+                    }
+                    break;
+                case CloudFormationSyntaxCondition condition:
+                    if(!Provider.Conditions.TryAdd(condition.LogicalId.Value, condition)) {
+                        Add(Errors.DuplicateConditionDeclaration(condition.LogicalId.Value, condition.LogicalId.SourceLocation));
+                    }
+                    break;
+                case CloudFormationSyntaxMapping mapping:
+                    if(!Provider.Mappings.TryAdd(mapping.LogicalId.Value, mapping)) {
+                        Add(Errors.DuplicateMappingDeclaration(mapping.LogicalId.Value, mapping.LogicalId.SourceLocation));
+                    }
+                    break;
+                default:
+
+                    // TODO: throw better exception
+                    throw new Exception("oops");
+                }
+            });
+
+            // validate all references
+            template.InspectType<CloudFormationSyntaxFunctionInvocation>(node => {
+                switch(node.Function.FunctionName) {
+                case "Condition":
+
+                    // verify a condition of this name exists
+                    if(Provider.Conditions.TryGetValue(node.StringArgument, out var condition)) {
+
+                        // track dependencies
+                        Provider.Dependencies.Add(node.ParentDeclaration, condition);
+                        Provider.ReverseDependencies.Add(condition, node.ParentDeclaration);
+                    } else {
+                        Add(Errors.ConditionNotFound(node.StringArgument, node.Argument.SourceLocation));
+                    }
+                    break;
+                case "Fn::GetAtt":
+
+                    // verify a resource of this name exists
+                    if(Provider.Resources.TryGetValue(node.StringArgument, out var resource)) {
+
+                        // track dependencies
+                        Provider.Dependencies.Add(node.ParentDeclaration, resource);
+                        Provider.ReverseDependencies.Add(resource, node.ParentDeclaration);
+                    } else {
+                        Add(Errors.GetAttResourceNotFound(node.StringArgument, node.Argument.SourceLocation));
+                    }
+                    break;
+                case "Fn::FindInMap":
+
+                    // verify a mapping of this name exists
+                    if(Provider.Mappings.TryGetValue(node.StringArgument, out var mapping)) {
+
+                        // track dependencies
+                        Provider.Dependencies.Add(node.ParentDeclaration, mapping);
+                        Provider.ReverseDependencies.Add(mapping, node.ParentDeclaration);
+                    } else {
+                        Add(Errors.FindInMapMappingNotFound(node.StringArgument, node.Argument.SourceLocation));
+                    }
+                    break;
+                case "Ref":
+
+                    // for conditions, !Ref can only reference parameters, not resources
+                    if(node.ParentDeclaration is CloudFormationSyntaxCondition) {
+
+                        // verify a parameter of this name exists
+                        if(Provider.Parameters.TryGetValue(node.StringArgument, out var parameter)) {
+
+                        // track dependencies
+                            Provider.Dependencies.Add(node.ParentDeclaration, parameter);
+                            Provider.ReverseDependencies.Add(parameter, node.ParentDeclaration);
+                        } else if(Provider.Resources.TryGetValue(node.StringArgument, out resource)) {
+
+                            // conditions cannot refer to resources
+                            Add(Errors.RefResourceNotValidInCondition(node.StringArgument, node.Argument.SourceLocation));
+                        } else {
+                            Add(Errors.RefParameterNotFound(node.StringArgument, node.Argument.SourceLocation));
+                        }
+                    } else {
+
+                        // verify a resource or parameter of this name exists
+                        if(Provider.Parameters.TryGetValue(node.StringArgument, out var parameter)) {
+
+                            // track dependencies
+                            Provider.Dependencies.Add(node.ParentDeclaration, parameter);
+                            Provider.ReverseDependencies.Add(parameter, node.ParentDeclaration);
+                        } else if(Provider.Resources.TryGetValue(node.StringArgument, out resource)) {
+
+                            // track dependencies
+                            Provider.Dependencies.Add(node.ParentDeclaration, resource);
+                            Provider.ReverseDependencies.Add(resource, node.ParentDeclaration);
+                        } else {
+                            Add(Errors.RefParameterOrResourceNotFound(node.StringArgument, node.Argument.SourceLocation));
+                        }
+                    }
+                    break;
+                default:
+
+                    // nothing to do
+                    break;
+                }
+            });
+        }
+
+        private void DetectCircularReferences(CloudFormationSyntaxTemplate template) {
+
+            // detect circular dependencies
+            var declarations = Provider.Parameters.Values.OfType<ACloudFormationSyntaxDeclaration>()
+                .Union(Provider.Conditions.Values)
+                .Union(Provider.Mappings.Values)
+                .Union(Provider.Resources.Values)
+                .Union(Provider.Outputs.Values)
+                .ToList();
+            var visited = new List<ACloudFormationSyntaxDeclaration>();
+            var cycles = new List<IEnumerable<ACloudFormationSyntaxDeclaration>>();
+            foreach(var declaration in declarations) {
+                Visit(declaration, visited);
+            }
+
+            // report all unique cycles found
+            if(cycles.Any()) {
+                var fingerprints = new HashSet<string>();
+                foreach(var cycle in cycles) {
+                    var path = cycle.Select(dependency => dependency.LogicalId.Value).ToList();
+
+                    // NOTE (2020-06-09, bjorg): cycles are reported for each node in the cycle; however, the nodes in the cycle
+                    //  form a unique fingerprint to avoid duplicate reporting duplicate cycles
+                    var fingerprint = string.Join(",", path.OrderBy(logicalId => logicalId));
+                    if(fingerprints.Add(fingerprint)) {
+                        Add(Errors.CircularDependencyDetected(string.Join(" -> ", path.Append(path.First())), cycle.First().SourceLocation));
+                    }
+                }
+            }
+
+            // local functions
+            void Visit(ACloudFormationSyntaxDeclaration declaration, List<ACloudFormationSyntaxDeclaration> visited) {
+
+                // check if we detected a cycle
+                var index = visited.IndexOf(declaration);
+                if(index >= 0) {
+
+                    // extract sub-list that represents cycle since cycle may not point back to the first element
+                    cycles.Add(visited.GetRange(index, visited.Count - index));
+                    return;
+                }
+
+                // recurse into every dependency, until we exhaust the tree or find a circular dependency
+                visited.Add(declaration);
+                foreach(var reference in Provider.Dependencies.Values.Distinct()) {
+                    Visit(reference, visited);
+                }
+                visited.Remove(declaration);
             }
         }
     }

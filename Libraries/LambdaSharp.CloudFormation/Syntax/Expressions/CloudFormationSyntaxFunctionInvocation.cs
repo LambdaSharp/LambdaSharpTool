@@ -34,6 +34,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
         public ACloudFormationSyntaxExpression Argument { get; }
         public override CloudFormationSyntaxValueType ExpressionValueType => Function.ReturnValueType;
 
+        // TODO: need to do better than this
+        public string StringArgument => ((CloudFormationSyntaxLiteral)Argument).Value;
+
         //--- Methods ---
         public override ACloudFormationSyntaxNode CloneNode() => new CloudFormationSyntaxFunctionInvocation(Function, Argument) {
             SourceLocation = SourceLocation

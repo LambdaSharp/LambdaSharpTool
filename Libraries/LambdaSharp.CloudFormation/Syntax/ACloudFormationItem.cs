@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -61,6 +62,14 @@ namespace LambdaSharp.CloudFormation.Syntax {
         //--- Properties ---
         public ACloudFormationSyntaxNode? Parent { get; private set; }
         public SourceLocation SourceLocation { get; set; } = SourceLocation.Empty;
+
+        public IEnumerable<ACloudFormationSyntaxNode> Parents {
+            get {
+                for(var parent = Parent; !(parent is null); parent = parent.Parent) {
+                    yield return parent;
+                }
+            }
+        }
 
         //--- Abstract Methods ---
         public abstract ACloudFormationSyntaxNode CloneNode();

@@ -17,10 +17,14 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LambdaSharp.CloudFormation.Reporting {
 
     public interface IReport {
+
+        //--- Properties ---
+        bool HasErrors { get; }
 
         //--- Methods ---
         void Add(IReportEntry entry);
@@ -30,6 +34,13 @@ namespace LambdaSharp.CloudFormation.Reporting {
 
         //--- Fields ---
         private readonly List<IReportEntry> _entries = new List<IReportEntry>();
+
+        //--- Properties ---
+        public bool HasErrors => _entries.OfType<ReportEntry>().Any(entry => entry.Severity switch {
+            "ERROR" => true,
+            "FATAL" => true,
+            _ => false
+        });
 
         //--- Methods ---
         public void Add(IReportEntry entry) {

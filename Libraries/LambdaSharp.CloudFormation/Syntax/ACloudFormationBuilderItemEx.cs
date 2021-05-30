@@ -28,11 +28,5 @@ namespace LambdaSharp.CloudFormation.Syntax {
             result.SourceLocation = node.SourceLocation;
             return result;
         }
-
-        public static IEnumerable<ACloudFormationSyntaxNode> GetParents(this ACloudFormationSyntaxNode node) {
-            for(var parent = node.Parent; !(parent is null); parent = parent.Parent) {
-                yield return parent;
-            }
-        }
     }
 }

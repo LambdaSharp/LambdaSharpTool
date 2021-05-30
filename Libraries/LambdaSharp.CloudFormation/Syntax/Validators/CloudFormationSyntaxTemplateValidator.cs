@@ -18,9 +18,9 @@
 
 using System;
 using System.Collections.Generic;
-using LambdaSharp.CloudFormation.Syntax;
 using LambdaSharp.CloudFormation.Reporting;
-using LambdaSharp.CloudFormation.Template;
+using LambdaSharp.CloudFormation.Syntax.Declarations;
+using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
@@ -41,6 +41,13 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
             //--- Properties ---
             public IReport Report { get; }
             public CloudFormationSyntaxTemplate Template { get; }
+            public Dictionary<string, CloudFormationSyntaxParameter> Parameters { get; } = new Dictionary<string, CloudFormationSyntaxParameter>();
+            public Dictionary<string, CloudFormationSyntaxResource> Resources { get; } = new Dictionary<string, CloudFormationSyntaxResource>();
+            public Dictionary<string, CloudFormationSyntaxOutput> Outputs { get; } = new Dictionary<string, CloudFormationSyntaxOutput>();
+            public Dictionary<string, CloudFormationSyntaxCondition> Conditions { get; } = new Dictionary<string, CloudFormationSyntaxCondition>();
+            public Dictionary<string, CloudFormationSyntaxMapping> Mappings { get; } = new Dictionary<string, CloudFormationSyntaxMapping>();
+            public Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration> Dependencies { get; } = new Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration>();
+            public Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration> ReverseDependencies { get; } = new Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration>();
         }
 
         //--- Fields ---

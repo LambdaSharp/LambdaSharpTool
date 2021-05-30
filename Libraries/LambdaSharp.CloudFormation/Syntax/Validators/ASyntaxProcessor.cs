@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using LambdaSharp.CloudFormation.Reporting;
+using LambdaSharp.CloudFormation.Syntax.Declarations;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
@@ -24,6 +26,13 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
         //--- Properties ---
         IReport Report { get; }
+        Dictionary<string, CloudFormationSyntaxParameter> Parameters { get; }
+        Dictionary<string, CloudFormationSyntaxCondition> Conditions { get; }
+        Dictionary<string, CloudFormationSyntaxMapping> Mappings { get; }
+        Dictionary<string, CloudFormationSyntaxResource> Resources { get; }
+        Dictionary<string, CloudFormationSyntaxOutput> Outputs { get; }
+        Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration> ReverseDependencies { get; }
+        Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration> Dependencies { get; }
     }
 
     internal abstract class ASyntaxProcessor {

@@ -32,6 +32,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         public static IReportEntry TemplateResourcesTooShort(SourceLocation location) => ReportEntry.Error("template resources section must contain at least one resource", location);
         public static IReportEntry DeclarationMissingName(SourceLocation location) => ReportEntry.Error("name missing for declaration", location);
         public static IReportEntry DeclarationNameMustBeString(SourceLocation location) => ReportEntry.Error("declaration name must be a string", location);
+        public static IReportEntry CircularDependencyDetected(string path, SourceLocation location) => ReportEntry.Error($"circular dependency {path}", location);
+
 
         #region Resource Declaration
         public static IReportEntry ResourceMissingType(SourceLocation location) => ReportEntry.Error("type missing for resource", location);
@@ -84,5 +86,34 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         public static IReportEntry ConstraintDescriptionAttributeRequiresStringType(SourceLocation location) => ReportEntry.Error("'ConstraintDescription' attribute can only be used with 'String' type", location);
         public static IReportEntry ConstraintDescriptionAttributeRequiresAllowedPatternAttribute(SourceLocation location) => ReportEntry.Error("'ConstraintDescription' attribute requires 'AllowedPattern' attribute to be set", location);
         #endregion
+
+        #region Declarations
+        public static IReportEntry DuplicateResourceDeclaration(string name, SourceLocation location) => ReportEntry.Error($"resource '{name}' is already defined", location);
+        public static IReportEntry AmbiguousResourceDeclaration(string name, SourceLocation location) => ReportEntry.Error($"resource '{name}' conflicts with parameter with same name", location);
+        public static IReportEntry DuplicateConditionDeclaration(string name, SourceLocation location) => ReportEntry.Error($"condition '{name}' is already defined", location);
+        public static IReportEntry DuplicateMappingDeclaration(string name, SourceLocation location) => ReportEntry.Error($"mapping '{name}' is already defined", location);
+        public static IReportEntry DuplicateParameterDeclaration(string name, SourceLocation location) => ReportEntry.Error($"parameter '{name}' is already defined", location);
+        public static IReportEntry AmbiguousParameterDeclaration(string name, SourceLocation location) => ReportEntry.Error($"parameter '{name}' conflicts with resource with same name", location);
+        public static IReportEntry DuplicateOutputDeclaration(string name, SourceLocation location) => ReportEntry.Error($"output '{name}' is already defined", location);
+        #endregion
+
+        #region Function: Ref
+        public static IReportEntry RefParameterNotFound(string name, SourceLocation location) => ReportEntry.Error($"parameter '{name}' does not exist", location);
+        public static IReportEntry RefParameterOrResourceNotFound(string name, SourceLocation location) => ReportEntry.Error($"parameter or resource '{name}' does not exist", location);
+        public static IReportEntry RefResourceNotValidInCondition(string name, SourceLocation location) => ReportEntry.Error($"resource '{name}' reference is not allowed in a condition", location);
+        #endregion
+
+        #region Function: Condition
+        public static IReportEntry ConditionNotFound(string name, SourceLocation location) => ReportEntry.Error($"condition '{name}' does not exist", location);
+        #endregion
+
+        #region Function: Fn::GetAtt
+        public static IReportEntry GetAttResourceNotFound(string name, SourceLocation location) => ReportEntry.Error($"resource '{name}' does not exist", location);
+        #endregion
+
+        #region Function: Fn::FindInMap
+        public static IReportEntry FindInMapMappingNotFound(string name, SourceLocation location) => ReportEntry.Error($"mapping '{name}' does not exist", location);
+        #endregion
+
     }
 }

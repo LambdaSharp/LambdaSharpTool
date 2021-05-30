@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+using System.Linq;
+using LambdaSharp.CloudFormation.Syntax.Declarations;
+
 namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
     public enum CloudFormationSyntaxValueType {
@@ -30,5 +33,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
         //--- Abstract Properties ---
         public abstract CloudFormationSyntaxValueType ExpressionValueType { get; }
+
+        //--- Properties ---
+        public ACloudFormationSyntaxDeclaration ParentDeclaration => Parents.OfType<ACloudFormationSyntaxDeclaration>().First();
     }
 }
