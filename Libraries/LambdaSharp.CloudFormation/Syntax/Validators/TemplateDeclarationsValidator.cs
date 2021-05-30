@@ -34,9 +34,9 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         private const int MAX_PARAMETER_VALUE_LENGTH = 4_000;
 
         //--- Constructors ---
-        public TemplateDeclarationsValidator(ISyntaxProcessorDependencyProvider provider) : base(provider) { }
+        public TemplateDeclarationsValidator(SyntaxProcessorState state, ISyntaxProcessorDependencyProvider provider) : base(state, provider) { }
 
-        public void Validate(CloudFormationSyntaxTemplate template) {
+        public void ValidateDeclarationsAndReferences(CloudFormationSyntaxTemplate template) {
 
             // validate template version
             if(!(template.AWSTemplateFormatVersion is null)) {
@@ -328,33 +328,33 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
             template.InspectType<ACloudFormationSyntaxDeclaration>(node => {
                 switch(node) {
                 case CloudFormationSyntaxParameter parameter:
-                    if(!Provider.Parameters.TryAdd(parameter.LogicalId.Value, parameter)) {
+                    if(!State.Declare(parameter)) {
                         Add(Errors.DuplicateParameterDeclaration(parameter.LogicalId.Value, parameter.LogicalId.SourceLocation));
                     }
-                    if(Provider.Resources.ContainsKey(parameter.LogicalId.Value)) {
+                    if(State.TryGetResource(parameter.LogicalId.Value, out _)) {
                         Add(Errors.AmbiguousParameterDeclaration(parameter.LogicalId.Value, parameter.LogicalId.SourceLocation));
                     }
                     break;
                 case CloudFormationSyntaxResource resource:
-                    if(!Provider.Resources.TryAdd(resource.LogicalId.Value, resource)) {
+                    if(!State.Declare(resource)) {
                         Add(Errors.DuplicateResourceDeclaration(resource.LogicalId.Value, resource.LogicalId.SourceLocation));
                     }
-                    if(Provider.Parameters.ContainsKey(resource.LogicalId.Value)) {
+                    if(State.TryGetParameter(resource.LogicalId.Value, out _)) {
                         Add(Errors.AmbiguousResourceDeclaration(resource.LogicalId.Value, resource.LogicalId.SourceLocation));
                     }
                     break;
                 case CloudFormationSyntaxOutput output:
-                    if(!Provider.Outputs.TryAdd(output.LogicalId.Value, output)) {
+                    if(!State.Declare(output)) {
                         Add(Errors.DuplicateOutputDeclaration(output.LogicalId.Value, output.LogicalId.SourceLocation));
                     }
                     break;
                 case CloudFormationSyntaxCondition condition:
-                    if(!Provider.Conditions.TryAdd(condition.LogicalId.Value, condition)) {
+                    if(!State.Declare(condition)) {
                         Add(Errors.DuplicateConditionDeclaration(condition.LogicalId.Value, condition.LogicalId.SourceLocation));
                     }
                     break;
                 case CloudFormationSyntaxMapping mapping:
-                    if(!Provider.Mappings.TryAdd(mapping.LogicalId.Value, mapping)) {
+                    if(!State.Declare(mapping)) {
                         Add(Errors.DuplicateMappingDeclaration(mapping.LogicalId.Value, mapping.LogicalId.SourceLocation));
                     }
                     break;
@@ -365,17 +365,33 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                 }
             });
 
-            // validate all references
+            // record explicit resource dependencies
+            template.InspectType<CloudFormationSyntaxResource>(node => {
+                if(!(node.DependsOn is null)) {
+                    foreach(var dependsOn in node.DependsOn) {
+                        if(State.TryGetResource(dependsOn.Value, out var resource)) {
+
+                            // track dependency
+                            State.AddDependency(node, resource);
+                        } else {
+                            Add(Errors.ResourceDependsOnNotFound(dependsOn.Value, dependsOn.SourceLocation));
+                        }
+                    }
+                }
+            });
+
+            // record implicit dependencies via references
             template.InspectType<CloudFormationSyntaxFunctionInvocation>(node => {
                 switch(node.Function.FunctionName) {
+
+                // TODO: replace function names with constants
                 case "Condition":
 
                     // verify a condition of this name exists
-                    if(Provider.Conditions.TryGetValue(node.StringArgument, out var condition)) {
+                    if(State.TryGetCondition(node.StringArgument, out var condition)) {
 
-                        // track dependencies
-                        Provider.Dependencies.Add(node.ParentDeclaration, condition);
-                        Provider.ReverseDependencies.Add(condition, node.ParentDeclaration);
+                        // track dependency
+                        State.AddDependency(node.ParentDeclaration, condition);
                     } else {
                         Add(Errors.ConditionNotFound(node.StringArgument, node.Argument.SourceLocation));
                     }
@@ -383,11 +399,10 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                 case "Fn::GetAtt":
 
                     // verify a resource of this name exists
-                    if(Provider.Resources.TryGetValue(node.StringArgument, out var resource)) {
+                    if(State.TryGetResource(node.StringArgument, out var resource)) {
 
-                        // track dependencies
-                        Provider.Dependencies.Add(node.ParentDeclaration, resource);
-                        Provider.ReverseDependencies.Add(resource, node.ParentDeclaration);
+                        // track dependency
+                        State.AddDependency(node.ParentDeclaration, resource);
                     } else {
                         Add(Errors.GetAttResourceNotFound(node.StringArgument, node.Argument.SourceLocation));
                     }
@@ -395,11 +410,10 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                 case "Fn::FindInMap":
 
                     // verify a mapping of this name exists
-                    if(Provider.Mappings.TryGetValue(node.StringArgument, out var mapping)) {
+                    if(State.TryGetMapping(node.StringArgument, out var mapping)) {
 
-                        // track dependencies
-                        Provider.Dependencies.Add(node.ParentDeclaration, mapping);
-                        Provider.ReverseDependencies.Add(mapping, node.ParentDeclaration);
+                        // track dependency
+                        State.AddDependency(node.ParentDeclaration, mapping);
                     } else {
                         Add(Errors.FindInMapMappingNotFound(node.StringArgument, node.Argument.SourceLocation));
                     }
@@ -410,12 +424,11 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                     if(node.ParentDeclaration is CloudFormationSyntaxCondition) {
 
                         // verify a parameter of this name exists
-                        if(Provider.Parameters.TryGetValue(node.StringArgument, out var parameter)) {
+                        if(State.TryGetParameter(node.StringArgument, out var parameter)) {
 
-                        // track dependencies
-                            Provider.Dependencies.Add(node.ParentDeclaration, parameter);
-                            Provider.ReverseDependencies.Add(parameter, node.ParentDeclaration);
-                        } else if(Provider.Resources.TryGetValue(node.StringArgument, out resource)) {
+                            // track dependency
+                            State.AddDependency(node.ParentDeclaration, parameter);
+                        } else if(State.TryGetResource(node.StringArgument, out resource)) {
 
                             // conditions cannot refer to resources
                             Add(Errors.RefResourceNotValidInCondition(node.StringArgument, node.Argument.SourceLocation));
@@ -425,16 +438,14 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
                     } else {
 
                         // verify a resource or parameter of this name exists
-                        if(Provider.Parameters.TryGetValue(node.StringArgument, out var parameter)) {
+                        if(State.TryGetParameter(node.StringArgument, out var parameter)) {
 
-                            // track dependencies
-                            Provider.Dependencies.Add(node.ParentDeclaration, parameter);
-                            Provider.ReverseDependencies.Add(parameter, node.ParentDeclaration);
-                        } else if(Provider.Resources.TryGetValue(node.StringArgument, out resource)) {
+                            // track dependency
+                            State.AddDependency(node.ParentDeclaration, parameter);
+                        } else if(State.TryGetResource(node.StringArgument, out resource)) {
 
-                            // track dependencies
-                            Provider.Dependencies.Add(node.ParentDeclaration, resource);
-                            Provider.ReverseDependencies.Add(resource, node.ParentDeclaration);
+                            // track dependency
+                            State.AddDependency(node.ParentDeclaration, resource);
                         } else {
                             Add(Errors.RefParameterOrResourceNotFound(node.StringArgument, node.Argument.SourceLocation));
                         }
@@ -451,11 +462,11 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         private void DetectCircularReferences(CloudFormationSyntaxTemplate template) {
 
             // detect circular dependencies
-            var declarations = Provider.Parameters.Values.OfType<ACloudFormationSyntaxDeclaration>()
-                .Union(Provider.Conditions.Values)
-                .Union(Provider.Mappings.Values)
-                .Union(Provider.Resources.Values)
-                .Union(Provider.Outputs.Values)
+            var declarations = State.Parameters.OfType<ACloudFormationSyntaxDeclaration>()
+                .Union(State.Conditions)
+                .Union(State.Mappings)
+                .Union(State.Resources)
+                .Union(State.Outputs)
                 .ToList();
             var visited = new List<ACloudFormationSyntaxDeclaration>();
             var cycles = new List<IEnumerable<ACloudFormationSyntaxDeclaration>>();
@@ -492,8 +503,8 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
                 // recurse into every dependency, until we exhaust the tree or find a circular dependency
                 visited.Add(declaration);
-                foreach(var reference in Provider.Dependencies.Values.Distinct()) {
-                    Visit(reference, visited);
+                foreach(var dependency in State.GetDependencies(declaration)) {
+                    Visit(dependency, visited);
                 }
                 visited.Remove(declaration);
             }

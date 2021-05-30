@@ -17,10 +17,12 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace LambdaSharp.CloudFormation.Syntax.Expressions {
 
+    [DebuggerDisplay("Literal = {Value}")]
     public sealed class CloudFormationSyntaxLiteral : ACloudFormationSyntaxExpression {
 
         //--- Fields ---

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using LambdaSharp.CloudFormation.Reporting;
 using LambdaSharp.CloudFormation.Syntax.Declarations;
-using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
@@ -30,46 +29,37 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
     public sealed class CloudFormationSyntaxTemplateValidator {
 
         //--- Types ---
-        private class Context : ISyntaxProcessorDependencyProvider {
+        private class DependencyProvider : ISyntaxProcessorDependencyProvider {
 
             //--- Constructors ---
-            public Context(IReport report, CloudFormationSyntaxTemplate template) {
+            public DependencyProvider(IReport report) {
                 Report = report ?? throw new ArgumentNullException(nameof(report));
-                Template = template ?? throw new ArgumentNullException(nameof(template));
             }
 
             //--- Properties ---
             public IReport Report { get; }
-            public CloudFormationSyntaxTemplate Template { get; }
-            public Dictionary<string, CloudFormationSyntaxParameter> Parameters { get; } = new Dictionary<string, CloudFormationSyntaxParameter>();
-            public Dictionary<string, CloudFormationSyntaxResource> Resources { get; } = new Dictionary<string, CloudFormationSyntaxResource>();
-            public Dictionary<string, CloudFormationSyntaxOutput> Outputs { get; } = new Dictionary<string, CloudFormationSyntaxOutput>();
-            public Dictionary<string, CloudFormationSyntaxCondition> Conditions { get; } = new Dictionary<string, CloudFormationSyntaxCondition>();
-            public Dictionary<string, CloudFormationSyntaxMapping> Mappings { get; } = new Dictionary<string, CloudFormationSyntaxMapping>();
-            public Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration> Dependencies { get; } = new Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration>();
-            public Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration> ReverseDependencies { get; } = new Dictionary<ACloudFormationSyntaxDeclaration, ACloudFormationSyntaxDeclaration>();
         }
 
         //--- Fields ---
         private readonly IReport _report;
 
         //--- Constructors ---
-        public CloudFormationSyntaxTemplateValidator(IReport report) {
-            _report = report ?? throw new ArgumentNullException(nameof(report));
-        }
+        public CloudFormationSyntaxTemplateValidator(IReport report)
+            => _report = report ?? throw new ArgumentNullException(nameof(report));
 
         //--- Methods ---
         public void Validate(CloudFormationSyntaxTemplate template) {
             if(template is null) {
                 throw new ArgumentNullException(nameof(template));
             }
-            var context = new Context(_report, template);
+            var state = new SyntaxProcessorState(template);
+            var provider = new DependencyProvider(_report);
 
             // validate structure
-            new SyntaxTreeIntegrityProcessor(context).ValidateIntegrity(template);
+            new SyntaxTreeIntegrityProcessor(state, provider).ValidateIntegrity(template);
 
             // validate template declarations
-            new TemplateDeclarationsValidator(context).Validate(template);
+            new TemplateDeclarationsValidator(state, provider).ValidateDeclarationsAndReferences(template);
         }
     }
 }

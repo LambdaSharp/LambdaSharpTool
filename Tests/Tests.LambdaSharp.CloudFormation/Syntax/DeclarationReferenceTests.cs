@@ -25,10 +25,10 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.CloudFormation.Syntax {
 
-    public class TemplateTests {
+    public class DeclarationReferenceTests {
 
         //--- Constructors ---
-        public TemplateTests(ITestOutputHelper output) => Output = output;
+        public DeclarationReferenceTests(ITestOutputHelper output) => Output = output;
 
         //--- Properties ---
         protected ITestOutputHelper Output { get; }
@@ -36,32 +36,27 @@ namespace Tests.LambdaSharp.CloudFormation.Syntax {
         //--- Methods ---
 
         [Fact]
-        public void Template_resources_missing() {
-
-            // arrange
-            var report = new Report(Output);
-            var template = new CloudFormationSyntaxTemplate();
-
-            // act
-            new CloudFormationSyntaxTemplateValidator(report).Validate(template);
-
-            // assert
-            Assert.Collection(
-                report.Entries,
-                entry => Assert.Equal("template is missing the resources section", entry.Message)
-            );
-        }
-
-        [Fact]
-        public void Template_version_is_wrong() {
+        public void Circular_dependency_via_DependsOn() {
 
             // arrange
             var report = new Report(Output);
             var template = new CloudFormationSyntaxTemplate {
-                AWSTemplateFormatVersion = new CloudFormationSyntaxLiteral("2010-09-119"),
                 Resources = new CloudFormationSyntaxList<CloudFormationSyntaxResource> {
+
+                    // MyResource
                     new CloudFormationSyntaxResource(new CloudFormationSyntaxLiteral("MyResource")) {
-                        Type = new CloudFormationSyntaxLiteral("AWS::SNS::Topic")
+                        Type = new CloudFormationSyntaxLiteral("AWS::SNS::Topic"),
+                        DependsOn = new CloudFormationSyntaxList<CloudFormationSyntaxLiteral> {
+                            new CloudFormationSyntaxLiteral("MyOtherResource")
+                        }
+                    },
+
+                    // MyOtherResource
+                    new CloudFormationSyntaxResource(new CloudFormationSyntaxLiteral("MyOtherResource")) {
+                        Type = new CloudFormationSyntaxLiteral("AWS::SNS::Topic"),
+                        DependsOn = new CloudFormationSyntaxList<CloudFormationSyntaxLiteral> {
+                            new CloudFormationSyntaxLiteral("MyResource")
+                        }
                     }
                 }
             };
@@ -72,28 +67,8 @@ namespace Tests.LambdaSharp.CloudFormation.Syntax {
             // assert
             Assert.Collection(
                 report.Entries,
-                entry => Assert.Equal("template version is not valid (expected: 2010-09-09)", entry.Message)
+                entry => Assert.Equal("circular dependency MyResource -> MyOtherResource -> MyResource", entry.Message)
             );
-        }
-
-        [Fact]
-        public void Minimal_valid_template() {
-
-            // arrange
-            var report = new Report(Output);
-            var template = new CloudFormationSyntaxTemplate {
-                Resources = new CloudFormationSyntaxList<CloudFormationSyntaxResource> {
-                    new CloudFormationSyntaxResource(new CloudFormationSyntaxLiteral("MyResource")) {
-                        Type = new CloudFormationSyntaxLiteral("AWS::SNS::Topic")
-                    }
-                }
-            };
-
-            // act
-            new CloudFormationSyntaxTemplateValidator(report).Validate(template);
-
-            // assert
-            Assert.Empty(report.Entries);
         }
     }
 }

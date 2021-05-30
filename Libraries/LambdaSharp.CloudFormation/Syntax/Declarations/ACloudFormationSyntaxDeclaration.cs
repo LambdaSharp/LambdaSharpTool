@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
+using System.Diagnostics;
 using LambdaSharp.CloudFormation.Syntax.Expressions;
 
 namespace LambdaSharp.CloudFormation.Syntax.Declarations {
 
+    [DebuggerDisplay("LogicalID = {LogicalId.Value}")]
     public abstract class ACloudFormationSyntaxDeclaration : ACloudFormationSyntaxNode {
 
         //--- Constructors ---

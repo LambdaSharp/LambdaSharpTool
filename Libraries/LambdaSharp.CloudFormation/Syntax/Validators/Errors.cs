@@ -38,6 +38,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         #region Resource Declaration
         public static IReportEntry ResourceMissingType(SourceLocation location) => ReportEntry.Error("type missing for resource", location);
         public static IReportEntry ResourceTypeExpectedString(SourceLocation location) => ReportEntry.Error("resource type must be a string", location);
+        public static IReportEntry ResourceDependsOnNotFound(string name, SourceLocation location) => ReportEntry.Error($"resource '{name}' does not exist", location);
         #endregion
 
         #region Condition Declaration
