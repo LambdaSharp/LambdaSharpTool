@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 
 namespace LambdaSharp.CloudFormation.Validation {
 
-    public static class CloudFormationValidationRules {
+    public static class CloudFormationRules {
 
         //--- Class Fields ---
         private static Regex _validResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);

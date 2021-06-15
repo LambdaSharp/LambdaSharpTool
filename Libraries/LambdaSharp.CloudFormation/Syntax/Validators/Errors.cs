@@ -20,11 +20,18 @@ using LambdaSharp.CloudFormation.Reporting;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
+    internal static class Warnings {
+
+        //--- Class Methods ---
+        public static IReportEntry MappingIsNeverUsed(string name, SourceLocation location) => ReportEntry.Warning($"mapping '{name}' is never used", location);
+    }
+
     internal static class Errors {
 
         //--- Class Methods ---
         public static IReportEntry NameMustBeAlphanumeric(SourceLocation location) => ReportEntry.Error("name must be alphanumeric", location);
         public static IReportEntry CannotUseReservedName(string name, SourceLocation location) => ReportEntry.Error($"cannot use reserved name '{name}'", location);
+        public static IReportEntry NameIsTooLong(int limit, SourceLocation location) => ReportEntry.Error($"name is too long (limit: {limit:N0})", location);
         public static IReportEntry ExpectedStringValue(SourceLocation location) => ReportEntry.Error("must be a string value", location);
         public static IReportEntry TemplateDescriptionTooLong(int maxDescriptionLength, SourceLocation location) => ReportEntry.Error($"template description cannot exceed {maxDescriptionLength:N0} bytes", location);
         public static IReportEntry TemplateVersionIsNotValid(string expectedVersion, SourceLocation location) => ReportEntry.Error($"template version is not valid (expected: {expectedVersion})", location);
@@ -59,6 +66,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         public static IReportEntry MappingLevel2KeyMissing(SourceLocation location) => ReportEntry.Error("level 2 key missing for mapping", location);
         public static IReportEntry MappingLevel2ValueExpectedLiteral(SourceLocation location) => ReportEntry.Error("level 2 value must be a literal", location);
         public static IReportEntry MappingLevel2KeyMissing(string name, SourceLocation location) => ReportEntry.Error($"level 2 key '{name}' is missing", location);
+        public static IReportEntry MappingTooManyDeclarations(int limit, SourceLocation location) => ReportEntry.Error($"too many mapping declarations (limit: {limit:N0})", location);
         #endregion
 
         #region Parameter Declaration

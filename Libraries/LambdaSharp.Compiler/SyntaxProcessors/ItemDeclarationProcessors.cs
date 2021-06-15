@@ -55,12 +55,12 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
             // local functions
             void ValidateItemDeclaration(AItemDeclaration declaration) {
-                if(!CloudFormationValidationRules.IsValidCloudFormationName(declaration.ItemName.Value)) {
+                if(!CloudFormationRules.IsValidCloudFormationName(declaration.ItemName.Value)) {
 
                     // declaration name is not valid
                     Logger.Log(NameMustBeAlphanumeric, declaration);
                 } else if(
-                    CloudFormationValidationRules.IsReservedCloudFormationName(declaration.FullName)
+                    CloudFormationRules.IsReservedCloudFormationName(declaration.FullName)
                     && !(declaration is PseudoParameterDeclaration)
                 ) {
 

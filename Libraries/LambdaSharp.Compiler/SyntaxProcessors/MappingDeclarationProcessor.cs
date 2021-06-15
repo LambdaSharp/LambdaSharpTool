@@ -43,7 +43,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
 
                         // validate top-level key
 
-                        if(!CloudFormationValidationRules.IsValidCloudFormationName(topLevelEntry.Key.Value)) {
+                        if(!CloudFormationRules.IsValidCloudFormationName(topLevelEntry.Key.Value)) {
                             Logger.Log(Error.MappingKeyMustBeAlphanumeric, topLevelEntry.Key);
                         }
                         if(!topLevelKeys.Add(topLevelEntry.Key.Value)) {
@@ -59,7 +59,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
                                 foreach(var secondLevelEntry in secondLevelObjectExpression) {
 
                                     // validate top-level key
-                                    if(!CloudFormationValidationRules.IsValidCloudFormationName(secondLevelEntry.Key.Value)) {
+                                    if(!CloudFormationRules.IsValidCloudFormationName(secondLevelEntry.Key.Value)) {
                                         Logger.Log(Error.MappingKeyMustBeAlphanumeric, secondLevelEntry.Key);
                                     }
                                     if(!secondLevelKeys.Add(secondLevelEntry.Key.Value)) {

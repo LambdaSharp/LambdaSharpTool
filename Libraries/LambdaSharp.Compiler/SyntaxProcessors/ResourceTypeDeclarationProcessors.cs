@@ -77,7 +77,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             if(resourceTypeNameParts.Length == 1) {
                 Logger.Log(Error.ResourceTypeNameInvalidFormat, node.ItemName);
             }
-            if(CloudFormationValidationRules.IsReservedCloudFormationName(resourceTypeNameParts[0])) {
+            if(CloudFormationRules.IsReservedCloudFormationName(resourceTypeNameParts[0])) {
                 Logger.Log(Error.ResourceTypeNameReservedPrefix(resourceTypeNameParts[0]), node.ItemName);
             }
 
@@ -86,7 +86,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             var properties = new List<ModuleManifestResourceProperty>();
             if(node.Properties.Any()) {
                 foreach(var property in node.Properties) {
-                    if(!CloudFormationValidationRules.IsValidCloudFormationName(property.Name.Value)) {
+                    if(!CloudFormationRules.IsValidCloudFormationName(property.Name.Value)) {
                         Logger.Log(Error.ResourceTypePropertyNameMustBeAlphanumeric, property);
                     }
                     if(property.Type == null) {
@@ -119,7 +119,7 @@ namespace LambdaSharp.Compiler.SyntaxProcessors {
             var attributes = new List<ModuleManifestResourceAttribute>();
             if(node.Attributes.Any()) {
                 foreach(var attribute in node.Attributes) {
-                    if(!CloudFormationValidationRules.IsValidCloudFormationName(attribute.Name.Value)) {
+                    if(!CloudFormationRules.IsValidCloudFormationName(attribute.Name.Value)) {
                         Logger.Log(Error.ResourceTypeAttributeNameMustBeAlphanumeric, attribute);
                     }
                     if(attribute.Type == null) {

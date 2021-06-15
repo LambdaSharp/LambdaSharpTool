@@ -35,7 +35,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
         }
 
         //--- Constructors ---
-        public SyntaxTreeIntegrityProcessor(SyntaxProcessorState state, ISyntaxProcessorDependencyProvider provider) : base(state, provider) { }
+        public SyntaxTreeIntegrityProcessor(SyntaxProcessorState state) : base(state) { }
 
         //--- Methods ---
         public void ValidateIntegrity(CloudFormationSyntaxTemplate template) {

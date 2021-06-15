@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using LambdaSharp.CloudFormation.Reporting;
 
 namespace LambdaSharp.CloudFormation.Syntax.Validators {
@@ -37,6 +38,10 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
 
             //--- Properties ---
             public IReport Report { get; }
+            public IEnumerable<IReportEntry> ReportEntries => Report.Entries;
+
+            //--- Methods ---
+            public void AddReportEntry(IReportEntry entry) => Report.Add(entry);
         }
 
         //--- Fields ---
@@ -51,14 +56,14 @@ namespace LambdaSharp.CloudFormation.Syntax.Validators {
             if(template is null) {
                 throw new ArgumentNullException(nameof(template));
             }
-            var state = new SyntaxProcessorState(template);
             var provider = new DependencyProvider(_report);
+            var state = new SyntaxProcessorState(provider, template);
 
             // validate structure
-            new SyntaxTreeIntegrityProcessor(state, provider).ValidateIntegrity(template);
+            new SyntaxTreeIntegrityProcessor(state).ValidateIntegrity(template);
 
             // validate template declarations
-            new TemplateDeclarationsValidator(state, provider).ValidateDeclarationsAndReferences(template);
+            new TemplateDeclarationsValidator(state).ValidateDeclarationsAndReferences(template);
         }
     }
 }
