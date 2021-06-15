@@ -108,7 +108,8 @@ namespace LambdaSharp.Core.RollbarApi {
 
         //--- Class Fields ---
         private static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions {
-            IgnoreNullValues = true
+            IgnoreNullValues = true,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
 
         //--- Class Methods ---
