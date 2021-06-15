@@ -143,9 +143,11 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.3.2) - TBD
 
-#### Features
-
 #### Fixes
+
+* Modules
+  * _LambdaSharp.Core_
+    * Fixed a regression in parsing project information from the Rollbar API.
 
 
 ### (v0.8.3.1) - 2021-05-28
