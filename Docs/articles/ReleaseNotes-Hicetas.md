@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.2.4) - 2021-04-30
+# LambdaSharp "Hicetas" Release (v0.8.2.5) - 2021-06-16
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -138,8 +138,15 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 ### Fixes
 * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
 
-
 ## Releases
+
+### (v0.8.2.5) - 2021-06-16
+
+### Fixes
+
+* Modules
+  * _LambdaSharp.Core_
+    * Fixed a regression in parsing project information from the Rollbar API.
 
 ### (v0.8.2.4) - 2021-04-30
 
