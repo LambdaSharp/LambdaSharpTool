@@ -235,11 +235,16 @@ namespace LambdaSharp.Tool {
                         return (Origin: bucketName, Version: null, Manifest: null);
                     }
 
-                    // NOTE (2019-08-12, bjorg): if the module is nested, we filter the list of found versions to
+                    // NOTE (2019-08-12, bjorg): if the module is nested or root, we filter the list of found versions to
                     //  only contain versions that meet the module version constraint; for shared modules, we want to
                     //  keep the latest version that is compatible with the tool and is equal-or-greater than the
                     //  module version constraint.
-                    if((dependencyType == ModuleManifestDependencyType.Nested) && (moduleInfo.Version != null)) {
+                    if(
+                        (
+                            (dependencyType == ModuleManifestDependencyType.Root)
+                            || (dependencyType == ModuleManifestDependencyType.Nested)
+                        ) && (moduleInfo.Version != null)
+                    ) {
                         found = found.Where(version => {
                             if(!version.MatchesConstraint(moduleInfo.Version)) {
                                 LogInfoVerbose($"... rejected v{version}: does not match version constraint {moduleInfo.Version}");
