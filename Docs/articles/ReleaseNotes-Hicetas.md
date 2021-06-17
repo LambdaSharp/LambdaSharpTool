@@ -145,6 +145,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Fixes
 
+* CLI
+  * Fixed an issue where `init` would not respect the `--version` argument for selecting the _LambdaSharp.Core_ module to deploy.
+
 * Modules
   * _LambdaSharp.Core_
     * Fixed a regression in parsing project information from the Rollbar API.
