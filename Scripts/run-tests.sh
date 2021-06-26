@@ -9,7 +9,7 @@ VERSION_PREFIX="1.0.0"
 if [ -z "$1" ]; then
 
     # run all unit tests
-    for i in `find $LAMBDASHARP/ -name Tests.*.csproj`; do
+    for i in `find $LAMBDASHARP/ -name Tests.*.csproj -or Test.*.csproj`; do
         pushd $(dirname $(realpath $i)) > /dev/null 2>&1
         dotnet test --configuration Release
         popd > /dev/null 2>&1
