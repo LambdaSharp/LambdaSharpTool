@@ -1,0 +1,75 @@
+/*
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2021
+ * lambdasharp.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+using LambdaSharp.DynamoToolkit.Operations;
+
+namespace LambdaSharp.DynamoToolkit {
+
+    public interface IDynamoTable {
+
+        //--- Methods ---
+        IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistenRead = false)
+            where TRecord : class;
+        IDynamoTablePutItem<TRecord> PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
+            where TRecord : class;
+        IDynamoTableUpdateItem<TRecord> UpdateItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
+            where TRecord : class;
+        IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
+            where TRecord : class;
+        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoPrimaryKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+            where TRecord : class;
+        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoGlobalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+            where TRecord : class;
+        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+            where TRecord : class;
+        IDynamoTableQuerySortKeyCondition QueryUntyped(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
+        IDynamoTableQuerySortKeyCondition QueryUntyped(ADynamoSecondaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
+    }
+
+    public static class IDynamoTableEx {
+
+        //--- Extension Methods ---
+        public static Task<TRecord?> GetItemAsync<TRecord>(this IDynamoTable table, DynamoPrimaryKey<TRecord> primaryKey, bool consistenRead = false, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => table.GetItem(primaryKey, consistenRead).ExecuteAsync(cancellationToken);
+
+        public static Task<bool> PutItemAsync<TRecord>(this IDynamoTable table, TRecord record, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => table.PutItem(record, primaryKey).ExecuteAsync(cancellationToken);
+
+        public static Task<bool> DeleteItemAsync<TRecord>(this IDynamoTable table, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => table.DeleteItem(primaryKey).ExecuteAsync(cancellationToken);
+
+        public static Task<TRecord?> DeleteAndReturnItemAsync<TRecord>(this IDynamoTable table, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => table.DeleteItem(primaryKey).ExecuteReturnOldItemAsync(cancellationToken);
+    }
+
+    public interface IDynamoTableBatchGetItem<TRecord> {
+
+        //--- Methods ---
+        IDynamoTableBatchGetItem<TRecord> GetAttribute<T>(Expression<Func<TRecord, T>> attribute);
+        Task<IEnumerable<TRecord>> ExecuteAsync(CancellationToken cancellationToken = default);
+    }
+}

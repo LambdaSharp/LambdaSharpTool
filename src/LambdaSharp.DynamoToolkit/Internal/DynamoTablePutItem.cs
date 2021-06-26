@@ -1,0 +1,85 @@
+/*
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2021
+ * lambdasharp.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Globalization;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
+using LambdaSharp.DynamoToolkit.Operations;
+
+namespace LambdaSharp.DynamoToolkit.Internal {
+
+    internal sealed class DynamoTablePutItem<TRecord> : IDynamoTablePutItem<TRecord>
+        where TRecord : class
+    {
+
+        //--- Fields ---
+        private readonly DynamoTable _table;
+        private readonly PutItemRequest _request;
+        private readonly DynamoRequestConverter _converter;
+
+        //--- Constructors ---
+        public DynamoTablePutItem(DynamoTable table, PutItemRequest request) {
+            _table = table ?? throw new ArgumentNullException(nameof(table));
+            _request = request ?? throw new ArgumentNullException(nameof(request));
+            _converter = new DynamoRequestConverter(_request.ExpressionAttributeNames, _request.ExpressionAttributeValues, _table.SerializerOptions);
+        }
+
+        //--- Methods ---
+        public IDynamoTablePutItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition) {
+            _converter.AddCondition(condition.Body);
+            return this;
+        }
+
+        public async Task<bool> ExecuteAsync(CancellationToken cancellationToken) {
+            PrepareRequest();
+            try {
+                await _table.DynamoClient.PutItemAsync(_request);
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
+
+        public async Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken) {
+            PrepareRequest();
+            _request.ReturnValues = ReturnValue.ALL_OLD;
+            try {
+                var response = await _table.DynamoClient.PutItemAsync(_request);
+                return _table.DeserializeItem<TRecord>(response.Attributes);
+            } catch(ConditionalCheckFailedException) {
+                return default(TRecord);
+            }
+        }
+
+        private void PrepareRequest() {
+            _request.ConditionExpression = _converter.ConvertConditions();
+
+            // add type details
+            _request.Item["_t"] = new AttributeValue(typeof(TRecord).FullName);
+
+            // add modified details
+            _request.Item["_m"] = new AttributeValue {
+                N = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)
+            };
+        }
+    }
+}
