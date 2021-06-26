@@ -16,8 +16,8 @@
     <PackageId>LambdaSharp.DynamoDB.Native</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
-    <Title>LambdaSharp (λ#) DynamoDB.Native</Title>
-    <Description>Serverless .NET for AWS - DynamoDB.Native Library</Description>
+    <Title>LambdaSharp (λ#) DynamoDB Native</Title>
+    <Description>Serverless .NET for AWS - DynamoDB Native Library</Description>
     <Company>LambdaSharp</Company>
     <Copyright>Copyright (C) 2018-2021</Copyright>
     <Authors>Bjorg</Authors>
