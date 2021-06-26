@@ -8,10 +8,10 @@
 > TODO: Add link to serialization readme
 > TODO: Look for all `/*` comments to see if they should be pulled into the readme
 > TODO: Better name for `QueryAnyType()`?
-> TODO: Rename `LambdaSharp.DynamoToolkit`
+> TODO: Rename `LambdaSharp.DynamoDB.Native`
 > TODO: test if a `HashSet<string>` property could always be initialized to an empty site and round-tripped; it would make logic much simpler!
 
-# LambdaSharp.DynamoToolkit
+# LambdaSharp.DynamoDB.Native
 
 ## Data Mapping
 

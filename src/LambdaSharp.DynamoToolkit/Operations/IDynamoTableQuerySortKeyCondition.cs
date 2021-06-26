@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.DynamoToolkit.Operations {
+namespace LambdaSharp.DynamoDB.Native.Operations {
 
     /*
      * KEY EXPRESSION OPERATORS AND FUNCTIONS

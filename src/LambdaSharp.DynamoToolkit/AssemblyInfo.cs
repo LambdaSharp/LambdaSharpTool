@@ -18,4 +18,4 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Test.LambdaSharp.DynamoToolkit")]
+[assembly: InternalsVisibleTo("Test.LambdaSharp.DynamoDB.Native")]

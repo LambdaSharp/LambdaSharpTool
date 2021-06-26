@@ -18,7 +18,9 @@
 
 using System;
 
-namespace LambdaSharp.DynamoToolkit {
+// TODO: split and rename file
+
+namespace LambdaSharp.DynamoDB.Native {
 
     public class DynamoKey {
 

@@ -23,10 +23,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoToolkit.Operations;
+using LambdaSharp.DynamoDB.Native.Operations;
 using LambdaSharp.DynamoDB.Serialization;
 
-namespace LambdaSharp.DynamoToolkit.Internal {
+namespace LambdaSharp.DynamoDB.Native.Internal {
 
     internal sealed class DynamoTableDeleteItem<TRecord> : IDynamoTableDeleteItem<TRecord>
         where TRecord : class

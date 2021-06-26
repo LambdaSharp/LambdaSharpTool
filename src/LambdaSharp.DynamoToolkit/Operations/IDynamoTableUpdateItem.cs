@@ -22,7 +22,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LambdaSharp.DynamoToolkit.Operations {
+namespace LambdaSharp.DynamoDB.Native.Operations {
 
     public interface IDynamoTableUpdateItem<TRecord> where TRecord : class {
 

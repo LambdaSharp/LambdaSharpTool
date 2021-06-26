@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Deterministic>true</Deterministic>
-    <RootNamespace>LambdaSharp.DynamoToolkit</RootNamespace>
+    <RootNamespace>LambdaSharp.DynamoDB.Native</RootNamespace>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
 
@@ -13,11 +13,11 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
 
-    <PackageId>LambdaSharp.DynamoToolkit</PackageId>
+    <PackageId>LambdaSharp.DynamoDB.Native</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
-    <Title>LambdaSharp (λ#) DynamoToolkit</Title>
-    <Description>Serverless .NET for AWS - DynamoToolkit Library</Description>
+    <Title>LambdaSharp (λ#) DynamoDB.Native</Title>
+    <Description>Serverless .NET for AWS - DynamoDB.Native Library</Description>
     <Company>LambdaSharp</Company>
     <Copyright>Copyright (C) 2018-2021</Copyright>
     <Authors>Bjorg</Authors>

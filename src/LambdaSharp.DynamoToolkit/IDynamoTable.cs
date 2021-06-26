@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LambdaSharp.DynamoToolkit.Operations;
+using LambdaSharp.DynamoDB.Native.Operations;
 
-namespace LambdaSharp.DynamoToolkit {
+namespace LambdaSharp.DynamoDB.Native {
 
     public interface IDynamoTable {
 

@@ -24,9 +24,9 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoToolkit.Operations;
+using LambdaSharp.DynamoDB.Native.Operations;
 
-namespace LambdaSharp.DynamoToolkit.Internal {
+namespace LambdaSharp.DynamoDB.Native.Internal {
 
     internal sealed class DynamoTableQuery<TRecord> : IDynamoTableQuerySortKeyCondition<TRecord>, IDynamoTableQuery<TRecord>
         where TRecord : class

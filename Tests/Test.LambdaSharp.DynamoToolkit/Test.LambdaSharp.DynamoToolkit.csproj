@@ -17,7 +17,7 @@
     <PackageReference Include="FluentAssertions" Version="5.10.3"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/LambdaSharp.DynamoToolkit/LambdaSharp.DynamoToolkit.csproj"/>
+    <ProjectReference Include="../../src/LambdaSharp.DynamoDB.Native/LambdaSharp.DynamoDB.Native.csproj"/>
     <ProjectReference Include="../../src/LambdaSharp.DynamoDB.Serialization/LambdaSharp.DynamoDB.Serialization.csproj"/>
   </ItemGroup>
 </Project>

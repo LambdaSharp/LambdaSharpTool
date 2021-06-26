@@ -24,9 +24,9 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
-using LambdaSharp.DynamoToolkit.Internal;
+using LambdaSharp.DynamoDB.Native.Internal;
 
-namespace LambdaSharp.DynamoToolkit.Logger {
+namespace LambdaSharp.DynamoDB.Native.Logger {
 
     public class LoggingDynamoDbClient : IAmazonDynamoDB {
 

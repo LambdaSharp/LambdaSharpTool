@@ -20,7 +20,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using FluentAssertions;
-using LambdaSharp.DynamoToolkit.Internal;
+using LambdaSharp.DynamoDB.Native.Internal;
 using Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests.Model;
 using Xunit;
 using Xunit.Abstractions;

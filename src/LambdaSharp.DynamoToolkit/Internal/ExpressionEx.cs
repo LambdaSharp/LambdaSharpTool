@@ -20,7 +20,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace LambdaSharp.DynamoToolkit.Internal {
+namespace LambdaSharp.DynamoDB.Native.Internal {
 
     internal static class ExpressionEx {
 

@@ -21,10 +21,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoToolkit.Operations;
+using LambdaSharp.DynamoDB.Native.Operations;
 using LambdaSharp.DynamoDB.Serialization;
 
-namespace LambdaSharp.DynamoToolkit.Internal {
+namespace LambdaSharp.DynamoDB.Native.Internal {
 
     internal sealed class DynamoTableGetItem<TRecord> : IDynamoTableGetItem<TRecord>
         where TRecord : class

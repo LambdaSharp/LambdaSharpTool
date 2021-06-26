@@ -25,7 +25,7 @@ using System.Linq.Expressions;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.DynamoDB.Serialization;
 
-namespace LambdaSharp.DynamoToolkit.Internal {
+namespace LambdaSharp.DynamoDB.Native.Internal {
 
     internal partial class DynamoRequestConverter {
 

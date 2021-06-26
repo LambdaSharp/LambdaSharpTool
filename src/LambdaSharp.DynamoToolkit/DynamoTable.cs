@@ -21,11 +21,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoToolkit.Internal;
-using LambdaSharp.DynamoToolkit.Operations;
+using LambdaSharp.DynamoDB.Native.Internal;
+using LambdaSharp.DynamoDB.Native.Operations;
 using LambdaSharp.DynamoDB.Serialization;
 
-namespace LambdaSharp.DynamoToolkit {
+namespace LambdaSharp.DynamoDB.Native {
 
     public class DynamoTable : IDynamoTable {
 
