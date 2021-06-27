@@ -406,11 +406,31 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
             // local function
             (string, Precedence) ParseBinaryOperands(string op, Precedence precedence, BinaryExpression binaryExpression) {
-                if(!TryParseConditionOperand(binaryExpression.Left, out var leftOperandRender)) {
-                    throw new NotSupportedException($"left value for '{op}' operation must be an operand expression: {binaryExpression.Left}");
+                var left = binaryExpression.Left;
+                var right = binaryExpression.Right;
+
+                // NOTE (2021-06-27, bjorg): special case for enums which are automatically cast to int
+                if(
+                    (binaryExpression.Left is UnaryExpression leftUnaryExpression)
+                    && (leftUnaryExpression.NodeType == ExpressionType.Convert)
+                    && (leftUnaryExpression.Type == typeof(int))
+                    && (binaryExpression.Right is ConstantExpression rightConstantExpresion)
+                    && (rightConstantExpresion.Type == (typeof(int)))
+                ) {
+
+                    // keep the original enum reference
+                    left = leftUnaryExpression.Operand;
+
+                    // convert the right constant expression form int enum value to string enum value
+                    right = Expression.Constant(Enum.GetName(leftUnaryExpression.Operand.Type, rightConstantExpresion.Value));
                 }
-                if(!TryParseConditionOperand(binaryExpression.Right, out var rightOperandRender)) {
-                    throw new NotSupportedException($"right value for '{op}' operation must be an operand expression: {binaryExpression.Right}");
+
+                // try parsing left and right expressions as operands
+                if(!TryParseConditionOperand(left, out var leftOperandRender)) {
+                    throw new NotSupportedException($"left value for '{op}' operation must be an operand expression: {left}");
+                }
+                if(!TryParseConditionOperand(right, out var rightOperandRender)) {
+                    throw new NotSupportedException($"right value for '{op}' operation must be an operand expression: {right}");
                 }
                 return ($"{leftOperandRender} {op} {rightOperandRender}", precedence);
             }

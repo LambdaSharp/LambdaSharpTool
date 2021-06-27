@@ -21,6 +21,10 @@ using System.Collections.Generic;
 
 namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests.Model {
 
+    public enum MyEnum {
+        EnumValue
+    }
+
     public class MyRecord {
 
         //--- Properties ---
@@ -30,6 +34,7 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests.Model {
         public ArrayList ArrayList { get; set; }
         public string[] Array { get; set; }
         public Dictionary<string, MyNestedRecord> Map { get; set; }
+        public MyEnum Enum { get; set; }
     }
 
     public class MyNestedRecord {

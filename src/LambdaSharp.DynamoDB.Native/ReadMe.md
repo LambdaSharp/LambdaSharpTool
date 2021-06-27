@@ -10,6 +10,7 @@
 > TODO: Better name for `QueryAnyType()`?
 > TODO: Rename `LambdaSharp.DynamoDB.Native`
 > TODO: test if a `HashSet<string>` property could always be initialized to an empty site and round-tripped; it would make logic much simpler!
+> TODO: enum type are treated as string!
 
 # LambdaSharp.DynamoDB.Native
 

@@ -449,5 +449,23 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
             converter.ExpressionValues[":v_1"].BS.Count.Should().Be(1);
             converter.ExpressionValues[":v_1"].BS.Should().Contain(item => item.ToArray().SequenceEqual(Encoding.UTF8.GetBytes("Hello")));
         }
+
+        [Fact]
+        public void Enum() {
+
+            // arrange
+            var converter = new DynamoRequestConverter(new(), new(), new());
+
+            // act
+            var expression = LambdaBody(record => MyEnum.EnumValue);
+            var success = converter.TryParseLiteral(expression, out var render);
+
+            // assert
+            success.Should().BeTrue();
+            render.Should().Be($":v_1");
+            converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
+            converter.ExpressionValues[":v_1"].S.Should().NotBeNull();
+            converter.ExpressionValues[":v_1"].S.Should().Be("Hello");
+        }
     }
 }
