@@ -42,6 +42,9 @@ namespace LambdaSharp.DynamoDB.Serialization {
     public static class DynamoSerializer {
 
         //--- Class Methods ---
+        public static AttributeValue Serialize(object? value)
+            => Serialize(value, new DynamoSerializerOptions());
+
         public static AttributeValue Serialize(object? value, DynamoSerializerOptions options) {
 
             // check for types mapped to attribute type 'NULL'
@@ -59,6 +62,10 @@ namespace LambdaSharp.DynamoDB.Serialization {
             }
             return converter.ToAttributeValue(value, typeToConvert, options);
         }
+
+        public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> attributes)
+            where TRecord : class
+            => Deserialize<TRecord>(attributes, new DynamoSerializerOptions());
 
         public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> attributes, DynamoSerializerOptions options)
             where TRecord : class
