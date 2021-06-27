@@ -67,7 +67,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
         //--- IDynamoTableQuery<TRecord> Members ---
         IDynamoTableQuery<TRecord> IDynamoTableQuery<TRecord>.WithFilter(Expression<Func<TRecord, bool>> filter) {
-            _converter.AddCondition(filter);
+            _converter.AddCondition(filter.Body);
             return this;
         }
 
