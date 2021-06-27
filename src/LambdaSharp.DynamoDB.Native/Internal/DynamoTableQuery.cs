@@ -91,38 +91,46 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return this;
         }
 
-        async IAsyncEnumerable<object?> IDynamoTableQuery.ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
+        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes: false);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
+                    object? record;
                     if(
                         item.TryGetValue("_t", out var itemTypeName)
                         && !(itemTypeName.S is null)
                         && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
                     ) {
-                        yield return _table.DeserializeItem(item, itemType ?? typeof(object));
+                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
                     } else {
-                        yield return _table.DeserializeItem(item, typeof(object));
+                        record = _table.DeserializeItem(item, typeof(object));
+                    }
+                    if(!(record is null)) {
+                        yield return record;
                     }
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;
             } while(_request.ExclusiveStartKey.Any());
         }
 
-        async IAsyncEnumerable<object?> IDynamoTableQuery.ExecuteFetchAllAttributesAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
+        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteFetchAllAttributesAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes: true);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
+                    object? record;
                     if(
                         item.TryGetValue("_t", out var itemTypeName)
                         && !(itemTypeName.S is null)
                         && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
                     ) {
-                        yield return _table.DeserializeItem(item, itemType ?? typeof(object));
+                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
                     } else {
-                        yield return _table.DeserializeItem(item, typeof(object));
+                        record = _table.DeserializeItem(item, typeof(object));
+                    }
+                    if(!(record is null)) {
+                        yield return record;
                     }
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;

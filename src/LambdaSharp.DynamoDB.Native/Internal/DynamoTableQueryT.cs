@@ -79,23 +79,29 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return this;
         }
 
-        async IAsyncEnumerable<TRecord?> IDynamoTableQuery<TRecord>.ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
+        async IAsyncEnumerable<TRecord> IDynamoTableQuery<TRecord>.ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes: false);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    yield return _table.DeserializeItem<TRecord>(item);
+                    var record = _table.DeserializeItem<TRecord>(item);
+                    if(!(record is null)) {
+                        yield return record;
+                    }
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;
             } while(_request.ExclusiveStartKey.Any());
         }
 
-        async IAsyncEnumerable<TRecord?> IDynamoTableQuery<TRecord>.ExecuteFetchAllAttributesAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
+        async IAsyncEnumerable<TRecord> IDynamoTableQuery<TRecord>.ExecuteFetchAllAttributesAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes: true);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    yield return _table.DeserializeItem<TRecord>(item);
+                    var record = _table.DeserializeItem<TRecord>(item);
+                    if(!(record is null)) {
+                        yield return record;
+                    }
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;
             } while(_request.ExclusiveStartKey.Any());

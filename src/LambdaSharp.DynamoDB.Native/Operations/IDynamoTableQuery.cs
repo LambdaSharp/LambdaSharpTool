@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
@@ -62,8 +61,10 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableQuery Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class;
         IDynamoTableQuery WithTypeFilter<T>();
         IDynamoTableQuery WithTypeFilter(Type type);
-        IAsyncEnumerable<object?> ExecuteAsync(CancellationToken cancellationToken = default);
-        IAsyncEnumerable<object?> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
+
+        // TODO: IAsyncEnumerable<TRecord?> is technically not an async method
+        IAsyncEnumerable<object> ExecuteAsync(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<object> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
     }
 
     public interface IDynamoTableQuery<TRecord> where TRecord : class {
@@ -71,7 +72,9 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         //--- Methods ---
         IDynamoTableQuery<TRecord> WithFilter(Expression<Func<TRecord, bool>> filter);
         IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
-        IAsyncEnumerable<TRecord?> ExecuteAsync(CancellationToken cancellationToken = default);
-        IAsyncEnumerable<TRecord?> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
+
+        // TODO: IAsyncEnumerable<TRecord?> is technically not an async method
+        IAsyncEnumerable<TRecord> ExecuteAsync(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<TRecord> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
     }
 }
