@@ -42,7 +42,7 @@ namespace LambdaSharp.Serialization {
                 return DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64());
             } else if((reader.TokenType == JsonTokenType.String) && options.NumberHandling.HasFlag(JsonNumberHandling.AllowReadingFromString)) {
                 if(!long.TryParse(reader.GetString(), out var number)) {
-                throw new JsonSerializerException("string value must a number");
+                    throw new JsonSerializerException("string value must a number");
                 }
                 return DateTimeOffset.FromUnixTimeSeconds(number);
             } else {
