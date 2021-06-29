@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using LambdaSharp.DynamoDB.Native;
 
 namespace Sample.DynamoDBNative.DataAccess.Models {
@@ -71,6 +72,7 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
         public string State { get; set; }
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum OrderStatus {
         Undefined,
         Pending,

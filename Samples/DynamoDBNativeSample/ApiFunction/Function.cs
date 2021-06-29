@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using LambdaSharp;
@@ -68,24 +67,30 @@ namespace Sample.DynamoDBNative.ApiFunction {
             return new AddOrUpdateAddressResponse();
         }
 
-        public async Task<ViewCustomerWithMostRecentOrdersResponse> ViewCustomerWithMostRecentOrdersAsync(string customerUsername, int? limit) {
-            var (customer, orders) = await _dataAccessClient.ViewCustomerWithMostRecentOrdersAsync(customerUsername, limit ?? 10);
-            return new ViewCustomerWithMostRecentOrdersResponse {
+        public async Task<GetCustomerWithMostRecentOrdersResponse> GetCustomerWithMostRecentOrdersAsync(string customerUsername, int? limit) {
+            var (customer, orders) = await _dataAccessClient.GetCustomerWithMostRecentOrdersAsync(customerUsername, limit ?? 10);
+            return new GetCustomerWithMostRecentOrdersResponse {
                 Customer = customer,
                 Orders = orders.ToList()
             };
         }
 
-        public async Task SaveOrderAsync() {
-            throw new NotImplementedException();
+        public async Task<SaveOrderResponse> SaveOrderAsync(SaveOrderRequest request) {
+            await _dataAccessClient.SaveOrderAsync(request.Order, request.Items);
+            return new SaveOrderResponse();
         }
 
-        public async Task UpdateOrderAsync() {
-            throw new NotImplementedException();
+        public async Task<UpdateOrderResponse> UpdateOrderAsync(UpdateOrderRequest request) {
+            await _dataAccessClient.UpdateOrderAsync(request.OrderId, request.Status);
+            return new UpdateOrderResponse();
         }
 
-        public async Task ViewOrderWithOrderItemsAsync() {
-            throw new NotImplementedException();
+        public async Task<GetOrderWithOrderItemsResponse> GetOrderWithOrderItemsAsync(string orderId) {
+            var (order, orderItems) = await _dataAccessClient.GetOrderWithOrderItemsAsync(orderId);
+            return new GetOrderWithOrderItemsResponse {
+                Order = order,
+                Items = orderItems.ToList()
+            };
         }
     }
 }

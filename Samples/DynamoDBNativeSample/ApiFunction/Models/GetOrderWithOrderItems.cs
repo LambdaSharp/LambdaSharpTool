@@ -21,10 +21,10 @@ using Sample.DynamoDBNative.DataAccess.Models;
 
 namespace Sample.DynamoDBNative.ApiFunction.Models {
 
-    public class ViewCustomerWithMostRecentOrdersResponse {
+    public class GetOrderWithOrderItemsResponse {
 
         //--- Properties ---
-        public CustomerRecord Customer { get; set; }
-        public List<OrderRecord> Orders { get; set; }
+        public OrderRecord Order { get; set; }
+        public List<OrderItemRecord> Items { get; set; }
     }
 }

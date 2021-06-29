@@ -21,6 +21,25 @@ Items:
   - Function: ApiFunction
     Memory: 1769
     Timeout: 30
+    Sources:
+
+      - Api: POST:/customers
+        Invoke: CreateCustomer
+
+      - Api: PUT:/customers/{customerUsername}/{addressLabel}
+        Invoke: AddOrUpdateAddress
+
+      - Api: GET:/customers/{customerUsername}
+        Invoke: GetCustomerWithMostRecentOrders
+
+      - Api: POST:/orders
+        Invoke: SaveOrder
+
+      - Api: PUT:/orders
+        Invoke: UpdateOrder
+
+      - Api: GET:/orders/{orderId}
+        Invoke: GetOrderWithOrderItems
 
   - Resource: DataTable
     Scope: ApiFunction
@@ -51,15 +70,15 @@ Items:
           KeyType: RANGE
 
       GlobalSecondaryIndexes:
-        IndexName: GSI1
-        KeySchema:
+        - IndexName: GSI1
+          KeySchema:
 
-          - AttributeName: GSI1PK
-            KeyType: HASH
+            - AttributeName: GSI1PK
+              KeyType: HASH
 
-          - AttributeName: GSI1SK
-            KeyType: RANGE
+            - AttributeName: GSI1SK
+              KeyType: RANGE
 
-        Projection:
-          ProjectionType: ALL
+          Projection:
+            ProjectionType: ALL
 

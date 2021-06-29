@@ -28,6 +28,16 @@ namespace Sample.DynamoDBNative.DataAccess {
 
     public class ThriftBooksDataAccessClient : IThriftBooksDataAccess {
 
+        //--- Class Methods ---
+        private static async Task<T> GetSingleItem<T>(IAsyncEnumerable<T> asyncEnumerable) {
+            var result = new List<T>();
+            await foreach(var item in asyncEnumerable) {
+                result.Add(item);
+                break;
+            }
+            return result.Single();
+        }
+
         //--- Constructors ---
         public ThriftBooksDataAccessClient(string tableName, IAmazonDynamoDB dynamoClient = null)
             => Table = new DynamoTable(tableName, dynamoClient);
@@ -63,7 +73,7 @@ namespace Sample.DynamoDBNative.DataAccess {
                 .ExecuteAsync(cancellationToken);
         }
 
-        public async Task<(CustomerRecord Customer, IEnumerable<OrderRecord> Orders)> ViewCustomerWithMostRecentOrdersAsync(string customerUsername, int limit, CancellationToken cancellationToken) {
+        public async Task<(CustomerRecord Customer, IEnumerable<OrderRecord> Orders)> GetCustomerWithMostRecentOrdersAsync(string customerUsername, int limit, CancellationToken cancellationToken) {
             var recordsEnumerable = Table.QueryMixed(new CustomerRecord.PrimaryKey(customerUsername), limit: 11, scanIndexForward: false)
                 .WhereSKMatchesAny()
                 .WithTypeFilter<CustomerRecord>()
@@ -95,13 +105,24 @@ namespace Sample.DynamoDBNative.DataAccess {
             }
         }
 
-        public Task UpdateOrderAsync(OrderRecord order, OrderStatus orderStatus, CancellationToken cancellationToken) {
-            return Table.UpdateItem(new OrderRecord.PrimaryKey(order))
+        public async Task UpdateOrderAsync(string orderId, OrderStatus orderStatus, CancellationToken cancellationToken) {
+
+            // resolve order ID to primary key by querying the global secondary index
+            var gsi1Key = new OrderRecord.GSI1Key(orderId);
+            var order = await GetSingleItem(
+                Table.Query(gsi1Key)
+                    .WhereSKEquals(gsi1Key.SortKeyValue)
+                    .Get(record => record.CustomerUsername)
+                    .ExecuteAsyncEnumerable(cancellationToken)
+            );
+
+            // update order with state
+            await Table.UpdateItem(new OrderRecord.PrimaryKey(order.CustomerUsername, order.OrderId))
                 .Set(record => record.Status, orderStatus)
                 .ExecuteAsync(cancellationToken);
         }
 
-        public async Task<(OrderRecord Order, IEnumerable<OrderItemRecord> Items)> ViewOrderWithOrderItemsAsync(string orderId, CancellationToken cancellationToken) {
+        public async Task<(OrderRecord Order, IEnumerable<OrderItemRecord> Items)> GetOrderWithOrderItemsAsync(string orderId, CancellationToken cancellationToken) {
             var recordsEnumerable = Table.QueryMixed(new OrderRecord.GSI1Key(orderId))
                 .WhereSKMatchesAny()
                 .WithTypeFilter<OrderRecord>()

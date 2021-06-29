@@ -28,9 +28,9 @@ namespace Sample.DynamoDBNative.DataAccess {
         //--- Methods ---
         Task CreateCustomerAsync(CustomerRecord customer, CancellationToken cancellationToken = default);
         Task AddOrUpdateAddressAsync(string customerUsername, AddressRecord address, CancellationToken cancellationToken = default);
-        Task<(CustomerRecord Customer, IEnumerable<OrderRecord> Orders)> ViewCustomerWithMostRecentOrdersAsync(string customerUsername, int limit, CancellationToken cancellationToken = default);
+        Task<(CustomerRecord Customer, IEnumerable<OrderRecord> Orders)> GetCustomerWithMostRecentOrdersAsync(string customerUsername, int limit, CancellationToken cancellationToken = default);
         Task SaveOrderAsync(OrderRecord order, IEnumerable<OrderItemRecord> orderItems, CancellationToken cancellationToken = default);
-        Task UpdateOrderAsync(OrderRecord order, OrderStatus orderStatus, CancellationToken cancellationToken = default);
-        Task<(OrderRecord Order, IEnumerable<OrderItemRecord> Items)> ViewOrderWithOrderItemsAsync(string orderId, CancellationToken cancellationToken = default);
+        Task UpdateOrderAsync(string orderId, OrderStatus orderStatus, CancellationToken cancellationToken = default);
+        Task<(OrderRecord Order, IEnumerable<OrderItemRecord> Items)> GetOrderWithOrderItemsAsync(string orderId, CancellationToken cancellationToken = default);
     }
 }
