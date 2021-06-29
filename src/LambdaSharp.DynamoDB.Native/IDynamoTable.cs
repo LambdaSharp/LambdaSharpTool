@@ -42,8 +42,8 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class;
         IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
             where TRecord : class;
-        IDynamoTableQuerySortKeyCondition QueryUntyped(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
-        IDynamoTableQuerySortKeyCondition QueryUntyped(ADynamoSecondaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
+        IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
+        IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
     }
 
     public static class IDynamoTableEx {

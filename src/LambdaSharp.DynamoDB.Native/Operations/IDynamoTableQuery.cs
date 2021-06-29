@@ -23,37 +23,6 @@ using System.Threading;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
-    /*
-     * FILTER EXPRESSION OPERATORS AND FUNCTIONS
-     * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.FilterExpression
-     *
-     * filter-expression ::=
-     *     operand comparator operand
-     *     | operand BETWEEN operand AND operand
-     *     | operand IN ( operand (',' operand (, ...) ))
-     *     | function
-     *     | condition AND condition
-     *     | condition OR condition
-     *     | NOT condition
-     *     | ( condition )
-     *
-     * comparator ::=
-     *     =
-     *     | <>
-     *     | <
-     *     | <=
-     *     | >
-     *     | >=
-     *
-     * function ::=
-     *     attribute_exists (path)
-     *     | attribute_not_exists (path)
-     *     | attribute_type (path, type)
-     *     | begins_with (path, substr)
-     *     | contains (path, operand)
-     *     | size (path)
-     */
-
     public interface IDynamoTableQuery {
 
         //--- Methods ---
@@ -61,10 +30,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableQuery Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class;
         IDynamoTableQuery WithTypeFilter<T>();
         IDynamoTableQuery WithTypeFilter(Type type);
-
-        // TODO: IAsyncEnumerable<TRecord?> is technically not an async method
-        IAsyncEnumerable<object> ExecuteAsync(CancellationToken cancellationToken = default);
-        IAsyncEnumerable<object> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<object> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<object> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
     }
 
     public interface IDynamoTableQuery<TRecord> where TRecord : class {
@@ -72,9 +39,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         //--- Methods ---
         IDynamoTableQuery<TRecord> WithFilter(Expression<Func<TRecord, bool>> filter);
         IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
-
-        // TODO: IAsyncEnumerable<TRecord?> is technically not an async method
-        IAsyncEnumerable<TRecord> ExecuteAsync(CancellationToken cancellationToken = default);
-        IAsyncEnumerable<TRecord> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<TRecord> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
     }
 }

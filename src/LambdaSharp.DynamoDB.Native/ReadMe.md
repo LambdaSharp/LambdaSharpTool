@@ -217,6 +217,9 @@ LIST-APPEND ::=
 * CONDITION EXPRESSION OPERATORS AND FUNCTIONS
 * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
 
+* FILTER EXPRESSION OPERATORS AND FUNCTIONS
+* https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.FilterExpression
+
 ```
 CONDITION-EXPRESSION ::=
     CONDITION-OPERAND '=' CONDITION-OPERAND
@@ -253,9 +256,6 @@ ATTRIBUTE-PATH ::=
     |  ATTRIBUTE-PATH '[' int-expression ']'
     |  ATTRIBUTE-PATH '[' string-expression ']'
 ```
-
-
-
 
 
 

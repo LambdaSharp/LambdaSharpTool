@@ -114,7 +114,7 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = _tableName
             }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
 
-        public IDynamoTableQuerySortKeyCondition QueryUntyped(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+        public IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit, bool scanIndexForward = true, bool consistenRead = false)
             => new DynamoTableQuery(this, new QueryRequest {
                 ConsistentRead = consistenRead,
                 Limit = limit,
@@ -122,7 +122,7 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = _tableName
             }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
 
-        public IDynamoTableQuerySortKeyCondition QueryUntyped(ADynamoSecondaryKey partitionKey, int limit, bool scanIndexForward, bool consistenRead)
+        public IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit, bool scanIndexForward, bool consistenRead)
             => new DynamoTableQuery(this, new QueryRequest {
                 ConsistentRead = consistenRead,
                 IndexName = partitionKey.IndexName,

@@ -91,7 +91,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return this;
         }
 
-        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
+        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes: false);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
@@ -114,7 +114,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             } while(_request.ExclusiveStartKey.Any());
         }
 
-        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteFetchAllAttributesAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
+        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteFetchAllAttributesAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes: true);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
