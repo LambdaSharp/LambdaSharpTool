@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Native.Exceptions {
 
@@ -30,14 +31,25 @@ namespace LambdaSharp.DynamoDB.Native.Exceptions {
         protected ADynamoException(string? message, Exception? innerException) : base(message, innerException) { }
     }
 
-    public class DynamoTableMaxAttemptsExceededException : ADynamoException {
+    public class DynamoTableBatchGetItemMaxAttemptsExceededException : ADynamoException {
 
         //--- Constructors ---
-        internal DynamoTableMaxAttemptsExceededException(IEnumerable<object> items)
+        internal DynamoTableBatchGetItemMaxAttemptsExceededException(IEnumerable<object> items)
             : base("max attempts exceeded")
             => Items = items ?? throw new ArgumentNullException(nameof(items));
 
         //--- Properties ---
         public IEnumerable<object> Items { get; }
+    }
+
+    public class DynamoTableBatchWriteItemMaxAttemptsExceededException : ADynamoException {
+
+        //--- Constructors ---
+        internal DynamoTableBatchWriteItemMaxAttemptsExceededException(IEnumerable<WriteRequest> unprocessedItems)
+            : base("max attempts exceeded")
+            => UnprocessedItems = unprocessedItems ?? throw new ArgumentNullException(nameof(unprocessedItems));
+
+        //--- Properties ---
+        public IEnumerable<WriteRequest> UnprocessedItems { get; }
     }
 }

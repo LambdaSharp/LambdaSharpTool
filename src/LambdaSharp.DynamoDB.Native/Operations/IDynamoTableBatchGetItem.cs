@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
+
     public interface IDynamoTableBatchGetItem<TRecord> where TRecord : class {
 
         //--- Methods ---

@@ -166,7 +166,7 @@ namespace LambdaSharp.DynamoDB.Native {
             return attributes;
         }
 
-        public IDynamoTableBatchGetItem<TRecord> BatchGetItem<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
+        public IDynamoTableBatchGetItem<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
             where TRecord : class
         {
             if(!primaryKeys.Any()) {
@@ -189,7 +189,7 @@ namespace LambdaSharp.DynamoDB.Native {
             return new DynamoTableBatchGetItem<TRecord>(this, request);
         }
 
-        public IDynamoTableBatchGetItem BatchGetMixed(bool consistentRead) {
+        public IDynamoTableBatchGetItem BatchGetItemMixed(bool consistentRead) {
             var request = new BatchGetItemRequest {
                 RequestItems = {
                     [_tableName] = new KeysAndAttributes {
@@ -198,6 +198,14 @@ namespace LambdaSharp.DynamoDB.Native {
                 }
             };
             return new DynamoTableBatchGetItem(this, request);
+        }
+
+        public IDynamoTableBatchWriteItem BatchWriteItem() {
+            return new DynamoTableBatchWriteItem(this, new BatchWriteItemRequest {
+                RequestItems = {
+                    [_tableName] = new List<WriteRequest>()
+                }
+            });
         }
     }
 }

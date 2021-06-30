@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
@@ -28,57 +27,66 @@ using LambdaSharp.DynamoDB.Native.Operations;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal sealed class DynamoTableBatchGetItem<TRecord> : IDynamoTableBatchGetItem<TRecord>
-        where TRecord : class
-    {
+    internal sealed class DynamoTableBatchWriteItem : IDynamoTableBatchWriteItem {
 
         //--- Constants ---
         private const int MILLISECOND_BACKOFF = 100;
 
         //--- Fields ---
         private readonly DynamoTable _table;
-        private readonly BatchGetItemRequest _request;
-        private readonly DynamoRequestConverter _converter;
+        private readonly BatchWriteItemRequest _request;
 
         //--- Constructors ---
-        public DynamoTableBatchGetItem(DynamoTable table, BatchGetItemRequest request) {
+        public DynamoTableBatchWriteItem(DynamoTable table, BatchWriteItemRequest request) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
-            _converter = new DynamoRequestConverter(request.RequestItems.Single().Value.ExpressionAttributeNames, _table.SerializerOptions);
         }
 
         //--- Methods ---
-        public IDynamoTableBatchGetItem<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute) {
-            _converter.AddProjection(attribute.Body);
+        public IDynamoTableBatchWriteItem AddPutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys) where TRecord : class {
+            _request.RequestItems.First().Value.Add(new WriteRequest {
+                PutRequest = new PutRequest {
+                    Item = _table.SerializeItem(record, primaryKey, secondaryKeys)
+                }
+            });
             return this;
         }
 
-        public async Task<IEnumerable<TRecord>> ExecuteAsync(int maxAttempts, CancellationToken cancellationToken = default) {
-            var requestTableAndKeys = _request.RequestItems.First();
-            requestTableAndKeys.Value.ProjectionExpression = _converter.ConvertProjections();
+        public IDynamoTableBatchWriteItem AddDeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey) where TRecord : class {
+            _request.RequestItems.First().Value.Add(new WriteRequest {
+                DeleteRequest = new DeleteRequest {
+                    Key = new Dictionary<string, AttributeValue> {
+                        [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
+                        [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                    }
+                }
+            });
+            return this;
+        }
+
+        public async Task ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default) {
+            var requestTableItems = _request.RequestItems.First();
+            if(!requestTableItems.Value.Any()) {
+                throw new ArgumentException("primary keys cannot be empty");
+            }
+            if(requestTableItems.Value.Count() > 100) {
+                throw new ArgumentException("too many primary keys");
+            }
 
             // NOTE (2021-06-30, bjorg): batch operations may run out of capacity/bandwidth and may have to be completed in batches themselves
-            var result = new List<TRecord>();
             var attempts = 1;
             do {
                 try {
-                    var response = await _table.DynamoClient.BatchGetItemAsync(_request, cancellationToken);
-                    if(response.Responses.Any()) {
-                        foreach(var item in response.Responses.Single().Value) {
-                            var record = _table.DeserializeItem<TRecord>(item);
-                            if(!(record is null)) {
-                                result.Add(record);
-                            }
-                        }
-                    }
+                    var response = await _table.DynamoClient.BatchWriteItemAsync(_request, cancellationToken);
 
                     // check if all requested primary keys were processed
-                    if(!response.UnprocessedKeys.Any()) {
+                    if(!response.UnprocessedItems.Any()) {
                         break;
                     }
 
                     // repeat request with unprocessed primary keys
-                    requestTableAndKeys.Value.Keys = response.UnprocessedKeys.First().Value.Keys;
+                    requestTableItems.Value.Clear();
+                    requestTableItems.Value.AddRange(response.UnprocessedItems.Single().Value);
                 } catch(ProvisionedThroughputExceededException) {
 
                     // NOTE (2021-06-30, bjorg): not a single item could be returned due to insufficient read capacity
@@ -86,11 +94,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
                 // use exponential backoff before attempting next operation
                 if(attempts >= maxAttempts) {
-                    throw new DynamoTableBatchGetItemMaxAttemptsExceededException(result);
+                    throw new DynamoTableBatchWriteItemMaxAttemptsExceededException(requestTableItems.Value);
                 }
                 await Task.Delay(TimeSpan.FromMilliseconds(MILLISECOND_BACKOFF << (attempts++ - 1)));
             } while(true);
-            return result;
         }
     }
 }
