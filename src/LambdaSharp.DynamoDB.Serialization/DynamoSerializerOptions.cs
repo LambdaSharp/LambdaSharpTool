@@ -43,6 +43,7 @@ namespace LambdaSharp.DynamoDB.Serialization {
             DynamoISetDecimalConverter.Instance,
             DynamoIDictionarySetConverter.Instance,
             DynamoListConverter.Instance,
+            DynamoJsonElementConverter.Instance,
             DynamoObjectConverter.Instance
         };
 
