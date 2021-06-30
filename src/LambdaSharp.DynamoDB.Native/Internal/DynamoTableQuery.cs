@@ -20,9 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.DynamoDB.Native.Operations;
@@ -135,6 +135,56 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;
             } while(_request.ExclusiveStartKey.Any());
+        }
+
+        async Task<IEnumerable<object>> IDynamoTableQuery.ExecuteAsync(CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes: false);
+            var result = new List<object>();
+            do {
+                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                foreach(var item in response.Items) {
+                    object? record;
+                    if(
+                        item.TryGetValue("_t", out var itemTypeName)
+                        && !(itemTypeName.S is null)
+                        && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
+                    ) {
+                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
+                    } else {
+                        record = _table.DeserializeItem(item, typeof(object));
+                    }
+                    if(!(record is null)) {
+                        result.Add(record);
+                    }
+                }
+                _request.ExclusiveStartKey = response.LastEvaluatedKey;
+            } while(_request.ExclusiveStartKey.Any());
+            return result;
+        }
+
+        async Task<IEnumerable<object>> IDynamoTableQuery.ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes: true);
+            var result = new List<object>();
+            do {
+                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                foreach(var item in response.Items) {
+                    object? record;
+                    if(
+                        item.TryGetValue("_t", out var itemTypeName)
+                        && !(itemTypeName.S is null)
+                        && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
+                    ) {
+                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
+                    } else {
+                        record = _table.DeserializeItem(item, typeof(object));
+                    }
+                    if(!(record is null)) {
+                        result.Add(record);
+                    }
+                }
+                _request.ExclusiveStartKey = response.LastEvaluatedKey;
+            } while(_request.ExclusiveStartKey.Any());
+            return result;
         }
 
         //--- IDynamoTableQuerySortKeyCondition Members ---

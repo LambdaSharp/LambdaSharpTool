@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
@@ -32,6 +33,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableQuery WithTypeFilter(Type type);
         IAsyncEnumerable<object> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
         IAsyncEnumerable<object> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
+        Task<IEnumerable<object>> ExecuteAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<object>> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
     }
 
     public interface IDynamoTableQuery<TRecord> where TRecord : class {
@@ -41,5 +44,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
         IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
         IAsyncEnumerable<TRecord> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
+        Task<IEnumerable<TRecord>> ExecuteAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<TRecord>> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
     }
 }

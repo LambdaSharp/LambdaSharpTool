@@ -22,6 +22,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.DynamoDB.Native.Operations;
@@ -105,6 +106,38 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;
             } while(_request.ExclusiveStartKey.Any());
+        }
+
+        async Task<IEnumerable<TRecord>> IDynamoTableQuery<TRecord>.ExecuteAsync(CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes: false);
+            var result = new List<TRecord>();
+            do {
+                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                foreach(var item in response.Items) {
+                    var record = _table.DeserializeItem<TRecord>(item);
+                    if(!(record is null)) {
+                        result.Add(record);
+                    }
+                }
+                _request.ExclusiveStartKey = response.LastEvaluatedKey;
+            } while(_request.ExclusiveStartKey.Any());
+            return result;
+        }
+
+        async Task<IEnumerable<TRecord>> IDynamoTableQuery<TRecord>.ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes: true);
+            var result = new List<TRecord>();
+            do {
+                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                foreach(var item in response.Items) {
+                    var record = _table.DeserializeItem<TRecord>(item);
+                    if(!(record is null)) {
+                        result.Add(record);
+                    }
+                }
+                _request.ExclusiveStartKey = response.LastEvaluatedKey;
+            } while(_request.ExclusiveStartKey.Any());
+            return result;
         }
 
         //--- IDynamoTableQuerySortKeyCondition<TRecord> Members ---
