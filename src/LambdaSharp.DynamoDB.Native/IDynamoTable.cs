@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,6 +53,20 @@ namespace LambdaSharp.DynamoDB.Native {
         public static Task<TRecord?> GetItemAsync<TRecord>(this IDynamoTable table, DynamoPrimaryKey<TRecord> primaryKey, bool consistenRead = false, CancellationToken cancellationToken = default)
             where TRecord : class
             => table.GetItem(primaryKey, consistenRead).ExecuteAsync(cancellationToken);
+
+        public static async Task<TRecord?> GetItemAsync<TRecord>(this IDynamoTable table, DynamoLocalIndexKey<TRecord> secondaryKey, bool consistenRead = false, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => (await table.Query(secondaryKey, limit: 1, consistenRead: consistenRead)
+                .WhereSKEquals(secondaryKey.SortKeyValue)
+                .ExecuteAsync(cancellationToken)
+            ).FirstOrDefault();
+
+        public static async Task<TRecord?> GetItemAsync<TRecord>(this IDynamoTable table, DynamoGlobalIndexKey<TRecord> secondaryKey, bool consistenRead = false, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => (await table.Query(secondaryKey, limit: 1, consistenRead: consistenRead)
+                .WhereSKEquals(secondaryKey.SortKeyValue)
+                .ExecuteAsync(cancellationToken)
+            ).FirstOrDefault();
 
         public static Task<bool> PutItemAsync<TRecord>(this IDynamoTable table, TRecord record, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
             where TRecord : class
