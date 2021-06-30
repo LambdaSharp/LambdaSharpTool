@@ -69,7 +69,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             if(!requestTableItems.Value.Any()) {
                 throw new ArgumentException("primary keys cannot be empty");
             }
-            if(requestTableItems.Value.Count() > 100) {
+            if(requestTableItems.Value.Count() > 25) {
                 throw new ArgumentException("too many primary keys");
             }
 
