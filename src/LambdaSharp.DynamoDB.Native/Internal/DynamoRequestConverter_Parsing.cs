@@ -413,16 +413,24 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 if(
                     (binaryExpression.Left is UnaryExpression leftUnaryExpression)
                     && (leftUnaryExpression.NodeType == ExpressionType.Convert)
+                    && leftUnaryExpression.Operand.Type.IsEnum
                     && (leftUnaryExpression.Type == typeof(int))
-                    && (binaryExpression.Right is ConstantExpression rightConstantExpresion)
-                    && (rightConstantExpresion.Type == (typeof(int)))
+                    && (binaryExpression.Right.Type == typeof(int))
                 ) {
 
                     // keep the original enum reference
                     left = leftUnaryExpression.Operand;
 
-                    // convert the right constant expression form int enum value to string enum value
-                    right = Expression.Constant(Enum.GetName(leftUnaryExpression.Operand.Type, rightConstantExpresion.Value));
+                    // convert the right constant expression from int enum value to string enum value
+                    if(right is ConstantExpression rightConstantExpresion) {
+                        right = Expression.Constant(Enum.GetName(leftUnaryExpression.Operand.Type, rightConstantExpresion.Value));
+                    } else if(
+                        (right is UnaryExpression rightUnaryExpression)
+                        && (rightUnaryExpression.NodeType == ExpressionType.Convert)
+                    ) {
+                        var rightValue = rightUnaryExpression.Operand.Evaluate() ?? throw new NotSupportedException($"enum value cannot be 'null': {rightUnaryExpression.Operand}");
+                        right = Expression.Constant(Enum.GetName(rightUnaryExpression.Operand.Type, rightValue));
+                    }
                 }
 
                 // try parsing left and right expressions as operands

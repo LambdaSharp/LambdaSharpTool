@@ -53,7 +53,7 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
             render.Should().Be("Enum = :v_1");
             converter.ExpressionAttributes.Should().BeEmpty();
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
-            converter.ExpressionValues[":v_1"].S.Should().Be("Hello");
+            converter.ExpressionValues[":v_1"].S.Should().Be("EnumValue");
         }
 
         [Fact]
@@ -71,7 +71,28 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
             render.Should().Be("Enum <> :v_1");
             converter.ExpressionAttributes.Should().BeEmpty();
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
-            converter.ExpressionValues[":v_1"].S.Should().Be("Hello");
+            converter.ExpressionValues[":v_1"].S.Should().Be("EnumValue");
+        }
+
+        [Fact]
+        public void Enum_equal_closure() {
+
+            // arrange
+            var converter = new DynamoRequestConverter(new(), new(), new());
+
+            // act
+            var rec = new MyRecord {
+                Enum = MyEnum.EnumValue
+            };
+            var expression = LambdaBody(record => record.Enum == rec.Enum);
+            var success = converter.TryParseCondition(expression, out var render, out _);
+
+            // assert
+            success.Should().BeTrue();
+            render.Should().Be("Enum = :v_1");
+            converter.ExpressionAttributes.Should().BeEmpty();
+            converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
+            converter.ExpressionValues[":v_1"].S.Should().Be("EnumValue");
         }
     }
 }
