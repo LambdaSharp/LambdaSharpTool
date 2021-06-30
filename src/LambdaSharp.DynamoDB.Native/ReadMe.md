@@ -1,16 +1,32 @@
 > TODO: move docs to the right place
+
 > TODO: Ability to designated a property to hold the "_m" (modified) date-timestamp
+
 > TODO: Test deserialization of custom type derived from `IList<Foo>`
+
 > TODO: Add `BatchWriteItem` operation
+
 > TODO: Add `ExecuteTransaction` operation
+
 > TODO: Add `BatchGetItem()` operation (can only fetch up to 100 items)
+
 > TODO: Add `Scan()` operation
+
 > TODO: Add link to serialization readme
+
 > TODO: Look for all `/*` comments to see if they should be pulled into the readme
+
 > TODO: Better name for `QueryAnyType()`?
+
 > TODO: Rename `LambdaSharp.DynamoDB.Native`
+
 > TODO: test if a `HashSet<string>` property could always be initialized to an empty site and round-tripped; it would make logic much simpler!
+
 > TODO: enum type are treated as string!
+
+> TODO: test `GetItem<>` when item doesn't exist
+
+> TODO: test `Get(record => record)` to see if it add `PK` and `SK` to the projection
 
 # LambdaSharp.DynamoDB.Native
 

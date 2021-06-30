@@ -28,9 +28,9 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
 
         //--- Methods ---
         IDynamoTableQuery WithFilter<TRecord>(Expression<Func<TRecord, bool>> filter) where TRecord : class;
-        IDynamoTableQuery Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class;
         IDynamoTableQuery WithTypeFilter<T>();
         IDynamoTableQuery WithTypeFilter(Type type);
+        IDynamoTableQuery Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class;
         IAsyncEnumerable<object> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
         IAsyncEnumerable<object> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
         Task<IEnumerable<object>> ExecuteAsync(CancellationToken cancellationToken = default);

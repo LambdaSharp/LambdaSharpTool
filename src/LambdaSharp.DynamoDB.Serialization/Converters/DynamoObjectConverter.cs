@@ -34,6 +34,9 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var mapObject = new Dictionary<string, AttributeValue>();
             foreach(var property in targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)) {
+
+                // TODO: inspect source property for custom converter attribute
+
                 var propertyValue = property.GetValue(value);
                 if(!(propertyValue is null) || !options.IgnoreNullValues) {
                     var attributeValue = DynamoSerializer.Serialize(propertyValue, options);
@@ -54,6 +57,9 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
             var result = Activator.CreateInstance(targetType) ?? throw new ApplicationException("Activator.CreateInstance() returned null");
             foreach(var property in targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)) {
                 if(value.TryGetValue(property.Name, out var attribute)) {
+
+                    // TODO: inspect target property for custom converter attribute
+
                     property.SetValue(result, DynamoSerializer.Deserialize(attribute, property.PropertyType, options));
                 }
             }

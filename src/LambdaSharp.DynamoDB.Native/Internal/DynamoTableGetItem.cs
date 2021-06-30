@@ -22,7 +22,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.DynamoDB.Native.Operations;
-using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
@@ -50,7 +49,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
         public async Task<TRecord?> ExecuteAsync(CancellationToken cancellationToken) {
             _request.ProjectionExpression = _converter.ConvertProjections();
-            var response = await _table.DynamoClient.GetItemAsync(_request);
+            var response = await _table.DynamoClient.GetItemAsync(_request, cancellationToken);
             return _table.DeserializeItem<TRecord>(response.Item);
         }
     }

@@ -57,10 +57,10 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = _tableName
             });
 
-        public IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistenRead = false)
+        public IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class
             => new DynamoTableGetItem<TRecord>(this, new GetItemRequest {
-                ConsistentRead = consistenRead,
+                ConsistentRead = consistentRead,
                 Key = new Dictionary<string, AttributeValue> {
                     [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
                     [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
@@ -85,46 +85,46 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = _tableName
             });
 
-        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoPrimaryKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoPrimaryKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class
             => new DynamoTableQuery<TRecord>(this, new QueryRequest {
-                ConsistentRead = consistenRead,
+                ConsistentRead = consistentRead,
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
                 TableName = _tableName
             }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
 
-        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit, bool scanIndexForward, bool consistenRead)
+        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit, bool scanIndexForward, bool consistentRead)
             where TRecord : class
             => new DynamoTableQuery<TRecord>(this, new QueryRequest {
-                ConsistentRead = consistenRead,
+                ConsistentRead = consistentRead,
                 IndexName = partitionKey.IndexName,
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
                 TableName = _tableName
             }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
 
-        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoGlobalIndexKey<TRecord> partitionKey, int limit, bool scanIndexForward, bool consistenRead)
+        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoGlobalIndexKey<TRecord> partitionKey, int limit, bool scanIndexForward, bool consistentRead)
             where TRecord : class
             => new DynamoTableQuery<TRecord>(this, new QueryRequest {
-                ConsistentRead = consistenRead,
+                ConsistentRead = consistentRead,
                 IndexName = partitionKey.IndexName,
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
                 TableName = _tableName
             }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
 
-        public IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit, bool scanIndexForward = true, bool consistenRead = false)
+        public IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit, bool scanIndexForward = true, bool consistentRead = false)
             => new DynamoTableQuery(this, new QueryRequest {
-                ConsistentRead = consistenRead,
+                ConsistentRead = consistentRead,
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
                 TableName = _tableName
             }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
 
-        public IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit, bool scanIndexForward, bool consistenRead)
+        public IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit, bool scanIndexForward, bool consistentRead)
             => new DynamoTableQuery(this, new QueryRequest {
-                ConsistentRead = consistenRead,
+                ConsistentRead = consistentRead,
                 IndexName = partitionKey.IndexName,
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
@@ -166,5 +166,38 @@ namespace LambdaSharp.DynamoDB.Native {
             return attributes;
         }
 
+        public IDynamoTableBatchGetItem<TRecord> BatchGetItem<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
+            where TRecord : class
+        {
+            if(!primaryKeys.Any()) {
+                throw new ArgumentException("primary keys cannot be empty", nameof(primaryKeys));
+            }
+            if(primaryKeys.Count() > 100) {
+                throw new ArgumentException("too many primary keys", nameof(primaryKeys));
+            }
+            var request = new BatchGetItemRequest {
+                RequestItems = {
+                    [_tableName] = new KeysAndAttributes {
+                        ConsistentRead = consistentRead,
+                        Keys = primaryKeys.Select(primaryKey => new Dictionary<string, AttributeValue> {
+                            [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
+                            [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                        }).ToList()
+                    }
+                }
+            };
+            return new DynamoTableBatchGetItem<TRecord>(this, request);
+        }
+
+        public IDynamoTableBatchGetItem BatchGetMixed(bool consistentRead) {
+            var request = new BatchGetItemRequest {
+                RequestItems = {
+                    [_tableName] = new KeysAndAttributes {
+                        ConsistentRead = consistentRead
+                    }
+                }
+            };
+            return new DynamoTableBatchGetItem(this, request);
+        }
     }
 }

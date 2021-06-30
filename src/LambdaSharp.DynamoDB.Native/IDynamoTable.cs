@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,7 +28,7 @@ namespace LambdaSharp.DynamoDB.Native {
     public interface IDynamoTable {
 
         //--- Methods ---
-        IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistenRead = false)
+        IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
         IDynamoTablePutItem<TRecord> PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
             where TRecord : class;
@@ -37,54 +36,16 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class;
         IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
-        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoPrimaryKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoPrimaryKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class;
-        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoGlobalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoGlobalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class;
-        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false)
+        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class;
-        IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
-        IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistenRead = false);
-    }
-
-    public static class IDynamoTableEx {
-
-        //--- Extension Methods ---
-        public static Task<TRecord?> GetItemAsync<TRecord>(this IDynamoTable table, DynamoPrimaryKey<TRecord> primaryKey, bool consistenRead = false, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => table.GetItem(primaryKey, consistenRead).ExecuteAsync(cancellationToken);
-
-        public static async Task<TRecord?> GetItemAsync<TRecord>(this IDynamoTable table, DynamoLocalIndexKey<TRecord> secondaryKey, bool consistenRead = false, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => (await table.Query(secondaryKey, limit: 1, consistenRead: consistenRead)
-                .WhereSKEquals(secondaryKey.SortKeyValue)
-                .ExecuteAsync(cancellationToken)
-            ).FirstOrDefault();
-
-        public static async Task<TRecord?> GetItemAsync<TRecord>(this IDynamoTable table, DynamoGlobalIndexKey<TRecord> secondaryKey, bool consistenRead = false, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => (await table.Query(secondaryKey, limit: 1, consistenRead: consistenRead)
-                .WhereSKEquals(secondaryKey.SortKeyValue)
-                .ExecuteAsync(cancellationToken)
-            ).FirstOrDefault();
-
-        public static Task<bool> PutItemAsync<TRecord>(this IDynamoTable table, TRecord record, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => table.PutItem(record, primaryKey).ExecuteAsync(cancellationToken);
-
-        public static Task<bool> DeleteItemAsync<TRecord>(this IDynamoTable table, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => table.DeleteItem(primaryKey).ExecuteAsync(cancellationToken);
-
-        public static Task<TRecord?> DeleteAndReturnItemAsync<TRecord>(this IDynamoTable table, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => table.DeleteItem(primaryKey).ExecuteReturnOldItemAsync(cancellationToken);
-    }
-
-    public interface IDynamoTableBatchGetItem<TRecord> {
-
-        //--- Methods ---
-        IDynamoTableBatchGetItem<TRecord> GetAttribute<T>(Expression<Func<TRecord, T>> attribute);
-        Task<IEnumerable<TRecord>> ExecuteAsync(CancellationToken cancellationToken = default);
+        IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
+        IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
+        IDynamoTableBatchGetItem<TRecord> BatchGetItem<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead = false)
+            where TRecord : class;
+        IDynamoTableBatchGetItem BatchGetMixed(bool consistentRead = false);
     }
 }
