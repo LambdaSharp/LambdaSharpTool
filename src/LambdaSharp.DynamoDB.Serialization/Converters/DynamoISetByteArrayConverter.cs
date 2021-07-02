@@ -32,32 +32,37 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         //--- Methods ---
         public override bool CanConvert(Type typeToConvert) => typeof(ISet<byte[]>).IsAssignableFrom(typeToConvert);
 
-        public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
+        public override AttributeValue? ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var binarySet = (ISet<byte[]>)value;
 
-            // NOTE (2021-06-21, bjorg): DynamoDB does not allow storing of empty sets!
-            if(binarySet.Any()) {
-                return new AttributeValue {
+            // NOTE (2021-06-21, bjorg): DynamoDB does not allow storing empty sets!
+            return binarySet.Any()
+                ? new AttributeValue {
                     BS = binarySet.Select(bytes => new MemoryStream(bytes)).ToList()
-                };
-            }
-            throw new DynamoSerializationException("empty binary set is not supported");
+                } : null;
         }
 
+        public override object? GetDefaultValue(Type targetType, DynamoSerializerOptions options)
+            => CreateInstance(targetType);
+
         public override object? FromBinarySet(List<MemoryStream> value, Type targetType, DynamoSerializerOptions options) {
+            var result = CreateInstance(targetType);
+            foreach(var item in value) {
+                result.Add(item.ToArray());
+            }
+            return result;
+        }
+
+        private ISet<byte[]> CreateInstance(Type targetType) {
             if(targetType.IsAssignableFrom(typeof(HashSet<byte[]>))) {
 
                 // return HashSet<byte[]>
-                return value.Select(item => item.ToArray()).ToHashSet(ByteArrayEqualityComparer.Instance);
+                return new HashSet<byte[]>(ByteArrayEqualityComparer.Instance);
             }
             if(!targetType.IsAbstract) {
 
                 // create set instance and add items
-                var result = (ISet<byte[]>)(Activator.CreateInstance(targetType) ?? throw new ApplicationException("Activator.CreateInstance() returned null"));
-                foreach(var item in value) {
-                    result.Add(item.ToArray());
-                }
-                return result;
+                return (ISet<byte[]>)(Activator.CreateInstance(targetType) ?? throw new ApplicationException("Activator.CreateInstance() returned null"));
             }
             throw new DynamoSerializationException($"incompatible target type for BS attribute value (given: {targetType.FullName})");
         }

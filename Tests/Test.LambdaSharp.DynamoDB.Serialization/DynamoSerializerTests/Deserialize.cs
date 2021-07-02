@@ -91,7 +91,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -112,7 +112,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -133,7 +133,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -154,7 +154,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -175,7 +175,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -196,7 +196,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -217,7 +217,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -241,7 +241,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -265,7 +265,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             value.Should().BeOfType<MyType>()
@@ -293,7 +293,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             var which = value.Should().BeOfType<MyType>().Which;
@@ -327,7 +327,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             var which = value.Should().BeOfType<MyType>().Which;
@@ -363,7 +363,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyType));
 
             // assert
             var which = value.Should().BeOfType<MyType>().Which;
@@ -405,7 +405,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var result = DynamoSerializer.Deserialize(attributes, typeof(object), new DynamoSerializerOptions());
+            var result = DynamoSerializer.Deserialize(attributes, typeof(object));
 
             // assert
             var map = result.Should().BeOfType<Dictionary<string, object>>().Subject;
@@ -441,7 +441,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(object), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(object));
 
             // assert
             value.Should().BeNull();
@@ -456,7 +456,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(object), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(object));
 
             // assert
             value.Should().BeOfType<bool>()
@@ -472,7 +472,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(bool), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(bool));
 
             // assert
             value.Should().BeOfType<bool>()
@@ -488,7 +488,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(object), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(object));
 
             // assert
             value.Should().BeOfType<string>()
@@ -504,7 +504,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(string), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(string));
 
             // assert
             value.Should().BeOfType<string>()
@@ -520,7 +520,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(TestEnum), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(TestEnum));
 
             // assert
             value.Should().BeOfType<TestEnum>()
@@ -536,7 +536,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(object), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(object));
 
             // assert
             value.Should().BeOfType<double>()
@@ -552,7 +552,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(int), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(int));
 
             // assert
             value.Should().BeOfType<int>()
@@ -568,7 +568,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(long), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(long));
 
             // assert
             value.Should().BeOfType<long>()
@@ -584,7 +584,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(double), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(double));
 
             // assert
             value.Should().BeOfType<double>()
@@ -600,7 +600,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(decimal), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(decimal));
 
             // assert
             value.Should().BeOfType<decimal>()
@@ -616,7 +616,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(object), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(object));
 
             // assert
             value.Should().BeOfType<byte[]>()
@@ -632,7 +632,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(byte[]), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(byte[]));
 
             // assert
             value.Should().BeOfType<byte[]>()
@@ -658,7 +658,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(object), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(object));
 
             // assert
             var list = value.Should().BeOfType<List<object>>().Subject;
@@ -687,7 +687,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(List<string>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(List<string>));
 
             // assert
             var list = value.Should().BeOfType<List<string>>().Subject;
@@ -712,7 +712,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(List<int>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(List<int>));
 
             // assert
             var list = value.Should().BeOfType<List<int>>().Subject;
@@ -733,7 +733,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<string>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<string>));
 
             // assert
             var hashSet = value.Should().BeOfType<HashSet<string>>().Subject;
@@ -754,7 +754,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<int>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<int>));
 
             // assert
             var hashSet = value.Should().BeOfType<HashSet<int>>().Subject;
@@ -775,7 +775,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<long>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<long>));
 
             // assert
             var hashSet = value.Should().BeOfType<HashSet<long>>().Subject;
@@ -796,7 +796,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<double>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<double>));
 
             // assert
             var hashSet = value.Should().BeOfType<HashSet<double>>().Subject;
@@ -817,7 +817,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<decimal>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<decimal>));
 
             // assert
             var hashSet = value.Should().BeOfType<HashSet<decimal>>().Subject;
@@ -840,13 +840,91 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<byte[]>), new DynamoSerializerOptions());
+            var value = DynamoSerializer.Deserialize(attribute, typeof(HashSet<byte[]>));
 
             // assert
             var hashSet = value.Should().BeOfType<HashSet<byte[]>>().Subject;
             hashSet.Should().HaveCount(2);
             hashSet.Contains(hello).Should().BeTrue();
             hashSet.Contains(world).Should().BeTrue();
+        }
+
+        [Fact]
+        public void Deserialize_missing_value_to_byte_array() {
+
+            // arrange
+
+            // act
+            var value = DynamoSerializer.Deserialize(attribute: null, typeof(HashSet<byte[]>));
+
+            // assert
+            var hashSet = value.Should().BeOfType<HashSet<byte[]>>().Subject;
+            hashSet.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public void Deserialize_missing_value_to_string_hashset() {
+
+            // arrange
+
+            // act
+            var value = DynamoSerializer.Deserialize(attribute: null, typeof(HashSet<string>));
+
+            // assert
+            var hashSet = value.Should().BeOfType<HashSet<string>>().Subject;
+            hashSet.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public void Deserialize_missing_value_to_int_hashset() {
+
+            // arrange
+
+            // act
+            var value = DynamoSerializer.Deserialize(attribute: null, typeof(HashSet<int>));
+
+            // assert
+            var hashSet = value.Should().BeOfType<HashSet<int>>().Subject;
+            hashSet.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public void Deserialize_missing_value_to_long_hashset() {
+
+            // arrange
+
+            // act
+            var value = DynamoSerializer.Deserialize(attribute: null, typeof(HashSet<long>));
+
+            // assert
+            var hashSet = value.Should().BeOfType<HashSet<long>>().Subject;
+            hashSet.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public void Deserialize_missing_value_to_double_hashset() {
+
+            // arrange
+
+            // act
+            var value = DynamoSerializer.Deserialize(attribute: null, typeof(HashSet<double>));
+
+            // assert
+            var hashSet = value.Should().BeOfType<HashSet<double>>().Subject;
+            hashSet.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public void Deserialize_missing_value_to_decimal_hashset() {
+
+            // arrange
+
+            // act
+            var value = DynamoSerializer.Deserialize(attribute: null, typeof(HashSet<decimal>));
+
+            // assert
+            var hashSet = value.Should().BeOfType<HashSet<decimal>>().Subject;
+            hashSet.Should().HaveCount(0);
         }
         #endregion
 

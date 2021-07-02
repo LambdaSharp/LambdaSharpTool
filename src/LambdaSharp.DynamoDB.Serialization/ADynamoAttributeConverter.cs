@@ -23,13 +23,18 @@ using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Serialization.Converters {
 
-    public abstract class ADynamoAttributeConverter {
+    public abstract class ADynamoAttributeConverter : IDynamoAttributeConverter {
 
         //--- Abstract Methods ---
         public abstract bool CanConvert(Type typeToConvert);
 
         //--- Methods ---
-        public virtual AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) => throw new NotImplementedException("conversion to attribute value is not implemented");
+        public virtual AttributeValue? ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) => throw new NotImplementedException("conversion to attribute value is not implemented");
+
+        public virtual object? GetDefaultValue(Type targetType, DynamoSerializerOptions options)
+            => (targetType.IsValueType && (Nullable.GetUnderlyingType(targetType) == null))
+                ? Activator.CreateInstance(targetType)
+                : null;
 
         public virtual object? FromNull(Type targetType, DynamoSerializerOptions options)
             => (!targetType.IsValueType || (Nullable.GetUnderlyingType(targetType) != null))

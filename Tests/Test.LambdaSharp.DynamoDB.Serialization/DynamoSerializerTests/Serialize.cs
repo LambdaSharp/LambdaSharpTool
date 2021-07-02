@@ -64,7 +64,7 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             };
 
             // act
-            var attribute = DynamoSerializer.Serialize(value, new DynamoSerializerOptions());
+            var attribute = DynamoSerializer.Serialize(value);
 
             // assert
             attribute.IsMSet.Should().BeTrue();
@@ -143,6 +143,133 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             attribute.M.ContainsKey(nameof(value.TimeSpan)).Should().BeTrue();
             attribute.M[nameof(value.TimeSpan)].N.Should().NotBeNull();
             attribute.M[nameof(value.TimeSpan)].N.Should().Be("789");
+        }
+
+        [Fact]
+        public void Serialize_empty_string() {
+
+            // arrange
+            var value = new {
+                Text = ""
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+
+            // check 'Text' property
+            attribute.M.ContainsKey(nameof(value.Text)).Should().BeTrue();
+            attribute.M[nameof(value.Text)].S.Should().Be("");
+        }
+
+        [Fact]
+        public void Serialize_empty_string_set() {
+
+            // arrange
+            var value = new {
+                StringSet = new HashSet<string>()
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+
+            // check 'StringSet' property
+            attribute.M.ContainsKey(nameof(value.StringSet)).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Serialize_empty_int_set() {
+
+            // arrange
+            var value = new {
+                IntSet = new HashSet<int>()
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+
+            // check 'StringSet' property
+            attribute.M.ContainsKey(nameof(value.IntSet)).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Serialize_empty_long_set() {
+
+            // arrange
+            var value = new {
+                LongSet = new HashSet<long>()
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+
+            // check 'StringSet' property
+            attribute.M.ContainsKey(nameof(value.LongSet)).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Serialize_empty_double_set() {
+
+            // arrange
+            var value = new {
+                DoubleSet = new HashSet<double>()
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+
+            // check 'StringSet' property
+            attribute.M.ContainsKey(nameof(value.DoubleSet)).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Serialize_empty_decimal_set() {
+
+            // arrange
+            var value = new {
+                DecimalSet = new HashSet<decimal>()
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+
+            // check 'StringSet' property
+            attribute.M.ContainsKey(nameof(value.DecimalSet)).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Serialize_empty_binary_set() {
+
+            // arrange
+            var value = new {
+                BinarySet = new HashSet<byte[]>()
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+
+            // check 'StringSet' property
+            attribute.M.ContainsKey(nameof(value.BinarySet)).Should().BeFalse();
         }
     }
 }

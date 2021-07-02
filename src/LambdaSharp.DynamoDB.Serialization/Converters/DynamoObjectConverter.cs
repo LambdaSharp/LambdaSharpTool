@@ -40,7 +40,7 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
                 var propertyValue = property.GetValue(value);
                 if(!(propertyValue is null) || !options.IgnoreNullValues) {
                     var attributeValue = DynamoSerializer.Serialize(propertyValue, options);
-                    if(!attributeValue.NULL || !options.IgnoreNullValues) {
+                    if(!(attributeValue is null)) {
                         mapObject.Add(property.Name, attributeValue);
                     }
                 }
@@ -56,11 +56,13 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
             // create instance and set properties on it
             var result = Activator.CreateInstance(targetType) ?? throw new ApplicationException("Activator.CreateInstance() returned null");
             foreach(var property in targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)) {
+
+                // TODO: inspect target property for custom converter attribute
+
                 if(value.TryGetValue(property.Name, out var attribute)) {
-
-                    // TODO: inspect target property for custom converter attribute
-
                     property.SetValue(result, DynamoSerializer.Deserialize(attribute, property.PropertyType, options));
+                } else {
+                    property.SetValue(result, DynamoSerializer.Deserialize(attribute: null, property.PropertyType, options));
                 }
             }
             return result;

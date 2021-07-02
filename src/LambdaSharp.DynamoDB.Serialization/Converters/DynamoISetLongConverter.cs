@@ -32,32 +32,37 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         //--- Methods ---
         public override bool CanConvert(Type typeToConvert) => typeof(ISet<long>).IsAssignableFrom(typeToConvert);
 
-        public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
+        public override AttributeValue? ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var numberSet = (ISet<long>)value;
 
-            // NOTE (2021-06-21, bjorg): DynamoDB does not allow storing of empty sets!
-            if(numberSet.Any()) {
-                return new AttributeValue {
+            // NOTE (2021-06-21, bjorg): DynamoDB does not allow storing empty sets!
+            return numberSet.Any()
+                ? new AttributeValue {
                     NS = numberSet.Select(item => item.ToString(CultureInfo.InvariantCulture)).ToList()
-                };
-            }
-            throw new DynamoSerializationException("empty number set is not supported");
+                } : null;
         }
 
+        public override object? GetDefaultValue(Type targetType, DynamoSerializerOptions options)
+            => CreateInstance(targetType);
+
         public override object? FromNumberSet(List<string> value, Type targetType, DynamoSerializerOptions options) {
+            var result = CreateInstance(targetType);
+            foreach(var item in value) {
+                result.Add(long.Parse(item, CultureInfo.InvariantCulture));
+            }
+            return result;
+        }
+
+        private ISet<long> CreateInstance(Type targetType) {
             if(targetType.IsAssignableFrom(typeof(HashSet<long>))) {
-                return value.Select(number => long.Parse(number)).ToHashSet();
+
+                // return HashSet<decimal>
+                return new HashSet<long>();
             }
             if(!targetType.IsAbstract) {
-                if(typeof(ISet<long>).IsAssignableFrom(targetType)) {
 
-                    // create set instance and add items
-                    var result = (ISet<long>)(Activator.CreateInstance(targetType) ?? throw new ApplicationException("Activator.CreateInstance() returned null"));
-                    foreach(var item in value) {
-                        result.Add(long.Parse(item, CultureInfo.InvariantCulture));
-                    }
-                    return result;
-                }
+                // create set instance and add items
+                return (ISet<long>)(Activator.CreateInstance(targetType) ?? throw new ApplicationException("Activator.CreateInstance() returned null"));
             }
             throw new DynamoSerializationException($"incompatible target type for NS attribute value (given: {targetType.FullName})");
         }

@@ -42,10 +42,10 @@ namespace LambdaSharp.DynamoDB.Serialization {
     public static class DynamoSerializer {
 
         //--- Class Methods ---
-        public static AttributeValue Serialize(object? value)
+        public static AttributeValue? Serialize(object? value)
             => Serialize(value, new DynamoSerializerOptions());
 
-        public static AttributeValue Serialize(object? value, DynamoSerializerOptions options) {
+        public static AttributeValue? Serialize(object? value, DynamoSerializerOptions options) {
 
             // check for types mapped to attribute type 'NULL'
             if(value is null) {
@@ -71,6 +71,9 @@ namespace LambdaSharp.DynamoDB.Serialization {
             where TRecord : class
             => (TRecord?)Deserialize(attributes, typeof(TRecord), options);
 
+        public static object? Deserialize(Dictionary<string, AttributeValue> attributes, Type? targetType)
+            => Deserialize(attributes, targetType, new DynamoSerializerOptions());
+
         public static object? Deserialize(Dictionary<string, AttributeValue> attributes, Type? targetType, DynamoSerializerOptions options) {
             var usedTargetType = ((targetType is null) || (targetType == typeof(object)))
                 ? typeof(Dictionary<string, object>)
@@ -82,7 +85,15 @@ namespace LambdaSharp.DynamoDB.Serialization {
             return converter.FromMap(attributes, usedTargetType, options);
         }
 
-        public static object? Deserialize(AttributeValue attribute, Type? targetType, DynamoSerializerOptions options) {
+        public static object? Deserialize(AttributeValue? attribute, Type? targetType)
+            => Deserialize(attribute, targetType, new DynamoSerializerOptions());
+
+        public static object? Deserialize(AttributeValue? attribute, Type? targetType, DynamoSerializerOptions options) {
+
+            // handle missing value
+            if(attribute == null) {
+                return FindConverter(typeof(object), "<default>", (converter, usedTargetType) => converter.GetDefaultValue(usedTargetType, options));
+            }
 
             // handle boolean value
             if(attribute.IsBOOLSet) {
@@ -136,7 +147,7 @@ namespace LambdaSharp.DynamoDB.Serialization {
             throw new DynamoSerializationException($"invalid attribute value");
 
             // local functions
-            object? FindConverter(Type defaultType, string attributeValueTypeName, Func<ADynamoAttributeConverter, Type, object?> convert) {
+            object? FindConverter(Type defaultType, string attributeValueTypeName, Func<IDynamoAttributeConverter, Type, object?> convert) {
                 var usedTargetType = ((targetType is null) || (targetType == typeof(object)))
                     ? defaultType
                     : targetType;

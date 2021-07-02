@@ -25,7 +25,7 @@ namespace LambdaSharp.DynamoDB.Serialization {
     public class DynamoSerializerOptions {
 
         //--- Class Fields ---
-        public static readonly IEnumerable<ADynamoAttributeConverter> DefaultConverters = new List<ADynamoAttributeConverter> {
+        public static readonly IEnumerable<IDynamoAttributeConverter> DefaultConverters = new List<IDynamoAttributeConverter> {
             DynamoBoolConverter.Instance,
             DynamoIntConverter.Instance,
             DynamoLongConverter.Instance,
@@ -48,12 +48,14 @@ namespace LambdaSharp.DynamoDB.Serialization {
         };
 
         //--- Properties ---
+
+        // TODO: do we want this?
         public bool IgnoreNullValues { get; set; } = true;
         public bool UseDefaultConverters { get; set; } = true;
-        public List<ADynamoAttributeConverter> Converters { get; set; } = new List<ADynamoAttributeConverter>();
+        public List<IDynamoAttributeConverter> Converters { get; set; } = new List<IDynamoAttributeConverter>();
 
         //--- Methods ---
-        internal IEnumerable<ADynamoAttributeConverter> GetConverters()
+        internal IEnumerable<IDynamoAttributeConverter> GetConverters()
             => UseDefaultConverters
                 ? Converters.Concat(DefaultConverters)
                 : Converters;
