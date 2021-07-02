@@ -56,7 +56,13 @@ namespace LambdaSharp.DynamoDB.Native {
         //--- Constructors ---
         public DynamoPrimaryKey(string pk, string sk) : base("PK", "SK", pk, sk) { }
 
+        public DynamoPrimaryKey(string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
+            : base(partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
+
         public DynamoPrimaryKey(string pkPattern, string skPattern, params string[] keys) : base("PK", "SK", pkPattern, skPattern, keys) { }
+
+        public DynamoPrimaryKey(string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
+            : base(partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
 
         //--- Properties ---
         public string PK => PartitionKeyValue;
@@ -74,13 +80,13 @@ namespace LambdaSharp.DynamoDB.Native {
 
         //--- Constructors ---
         public ADynamoSecondaryKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
-            : base(partitionKeyName, partitionKeyValue, sortKeyName, sortKeyValue)
+            : base(partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue)
         {
             IndexName = indexName ?? throw new ArgumentNullException(nameof(indexName));
         }
 
         public ADynamoSecondaryKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(partitionKeyName, partitionKeyValuePattern, sortKeyName, sortKeyValuePattern, keys)
+            : base(partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys)
         {
             IndexName = indexName ?? throw new ArgumentNullException(nameof(indexName));
         }
@@ -93,39 +99,39 @@ namespace LambdaSharp.DynamoDB.Native {
 
         //--- Constructors ---
         public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
-            : base(indexName, partitionKeyName, partitionKeyValue, sortKeyName, sortKeyValue) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
 
         public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, partitionKeyValuePattern, sortKeyName, sortKeyValuePattern, keys) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
     }
 
     public class DynamoLocalIndexKey<TRecord> : DynamoLocalIndexKey where TRecord : class {
 
         //--- Constructors ---
         public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
-            : base(indexName, partitionKeyName, partitionKeyValue, sortKeyName, sortKeyValue) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
 
         public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, partitionKeyValuePattern, sortKeyName, sortKeyValuePattern, keys) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
     }
 
     public class DynamoGlobalIndexKey : ADynamoSecondaryKey {
 
         //--- Constructors ---
         public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
-            : base(indexName, partitionKeyName, partitionKeyValue, sortKeyName, sortKeyValue) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
 
         public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, partitionKeyValuePattern, sortKeyName, sortKeyValuePattern, keys) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
     }
 
     public class DynamoGlobalIndexKey<TRecord> : DynamoGlobalIndexKey where TRecord : class {
 
         //--- Constructors ---
         public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
-            : base(indexName, partitionKeyName, partitionKeyValue, sortKeyName, sortKeyValue) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
 
         public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, partitionKeyValuePattern, sortKeyName, sortKeyValuePattern, keys) { }
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
     }
 }
