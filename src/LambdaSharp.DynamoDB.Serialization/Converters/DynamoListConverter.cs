@@ -49,7 +49,10 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var list = new List<AttributeValue>();
             foreach(var item in (IEnumerable)value) {
-                list.Add(DynamoSerializer.Serialize(item, options));
+                var attributeValue = DynamoSerializer.Serialize(item, options);
+                list.Add(attributeValue ?? new AttributeValue {
+                    NULL = true
+                });
             }
             return new AttributeValue {
                 L = list,

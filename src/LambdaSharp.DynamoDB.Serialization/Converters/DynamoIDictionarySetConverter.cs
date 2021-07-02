@@ -60,7 +60,7 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
                         throw new DynamoSerializationException("null key is not supported");
                     }
                     var attributeValue = DynamoSerializer.Serialize(entryValue, options);
-                    if(!attributeValue.NULL || !options.IgnoreNullValues) {
+                    if(attributeValue != null) {
                         mapDictionary.Add(entryKey, attributeValue);
                     }
                 }

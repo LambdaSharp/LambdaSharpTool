@@ -133,7 +133,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             => ProjectionAttributes.Add(GetAttributeName(attributeName));
 
         public string GetExpressionValueName(object? value)
-            => GetExpressionValueName(DynamoSerializer.Serialize(value, SerializerOptions));
+            => GetExpressionValueName(DynamoSerializer.Serialize(value, SerializerOptions) ?? new AttributeValue {
+                NULL = true
+            });
 
         public string GetExpressionValueName(bool value)
             => GetExpressionValueName(new AttributeValue {

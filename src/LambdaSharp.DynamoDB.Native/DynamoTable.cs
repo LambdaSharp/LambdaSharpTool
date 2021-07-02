@@ -141,7 +141,10 @@ namespace LambdaSharp.DynamoDB.Native {
         public Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, ADynamoSecondaryKey[] secondaryKeys)
             where TRecord : class
         {
-            var attributes = DynamoSerializer.Serialize(record, SerializerOptions).M;
+            var attributes = DynamoSerializer.Serialize(record, SerializerOptions)?.M;
+            if(attributes is null) {
+                throw new ArgumentException("cannot serialize null record", nameof(record));
+            }
 
             // add primary key details
             attributes[primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue);
