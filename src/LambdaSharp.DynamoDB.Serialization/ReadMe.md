@@ -1,5 +1,11 @@
 > TODO: move to correct location
 
+> TODO: add `[DynamoName("foo")]` attribute (test with `"_t"` and `"_m"`)
+
+> TODO: add `[DynamoIgnore]` attribute (test with `"_t"` and `"_m"`)
+
+> TODO: empty string and binary values are now allowed: https://aws.amazon.com/about-aws/whats-new/2020/05/amazon-dynamodb-now-supports-empty-values-for-non-key-string-and-binary-attributes-in-dynamodb-tables/
+
 # LambdaSharp.DynamoDB.Serialization
 
 This utility library serializes C# data-structures to DynamoDB attribute values. It follows similar conventions as _System.Text.Json.Serialization_ classes.
