@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Amazon.DynamoDBv2.Model;
 
@@ -34,14 +35,21 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var mapObject = new Dictionary<string, AttributeValue>();
             foreach(var property in targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)) {
+                var propertyAttributes = property.GetCustomAttributes();
 
-                // TODO: inspect source property for custom converter attribute
+                // check if this object property should be ignored
+                if(!(propertyAttributes.OfType<DynamoPropertyIgnoreAttribute>().SingleOrDefault() is null)) {
+                    continue;
+                }
 
                 var propertyValue = property.GetValue(value);
                 if(!(propertyValue is null) || !options.IgnoreNullValues) {
                     var attributeValue = DynamoSerializer.Serialize(propertyValue, options);
                     if(!(attributeValue is null)) {
-                        mapObject.Add(property.Name, attributeValue);
+
+                        // check if this object property has a custom name
+                        var name = propertyAttributes.OfType<DynamoPropertyNameAttribute>().SingleOrDefault()?.Name ?? property.Name;
+                        mapObject.Add(name, attributeValue);
                     }
                 }
             }
@@ -56,10 +64,16 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
             // create instance and set properties on it
             var result = Activator.CreateInstance(targetType) ?? throw new ApplicationException("Activator.CreateInstance() returned null");
             foreach(var property in targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)) {
+                var propertyAttributes = property.GetCustomAttributes();
 
-                // TODO: inspect target property for custom converter attribute
+                // check if this object property should be ignored
+                if(!(propertyAttributes.OfType<DynamoPropertyIgnoreAttribute>().SingleOrDefault() is null)) {
+                    continue;
+                }
 
-                if(value.TryGetValue(property.Name, out var attribute)) {
+                // check if this object property has a custom name
+                var name = propertyAttributes.OfType<DynamoPropertyNameAttribute>().SingleOrDefault()?.Name ?? property.Name;
+                if(value.TryGetValue(name, out var attribute)) {
                     property.SetValue(result, DynamoSerializer.Deserialize(attribute, property.PropertyType, options));
                 } else {
                     property.SetValue(result, DynamoSerializer.Deserialize(attribute: null, property.PropertyType, options));

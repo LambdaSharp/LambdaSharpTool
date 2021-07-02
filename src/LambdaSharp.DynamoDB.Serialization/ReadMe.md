@@ -1,8 +1,8 @@
 > TODO: move to correct location
 
-> TODO: add `[DynamoName("foo")]` attribute (test with `"_t"` and `"_m"`)
+> TODO: add `[DynamoPropertyName("foo")]` attribute (test with `"_t"` and `"_m"`)
 
-> TODO: add `[DynamoIgnore]` attribute (test with `"_t"` and `"_m"`)
+> TODO: add `[DynamoPropertyIgnore]` attribute (test with `"_t"` and `"_m"`)
 
 > TODO: empty string and binary values are now allowed: https://aws.amazon.com/about-aws/whats-new/2020/05/amazon-dynamodb-now-supports-empty-values-for-non-key-string-and-binary-attributes-in-dynamodb-tables/
 

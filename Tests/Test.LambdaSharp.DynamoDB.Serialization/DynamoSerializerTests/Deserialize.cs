@@ -63,6 +63,17 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             public int Age { get; set; }
         }
 
+        private class MyCustomType {
+
+            //--- Properties ---
+
+            [DynamoPropertyIgnore]
+            public string IgnoreText { get; set; }
+
+            [DynamoPropertyName("OtherName")]
+            public string CustomName { get; set; }
+        }
+
         public enum TestEnum {
             Nothing,
             Something
@@ -946,6 +957,50 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             // assert
             var timespan = value.Should().BeOfType<TimeSpan>().Subject;
             timespan.TotalSeconds.Should().Be(789);
+        }
+
+        [Fact]
+        public void Deserialize_custom_name_property() {
+
+            // arrange
+            var attribute = new AttributeValue() {
+                S = "Hello"
+            };
+            var attributes = new AttributeValue() {
+                M = new() {
+                    ["OtherName"] = attribute
+                }
+            };
+
+            // act
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyCustomType));
+
+            // assert
+            var which = value.Should().BeOfType<MyCustomType>().Which;
+            which.Should().NotBeNull();
+            which.CustomName.Should().Be("Hello");
+        }
+
+        [Fact]
+        public void Serialize_ignore_property() {
+
+            // arrange
+            var attribute = new AttributeValue() {
+                S = "World"
+            };
+            var attributes = new AttributeValue() {
+                M = new() {
+                    [nameof(MyCustomType.IgnoreText)] = attribute
+                }
+            };
+
+            // act
+            var value = DynamoSerializer.Deserialize(attributes, typeof(MyCustomType));
+
+            // assert
+            var which = value.Should().BeOfType<MyCustomType>().Which;
+            which.Should().NotBeNull();
+            which.IgnoreText.Should().BeNull();
         }
     }
 }

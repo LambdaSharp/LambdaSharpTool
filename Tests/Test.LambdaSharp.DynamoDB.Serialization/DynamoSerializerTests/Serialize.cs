@@ -30,6 +30,18 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
     public class Serialize {
 
+        //--- Types ---
+        public class MyCustomType {
+
+            //--- Properties ---
+
+            [DynamoPropertyIgnore]
+            public string IgnoreText { get; set; }
+
+            [DynamoPropertyName("OtherName")]
+            public string CustomName { get; set; }
+        }
+
         //--- Constructors ---
         public Serialize(ITestOutputHelper output) => Output = output;
 
@@ -138,8 +150,6 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'TimeSpan' property
             attribute.M.ContainsKey(nameof(value.TimeSpan)).Should().BeTrue();
             attribute.M[nameof(value.TimeSpan)].N.Should().NotBeNull();
             attribute.M[nameof(value.TimeSpan)].N.Should().Be("789");
@@ -158,8 +168,6 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'Text' property
             attribute.M.ContainsKey(nameof(value.Text)).Should().BeTrue();
             attribute.M[nameof(value.Text)].S.Should().Be("");
         }
@@ -177,8 +185,6 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'StringSet' property
             attribute.M.ContainsKey(nameof(value.StringSet)).Should().BeFalse();
         }
 
@@ -195,8 +201,6 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'StringSet' property
             attribute.M.ContainsKey(nameof(value.IntSet)).Should().BeFalse();
         }
 
@@ -213,8 +217,6 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'StringSet' property
             attribute.M.ContainsKey(nameof(value.LongSet)).Should().BeFalse();
         }
 
@@ -231,8 +233,6 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'StringSet' property
             attribute.M.ContainsKey(nameof(value.DoubleSet)).Should().BeFalse();
         }
 
@@ -249,8 +249,6 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'StringSet' property
             attribute.M.ContainsKey(nameof(value.DecimalSet)).Should().BeFalse();
         }
 
@@ -267,9 +265,40 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
             // assert
             attribute.IsMSet.Should().BeTrue();
-
-            // check 'StringSet' property
             attribute.M.ContainsKey(nameof(value.BinarySet)).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Serialize_custom_name_property() {
+
+            // arrange
+            var value = new MyCustomType {
+                CustomName = "Hello"
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+            attribute.M.ContainsKey("OtherName").Should().BeTrue();
+            attribute.M["OtherName"].S.Should().Be("Hello");
+        }
+
+        [Fact]
+        public void Serialize_ignore_property() {
+
+            // arrange
+            var value = new MyCustomType {
+                IgnoreText = "World"
+            };
+
+            // act
+            var attribute = DynamoSerializer.Serialize(value);
+
+            // assert
+            attribute.IsMSet.Should().BeTrue();
+            attribute.M.ContainsKey(nameof(value.IgnoreText)).Should().BeFalse();
         }
     }
 }
