@@ -22,6 +22,16 @@
 
 > TODO: `TransactGetItems()` vs. `BatchGetItem()`: as is plural, the other is not
 
+> TODO: extension method to write more than 25 items in a batch
+
+> TODO: `GetAttributePath` should fail on record
+
+> TODO: the current `Query(keys)` mechanism is too complicated; it requires the dev to know the access pattern, which is not good; instead it should be:
+>   * `_table.Query(new MySubRecord.GetSubRecordsBelongingTo(parentRecord))`
+>   * `_table.Query(new CustomerRecord.AllCustomers())`
+
+> TODO: only `PutItem()` operations need secondary keys
+
 # LambdaSharp.DynamoDB.Native
 
 ## Data Mapping
@@ -29,8 +39,11 @@
 ### TODO (missing alternative for NULL and L)
 
 > TODO: IList<T> handling in serialization
+
 > TODO: enum handling in serialization
+
 > TODO: equivalence rules for SET update operations (T, IDictionary<string, T>, IList<T>, ISet<T>)
+
 > TODO: list all valid literal expressions (`"abc"`, `123`, `true`, `new string[0]`, `new[] { "hello" }`)
 
 |DynamoDB Data Type |Default .NET Type                      |Alternative .NET Type                  |

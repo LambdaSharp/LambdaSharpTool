@@ -94,7 +94,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             // arrange
 
             // act
-            var result = await Table.GetItemAsync(DataModel.CustomerPrimaryKey("123456789"));
+            var result = await Table.GetItemAsync(DataModel.CustomerRecordPrimaryKey("123456789"));
 
             // assert
             result.Should().BeNull();
@@ -108,7 +108,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.CreateCustomerAsync(customer);
 
             // act
-            var result = await Table.PutItem(customer, DataModel.CustomerPrimaryKey(customer))
+            var result = await Table.PutItem(customer, DataModel.PrimaryKey(customer))
                 .WithCondition(record => DynamoCondition.Exists(record))
                 .ExecuteAsync();
 
@@ -124,7 +124,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.CreateCustomerAsync(customer);
 
             // act
-            var result = await Table.PutItem(customer, DataModel.CustomerPrimaryKey(customer))
+            var result = await Table.PutItem(customer, DataModel.PrimaryKey(customer))
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync();
 
@@ -142,7 +142,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.SaveOrderAsync(order, items);
 
             // act
-            var result = await Table.UpdateItem(DataModel.OrderPrimaryKey(order))
+            var result = await Table.UpdateItem(DataModel.PrimaryKey(order))
                 .WithCondition(record => record.Status == OrderStatus.Pending)
                 .Set(record => record.Status, OrderStatus.Shipped)
                 .ExecuteAsync();
@@ -159,7 +159,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.CreateCustomerAsync(customer);
 
             // act
-            var result = await Table.DeleteItem(DataModel.CustomerPrimaryKey(customer))
+            var result = await Table.DeleteItem(DataModel.PrimaryKey(customer))
                 .WithCondition(record => record.Name == customer.Name)
                 .ExecuteAsync();
 
@@ -175,7 +175,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.CreateCustomerAsync(customer);
 
             // act
-            var result = await Table.DeleteItem(DataModel.CustomerPrimaryKey(customer))
+            var result = await Table.DeleteItem(DataModel.PrimaryKey(customer))
                 .WithCondition(record => record.Name == "Bob")
                 .ExecuteAsync();
 
@@ -193,7 +193,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.SaveOrderAsync(order, items);
 
             // act
-            var result = await Table.UpdateItem(DataModel.OrderPrimaryKey(order))
+            var result = await Table.UpdateItem(DataModel.PrimaryKey(order))
                 .WithCondition(record => record.Status == OrderStatus.Shipped)
                 .Set(record => record.Status, OrderStatus.Delivered)
                 .ExecuteAsync();
@@ -273,8 +273,8 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // act
             var result = await Table.TransactGetItems(new[] {
-                DataModel.CustomerPrimaryKey(customer1),
-                DataModel.CustomerPrimaryKey(customer2) }
+                DataModel.PrimaryKey(customer1),
+                DataModel.PrimaryKey(customer2) }
             ).TryExecuteAsync();
 
             // assert
@@ -295,8 +295,8 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // act
             var result = await Table.BatchGetItems(new[] {
-                DataModel.CustomerPrimaryKey(customer1),
-                DataModel.CustomerPrimaryKey(customer2) }
+                DataModel.PrimaryKey(customer1),
+                DataModel.PrimaryKey(customer2) }
             ).ExecuteAsync();
 
             // assert
@@ -316,8 +316,8 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // act
             var result = await Table.BatchGetItemsMixed()
-                .GetItem(DataModel.CustomerPrimaryKey(customer))
-                .GetItem(DataModel.OrderPrimaryKey(order))
+                .GetItem(DataModel.PrimaryKey(customer))
+                .GetItem(DataModel.PrimaryKey(order))
                 .ExecuteAsync();
 
             // assert
@@ -337,10 +337,10 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // act
             var result = await Table.BatchGetItemsMixed()
-                .StartGetItem(DataModel.CustomerPrimaryKey(customer))
+                .StartGetItem(DataModel.PrimaryKey(customer))
                     .Get(record => record.Username)
                 .End()
-                .StartGetItem(DataModel.OrderPrimaryKey(order))
+                .StartGetItem(DataModel.PrimaryKey(order))
                     .Get(record => record.OrderId)
                 .End()
                 .ExecuteAsync();

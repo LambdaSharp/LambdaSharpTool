@@ -37,23 +37,21 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
         private const string ORDER_ITEM_GSI1_SK_PATTERN = "ITEM#{1}";
 
         //--- Class Methods ---
-        public static DynamoPrimaryKey<CustomerRecord> CustomerPrimaryKey(CustomerRecord record) => CustomerPrimaryKey(record.Username);
-        public static DynamoPrimaryKey<CustomerRecord> CustomerPrimaryKey(string username) => new DynamoPrimaryKey<CustomerRecord>(CUSTOMER_PK_PATTERN, CUSTOMER_SK_PATTERN, username);
-        public static DynamoPrimaryKey<CustomerEmailRecord> CustomerEmailPrimaryKey(CustomerEmailRecord record) => CustomerEmailPrimaryKey(record.EmailAddress);
-        public static DynamoPrimaryKey<CustomerEmailRecord> CustomerEmailPrimaryKey(string emailAddress) => new DynamoPrimaryKey<CustomerEmailRecord>(CUSTOMER_EMAIL_PK_PATTERN, CUSTOMER_EMAIL_SK_PATTERN, emailAddress);
-        public static DynamoPrimaryKey<OrderRecord> OrderPrimaryKey(OrderRecord record) => OrderPrimaryKey(record.CustomerUsername, record.OrderId);
-        public static DynamoPrimaryKey<OrderRecord> OrderPrimaryKey(string customerUsername, string orderId) => new DynamoPrimaryKey<OrderRecord>(ORDER_PK_PATTERN, ORDER_SK_PATTERN, customerUsername, orderId);
-        public static ADynamoSecondaryKey[] OrderSecondaryKeys(OrderRecord record) => OrderSecondaryKeys(record.CustomerUsername, record.OrderId);
-        public static ADynamoSecondaryKey[] OrderSecondaryKeys(string customerUsername, string orderId)
+        public static DynamoPrimaryKey<CustomerRecord> PrimaryKey(CustomerRecord record) => CustomerRecordPrimaryKey(record.Username);
+        public static DynamoPrimaryKey<CustomerRecord> CustomerRecordPrimaryKey(string username) => new DynamoPrimaryKey<CustomerRecord>(CUSTOMER_PK_PATTERN, CUSTOMER_SK_PATTERN, username);
+        public static DynamoPrimaryKey<CustomerEmailRecord> PrimaryKey(CustomerEmailRecord record) => CustomerEmailRecordPrimaryKey(record.EmailAddress);
+        public static DynamoPrimaryKey<CustomerEmailRecord> CustomerEmailRecordPrimaryKey(string emailAddress) => new DynamoPrimaryKey<CustomerEmailRecord>(CUSTOMER_EMAIL_PK_PATTERN, CUSTOMER_EMAIL_SK_PATTERN, emailAddress);
+        public static DynamoPrimaryKey<OrderRecord> PrimaryKey(OrderRecord record) => OrderRecordPrimaryKey(record.CustomerUsername, record.OrderId);
+        public static DynamoPrimaryKey<OrderRecord> OrderRecordPrimaryKey(string customerUsername, string orderId) => new DynamoPrimaryKey<OrderRecord>(ORDER_PK_PATTERN, ORDER_SK_PATTERN, customerUsername, orderId);
+        public static ADynamoSecondaryKey[] SecondaryKeys(OrderRecord record)
             => new[] {
-                new DynamoGlobalIndexKey("GSI1", "GSI1PK", "GSI1SK", ORDER_GSI1_PK_PATTERN, ORDER_GSI1_SK_PATTERN, orderId)
+                new DynamoGlobalIndexKey("GSI1", "GSI1PK", "GSI1SK", ORDER_GSI1_PK_PATTERN, ORDER_GSI1_SK_PATTERN, record.OrderId)
             };
-        public static DynamoPrimaryKey<OrderItemRecord> OrderItemPrimaryKey(OrderItemRecord record) => OrderItemPrimaryKey(record.OrderId, record.ItemId);
-        public static DynamoPrimaryKey<OrderItemRecord> OrderItemPrimaryKey(string orderId, string itemId) => new DynamoPrimaryKey<OrderItemRecord>(ORDER_ITEM_PK_PATTERN, ORDER_ITEM_SK_PATTERN, orderId, itemId);
-        public static ADynamoSecondaryKey[] OrderItemSecondaryKeys(OrderItemRecord record) => OrderItemSecondaryKeys(record.OrderId, record.ItemId);
-        public static ADynamoSecondaryKey[] OrderItemSecondaryKeys(string orderId, string itemId)
+        public static DynamoPrimaryKey<OrderItemRecord> PrimaryKey(OrderItemRecord record) => OrderItemRecordPrimaryKey(record.OrderId, record.ItemId);
+        public static DynamoPrimaryKey<OrderItemRecord> OrderItemRecordPrimaryKey(string orderId, string itemId) => new DynamoPrimaryKey<OrderItemRecord>(ORDER_ITEM_PK_PATTERN, ORDER_ITEM_SK_PATTERN, orderId, itemId);
+        public static ADynamoSecondaryKey[] SecondaryKeys(OrderItemRecord record)
             => new[] {
-                new DynamoGlobalIndexKey("GSI1", "GSI1PK", "GSI1SK", ORDER_ITEM_GSI1_PK_PATTERN, ORDER_ITEM_GSI1_SK_PATTERN, orderId, itemId)
+                new DynamoGlobalIndexKey("GSI1", "GSI1PK", "GSI1SK", ORDER_ITEM_GSI1_PK_PATTERN, ORDER_ITEM_GSI1_SK_PATTERN, record.OrderId, record.ItemId)
             };
 
         // TODO: need a better solution here

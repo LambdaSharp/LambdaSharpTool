@@ -61,7 +61,7 @@ namespace Sample.DynamoDBNative.DataAccess {
             }
 
             // TODO: wrap in a transaction
-            await Table.PutItem(customer, DataModel.CustomerPrimaryKey(customer))
+            await Table.PutItem(customer, DataModel.PrimaryKey(customer))
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
 
@@ -69,13 +69,13 @@ namespace Sample.DynamoDBNative.DataAccess {
                 Username = customer.Username,
                 EmailAddress = customer.EmailAddress
             };
-            await Table.PutItem(customerEmail, DataModel.CustomerEmailPrimaryKey(customerEmail))
+            await Table.PutItem(customerEmail, DataModel.PrimaryKey(customerEmail))
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
         }
 
         public Task AddOrUpdateAddressAsync(string customerUsername, AddressRecord address, CancellationToken cancellationToken) {
-            return Table.UpdateItem(DataModel.CustomerPrimaryKey(customerUsername))
+            return Table.UpdateItem(DataModel.CustomerRecordPrimaryKey(customerUsername))
                 .Set(record => record.Addresses[address.Label], address)
                 .ExecuteAsync(cancellationToken);
         }
@@ -101,7 +101,7 @@ namespace Sample.DynamoDBNative.DataAccess {
 
                 // BatchWriteItem can take up to 25 operations
                 foreach(var orderItem in orderItems.Take(25)) {
-                    batch.PutItem(orderItem, DataModel.OrderItemPrimaryKey(orderItem), DataModel.OrderItemSecondaryKeys(orderItem));
+                    batch.PutItem(orderItem, DataModel.PrimaryKey(orderItem), DataModel.SecondaryKeys(orderItem));
                 }
                 await batch.ExecuteAsync();
 
@@ -110,7 +110,7 @@ namespace Sample.DynamoDBNative.DataAccess {
             }
 
             // store order
-            var success = await Table.PutItem(order, DataModel.OrderPrimaryKey(order), DataModel.OrderSecondaryKeys(order))
+            var success = await Table.PutItem(order, DataModel.PrimaryKey(order), DataModel.SecondaryKeys(order))
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
             if(!success) {
@@ -130,7 +130,7 @@ namespace Sample.DynamoDBNative.DataAccess {
             );
 
             // update order with state
-            await Table.UpdateItem(DataModel.OrderPrimaryKey(order.CustomerUsername, order.OrderId))
+            await Table.UpdateItem(DataModel.OrderRecordPrimaryKey(order.CustomerUsername, order.OrderId))
                 .Set(record => record.Status, orderStatus)
                 .ExecuteAsync(cancellationToken);
         }
