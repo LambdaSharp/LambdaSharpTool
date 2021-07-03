@@ -75,7 +75,8 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
                 [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
             });
-            _expectedTypes[typeof(TRecord).FullName ?? throw new ArgumentException("type name is <null>")] = typeof(TRecord);
+            var expectedTypeName = _table.GetExpectedTypeName(typeof(TRecord));
+            _expectedTypes[expectedTypeName] = typeof(TRecord);
             return new DynamoTableBatchGetItemsEntry<TRecord>(this);
         }
 
@@ -97,16 +98,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     var response = await _table.DynamoClient.BatchGetItemAsync(_request, cancellationToken);
                     if(response.Responses.Any()) {
                         foreach(var item in response.Responses.Single().Value) {
-                            object? record;
-                            if(
-                                item.TryGetValue("_t", out var itemTypeName)
-                                && !(itemTypeName.S is null)
-                                && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
-                            ) {
-                                record = _table.DeserializeItem(item, itemType ?? typeof(object));
-                            } else {
-                                record = _table.DeserializeItem(item, typeof(object));
-                            }
+                            var record = _table.DeserializeItem(item, _expectedTypes);
                             if(!(record is null)) {
                                 result.Add(record);
                             }

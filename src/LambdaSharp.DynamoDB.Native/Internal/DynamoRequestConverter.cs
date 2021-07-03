@@ -123,8 +123,8 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         public void AddCondition(Expression condition)
             => Conditions.Add(ParseCondition(condition));
 
-        public void AddTypeCondition(Type type)
-            => TypeConditions.Add((Expression: $"{GetAttributeName("_t")} = {GetExpressionValueName(type.FullName ?? throw new ArgumentException("type name is <null>"))}", Precedence: Precedence.ScalarComparison));
+        public void AddTypeCondition(string typeName)
+            => TypeConditions.Add((Expression: $"{GetAttributeName("_t")} = {GetExpressionValueName(typeName)}", Precedence: Precedence.ScalarComparison));
 
         public void AddProjection(Expression attribute)
             => ProjectionAttributes.Add(ParseAttributePath(attribute));

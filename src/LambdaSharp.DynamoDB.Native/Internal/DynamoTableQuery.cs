@@ -80,14 +80,16 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         IDynamoTableQuery IDynamoTableQuery.WithTypeFilter<T>() {
-            _converter.AddTypeCondition(typeof(T));
-            _expectedTypes[typeof(T).FullName ?? throw new ArgumentException("type name is <null>")] = typeof(T);
+            var expectedTypeName = _table.GetExpectedTypeName(typeof(T));
+            _converter.AddTypeCondition(expectedTypeName);
+            _expectedTypes[expectedTypeName] = typeof(T);
             return this;
         }
 
         IDynamoTableQuery IDynamoTableQuery.WithTypeFilter(Type type) {
-            _converter.AddTypeCondition(type ?? throw new ArgumentNullException(nameof(type)));
-            _expectedTypes[type.FullName ?? throw new ArgumentException("type name is <null>")] = type;
+            var expectedTypeName = _table.GetExpectedTypeName(type ?? throw new ArgumentNullException(nameof(type)));
+            _converter.AddTypeCondition(expectedTypeName);
+            _expectedTypes[expectedTypeName] = type;
             return this;
         }
 
@@ -96,16 +98,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    object? record;
-                    if(
-                        item.TryGetValue("_t", out var itemTypeName)
-                        && !(itemTypeName.S is null)
-                        && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
-                    ) {
-                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
-                    } else {
-                        record = _table.DeserializeItem(item, typeof(object));
-                    }
+                    var record = _table.DeserializeItem(item, _expectedTypes);
                     if(!(record is null)) {
                         yield return record;
                     }
@@ -119,16 +112,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    object? record;
-                    if(
-                        item.TryGetValue("_t", out var itemTypeName)
-                        && !(itemTypeName.S is null)
-                        && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
-                    ) {
-                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
-                    } else {
-                        record = _table.DeserializeItem(item, typeof(object));
-                    }
+                    var record = _table.DeserializeItem(item, _expectedTypes);
                     if(!(record is null)) {
                         yield return record;
                     }
@@ -143,16 +127,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    object? record;
-                    if(
-                        item.TryGetValue("_t", out var itemTypeName)
-                        && !(itemTypeName.S is null)
-                        && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
-                    ) {
-                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
-                    } else {
-                        record = _table.DeserializeItem(item, typeof(object));
-                    }
+                    var record = _table.DeserializeItem(item, _expectedTypes);
                     if(!(record is null)) {
                         result.Add(record);
                     }
@@ -168,16 +143,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    object? record;
-                    if(
-                        item.TryGetValue("_t", out var itemTypeName)
-                        && !(itemTypeName.S is null)
-                        && _expectedTypes.TryGetValue(itemTypeName.S, out var itemType)
-                    ) {
-                        record = _table.DeserializeItem(item, itemType ?? typeof(object));
-                    } else {
-                        record = _table.DeserializeItem(item, typeof(object));
-                    }
+                    var record = _table.DeserializeItem(item, _expectedTypes);
                     if(!(record is null)) {
                         result.Add(record);
                     }

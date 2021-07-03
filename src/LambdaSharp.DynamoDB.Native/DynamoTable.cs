@@ -191,7 +191,7 @@ namespace LambdaSharp.DynamoDB.Native {
             }
 
             // add type details
-            attributes["_t"] = new AttributeValue(typeof(TRecord).FullName);
+            attributes["_t"] = new AttributeValue(GetExpectedTypeName(typeof(TRecord)));
 
             // add modified details
             attributes["_m"] = new AttributeValue {
@@ -221,11 +221,38 @@ namespace LambdaSharp.DynamoDB.Native {
             return attributes;
         }
 
-        internal TRecord? DeserializeItem<TRecord>(Dictionary<string, AttributeValue> attributes)
+        internal TRecord? DeserializeItem<TRecord>(Dictionary<string, AttributeValue> item)
             where TRecord : class
-            => DynamoSerializer.Deserialize<TRecord>(attributes, SerializerOptions);
+            => DynamoSerializer.Deserialize<TRecord>(item, SerializerOptions);
 
-        internal object? DeserializeItem(Dictionary<string, AttributeValue> attributes, Type? targetType)
-            => DynamoSerializer.Deserialize(attributes, targetType, SerializerOptions);
+        internal object? DeserializeItem(Dictionary<string, AttributeValue> item, Type? type)
+            => DynamoSerializer.Deserialize(item, type, SerializerOptions);
+
+        internal object? DeserializeItem(Dictionary<string, AttributeValue> item, Dictionary<string, Type> possibleTypes) {
+
+            // determine deserialization type by expecting record meta-data
+            var type = typeof(object);
+            if(
+                item.TryGetValue("_t", out var itemTypeAttribute)
+                && !(itemTypeAttribute.S is null)
+                && possibleTypes.TryGetValue(itemTypeAttribute.S, out var foundTargetType)
+            ) {
+                type = foundTargetType;
+            }
+            return DeserializeItem(item, type);
+        }
+
+        internal string GetExpectedTypeName(Type type) {
+            var result = type.FullName ?? "";
+
+            // check if the typename should be shortened
+            if(
+                !string.IsNullOrEmpty(SerializerOptions.ExpectedTypeNamespace)
+                && result.StartsWith(SerializerOptions.ExpectedTypeNamespace, StringComparison.InvariantCulture)
+            ) {
+                result = result.Substring(SerializerOptions.ExpectedTypeNamespace.Length);
+            }
+            return result;
+        }
     }
 }

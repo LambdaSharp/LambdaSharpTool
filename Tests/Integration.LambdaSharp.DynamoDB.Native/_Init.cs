@@ -22,9 +22,9 @@ using System.Text.Json;
 using System;
 using System.Linq;
 using LambdaSharp.DynamoDB.Serialization;
-using LambdaSharp.DynamoDB.Native;
 using LambdaSharp.DynamoDB.Native.Logger;
 using Sample.DynamoDBNative.DataAccess.Models;
+using System.Collections.Generic;
 
 namespace Integration.LambdaSharp.DynamoDB.Native {
 
@@ -48,25 +48,48 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         protected static string GetRandomString(int length)
             => new string(Enumerable.Repeat(VALID_SYMBOLS, length).Select(chars => chars[_random.Next(chars.Length)]).ToArray());
 
-        protected static CustomerRecord NewCustomerRecord() {
+        protected static CustomerRecord NewCustomer() {
             var username = "user_" + GetRandomString(10);
             return new CustomerRecord {
                 Username = username,
                 Name = "John Doe",
-                EmailAddress = $"{username}@example.org",
+                EmailAddress = username + "@example.org",
                 Addresses = new()
             };
+        }
+
+        protected static (OrderRecord, IEnumerable<OrderItemRecord>) NewOrder(string customerUsername) {
+            var order = new OrderRecord {
+                OrderId = GetRandomString(10),
+                Status = OrderStatus.Pending,
+                Amount = 9m,
+                CreateAt = DateTimeOffset.FromUnixTimeMilliseconds(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
+                CustomerUsername = customerUsername,
+                NumberOfItems = 3
+            };
+            var orderItems = new List<OrderItemRecord>();
+            for(var i = 0; i < order.NumberOfItems; ++i) {
+                orderItems.Add(new OrderItemRecord {
+                    Description = $"Order item {i + 1}",
+                    ItemId = GetRandomString(10),
+                    OrderId = order.OrderId,
+                    Price = 3m,
+                    Quantity = 1
+                });
+            }
+            return (order, orderItems);
         }
 
         //--- Constructors ---
         protected _Init(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) {
             Output = output;
-            var dynamoClient = new LoggingDynamoDbClient(new AmazonDynamoDBClient(), item => Output.WriteLine(JsonSerializer.Serialize(item, JsonOptions)));
-            Table = new DynamoTable(dynamoDbFixture.TableName, dynamoClient);
+            DynamoClient = new LoggingDynamoDbClient(new AmazonDynamoDBClient(), item => Output.WriteLine(JsonSerializer.Serialize(item, JsonOptions)));
+            TableName = dynamoDbFixture.TableName;
         }
 
         //--- Properties ---
         protected ITestOutputHelper Output { get; }
-        protected IDynamoTable Table { get; }
+        protected IAmazonDynamoDB DynamoClient { get; }
+        protected string TableName { get; }
     }
 }

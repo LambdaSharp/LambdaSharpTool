@@ -36,10 +36,12 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         //--- Constructors ---
         public ThriftBooksDataAccessTests(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {
             DataAccessClient = new ThriftBooksDataAccessClient(dynamoDbFixture.TableName, dynamoDbFixture.DynamoClient);
+            Table = new DynamoTable(TableName, DynamoClient, ThriftBooksDataAccessClient.DynamoOptions);
         }
 
         //--- Properties ---
         private IThriftBooksDataAccess DataAccessClient { get; }
+        private IDynamoTable Table { get; }
 
         //--- Methods ---
 
@@ -47,7 +49,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         public async Task Create_customer_record() {
 
             // arrange
-            var customer = NewCustomerRecord();
+            var customer = NewCustomer();
 
             // act
             await DataAccessClient.CreateCustomerAsync(customer);
@@ -61,7 +63,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         public async Task Update_address() {
 
             // arrange
-            var customer = NewCustomerRecord();
+            var customer = NewCustomer();
 
             // act
             await DataAccessClient.CreateCustomerAsync(customer);
@@ -87,29 +89,12 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         public async Task Add_order() {
 
             // arrange
-            var customer = NewCustomerRecord();
+            var customer = NewCustomer();
+            var (order, items) = NewOrder(customer.Username);
 
             // act
             await DataAccessClient.CreateCustomerAsync(customer);
-            var orderId = "order_" + GetRandomString(10);
-            var orderItems = new List<OrderItemRecord> {
-                new() {
-                    OrderId = orderId,
-                    Description = "Toothbrush",
-                    ItemId = "123",
-                    Price = 1.23m,
-                    Quantity = 1
-                }
-            };
-            var order = new OrderRecord {
-                Amount = 100,
-                CreateAt = DateTimeOffset.FromUnixTimeSeconds(1624671954),
-                CustomerUsername = customer.Username,
-                NumberOfItems = orderItems.Count,
-                OrderId = orderId,
-                Status = OrderStatus.Pending
-            };
-            await DataAccessClient.SaveOrderAsync(order, orderItems);
+            await DataAccessClient.SaveOrderAsync(order, items);
             var result = await DataAccessClient.GetCustomerWithMostRecentOrdersAsync(customer.Username, limit: 10);
 
             // assert

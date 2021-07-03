@@ -22,6 +22,8 @@ using System.Threading.Tasks;
 using Sample.DynamoDBNative.DataAccess.Models;
 using Sample.DynamoDBNative.DataAccess;
 using FluentAssertions;
+using System.Linq;
+using LambdaSharp.DynamoDB.Native;
 
 namespace Integration.LambdaSharp.DynamoDB.Native {
 
@@ -33,10 +35,12 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         //--- Constructors ---
         public DynamoTableOperations(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {
             DataAccessClient = new ThriftBooksDataAccessClient(dynamoDbFixture.TableName, dynamoDbFixture.DynamoClient);
+            Table = new DynamoTable(TableName, DynamoClient, ThriftBooksDataAccessClient.DynamoOptions);
         }
 
         //--- Properties ---
         private IThriftBooksDataAccess DataAccessClient { get; }
+        private IDynamoTable Table { get; }
 
         //--- Methods ---
 
@@ -44,13 +48,13 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         public async Task TransactGetItems() {
 
             // arrange
-            var customer1 = NewCustomerRecord();
+            var customer1 = NewCustomer();
             await DataAccessClient.CreateCustomerAsync(customer1);
-            var customer2 = NewCustomerRecord();
+            var customer2 = NewCustomer();
             await DataAccessClient.CreateCustomerAsync(customer2);
 
             // act
-            var result = await base.Table.TransactGetItems(new[] {
+            var result = await Table.TransactGetItems(new[] {
                 new CustomerRecord.PrimaryKey(customer1),
                 new CustomerRecord.PrimaryKey(customer2) }
             ).TryExecuteAsync();
@@ -66,13 +70,13 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         public async Task BatchGetItems() {
 
             // arrange
-            var customer1 = NewCustomerRecord();
+            var customer1 = NewCustomer();
             await DataAccessClient.CreateCustomerAsync(customer1);
-            var customer2 = NewCustomerRecord();
+            var customer2 = NewCustomer();
             await DataAccessClient.CreateCustomerAsync(customer2);
 
             // act
-            var result = await base.Table.BatchGetItems(new[] {
+            var result = await Table.BatchGetItems(new[] {
                 new CustomerRecord.PrimaryKey(customer1),
                 new CustomerRecord.PrimaryKey(customer2) }
             ).ExecuteAsync();
@@ -81,6 +85,66 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             result.Should().HaveCount(2);
             result.Should().ContainEquivalentOf(customer1);
             result.Should().ContainEquivalentOf(customer2);
+        }
+
+        [Fact]
+        public async Task BatchGetItemsMixed() {
+
+            // arrange
+            var customer = NewCustomer();
+            await DataAccessClient.CreateCustomerAsync(customer);
+            var (order, items) = NewOrder(customer.Username);
+            await DataAccessClient.SaveOrderAsync(order, items);
+
+            // act
+            var result = await Table.BatchGetItemsMixed()
+                .GetItem(new CustomerRecord.PrimaryKey(customer))
+                .GetItem(new OrderRecord.PrimaryKey(order))
+                .ExecuteAsync();
+
+            // assert
+            result.Should().HaveCount(2);
+            result.Should().ContainEquivalentOf(customer);
+            result.Should().ContainEquivalentOf(order);
+        }
+
+        [Fact]
+        public async Task BatchGetItemsMixedPartial() {
+
+            // arrange
+            var customer = NewCustomer();
+            await DataAccessClient.CreateCustomerAsync(customer);
+            var (order, items) = NewOrder(customer.Username);
+            await DataAccessClient.SaveOrderAsync(order, items);
+
+            // act
+            var result = await Table.BatchGetItemsMixed()
+                .StartGetItem(new CustomerRecord.PrimaryKey(customer))
+                    .Get(record => record.Username)
+                .End()
+                .StartGetItem(new OrderRecord.PrimaryKey(order))
+                    .Get(record => record.OrderId)
+                .End()
+                .ExecuteAsync();
+
+            // assert
+            result.Should().HaveCount(2);
+
+            // verify fetched customer record
+            var customerRecords = result.OfType<CustomerRecord>().ToList();
+            customerRecords.Should().HaveCount(1);
+            var fetchedCustomer =  customerRecords.First();
+            fetchedCustomer.Should().NotBeNull();
+            fetchedCustomer.Username.Should().Be(customer.Username);
+            fetchedCustomer.Name.Should().BeNull();
+
+            // verify fetched customer record
+            var orderRecords = result.OfType<OrderRecord>().ToList();
+            orderRecords.Should().HaveCount(1);
+            var fetchedOrder =  orderRecords.First();
+            fetchedOrder.Should().NotBeNull();
+            fetchedOrder.OrderId.Should().Be(order.OrderId);
+            fetchedOrder.CustomerUsername.Should().BeNull();
         }
     }
 }

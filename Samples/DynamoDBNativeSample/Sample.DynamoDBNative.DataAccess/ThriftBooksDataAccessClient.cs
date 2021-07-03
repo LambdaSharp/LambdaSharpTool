@@ -23,11 +23,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using LambdaSharp.DynamoDB.Native;
+using LambdaSharp.DynamoDB.Serialization;
 using Sample.DynamoDBNative.DataAccess.Models;
 
 namespace Sample.DynamoDBNative.DataAccess {
 
     public class ThriftBooksDataAccessClient : IThriftBooksDataAccess {
+
+        //--- Class Fields ---
+        public static readonly DynamoSerializerOptions DynamoOptions = new DynamoSerializerOptions {
+            ExpectedTypeNamespace = "Sample.DynamoDBNative.DataAccess.Models"
+        };
 
         //--- Class Methods ---
         private static async Task<T> GetSingleItem<T>(IAsyncEnumerable<T> asyncEnumerable) {
@@ -41,7 +47,7 @@ namespace Sample.DynamoDBNative.DataAccess {
 
         //--- Constructors ---
         public ThriftBooksDataAccessClient(string tableName, IAmazonDynamoDB dynamoClient = null)
-            => Table = new DynamoTable(tableName, dynamoClient);
+            => Table = new DynamoTable(tableName, dynamoClient, DynamoOptions);
 
         //--- Properties ---
         protected IDynamoTable Table { get; }
