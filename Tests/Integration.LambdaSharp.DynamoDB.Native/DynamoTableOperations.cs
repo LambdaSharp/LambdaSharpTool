@@ -32,6 +32,28 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
         // TODO: add `BatchWriteItems()`
 
+        //--- Types ---
+        private class MyRecord {
+
+            //--- Types ---
+            public class PrimaryKey : DynamoPrimaryKey<MyRecord> {
+
+                //--- Constants ---
+                public const string PK_PATTERN = "TYPE-ID#{0}";
+                public const string SK_PATTERN = "SUB-ID#{1}";
+
+                //--- Constructors ---
+                public PrimaryKey(MyRecord record) : this(record.Id, record.SubId) { }
+                public PrimaryKey(string id, string subId) : base(PK_PATTERN, SK_PATTERN, id, subId) { }
+
+            }
+
+            //--- Properties ---
+            public string Id { get; set; }
+            public string SubId { get; set; }
+            public string Value { get; set; }
+        }
+
         //--- Constructors ---
         public DynamoTableOperations(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {
             DataAccessClient = new ThriftBooksDataAccessClient(dynamoDbFixture.TableName, dynamoDbFixture.DynamoClient);
@@ -156,6 +178,35 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // assert
             result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Query_main_index() {
+
+            // arrange
+            var id = GetRandomString(10);
+            var record1 = new MyRecord {
+                Id = id,
+                SubId = GetRandomString(10),
+                Value = "Hello"
+            };
+            await Table.PutItemAsync(record1, new MyRecord.PrimaryKey(record1));
+            var record2 = new MyRecord {
+                Id = id,
+                SubId = GetRandomString(10),
+                Value = "World"
+            };
+            await Table.PutItemAsync(record2, new MyRecord.PrimaryKey(record2));
+
+            // act
+            var result = await Table.Query(new MyRecord.PrimaryKey(id, ""), consistentRead: true)
+                .WhereSKBeginsWith(string.Format(MyRecord.PrimaryKey.SK_PATTERN, "", ""))
+                .ExecuteAsync();
+
+            // assert
+            result.Should().HaveCount(2);
+            result.Should().ContainEquivalentOf(record1);
+            result.Should().ContainEquivalentOf(record2);
         }
 
         [Fact]
