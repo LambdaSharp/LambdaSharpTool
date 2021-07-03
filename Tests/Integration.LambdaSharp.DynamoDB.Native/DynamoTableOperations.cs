@@ -57,7 +57,23 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         }
 
         [Fact]
-        public async Task PutItem_condition_failed() {
+        public async Task PutItem_with_condition_success() {
+
+            // arrange
+            var customer = NewCustomer();
+            await DataAccessClient.CreateCustomerAsync(customer);
+
+            // act
+            var result = await Table.PutItem(customer, new CustomerRecord.PrimaryKey(customer))
+                .WithCondition(record => DynamoCondition.Exists(record))
+                .ExecuteAsync();
+
+            // assert
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task PutItem_with_condition_failed() {
 
             // arrange
             var customer = NewCustomer();
@@ -66,6 +82,76 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             // act
             var result = await Table.PutItem(customer, new CustomerRecord.PrimaryKey(customer))
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .ExecuteAsync();
+
+            // assert
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task UpdateItem_with_condition_success() {
+
+            // arrange
+            var customer = NewCustomer();
+            var (order, items) = NewOrder(customer.Username);
+            await DataAccessClient.CreateCustomerAsync(customer);
+            await DataAccessClient.SaveOrderAsync(order, items);
+
+            // act
+            var result = await Table.UpdateItem(new OrderRecord.PrimaryKey(order))
+                .WithCondition(record => record.Status == OrderStatus.Pending)
+                .Set(record => record.Status, OrderStatus.Shipped)
+                .ExecuteAsync();
+
+            // assert
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task DeleteItem_with_condition_success() {
+
+            // arrange
+            var customer = NewCustomer();
+            await DataAccessClient.CreateCustomerAsync(customer);
+
+            // act
+            var result = await Table.DeleteItem(new CustomerRecord.PrimaryKey(customer))
+                .WithCondition(record => record.Name == customer.Name)
+                .ExecuteAsync();
+
+            // assert
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task DeleteItem_with_condition_failed() {
+
+            // arrange
+            var customer = NewCustomer();
+            await DataAccessClient.CreateCustomerAsync(customer);
+
+            // act
+            var result = await Table.DeleteItem(new CustomerRecord.PrimaryKey(customer))
+                .WithCondition(record => record.Name == "Bob")
+                .ExecuteAsync();
+
+            // assert
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task UpdateItem_with_condition_failed() {
+
+            // arrange
+            var customer = NewCustomer();
+            var (order, items) = NewOrder(customer.Username);
+            await DataAccessClient.CreateCustomerAsync(customer);
+            await DataAccessClient.SaveOrderAsync(order, items);
+
+            // act
+            var result = await Table.UpdateItem(new OrderRecord.PrimaryKey(order))
+                .WithCondition(record => record.Status == OrderStatus.Shipped)
+                .Set(record => record.Status, OrderStatus.Delivered)
                 .ExecuteAsync();
 
             // assert
