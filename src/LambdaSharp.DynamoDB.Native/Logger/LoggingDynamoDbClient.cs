@@ -151,6 +151,94 @@ namespace LambdaSharp.DynamoDB.Native.Logger {
             }
         }
 
+        public async Task<BatchGetItemResponse> BatchGetItemAsync(BatchGetItemRequest request, CancellationToken cancellationToken = default) {
+            try {
+                var response = await _dynamoDBClient.BatchGetItemAsync(request, cancellationToken);
+                _log?.Invoke(new {
+                    Action = nameof(BatchGetItemAsync),
+                    Request = request,
+                    Response = response
+                });
+                return response;
+            } catch(Exception e) {
+                _log?.Invoke(new {
+                    Action = nameof(BatchGetItemAsync),
+                    Request = request,
+                    Exception = new {
+                        Type = e.GetType().FullName,
+                        Message = e.Message
+                    }
+                });
+                throw;
+            }
+        }
+
+        public async Task<BatchWriteItemResponse> BatchWriteItemAsync(BatchWriteItemRequest request, CancellationToken cancellationToken = default) {
+            try {
+                var response = await _dynamoDBClient.BatchWriteItemAsync(request, cancellationToken);
+                _log?.Invoke(new {
+                    Action = nameof(BatchWriteItemAsync),
+                    Request = request,
+                    Response = response
+                });
+                return response;
+            } catch(Exception e) {
+                _log?.Invoke(new {
+                    Action = nameof(BatchWriteItemAsync),
+                    Request = request,
+                    Exception = new {
+                        Type = e.GetType().FullName,
+                        Message = e.Message
+                    }
+                });
+                throw;
+            }
+        }
+
+        public async Task<TransactGetItemsResponse> TransactGetItemsAsync(TransactGetItemsRequest request, CancellationToken cancellationToken = default) {
+            try {
+                var response = await _dynamoDBClient.TransactGetItemsAsync(request, cancellationToken);
+                _log?.Invoke(new {
+                    Action = nameof(TransactGetItemsAsync),
+                    Request = request,
+                    Response = response
+                });
+                return response;
+            } catch(Exception e) {
+                _log?.Invoke(new {
+                    Action = nameof(TransactGetItemsAsync),
+                    Request = request,
+                    Exception = new {
+                        Type = e.GetType().FullName,
+                        Message = e.Message
+                    }
+                });
+                throw;
+            }
+        }
+
+        public async Task<TransactWriteItemsResponse> TransactWriteItemsAsync(TransactWriteItemsRequest request, CancellationToken cancellationToken = default) {
+            try {
+                var response = await _dynamoDBClient.TransactWriteItemsAsync(request, cancellationToken);
+                _log?.Invoke(new {
+                    Action = nameof(TransactWriteItemsAsync),
+                    Request = request,
+                    Response = response
+                });
+                return response;
+            } catch(Exception e) {
+                _log?.Invoke(new {
+                    Action = nameof(TransactWriteItemsAsync),
+                    Request = request,
+                    Exception = new {
+                        Type = e.GetType().FullName,
+                        Message = e.Message
+                    }
+                });
+                throw;
+            }
+        }
+
         #region *** Not Supported ***
 
         //--- Properties ---
@@ -170,15 +258,7 @@ namespace LambdaSharp.DynamoDB.Native.Logger {
             throw new NotSupportedException();
         }
 
-        public Task<BatchGetItemResponse> BatchGetItemAsync(BatchGetItemRequest request, CancellationToken cancellationToken = default) {
-            throw new NotSupportedException();
-        }
-
         public Task<BatchWriteItemResponse> BatchWriteItemAsync(Dictionary<string, List<WriteRequest>> requestItems, CancellationToken cancellationToken = default) {
-            throw new NotSupportedException();
-        }
-
-        public Task<BatchWriteItemResponse> BatchWriteItemAsync(BatchWriteItemRequest request, CancellationToken cancellationToken = default) {
             throw new NotSupportedException();
         }
 
@@ -379,14 +459,6 @@ namespace LambdaSharp.DynamoDB.Native.Logger {
         }
 
         public Task<TagResourceResponse> TagResourceAsync(TagResourceRequest request, CancellationToken cancellationToken = default) {
-            throw new NotSupportedException();
-        }
-
-        public Task<TransactGetItemsResponse> TransactGetItemsAsync(TransactGetItemsRequest request, CancellationToken cancellationToken = default) {
-            throw new NotSupportedException();
-        }
-
-        public Task<TransactWriteItemsResponse> TransactWriteItemsAsync(TransactWriteItemsRequest request, CancellationToken cancellationToken = default) {
             throw new NotSupportedException();
         }
 

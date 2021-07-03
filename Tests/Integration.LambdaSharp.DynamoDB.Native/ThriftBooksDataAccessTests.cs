@@ -29,19 +29,9 @@ using Sample.DynamoDBNative.DataAccess.Models;
 
 namespace Integration.LambdaSharp.DynamoDB.Native {
 
+
     [Collection("DynamoDB")]
     public class ThriftBooksDataAccessTests : _Init {
-
-        //--- Class Methods ---
-        public static CustomerRecord NewCustomerRecord() {
-            var username = "user_" + GetRandomString(10);
-            return new CustomerRecord {
-                Username = username,
-                Name = "John Doe",
-                EmailAddress = $"{username}@example.org",
-                Addresses = new()
-            };
-        }
 
         //--- Constructors ---
         public ThriftBooksDataAccessTests(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {

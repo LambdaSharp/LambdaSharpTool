@@ -24,6 +24,7 @@ using System.Linq;
 using LambdaSharp.DynamoDB.Serialization;
 using LambdaSharp.DynamoDB.Native;
 using LambdaSharp.DynamoDB.Native.Logger;
+using Sample.DynamoDBNative.DataAccess.Models;
 
 namespace Integration.LambdaSharp.DynamoDB.Native {
 
@@ -46,6 +47,16 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         //--- Class Methods ---
         protected static string GetRandomString(int length)
             => new string(Enumerable.Repeat(VALID_SYMBOLS, length).Select(chars => chars[_random.Next(chars.Length)]).ToArray());
+
+        protected static CustomerRecord NewCustomerRecord() {
+            var username = "user_" + GetRandomString(10);
+            return new CustomerRecord {
+                Username = username,
+                Name = "John Doe",
+                EmailAddress = $"{username}@example.org",
+                Addresses = new()
+            };
+        }
 
         //--- Constructors ---
         protected _Init(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) {
