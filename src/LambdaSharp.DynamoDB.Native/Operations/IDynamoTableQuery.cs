@@ -27,7 +27,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     public interface IDynamoTableQuery {
 
         //--- Methods ---
-        IDynamoTableQuery WithFilter<TRecord>(Expression<Func<TRecord, bool>> filter) where TRecord : class;
+        IDynamoTableQuery Where<TRecord>(Expression<Func<TRecord, bool>> filter) where TRecord : class;
         IDynamoTableQuery WithTypeFilter<T>();
         IDynamoTableQuery WithTypeFilter(Type type);
         IDynamoTableQuery Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class;
@@ -40,7 +40,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     public interface IDynamoTableQuery<TRecord> where TRecord : class {
 
         //--- Methods ---
-        IDynamoTableQuery<TRecord> WithFilter(Expression<Func<TRecord, bool>> filter);
+        IDynamoTableQuery<TRecord> Where(Expression<Func<TRecord, bool>> filter);
         IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
         IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
         IAsyncEnumerable<TRecord> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
