@@ -50,7 +50,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         public async Task<TRecord?> ExecuteAsync(CancellationToken cancellationToken) {
             _request.ProjectionExpression = _converter.ConvertProjections();
             var response = await _table.DynamoClient.GetItemAsync(_request, cancellationToken);
-            return _table.DeserializeItem<TRecord>(response.Item);
+            return response.IsItemSet
+                ? _table.DeserializeItem<TRecord>(response.Item)
+                : null;
         }
     }
 }

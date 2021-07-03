@@ -45,6 +45,18 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         //--- Methods ---
 
         [Fact]
+        public async Task GetItem_when_it_does_not_exist() {
+
+            // arrange
+
+            // act
+            var result = await Table.GetItemAsync(new CustomerRecord.PrimaryKey("123456789"));
+
+            // assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
         public async Task TransactGetItems() {
 
             // arrange
