@@ -20,6 +20,8 @@
 
 > TODO: test `GetItem<>` when item doesn't exist
 
+> TODO: `TransactGetItems()` vs. `BatchGetItem()`: as is plural, the other is not
+
 # LambdaSharp.DynamoDB.Native
 
 ## Data Mapping

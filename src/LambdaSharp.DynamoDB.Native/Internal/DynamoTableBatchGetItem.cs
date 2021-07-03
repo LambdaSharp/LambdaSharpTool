@@ -47,11 +47,13 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             //--- Methods ---
             public IDynamoTableBatchGetItemEntry<TRecord> Get<T>(System.Linq.Expressions.Expression<Func<TRecord, T>> attribute) {
                 _parent._converter.AddProjection(attribute.Body);
+
+                // NOTE (2021-06-24, bjorg): we always fetch `_t` to allow polymorphic deserialization
+                _parent._converter.AddProjection("_t");
                 return this;
             }
 
-            public IDynamoTableBatchGetItem Execute(CancellationToken cancellationToken = default)
-                => _parent;
+            public IDynamoTableBatchGetItem End() => _parent;
         }
 
         //--- Fields ---
@@ -68,14 +70,11 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         //--- Methods ---
-        public IDynamoTableBatchGetItemEntry<TRecord> AddGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
+        public IDynamoTableBatchGetItemEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
             _request.RequestItems.First().Value.Keys.Add(new Dictionary<string, AttributeValue> {
                 [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
                 [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
             });
-
-            // NOTE (2021-06-24, bjorg): we always fetch `_t` to allow polymorphic deserialization
-            _converter.AddProjection("_t");
             _expectedTypes[typeof(TRecord).FullName ?? throw new ArgumentException("type name is <null>")] = typeof(TRecord);
             return new DynamoTableBatchGetItemEntry<TRecord>(this);
         }

@@ -44,5 +44,8 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class;
         IDynamoTableBatchGetItem BatchGetItemMixed(bool consistentRead = false);
         IDynamoTableBatchWriteItem BatchWriteItem();
+        IDynamoTableTransactGetItems<TRecord> TransactGetItemsMixed<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys)
+            where TRecord : class;
+        IDynamoTableTransactGetItems TransactGetItemsMixed();
     }
 }

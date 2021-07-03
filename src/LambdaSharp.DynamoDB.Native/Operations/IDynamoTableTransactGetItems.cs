@@ -24,30 +24,29 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
-
-    public interface IDynamoTableBatchGetItem<TRecord> where TRecord : class {
+    public interface IDynamoTableTransactGetItems<TRecord> where TRecord : class {
 
         //--- Methods ---
-        IDynamoTableBatchGetItem<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
-        Task<IEnumerable<TRecord>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
+        IDynamoTableTransactGetItems<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+        Task<(bool Success, IEnumerable<TRecord> Items)> TryExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
     }
 
-    public interface IDynamoTableBatchGetItem {
+    public interface IDynamoTableTransactGetItems {
 
         //--- Methods ---
-        IDynamoTableBatchGetItemEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
+        IDynamoTableTransactGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
-        Task<IEnumerable<object>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
+        Task<(bool Success, IEnumerable<object> Items)> TryExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
 
-        IDynamoTableBatchGetItem GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
+        IDynamoTableTransactGetItems GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class
             => StartGetItem(primaryKey, consistentRead).End();
     }
 
-    public interface IDynamoTableBatchGetItemEntry<TRecord> where TRecord : class {
+    public interface IDynamoTableTransactGetItemsEntry<TRecord> where TRecord : class {
 
         //--- Methods ---
-        IDynamoTableBatchGetItemEntry<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
-        IDynamoTableBatchGetItem End();
+        IDynamoTableTransactGetItemsEntry<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+        IDynamoTableTransactGetItems End();
     }
 }

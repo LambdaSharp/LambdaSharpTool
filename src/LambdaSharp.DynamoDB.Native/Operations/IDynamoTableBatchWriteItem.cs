@@ -24,9 +24,9 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     public interface IDynamoTableBatchWriteItem {
 
         //--- Methods ---
-        IDynamoTableBatchWriteItem AddPutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
+        IDynamoTableBatchWriteItem PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
             where TRecord : class;
-        IDynamoTableBatchWriteItem AddDeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
+        IDynamoTableBatchWriteItem DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
         Task ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
     }

@@ -103,7 +103,7 @@ namespace Sample.DynamoDBNative.DataAccess {
 
                 // BatchWriteItem can take up to 25 operations
                 foreach(var orderItem in orderItems.Take(25)) {
-                    batch.AddPutItem(orderItem, new OrderItemRecord.PrimaryKey(orderItem));
+                    batch.PutItem(orderItem, new OrderItemRecord.PrimaryKey(orderItem));
                 }
                 await batch.ExecuteAsync();
 
