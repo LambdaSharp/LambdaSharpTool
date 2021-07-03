@@ -169,7 +169,7 @@ namespace LambdaSharp.DynamoDB.Native {
             return attributes;
         }
 
-        public IDynamoTableBatchGetItem<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
+        public IDynamoTableBatchGetItem<TRecord> BatchGetItem<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
             where TRecord : class
         {
             if(!primaryKeys.Any()) {
