@@ -57,6 +57,22 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         }
 
         [Fact]
+        public async Task PutItem_condition_failed() {
+
+            // arrange
+            var customer = NewCustomer();
+            await DataAccessClient.CreateCustomerAsync(customer);
+
+            // act
+            var result = await Table.PutItem(customer, new CustomerRecord.PrimaryKey(customer))
+                .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .ExecuteAsync();
+
+            // assert
+            result.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task TransactGetItems() {
 
             // arrange
