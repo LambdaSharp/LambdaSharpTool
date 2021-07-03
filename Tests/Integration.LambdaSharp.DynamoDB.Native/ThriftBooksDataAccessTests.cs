@@ -53,7 +53,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // act
             await DataAccessClient.CreateCustomerAsync(customer);
-            var result = await Table.GetItemAsync(new CustomerRecord.PrimaryKey(customer), consistentRead: true);
+            var result = await Table.GetItemAsync(DataModel.CustomerPrimaryKey(customer), consistentRead: true);
 
             // assert
             result.Should().BeEquivalentTo(customer);
@@ -74,7 +74,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
                 State = "CA"
             };
             await DataAccessClient.AddOrUpdateAddressAsync(customer.Username, address);
-            var result = await Table.GetItemAsync(new CustomerRecord.PrimaryKey(customer), consistentRead: true);
+            var result = await Table.GetItemAsync(DataModel.CustomerPrimaryKey(customer), consistentRead: true);
 
             // assert
             result.Username.Should().Be(customer.Username);

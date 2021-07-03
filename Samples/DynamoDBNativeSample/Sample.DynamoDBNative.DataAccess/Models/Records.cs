@@ -19,23 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using LambdaSharp.DynamoDB.Native;
 
 namespace Sample.DynamoDBNative.DataAccess.Models {
 
     public class CustomerRecord {
-
-        //--- Types ---
-        public sealed class PrimaryKey : DynamoPrimaryKey<CustomerRecord> {
-
-            //--- Constants ---
-            public const string PK_PATTERN = "CUSTOMER#{0}";
-            public const string SK_PATTERN = "INFO";
-
-            //--- Constructors ---
-            public PrimaryKey(CustomerRecord record) : this(record.Username) { }
-            public PrimaryKey(string username) : base(PK_PATTERN, SK_PATTERN, username) { }
-        }
 
         //--- Properties ---
         public string Username { get; set; }
@@ -45,18 +32,6 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
     }
 
     public class CustomerEmailRecord {
-
-        //--- Types ---
-        public sealed class PrimaryKey : DynamoPrimaryKey<CustomerEmailRecord> {
-
-            //--- Constants ---
-            public const string PK_PATTERN = "CUSTOMEREMAIL#{0}";
-            public const string SK_PATTERN = "INFO";
-
-            //--- Constructors ---
-            public PrimaryKey(CustomerEmailRecord record) : this(record.EmailAddress) { }
-            public PrimaryKey(string emailAddress) : base(PK_PATTERN, SK_PATTERN, emailAddress) { }
-        }
 
         //--- Properties ---
         public string Username { get; set; }
@@ -84,29 +59,6 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
 
     public class OrderRecord {
 
-        //--- Types ---
-        public sealed class PrimaryKey : DynamoPrimaryKey<OrderRecord> {
-
-            //--- Constants ---
-            public const string PK_PATTERN = "CUSTOMER#{0}";
-            public const string SK_PATTERN = "#ORDER#{1}";
-
-            //--- Constructors ---
-            public PrimaryKey(OrderRecord record) : this(record.CustomerUsername, record.OrderId) { }
-            public PrimaryKey(string customerUsername, string orderId) : base(PK_PATTERN, SK_PATTERN, customerUsername, orderId) { }
-        }
-
-        public sealed class GSI1Key : DynamoGlobalIndexKey<OrderRecord> {
-
-            //--- Constants ---
-            public const string PK_PATTERN = "ORDER#{0}";
-            public const string SK_PATTERN = "INFO";
-
-            //--- Constructors ---
-            public GSI1Key(OrderRecord record) : this(record.OrderId) { }
-            public GSI1Key(string orderId) : base("GSI1", "GSI1PK", "GSI1SK", PK_PATTERN, SK_PATTERN, orderId) { }
-        }
-
         //--- Properties ---
         public string OrderId { get; set; }
         public string CustomerUsername { get; set; }
@@ -117,29 +69,6 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
     }
 
     public class OrderItemRecord {
-
-        //--- Types ---
-        public sealed class PrimaryKey : DynamoPrimaryKey<OrderItemRecord> {
-
-            //--- Constants ---
-            public const string PK_PATTERN = "ORDER#{0}#ITEM#{1}";
-            public const string SK_PATTERN = "INFO";
-
-            //--- Constructors ---
-            public PrimaryKey(OrderItemRecord record) : this(record.OrderId, record.ItemId) { }
-            public PrimaryKey(string orderId, string itemId) : base(PK_PATTERN, SK_PATTERN, orderId, itemId) { }
-        }
-
-        public sealed class GSI1Key : DynamoGlobalIndexKey<OrderItemRecord> {
-
-            //--- Constants ---
-            public const string PK_PATTERN = "ORDER#{0}";
-            public const string SK_PATTERN = "ITEM#{1}";
-
-            //--- Constructors ---
-            public GSI1Key(OrderItemRecord record) : this(record.OrderId, record.ItemId) { }
-            public GSI1Key(string orderId, string itemId) : base("GSI1", "GSI1PK", "GSI1SK", PK_PATTERN, SK_PATTERN, orderId, itemId) { }
-        }
 
         //--- Properties ---
         public string OrderId { get; set; }
