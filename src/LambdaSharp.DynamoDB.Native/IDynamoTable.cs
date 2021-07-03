@@ -40,11 +40,11 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class;
         IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
         IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
-        IDynamoTableBatchGetItem<TRecord> BatchGetItem<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead = false)
+        IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead = false)
             where TRecord : class;
-        IDynamoTableBatchGetItem BatchGetItemMixed(bool consistentRead = false);
-        IDynamoTableBatchWriteItem BatchWriteItem();
-        IDynamoTableTransactGetItems<TRecord> TransactGetItemsMixed<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys)
+        IDynamoTableBatchGetItems BatchGetItemsMixed(bool consistentRead = false);
+        IDynamoTableBatchWriteItems BatchWriteItems();
+        IDynamoTableTransactGetItems<TRecord> TransactGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys)
             where TRecord : class;
         IDynamoTableTransactGetItems TransactGetItemsMixed();
     }

@@ -28,7 +28,7 @@ using LambdaSharp.DynamoDB.Native.Operations;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal sealed class DynamoTableBatchGetItem<TRecord> : IDynamoTableBatchGetItem<TRecord>
+    internal sealed class DynamoTableBatchGetItems<TRecord> : IDynamoTableBatchGetItems<TRecord>
         where TRecord : class
     {
 
@@ -41,14 +41,14 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         private readonly DynamoRequestConverter _converter;
 
         //--- Constructors ---
-        public DynamoTableBatchGetItem(DynamoTable table, BatchGetItemRequest request) {
+        public DynamoTableBatchGetItems(DynamoTable table, BatchGetItemRequest request) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
             _converter = new DynamoRequestConverter(request.RequestItems.Single().Value.ExpressionAttributeNames, _table.SerializerOptions);
         }
 
         //--- Methods ---
-        public IDynamoTableBatchGetItem<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute) {
+        public IDynamoTableBatchGetItems<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute) {
             _converter.AddProjection(attribute.Body);
             return this;
         }

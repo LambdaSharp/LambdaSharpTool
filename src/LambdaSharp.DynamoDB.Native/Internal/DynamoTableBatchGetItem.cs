@@ -27,25 +27,25 @@ using LambdaSharp.DynamoDB.Native.Exceptions;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal sealed class DynamoTableBatchGetItem : IDynamoTableBatchGetItem {
+    internal sealed class DynamoTableBatchGetItems : IDynamoTableBatchGetItems {
 
         //--- Constants ---
         private const int MILLISECOND_BACKOFF = 100;
 
         //--- Types ---
-        internal sealed class DynamoTableBatchGetItemEntry<TRecord> : IDynamoTableBatchGetItemEntry<TRecord>
+        internal sealed class DynamoTableBatchGetItemsEntry<TRecord> : IDynamoTableBatchGetItemsEntry<TRecord>
             where TRecord : class
         {
 
             //--- Fields ---
-            private readonly DynamoTableBatchGetItem _parent;
+            private readonly DynamoTableBatchGetItems _parent;
 
             //--- Constructors ---
-            public DynamoTableBatchGetItemEntry(DynamoTableBatchGetItem parent)
+            public DynamoTableBatchGetItemsEntry(DynamoTableBatchGetItems parent)
                 => _parent = parent ?? throw new ArgumentNullException(nameof(parent));
 
             //--- Methods ---
-            public IDynamoTableBatchGetItemEntry<TRecord> Get<T>(System.Linq.Expressions.Expression<Func<TRecord, T>> attribute) {
+            public IDynamoTableBatchGetItemsEntry<TRecord> Get<T>(System.Linq.Expressions.Expression<Func<TRecord, T>> attribute) {
                 _parent._converter.AddProjection(attribute.Body);
 
                 // NOTE (2021-06-24, bjorg): we always fetch `_t` to allow polymorphic deserialization
@@ -53,7 +53,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 return this;
             }
 
-            public IDynamoTableBatchGetItem End() => _parent;
+            public IDynamoTableBatchGetItems End() => _parent;
         }
 
         //--- Fields ---
@@ -63,20 +63,20 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         private readonly Dictionary<string, Type> _expectedTypes = new Dictionary<string, Type>();
 
         //--- Constructors ---
-        public DynamoTableBatchGetItem(DynamoTable table, BatchGetItemRequest request) {
+        public DynamoTableBatchGetItems(DynamoTable table, BatchGetItemRequest request) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
             _converter = new DynamoRequestConverter(_request.RequestItems.Single().Value.ExpressionAttributeNames, _table.SerializerOptions);
         }
 
         //--- Methods ---
-        public IDynamoTableBatchGetItemEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
+        public IDynamoTableBatchGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
             _request.RequestItems.First().Value.Keys.Add(new Dictionary<string, AttributeValue> {
                 [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
                 [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
             });
             _expectedTypes[typeof(TRecord).FullName ?? throw new ArgumentException("type name is <null>")] = typeof(TRecord);
-            return new DynamoTableBatchGetItemEntry<TRecord>(this);
+            return new DynamoTableBatchGetItemsEntry<TRecord>(this);
         }
 
         public async Task<IEnumerable<object>> ExecuteAsync(int maxAttempts, CancellationToken cancellationToken = default) {

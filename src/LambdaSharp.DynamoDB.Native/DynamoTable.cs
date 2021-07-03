@@ -169,7 +169,7 @@ namespace LambdaSharp.DynamoDB.Native {
             return attributes;
         }
 
-        public IDynamoTableBatchGetItem<TRecord> BatchGetItem<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
+        public IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
             where TRecord : class
         {
             if(!primaryKeys.Any()) {
@@ -189,11 +189,11 @@ namespace LambdaSharp.DynamoDB.Native {
                     }
                 }
             };
-            return new DynamoTableBatchGetItem<TRecord>(this, request);
+            return new DynamoTableBatchGetItems<TRecord>(this, request);
         }
 
-        public IDynamoTableBatchGetItem BatchGetItemMixed(bool consistentRead)
-            => new DynamoTableBatchGetItem(this, new BatchGetItemRequest {
+        public IDynamoTableBatchGetItems BatchGetItemsMixed(bool consistentRead)
+            => new DynamoTableBatchGetItems(this, new BatchGetItemRequest {
                 RequestItems = {
                     [TableName] = new KeysAndAttributes {
                         ConsistentRead = consistentRead
@@ -201,14 +201,14 @@ namespace LambdaSharp.DynamoDB.Native {
                 }
             });
 
-        public IDynamoTableBatchWriteItem BatchWriteItem( )
-            => new DynamoTableBatchWriteItem(this, new BatchWriteItemRequest {
+        public IDynamoTableBatchWriteItems BatchWriteItems( )
+            => new DynamoTableBatchWriteItems(this, new BatchWriteItemRequest {
                 RequestItems = {
                     [TableName] = new List<WriteRequest>()
                 }
             });
 
-        public IDynamoTableTransactGetItems<TRecord> TransactGetItemsMixed<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys) where TRecord : class
+        public IDynamoTableTransactGetItems<TRecord> TransactGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys) where TRecord : class
             => new DynamoTableTransactGetItems<TRecord>(this, new TransactGetItemsRequest {
                 TransactItems = primaryKeys.Select(primaryKey => new TransactGetItem {
                     Get = new Get {

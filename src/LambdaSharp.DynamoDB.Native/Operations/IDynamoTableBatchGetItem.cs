@@ -25,29 +25,29 @@ using System.Threading.Tasks;
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
 
-    public interface IDynamoTableBatchGetItem<TRecord> where TRecord : class {
+    public interface IDynamoTableBatchGetItems<TRecord> where TRecord : class {
 
         //--- Methods ---
-        IDynamoTableBatchGetItem<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+        IDynamoTableBatchGetItems<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
         Task<IEnumerable<TRecord>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
     }
 
-    public interface IDynamoTableBatchGetItem {
+    public interface IDynamoTableBatchGetItems {
 
         //--- Methods ---
-        IDynamoTableBatchGetItemEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
+        IDynamoTableBatchGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
         Task<IEnumerable<object>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
 
-        IDynamoTableBatchGetItem GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
+        IDynamoTableBatchGetItems GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class
             => StartGetItem(primaryKey, consistentRead).End();
     }
 
-    public interface IDynamoTableBatchGetItemEntry<TRecord> where TRecord : class {
+    public interface IDynamoTableBatchGetItemsEntry<TRecord> where TRecord : class {
 
         //--- Methods ---
-        IDynamoTableBatchGetItemEntry<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
-        IDynamoTableBatchGetItem End();
+        IDynamoTableBatchGetItemsEntry<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+        IDynamoTableBatchGetItems End();
     }
 }

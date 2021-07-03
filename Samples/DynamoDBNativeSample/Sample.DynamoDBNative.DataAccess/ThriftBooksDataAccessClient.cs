@@ -99,7 +99,7 @@ namespace Sample.DynamoDBNative.DataAccess {
 
             // store all order items using batch operations
             while(orderItems.Any()) {
-                var batch = Table.BatchWriteItem();
+                var batch = Table.BatchWriteItems();
 
                 // BatchWriteItem can take up to 25 operations
                 foreach(var orderItem in orderItems.Take(25)) {

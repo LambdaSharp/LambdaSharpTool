@@ -27,7 +27,7 @@ using LambdaSharp.DynamoDB.Native.Operations;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal sealed class DynamoTableBatchWriteItem : IDynamoTableBatchWriteItem {
+    internal sealed class DynamoTableBatchWriteItems : IDynamoTableBatchWriteItems {
 
         //--- Constants ---
         private const int MILLISECOND_BACKOFF = 100;
@@ -37,13 +37,13 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         private readonly BatchWriteItemRequest _request;
 
         //--- Constructors ---
-        public DynamoTableBatchWriteItem(DynamoTable table, BatchWriteItemRequest request) {
+        public DynamoTableBatchWriteItems(DynamoTable table, BatchWriteItemRequest request) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
         }
 
         //--- Methods ---
-        public IDynamoTableBatchWriteItem PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys) where TRecord : class {
+        public IDynamoTableBatchWriteItems PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys) where TRecord : class {
             _request.RequestItems.First().Value.Add(new WriteRequest {
                 PutRequest = new PutRequest {
                     Item = _table.SerializeItem(record, primaryKey, secondaryKeys)
@@ -52,7 +52,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return this;
         }
 
-        public IDynamoTableBatchWriteItem DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey) where TRecord : class {
+        public IDynamoTableBatchWriteItems DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey) where TRecord : class {
             _request.RequestItems.First().Value.Add(new WriteRequest {
                 DeleteRequest = new DeleteRequest {
                     Key = new Dictionary<string, AttributeValue> {

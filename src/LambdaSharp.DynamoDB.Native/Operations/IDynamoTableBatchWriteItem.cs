@@ -21,12 +21,12 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
-    public interface IDynamoTableBatchWriteItem {
+    public interface IDynamoTableBatchWriteItems {
 
         //--- Methods ---
-        IDynamoTableBatchWriteItem PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
+        IDynamoTableBatchWriteItems PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
             where TRecord : class;
-        IDynamoTableBatchWriteItem DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
+        IDynamoTableBatchWriteItems DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
         Task ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
     }
