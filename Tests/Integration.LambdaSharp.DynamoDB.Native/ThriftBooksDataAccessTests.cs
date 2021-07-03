@@ -36,7 +36,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         //--- Constructors ---
         public ThriftBooksDataAccessTests(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {
             DataAccessClient = new ThriftBooksDataAccessClient(dynamoDbFixture.TableName, dynamoDbFixture.DynamoClient);
-            Table = new DynamoTable(TableName, DynamoClient, ThriftBooksDataAccessClient.DynamoOptions);
+            Table = new DynamoTable(TableName, DynamoClient, ThriftBooksDataAccessClient.TableOptions);
         }
 
         //--- Properties ---

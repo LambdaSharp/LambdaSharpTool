@@ -31,7 +31,7 @@ namespace Sample.DynamoDBNative.DataAccess {
     public class ThriftBooksDataAccessClient : IThriftBooksDataAccess {
 
         //--- Class Fields ---
-        public static readonly DynamoSerializerOptions DynamoOptions = new DynamoSerializerOptions {
+        public static readonly DynamoTableOptions TableOptions = new DynamoTableOptions {
             ExpectedTypeNamespace = "Sample.DynamoDBNative.DataAccess.Models"
         };
 
@@ -47,7 +47,7 @@ namespace Sample.DynamoDBNative.DataAccess {
 
         //--- Constructors ---
         public ThriftBooksDataAccessClient(string tableName, IAmazonDynamoDB dynamoClient = null)
-            => Table = new DynamoTable(tableName, dynamoClient, DynamoOptions);
+            => Table = new DynamoTable(tableName, dynamoClient, TableOptions);
 
         //--- Properties ---
         protected IDynamoTable Table { get; }

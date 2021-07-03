@@ -28,19 +28,27 @@ using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native {
 
+    public class DynamoTableOptions {
+
+        //--- Properties ---
+        public DynamoSerializerOptions SerializerOptions { get; set; } = new DynamoSerializerOptions();
+        public string? ExpectedTypeNamespace { get; set; }
+    }
+
     public class DynamoTable : IDynamoTable {
 
         //--- Constructors ---
-        public DynamoTable(string tableName, IAmazonDynamoDB? dynamoClient = null, DynamoSerializerOptions? serializerOptions = null) {
+        public DynamoTable(string tableName, IAmazonDynamoDB? dynamoClient = null, DynamoTableOptions? options = null) {
             TableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
             DynamoClient = dynamoClient ?? new AmazonDynamoDBClient();
-            SerializerOptions = serializerOptions ?? new DynamoSerializerOptions();
+            Options = options ?? new DynamoTableOptions();
         }
 
         //--- Properties ---
         public IAmazonDynamoDB DynamoClient { get; }
-        public DynamoSerializerOptions SerializerOptions { get; set; }
+        public DynamoTableOptions Options { get; set; }
         public string TableName { get; }
+        internal DynamoSerializerOptions SerializerOptions => Options.SerializerOptions;
 
         //--- Methods ---
         public IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
@@ -247,10 +255,10 @@ namespace LambdaSharp.DynamoDB.Native {
 
             // check if the typename should be shortened
             if(
-                !string.IsNullOrEmpty(SerializerOptions.ExpectedTypeNamespace)
-                && result.StartsWith(SerializerOptions.ExpectedTypeNamespace, StringComparison.InvariantCulture)
+                !string.IsNullOrEmpty(Options.ExpectedTypeNamespace)
+                && result.StartsWith(Options.ExpectedTypeNamespace, StringComparison.InvariantCulture)
             ) {
-                result = result.Substring(SerializerOptions.ExpectedTypeNamespace.Length);
+                result = result.Substring(Options.ExpectedTypeNamespace.Length);
             }
             return result;
         }

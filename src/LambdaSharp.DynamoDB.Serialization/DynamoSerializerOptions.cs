@@ -52,7 +52,6 @@ namespace LambdaSharp.DynamoDB.Serialization {
         // TODO: do we want this?
         public bool IgnoreNullValues { get; set; } = true;
         public bool UseDefaultConverters { get; set; } = true;
-        public string? ExpectedTypeNamespace { get; set; }
         public List<IDynamoAttributeConverter> Converters { get; set; } = new List<IDynamoAttributeConverter>();
 
         //--- Methods ---
