@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
@@ -29,20 +30,15 @@ namespace LambdaSharp.DynamoDB.Native {
 
     public class DynamoTable : IDynamoTable {
 
-        //--- Fields ---
-        private readonly IAmazonDynamoDB _dynamoClient;
-
-        //--- Properties ---
-        public IAmazonDynamoDB DynamoClient => _dynamoClient;
-
         //--- Constructors ---
         public DynamoTable(string tableName, IAmazonDynamoDB? dynamoClient = null, DynamoSerializerOptions? serializerOptions = null) {
             TableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
-            _dynamoClient = dynamoClient ?? new AmazonDynamoDBClient();
+            DynamoClient = dynamoClient ?? new AmazonDynamoDBClient();
             SerializerOptions = serializerOptions ?? new DynamoSerializerOptions();
         }
 
         //--- Properties ---
+        public IAmazonDynamoDB DynamoClient { get; }
         public DynamoSerializerOptions SerializerOptions { get; set; }
         public string TableName { get; }
 
@@ -131,44 +127,6 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
 
-        public TRecord? DeserializeItem<TRecord>(Dictionary<string, AttributeValue> attributes)
-            where TRecord : class
-            => DynamoSerializer.Deserialize<TRecord>(attributes, SerializerOptions);
-
-        public object? DeserializeItem(Dictionary<string, AttributeValue> attributes, Type? targetType)
-            => DynamoSerializer.Deserialize(attributes, targetType, SerializerOptions);
-
-        public Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, ADynamoSecondaryKey[] secondaryKeys)
-            where TRecord : class
-        {
-            var attributes = DynamoSerializer.Serialize(record, SerializerOptions)?.M;
-            if(attributes is null) {
-                throw new ArgumentException("cannot serialize null record", nameof(record));
-            }
-
-            // add primary key details
-            attributes[primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue);
-            attributes[primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue);
-
-            // add secondary key details
-            foreach(var secondaryKey in secondaryKeys) {
-                switch(secondaryKey) {
-                case DynamoLocalIndexKey localIndexKey:
-
-                    // primary key is the same and should not be set again
-                    attributes[secondaryKey.SortKeyName] = new AttributeValue(secondaryKey.SortKeyValue);
-                    break;
-                case DynamoGlobalIndexKey globalIndexKey:
-                    attributes[secondaryKey.PartitionKeyName] = new AttributeValue(secondaryKey.PartitionKeyValue);
-                    attributes[secondaryKey.SortKeyName] = new AttributeValue(secondaryKey.SortKeyValue);
-                    break;
-                default:
-                    throw new ArgumentException($"unrecognized key type: '{secondaryKey?.GetType().FullName ?? "<null>"}'");
-                }
-            }
-            return attributes;
-        }
-
         public IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
             where TRecord : class
         {
@@ -223,5 +181,51 @@ namespace LambdaSharp.DynamoDB.Native {
 
         public IDynamoTableTransactGetItems TransactGetItemsMixed()
             => new DynamoTableTransactGetItems(this, new TransactGetItemsRequest());
+
+        internal Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, ADynamoSecondaryKey[] secondaryKeys)
+            where TRecord : class
+        {
+            var attributes = DynamoSerializer.Serialize(record, SerializerOptions)?.M;
+            if(attributes is null) {
+                throw new ArgumentException("cannot serialize null record", nameof(record));
+            }
+
+            // add type details
+            attributes["_t"] = new AttributeValue(typeof(TRecord).FullName);
+
+            // add modified details
+            attributes["_m"] = new AttributeValue {
+                N = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)
+            };
+
+            // add primary key details
+            attributes[primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue);
+            attributes[primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue);
+
+            // add secondary key details
+            foreach(var secondaryKey in secondaryKeys) {
+                switch(secondaryKey) {
+                case DynamoLocalIndexKey localIndexKey:
+
+                    // primary key is the same and should not be set again
+                    attributes[secondaryKey.SortKeyName] = new AttributeValue(secondaryKey.SortKeyValue);
+                    break;
+                case DynamoGlobalIndexKey globalIndexKey:
+                    attributes[secondaryKey.PartitionKeyName] = new AttributeValue(secondaryKey.PartitionKeyValue);
+                    attributes[secondaryKey.SortKeyName] = new AttributeValue(secondaryKey.SortKeyValue);
+                    break;
+                default:
+                    throw new ArgumentException($"unrecognized key type: '{secondaryKey?.GetType().FullName ?? "<null>"}'");
+                }
+            }
+            return attributes;
+        }
+
+        internal TRecord? DeserializeItem<TRecord>(Dictionary<string, AttributeValue> attributes)
+            where TRecord : class
+            => DynamoSerializer.Deserialize<TRecord>(attributes, SerializerOptions);
+
+        internal object? DeserializeItem(Dictionary<string, AttributeValue> attributes, Type? targetType)
+            => DynamoSerializer.Deserialize(attributes, targetType, SerializerOptions);
     }
 }

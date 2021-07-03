@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,7 +49,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         public async Task<bool> ExecuteAsync(CancellationToken cancellationToken) {
-            PrepareRequest();
+            _request.ConditionExpression = _converter.ConvertConditions();
             try {
                 await _table.DynamoClient.PutItemAsync(_request);
                 return true;
@@ -60,7 +59,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         public async Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken) {
-            PrepareRequest();
+            _request.ConditionExpression = _converter.ConvertConditions();
             _request.ReturnValues = ReturnValue.ALL_OLD;
             try {
                 var response = await _table.DynamoClient.PutItemAsync(_request);
@@ -68,18 +67,6 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             } catch(ConditionalCheckFailedException) {
                 return default(TRecord);
             }
-        }
-
-        private void PrepareRequest() {
-            _request.ConditionExpression = _converter.ConvertConditions();
-
-            // add type details
-            _request.Item["_t"] = new AttributeValue(typeof(TRecord).FullName);
-
-            // add modified details
-            _request.Item["_m"] = new AttributeValue {
-                N = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)
-            };
         }
     }
 }
