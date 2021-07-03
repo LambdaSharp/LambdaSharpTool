@@ -31,6 +31,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
     public class DynamoTableOperations : _Init {
 
         // TODO: add `BatchWriteItems()`
+        // TODO: add `TransactGetItemsMixed()`
 
         //--- Types ---
         private class MyRecord {
