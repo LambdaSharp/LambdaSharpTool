@@ -89,14 +89,6 @@ namespace Sample.DynamoDBNative.DataAccess {
 
         public async Task SaveOrderAsync(OrderRecord order, IEnumerable<OrderItemRecord> orderItems, CancellationToken cancellationToken) {
 
-            // store order
-            var success = await Table.PutItem(order, new OrderRecord.PrimaryKey(order), new OrderRecord.GSI1Key(order))
-                .WithCondition(record => DynamoCondition.DoesNotExist(record))
-                .ExecuteAsync(cancellationToken);
-            if(!success) {
-                throw new Exception("unable to store order");
-            }
-
             // store all order items using batch operations
             while(orderItems.Any()) {
                 var batch = Table.BatchWriteItems();
@@ -109,6 +101,14 @@ namespace Sample.DynamoDBNative.DataAccess {
 
                 // skip the oder items that we stored
                 orderItems = orderItems.Skip(25);
+            }
+
+            // store order
+            var success = await Table.PutItem(order, new OrderRecord.PrimaryKey(order), new OrderRecord.GSI1Key(order))
+                .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .ExecuteAsync(cancellationToken);
+            if(!success) {
+                throw new Exception("unable to store order");
             }
         }
 
