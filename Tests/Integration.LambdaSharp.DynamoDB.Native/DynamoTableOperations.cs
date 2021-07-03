@@ -39,7 +39,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             public class PrimaryKey : DynamoPrimaryKey<MyRecord> {
 
                 //--- Constants ---
-                public const string PK_PATTERN = "TYPE-ID#{0}";
+                public const string PK_PATTERN = "MY-RECORD-ID#{0}";
                 public const string SK_PATTERN = "SUB-ID#{1}";
 
                 //--- Constructors ---
@@ -52,6 +52,27 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             public string Id { get; set; }
             public string SubId { get; set; }
             public string Value { get; set; }
+        }
+
+        private class MyOtherRecord {
+
+            //--- Types ---
+            public class PrimaryKey : DynamoPrimaryKey<MyOtherRecord> {
+
+                //--- Constants ---
+                public const string PK_PATTERN = "MY-RECORD-ID#{0}";
+                public const string SK_PATTERN = "OTHER-SUB-ID#{1}";
+
+                //--- Constructors ---
+                public PrimaryKey(MyOtherRecord record) : this(record.Id, record.SubId) { }
+                public PrimaryKey(string id, string subId) : base(PK_PATTERN, SK_PATTERN, id, subId) { }
+
+            }
+
+            //--- Properties ---
+            public string Id { get; set; }
+            public string SubId { get; set; }
+            public string Name { get; set; }
         }
 
         //--- Constructors ---
@@ -199,8 +220,39 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await Table.PutItemAsync(record2, new MyRecord.PrimaryKey(record2));
 
             // act
-            var result = await Table.Query(new MyRecord.PrimaryKey(id, ""), consistentRead: true)
+            var result = await Table.Query(new MyRecord.PrimaryKey(record1), consistentRead: true)
                 .WhereSKBeginsWith(string.Format(MyRecord.PrimaryKey.SK_PATTERN, "", ""))
+                .ExecuteAsync();
+
+            // assert
+            result.Should().HaveCount(2);
+            result.Should().ContainEquivalentOf(record1);
+            result.Should().ContainEquivalentOf(record2);
+        }
+
+        [Fact]
+        public async Task QueryMixed_main_index() {
+
+            // arrange
+            var id = GetRandomString(10);
+            var record1 = new MyRecord {
+                Id = id,
+                SubId = GetRandomString(10),
+                Value = "Hello"
+            };
+            await Table.PutItemAsync(record1, new MyRecord.PrimaryKey(record1));
+            var record2 = new MyOtherRecord {
+                Id = id,
+                SubId = GetRandomString(10),
+                Name = "Bob"
+            };
+            await Table.PutItemAsync(record2, new MyOtherRecord.PrimaryKey(record2));
+
+            // act
+            var result = await Table.QueryMixed(new MyRecord.PrimaryKey(record1), consistentRead: true)
+                .WhereSKMatchesAny()
+                .WithTypeFilter<MyRecord>()
+                .WithTypeFilter<MyOtherRecord>()
                 .ExecuteAsync();
 
             // assert
