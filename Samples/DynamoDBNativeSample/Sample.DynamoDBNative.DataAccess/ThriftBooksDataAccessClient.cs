@@ -61,7 +61,7 @@ namespace Sample.DynamoDBNative.DataAccess {
             }
 
             // TODO: wrap in a transaction
-            await Table.PutItem(customer, DataModel.PrimaryKey(customer))
+            await Table.PutItem(customer, customer.GetPrimaryKey())
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
 
@@ -69,13 +69,13 @@ namespace Sample.DynamoDBNative.DataAccess {
                 Username = customer.Username,
                 EmailAddress = customer.EmailAddress
             };
-            await Table.PutItem(customerEmail, DataModel.PrimaryKey(customerEmail))
+            await Table.PutItem(customerEmail, customerEmail.GetPrimaryKey())
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
         }
 
         public Task AddOrUpdateAddressAsync(string customerUsername, AddressRecord address, CancellationToken cancellationToken) {
-            return Table.UpdateItem(DataModel.CustomerRecordPrimaryKey(customerUsername))
+            return Table.UpdateItem(DataModel.MakeCustomerRecordPrimaryKey(customerUsername))
                 .Set(record => record.Addresses[address.Label], address)
                 .ExecuteAsync(cancellationToken);
         }
@@ -83,7 +83,7 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task<(CustomerRecord Customer, IEnumerable<OrderRecord> Orders)> GetCustomerWithMostRecentOrdersAsync(string customerUsername, int limit, CancellationToken cancellationToken) {
 
             // query all records under the customer name, which include the order records as well
-            var records = await Table.QueryMixed(DataModel.CustomerAndOrdersQuery(customerUsername), limit: 11, scanIndexForward: false)
+            var records = await Table.QueryMixed(DataModel.MakeCustomerAndOrdersQueryPattern(customerUsername), limit: 11, scanIndexForward: false)
                 .WhereSKMatchesAny()
                 .WithTypeFilter<CustomerRecord>()
                 .WithTypeFilter<OrderRecord>()
@@ -101,7 +101,7 @@ namespace Sample.DynamoDBNative.DataAccess {
 
                 // BatchWriteItem can take up to 25 operations
                 foreach(var orderItem in orderItems.Take(25)) {
-                    batch.PutItem(orderItem, DataModel.PrimaryKey(orderItem), DataModel.SecondaryKeys(orderItem));
+                    batch.PutItem(orderItem, orderItem.GetPrimaryKey(), orderItem.GetSecondaryKeys());
                 }
                 await batch.ExecuteAsync();
 
@@ -110,7 +110,7 @@ namespace Sample.DynamoDBNative.DataAccess {
             }
 
             // store order
-            var success = await Table.PutItem(order, DataModel.PrimaryKey(order), DataModel.SecondaryKeys(order))
+            var success = await Table.PutItem(order, order.GetPrimaryKey(), order.GetSecondaryKeys())
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
             if(!success) {
@@ -121,7 +121,7 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task UpdateOrderAsync(string orderId, OrderStatus orderStatus, CancellationToken cancellationToken) {
 
             // resolve order ID to primary key by querying the global secondary index
-            var gsi1Key = DataModel.OrderQuery(orderId);
+            var gsi1Key = DataModel.MakeOrderQueryPattern(orderId);
             var order = await GetSingleItem(
                 Table.Query(gsi1Key)
                     .WhereSKEquals(gsi1Key.SortKeyValue)
@@ -130,7 +130,7 @@ namespace Sample.DynamoDBNative.DataAccess {
             );
 
             // update order with state
-            await Table.UpdateItem(DataModel.OrderRecordPrimaryKey(order.CustomerUsername, order.OrderId))
+            await Table.UpdateItem(DataModel.MakeOrderRecordPrimaryKey(order.CustomerUsername, order.OrderId))
                 .Set(record => record.Status, orderStatus)
                 .ExecuteAsync(cancellationToken);
         }
@@ -138,7 +138,7 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task<(OrderRecord Order, IEnumerable<OrderItemRecord> Items)> GetOrderWithOrderItemsAsync(string orderId, CancellationToken cancellationToken) {
 
             // query all records under the order ID, which include the order item records as well
-            var records = await Table.QueryMixed(DataModel.OrderAndOrderItemsQuery(orderId))
+            var records = await Table.QueryMixed(DataModel.MakeOrderAndOrderItemsQueryPattern(orderId))
                 .WhereSKMatchesAny()
                 .WithTypeFilter<OrderRecord>()
                 .WithTypeFilter<OrderItemRecord>()

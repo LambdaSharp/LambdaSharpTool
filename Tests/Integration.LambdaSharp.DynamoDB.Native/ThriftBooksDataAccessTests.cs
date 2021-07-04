@@ -16,12 +16,10 @@
  * limitations under the License.
  */
 
+using System.Threading.Tasks;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
-using System.Linq;
 using FluentAssertions;
 using LambdaSharp.DynamoDB.Native;
 using Sample.DynamoDBNative.DataAccess;
@@ -53,7 +51,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // act
             await DataAccessClient.CreateCustomerAsync(customer);
-            var result = await Table.GetItemAsync(DataModel.PrimaryKey(customer), consistentRead: true);
+            var result = await Table.GetItemAsync(customer.GetPrimaryKey(), consistentRead: true);
 
             // assert
             result.Should().BeEquivalentTo(customer);
@@ -74,7 +72,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
                 State = "CA"
             };
             await DataAccessClient.AddOrUpdateAddressAsync(customer.Username, address);
-            var result = await Table.GetItemAsync(DataModel.PrimaryKey(customer), consistentRead: true);
+            var result = await Table.GetItemAsync(customer.GetPrimaryKey(), consistentRead: true);
 
             // assert
             result.Username.Should().Be(customer.Username);

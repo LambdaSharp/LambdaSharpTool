@@ -32,6 +32,8 @@
 
 > TODO: only `PutItem()` operations need secondary keys
 
+> TODO: pre-defined key projections that are done by `PutItem()` and `UpdateItem()` when needed: `[DynamoProjectedAttribute("GS1PK", "ORDER#{OrderId}")]`
+
 # LambdaSharp.DynamoDB.Native
 
 ## Data Mapping
