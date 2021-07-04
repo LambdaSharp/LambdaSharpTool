@@ -23,11 +23,24 @@ namespace LambdaSharp.DynamoDB.Native {
         //--- Methods ---
         IDynamoQuerySelect<TRecord> WhereSKMatchesAny();
         IDynamoQuerySelect<TRecord> WhereSKEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKBeginsWith(string skValuePrefix);
         IDynamoQuerySelect<TRecord> WhereSKIsGreaterThan(string skValue);
         IDynamoQuerySelect<TRecord> WhereSKIsGreaterThanOrEquals(string skValue);
         IDynamoQuerySelect<TRecord> WhereSKIsLessThan(string skValue);
         IDynamoQuerySelect<TRecord> WhereSKIsLessThanOrEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsBetween(string skLowValue, string skHighValue);
+        IDynamoQuerySelect<TRecord> WhereSKIsBetween(string skLowerBound, string skUpperBound);
+        IDynamoQuerySelect<TRecord> WhereSKBeginsWith(string skValuePrefix);
+    }
+
+    public interface IDynamoQuerySelect {
+
+        //--- Methods ---
+        IDynamoQuerySelect WhereSKMatchesAny();
+        IDynamoQuerySelect WhereSKEquals(string skValue);
+        IDynamoQuerySelect WhereSKIsGreaterThan(string skValue);
+        IDynamoQuerySelect WhereSKIsGreaterThanOrEquals(string skValue);
+        IDynamoQuerySelect WhereSKIsLessThan(string skValue);
+        IDynamoQuerySelect WhereSKIsLessThanOrEquals(string skValue);
+        IDynamoQuerySelect WhereSKIsBetween(string skLowerBound, string skUpperBound);
+        IDynamoQuerySelect WhereSKBeginsWith(string skValuePrefix);
     }
 }

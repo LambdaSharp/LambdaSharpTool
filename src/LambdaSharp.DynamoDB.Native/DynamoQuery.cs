@@ -29,9 +29,22 @@ namespace LambdaSharp.DynamoDB.Native {
         public static IDynamoQueryFrom FromIndex(string indexName, string partitionKeyName, string sortKeyName)
             => new DynamoQueryFrom(indexName ?? throw new ArgumentNullException(nameof(indexName)), partitionKeyName, sortKeyName);
 
+        public static IDynamoQuerySelect Select(string pkValue)
+            => FromMainIndex().Select(pkValue);
+
         public static IDynamoQuerySelect<TRecord> Select<TRecord>(string pkValue)
             where TRecord : class
             => FromMainIndex().Select<TRecord>(pkValue);
+
+        public static IDynamoQuerySelect SelectFormat(string partitionKeyValuePattern, params string[] values) {
+            for(var i = 0; i < values.Length; ++i) {
+                if(values[i] is null) {
+                    throw new ArgumentException($"key[{i}] is null", nameof(values));
+                }
+            }
+            var pkValue = string.Format(partitionKeyValuePattern ?? throw new ArgumentNullException(nameof(partitionKeyValuePattern)), values);
+            return Select(pkValue);
+        }
 
         public static IDynamoQuerySelect<TRecord> SelectFormat<TRecord>(string partitionKeyValuePattern, params string[] values) where TRecord : class {
             for(var i = 0; i < values.Length; ++i) {

@@ -29,13 +29,16 @@ using LambdaSharp.DynamoDB.Native.Operations;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal sealed class DynamoTableQuery<TRecord> : IDynamoTableQuery<TRecord> where TRecord : class {
+    internal sealed class DynamoTableQuery<TRecord> : IDynamoTableQuery, IDynamoTableQuery<TRecord>
+        where TRecord : class
+    {
 
         //--- Fields ---
         private readonly DynamoTable _table;
         private readonly QueryRequest _request;
         private readonly DynamoRequestConverter _converter;
         private readonly ADynamoQuerySelect<TRecord> _queryPattern;
+        private readonly Dictionary<string, Type> _expectedTypes = new Dictionary<string, Type>();
 
         //--- Constructors ---
         public DynamoTableQuery(DynamoTable table, QueryRequest request, ADynamoQuerySelect<TRecord> querySelect) {
@@ -66,12 +69,12 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         //--- IDynamoTableQuery<TRecord> Members ---
-        public IDynamoTableQuery<TRecord> Where(Expression<Func<TRecord, bool>> filter) {
+        IDynamoTableQuery<TRecord> IDynamoTableQuery<TRecord>.Where(Expression<Func<TRecord, bool>> filter) {
             _converter.AddCondition(filter);
             return this;
         }
 
-        public IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute) {
+        IDynamoTableQuery<TRecord> IDynamoTableQuery<TRecord>.Get<T>(Expression<Func<TRecord, T>> attribute) {
             _converter.AddProjection(attribute.Body);
 
             // NOTE (2021-06-24, bjorg): we always fetch `_t` to allow polymorphic deserialization
@@ -79,24 +82,12 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return this;
         }
 
-        public IDynamoTableQuery<TRecord> WithTypeFilter<T>() {
-            var expectedTypeName = _table.Options.RegisterTypeAndGetTypeName(typeof(T));
-            _converter.AddTypeCondition(expectedTypeName);
-            return this;
-        }
-
-        public IDynamoTableQuery<TRecord> WithTypeFilter(Type type) {
-            var expectedTypeName = _table.Options.RegisterTypeAndGetTypeName(type ?? throw new ArgumentNullException(nameof(type)));
-            _converter.AddTypeCondition(expectedTypeName);
-            return this;
-        }
-
-        public async IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(bool fetchAllAttributes, [EnumeratorCancellation] CancellationToken cancellationToken) {
+        async IAsyncEnumerable<TRecord> IDynamoTableQuery<TRecord>.ExecuteAsyncEnumerable(bool fetchAllAttributes, [EnumeratorCancellation] CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord));
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         yield return typedRecord;
                     }
@@ -105,13 +96,64 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             } while(_request.ExclusiveStartKey.Any());
         }
 
-        public async Task<IEnumerable<TRecord>> ExecuteAsync(bool fetchAllAttributes, CancellationToken cancellationToken) {
+        async Task<IEnumerable<TRecord>> IDynamoTableQuery<TRecord>.ExecuteAsync(bool fetchAllAttributes, CancellationToken cancellationToken) {
             PrepareRequest(fetchAllAttributes);
             var result = new List<TRecord>();
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord));
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
+                    if(!(record is null) && (record is TRecord typedRecord)) {
+                        result.Add(typedRecord);
+                    }
+                }
+                _request.ExclusiveStartKey = response.LastEvaluatedKey;
+            } while(_request.ExclusiveStartKey.Any());
+            return result;
+        }
+
+        //--- IDynamoTableQuery Members ---
+        IDynamoTableQuery IDynamoTableQuery.Where<TRecord1>(Expression<Func<TRecord1, bool>> filter) {
+            _converter.AddCondition(filter);
+            return this;
+        }
+
+        IDynamoTableQuery IDynamoTableQuery.WithTypeFilter(Type type) {
+            var expectedTypeName = _table.Options.GetShortRecordTypeName(type);
+            _expectedTypes[expectedTypeName] = type;
+            _converter.AddTypeCondition(expectedTypeName);
+            return this;
+        }
+
+        IDynamoTableQuery IDynamoTableQuery.Get<TRecord1, T>(Expression<Func<TRecord1, T>> attribute) {
+            _converter.AddProjection(attribute.Body);
+
+            // NOTE (2021-06-24, bjorg): we always fetch `_t` to allow polymorphic deserialization
+            _converter.AddProjection("_t");
+            return this;
+        }
+
+        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteAsyncEnumerable(bool fetchAllAttributes, [EnumeratorCancellation] CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes);
+            do {
+                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                foreach(var item in response.Items) {
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
+                    if(!(record is null) && (record is TRecord typedRecord)) {
+                        yield return typedRecord;
+                    }
+                }
+                _request.ExclusiveStartKey = response.LastEvaluatedKey;
+            } while(_request.ExclusiveStartKey.Any());
+        }
+
+        async Task<IEnumerable<object>> IDynamoTableQuery.ExecuteAsync(bool fetchAllAttributes, CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes);
+            var result = new List<TRecord>();
+            do {
+                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                foreach(var item in response.Items) {
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         result.Add(typedRecord);
                     }

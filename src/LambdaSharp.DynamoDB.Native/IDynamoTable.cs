@@ -32,6 +32,7 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class;
         IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
+        IDynamoTableQuery QueryMixed(IDynamoQuerySelect querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
         IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class;
         IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead = false)

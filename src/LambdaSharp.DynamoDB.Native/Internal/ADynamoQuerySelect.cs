@@ -20,7 +20,9 @@ using System;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal abstract class ADynamoQuerySelect<TRecord> : IDynamoQuerySelect<TRecord> where TRecord : class {
+    internal abstract class ADynamoQuerySelect<TRecord> : IDynamoQuerySelect, IDynamoQuerySelect<TRecord>
+        where TRecord : class
+    {
 
         //--- Constructors ---
         protected ADynamoQuerySelect(string? indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue) {
@@ -38,28 +40,54 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         //--- Abstract Methods ---
         public abstract string GetKeyConditionExpression(DynamoRequestConverter converter);
 
-        //--- Methods ---
-        public IDynamoQuerySelect<TRecord> WhereSKMatchesAny()
+        //--- IDynamoQuerySelect Members ---
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKMatchesAny( )
             => new DynamoQuerySelectAny<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue);
 
-        public IDynamoQuerySelect<TRecord> WhereSKEquals(string skValue)
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.Equals, skValue);
-        public IDynamoQuerySelect<TRecord> WhereSKIsGreaterThan(string skValue)
+
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsGreaterThan(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.GreaterThan, skValue);
 
-        public IDynamoQuerySelect<TRecord> WhereSKIsGreaterThanOrEquals(string skValue)
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsGreaterThanOrEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.GreaterThanOrEquals, skValue);
 
-        public IDynamoQuerySelect<TRecord> WhereSKIsLessThan(string skValue)
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsLessThan(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.LessThan, skValue);
 
-        public IDynamoQuerySelect<TRecord> WhereSKIsLessThanOrEquals(string skValue)
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsLessThanOrEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.LessThanOrEquals, skValue);
 
-        public IDynamoQuerySelect<TRecord> WhereSKIsBetween(string skLowerBound, string skUpperBound)
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsBetween(string skLowerBound, string skUpperBound)
             => new DynamoQuerySelectRange<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, skLowerBound, skUpperBound);
 
-        public IDynamoQuerySelect<TRecord> WhereSKBeginsWith(string skValuePrefix)
+        IDynamoQuerySelect IDynamoQuerySelect.WhereSKBeginsWith(string skValuePrefix)
+            => new DynamoQuerySelectBeginsWith<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, skValuePrefix);
+
+        //--- IDynamoQuerySelect<TRecord> Members ---
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKMatchesAny()
+            => new DynamoQuerySelectAny<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue);
+
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKEquals(string skValue)
+            => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.Equals, skValue);
+
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsGreaterThan(string skValue)
+            => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.GreaterThan, skValue);
+
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsGreaterThanOrEquals(string skValue)
+            => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.GreaterThanOrEquals, skValue);
+
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsLessThan(string skValue)
+            => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.LessThan, skValue);
+
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsLessThanOrEquals(string skValue)
+            => new DynamoQuerySelectCompare<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, DynamoQueryComparison.LessThanOrEquals, skValue);
+
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsBetween(string skLowerBound, string skUpperBound)
+            => new DynamoQuerySelectRange<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, skLowerBound, skUpperBound);
+
+        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKBeginsWith(string skValuePrefix)
             => new DynamoQuerySelectBeginsWith<TRecord>(IndexName, PartitionKeyName, SortKeyName, PartitionKeyValue, skValuePrefix);
     }
 

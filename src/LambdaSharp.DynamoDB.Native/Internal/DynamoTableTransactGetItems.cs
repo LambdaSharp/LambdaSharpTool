@@ -91,7 +91,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             _converters.Add(converter);
 
             // register expected type
-            var expectedTypeName = _table.GetExpectedTypeName(typeof(TRecord));
+            var expectedTypeName = _table.Options.GetShortRecordTypeName(typeof(TRecord));
             _expectedTypes[expectedTypeName] = typeof(TRecord);
             return new DynamoTableTransactGetItemsEntry<TRecord>(this, converter);
         }
@@ -112,7 +112,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 var result = new List<object>();
                 var response = await _table.DynamoClient.TransactGetItemsAsync(_request, cancellationToken);
                 foreach(var itemResponse in response.Responses) {
-                    var record = _table.DeserializeItem(itemResponse.Item, _expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(itemResponse.Item, typeof(object), _expectedTypes);
                     if(!(record is null)) {
                         result.Add(record);
                     }

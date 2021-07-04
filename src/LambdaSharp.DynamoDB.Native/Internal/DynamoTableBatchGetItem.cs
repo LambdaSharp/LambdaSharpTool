@@ -75,7 +75,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
                 [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
             });
-            var expectedTypeName = _table.GetExpectedTypeName(typeof(TRecord));
+            var expectedTypeName = _table.Options.GetShortRecordTypeName(typeof(TRecord));
             _expectedTypes[expectedTypeName] = typeof(TRecord);
             return new DynamoTableBatchGetItemsEntry<TRecord>(this);
         }
@@ -98,7 +98,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     var response = await _table.DynamoClient.BatchGetItemAsync(_request, cancellationToken);
                     if(response.Responses.Any()) {
                         foreach(var item in response.Responses.Single().Value) {
-                            var record = _table.DeserializeItem(item, _expectedTypes);
+                            var record = _table.DeserializeItemUsingRecordType(item, typeof(object), _expectedTypes);
                             if(!(record is null)) {
                                 result.Add(record);
                             }

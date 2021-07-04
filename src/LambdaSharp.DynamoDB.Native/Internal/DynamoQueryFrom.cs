@@ -35,6 +35,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         public string SortKeyName { get; }
 
         //--- Methods ---
+        public IDynamoQuerySelect Select(string pkValue)
+            => new DynamoQuerySelectAny<object>(IndexName, PartitionKeyName, SortKeyName, pkValue);
+
         public IDynamoQuerySelect<TRecord> Select<TRecord>(string pkValue)
             where TRecord : class
             => new DynamoQuerySelectAny<TRecord>(IndexName, PartitionKeyName, SortKeyName, pkValue);

@@ -66,20 +66,23 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             public static IDynamoQuerySelect<MyRecord> SelectMyRecords(string recordId)
                 => DynamoQuery.SelectFormat<MyRecord>(MY_RECORD_PK_PATTERN, recordId)
                     .WhereSKBeginsWith(string.Format(MY_RECORD_SK_PATTERN, "", ""));
-            public static IDynamoQuerySelect<object> SelectMyRecordsAndMyOtherRecords(string recordId)
-                => DynamoQuery.SelectFormat<object>(MY_RECORD_PK_PATTERN, recordId);
+            public static IDynamoQuerySelect SelectMyRecordsAndMyOtherRecords(string recordId)
+                => DynamoQuery.SelectFormat(MY_RECORD_PK_PATTERN, recordId);
         }
 
         //--- Constructors ---
         public DynamoTableOperations(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {
             DataAccessClient = new ThriftBooksDataAccessClient(dynamoDbFixture.TableName, dynamoDbFixture.DynamoClient);
             Table = new DynamoTable(TableName, DynamoClient, ThriftBooksDataAccessClient.TableOptions);
-            ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableRecordType {
-                Type = typeof(MyRecord)
-            });
-            ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableRecordType {
-                Type = typeof(MyOtherRecord)
-            });
+
+            // TODO: this is only being added to one of the two Dynamo table wrappers!
+
+            // ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableOptions.RecordType {
+            //     Type = typeof(MyRecord)
+            // });
+            // ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableOptions.RecordType {
+            //     Type = typeof(MyOtherRecord)
+            // });
         }
 
         //--- Properties ---
@@ -248,7 +251,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await Table.PutItemAsync(record2, MyDataModel.GetPrimaryKey(record2));
 
             // act
-            var result = await Table.Query(MyDataModel.SelectMyRecordsAndMyOtherRecords(record1.Id), consistentRead: true)
+            var result = await Table.QueryMixed(MyDataModel.SelectMyRecordsAndMyOtherRecords(record1.Id), consistentRead: true)
                 .WithTypeFilter<MyRecord>()
                 .WithTypeFilter<MyOtherRecord>()
                 .ExecuteAsync();

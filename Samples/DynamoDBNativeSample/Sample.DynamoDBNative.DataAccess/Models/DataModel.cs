@@ -61,14 +61,14 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
         public static DynamoPrimaryKey<OrderRecord> OrderRecordPrimaryKey(string customerUsername, string orderId) => new DynamoPrimaryKey<OrderRecord>(ORDER_PK_PATTERN, ORDER_SK_PATTERN, customerUsername, orderId);
         public static DynamoPrimaryKey<OrderItemRecord> OrderItemRecordPrimaryKey(string orderId, string itemId) => new DynamoPrimaryKey<OrderItemRecord>(ORDER_ITEM_PK_PATTERN, ORDER_ITEM_SK_PATTERN, orderId, itemId);
 
-        public static IDynamoQuerySelect<object> SelectCustomerAndOrders(string customerUsername)
-            => DynamoQuery.SelectFormat<object>(CUSTOMER_PK_PATTERN, customerUsername);
+        public static IDynamoQuerySelect SelectCustomerAndOrders(string customerUsername)
+            => DynamoQuery.SelectFormat(CUSTOMER_PK_PATTERN, customerUsername);
             // TODO
             // .WithTypeFilter<CustomerRecord>()
             // .WithTypeFilter<OrderRecord>()
 
-        public static IDynamoQuerySelect<object> SelectOrderAndOrderItems(string orderId)
-            => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK").SelectFormat<object>(ORDER_ITEM_GSI1_PK_PATTERN, orderId);
+        public static IDynamoQuerySelect SelectOrderAndOrderItems(string orderId)
+            => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK").SelectFormat(ORDER_ITEM_GSI1_PK_PATTERN, orderId);
             // TODO
             // .WithTypeFilter<OrderRecord>()
             // .WithTypeFilter<OrderItemRecord>()

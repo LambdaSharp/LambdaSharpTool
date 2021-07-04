@@ -72,7 +72,7 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task<(CustomerRecord Customer, IEnumerable<OrderRecord> Orders)> GetCustomerWithMostRecentOrdersAsync(string customerUsername, int limit, CancellationToken cancellationToken) {
 
             // query all records under the customer name, which include the order records as well
-            var records = await Table.Query(DataModel.SelectCustomerAndOrders(customerUsername), limit: 11, scanIndexForward: false)
+            var records = await Table.QueryMixed(DataModel.SelectCustomerAndOrders(customerUsername), limit: 11, scanIndexForward: false)
                 // TODO: this should not be needed
                 .WithTypeFilter<CustomerRecord>()
                 .WithTypeFilter<OrderRecord>()
@@ -124,7 +124,7 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task<(OrderRecord Order, IEnumerable<OrderItemRecord> Items)> GetOrderWithOrderItemsAsync(string orderId, CancellationToken cancellationToken) {
 
             // query all records under the order ID, which include the order item records as well
-            var records = await Table.Query(DataModel.SelectOrderAndOrderItems(orderId))
+            var records = await Table.QueryMixed(DataModel.SelectOrderAndOrderItems(orderId))
                 // TODO: this should not be needed
                 .WithTypeFilter<OrderRecord>()
                 .WithTypeFilter<OrderItemRecord>()

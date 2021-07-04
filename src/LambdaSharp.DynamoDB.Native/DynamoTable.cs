@@ -82,6 +82,14 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
+        public IDynamoTableQuery QueryMixed(IDynamoQuerySelect querySelect, int limit, bool scanIndexForward, bool consistentRead)
+            => new DynamoTableQuery<object>(this, new QueryRequest {
+                ConsistentRead = consistentRead,
+                Limit = limit,
+                ScanIndexForward = scanIndexForward,
+                TableName = TableName
+            }, (ADynamoQuerySelect<object>)querySelect);
+
         public IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit, bool scanIndexForward, bool consistentRead)
             where TRecord : class
             => new DynamoTableQuery<TRecord>(this, new QueryRequest {
@@ -155,7 +163,7 @@ namespace LambdaSharp.DynamoDB.Native {
             }
 
             // add type details
-            attributes["_t"] = new AttributeValue(Options.GetRecordTypeName(typeof(TRecord)));
+            attributes["_t"] = new AttributeValue(Options.GetShortRecordTypeName(typeof(TRecord)));
 
             // add modified details
             attributes["_m"] = new AttributeValue {
@@ -185,14 +193,12 @@ namespace LambdaSharp.DynamoDB.Native {
             return attributes;
         }
 
+        // TODO: review usages
         internal TRecord? DeserializeItem<TRecord>(Dictionary<string, AttributeValue> item)
             where TRecord : class
             => DynamoSerializer.Deserialize<TRecord>(item, SerializerOptions);
 
-        internal object? DeserializeItem(Dictionary<string, AttributeValue> item, Type? type)
-            => DynamoSerializer.Deserialize(item, type, SerializerOptions);
-
-        internal object? DeserializeItemUsingRecordType(Dictionary<string, AttributeValue> item, Type expectedRecordType) {
+        internal object? DeserializeItemUsingRecordType(Dictionary<string, AttributeValue> item, Type expectedRecordType, Dictionary<string, Type>? requestExpectedTypes) {
             Type? type = null;
 
             // determine deserialization type by inspecting record meta-data
@@ -200,11 +206,16 @@ namespace LambdaSharp.DynamoDB.Native {
                 item.TryGetValue("_t", out var itemTypeAttribute)
                 && !(itemTypeAttribute.S is null)
             ) {
-                type = Options.GetRecordType(itemTypeAttribute.S);
+                if((requestExpectedTypes is null) || !requestExpectedTypes.TryGetValue(itemTypeAttribute.S, out type)) {
+                    type = Options.GetRecordType(itemTypeAttribute.S);
+                }
             }
 
             // fallback to expected record type
             return DeserializeItem(item, type ?? expectedRecordType);
         }
+
+        private object? DeserializeItem(Dictionary<string, AttributeValue> item, Type? type)
+            => DynamoSerializer.Deserialize(item, type, SerializerOptions);
     }
 }

@@ -44,16 +44,10 @@ namespace LambdaSharp.DynamoDB.Native {
         public List<RecordType> RecordTypes { get; set; } = new List<RecordType>();
 
         //--- Methods ---
-        internal string RegisterTypeAndGetTypeName(Type type) {
-            if(!RecordTypes.Any(recordType => recordType.Type == type)) {
-                RecordTypes.Add(new RecordType {
-                    Type = type
-                });
+        internal string GetShortRecordTypeName(Type type) {
+            if(type is null) {
+                throw new ArgumentNullException(nameof(type));
             }
-            return GetRecordTypeName(type);
-        }
-
-        internal string GetRecordTypeName(Type type) {
             var result = type.FullName ?? "";
 
             // check if the typename should be shortened
@@ -66,15 +60,18 @@ namespace LambdaSharp.DynamoDB.Native {
             return result;
         }
 
-        internal Type? GetRecordType(string typeName) {
-
-            // check if typename was shortened
+        internal string GetFullRecordTypeName(string typeName) {
             if(typeName.StartsWith(".")) {
                 typeName = $"{ExpectedTypeNamespace}{typeName}";
             }
+            return typeName;
+        }
+
+        internal Type? GetRecordType(string typeName) {
+            var fullTypeName = GetFullRecordTypeName(typeName);
 
             // find type that matches full typename
-            return RecordTypes.FirstOrDefault(recordType => recordType.Type.FullName == typeName)?.Type;
+            return RecordTypes.FirstOrDefault(recordType => recordType.Type.FullName == fullTypeName)?.Type;
         }
     }
 }
