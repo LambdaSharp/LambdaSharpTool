@@ -32,16 +32,16 @@ namespace LambdaSharp.DynamoDB.Native {
             SortKeyValue = sortKeyValue ?? throw new ArgumentNullException(nameof(sortKeyValue));
         }
 
-        public DynamoKey(string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys) {
-            for(var i = 0; i < keys.Length; ++i) {
-                if(keys[i] is null) {
-                    throw new ArgumentException($"key[{i}] is null", nameof(keys));
+        public DynamoKey(string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] values) {
+            for(var i = 0; i < values.Length; ++i) {
+                if(values[i] is null) {
+                    throw new ArgumentException($"key[{i}] is null", nameof(values));
                 }
             }
             PartitionKeyName = partitionKeyName ?? throw new ArgumentNullException(nameof(partitionKeyName));
             SortKeyName = sortKeyName ?? throw new ArgumentNullException(nameof(sortKeyName));
-            PartitionKeyValue = string.Format(partitionKeyValuePattern ?? throw new ArgumentNullException(nameof(partitionKeyValuePattern)), keys);
-            SortKeyValue = string.Format(sortKeyValuePattern ?? throw new ArgumentNullException(nameof(sortKeyValuePattern)), keys);
+            PartitionKeyValue = string.Format(partitionKeyValuePattern ?? throw new ArgumentNullException(nameof(partitionKeyValuePattern)), values);
+            SortKeyValue = string.Format(sortKeyValuePattern ?? throw new ArgumentNullException(nameof(sortKeyValuePattern)), values);
         }
 
         //--- Properties ---
@@ -59,10 +59,10 @@ namespace LambdaSharp.DynamoDB.Native {
         public DynamoPrimaryKey(string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
             : base(partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
 
-        public DynamoPrimaryKey(string pkPattern, string skPattern, params string[] keys) : base("PK", "SK", pkPattern, skPattern, keys) { }
+        public DynamoPrimaryKey(string pkPattern, string skPattern, params string[] values) : base("PK", "SK", pkPattern, skPattern, values) { }
 
-        public DynamoPrimaryKey(string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
+        public DynamoPrimaryKey(string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] values)
+            : base(partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, values) { }
 
         //--- Properties ---
         public string PK => PartitionKeyValue;
@@ -73,7 +73,7 @@ namespace LambdaSharp.DynamoDB.Native {
 
         //--- Constructors ---
         public DynamoPrimaryKey(string pk, string sk) : base(pk, sk) { }
-        public DynamoPrimaryKey(string pkPattern, string skPattern, params string[] keys) : base(pkPattern, skPattern, keys) { }
+        public DynamoPrimaryKey(string pkPattern, string skPattern, params string[] values) : base(pkPattern, skPattern, values) { }
     }
 
     public abstract class ADynamoSecondaryKey : DynamoKey {
@@ -85,8 +85,8 @@ namespace LambdaSharp.DynamoDB.Native {
             IndexName = indexName ?? throw new ArgumentNullException(nameof(indexName));
         }
 
-        public ADynamoSecondaryKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys)
+        public ADynamoSecondaryKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] values)
+            : base(partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, values)
         {
             IndexName = indexName ?? throw new ArgumentNullException(nameof(indexName));
         }
@@ -101,18 +101,8 @@ namespace LambdaSharp.DynamoDB.Native {
         public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
             : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
 
-        public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
-    }
-
-    public class DynamoLocalIndexKey<TRecord> : DynamoLocalIndexKey where TRecord : class {
-
-        //--- Constructors ---
-        public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
-            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
-
-        public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
+        public DynamoLocalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] values)
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, values) { }
     }
 
     public class DynamoGlobalIndexKey : ADynamoSecondaryKey {
@@ -121,17 +111,7 @@ namespace LambdaSharp.DynamoDB.Native {
         public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
             : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
 
-        public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
-    }
-
-    public class DynamoGlobalIndexKey<TRecord> : DynamoGlobalIndexKey where TRecord : class {
-
-        //--- Constructors ---
-        public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValue, string sortKeyValue)
-            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValue, sortKeyValue) { }
-
-        public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] keys)
-            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, keys) { }
+        public DynamoGlobalIndexKey(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, string sortKeyValuePattern, params string[] values)
+            : base(indexName, partitionKeyName, sortKeyName, partitionKeyValuePattern, sortKeyValuePattern, values) { }
     }
 }

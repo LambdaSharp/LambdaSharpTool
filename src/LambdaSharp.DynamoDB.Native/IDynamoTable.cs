@@ -32,14 +32,8 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class;
         IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
-        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoPrimaryKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
+        IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class;
-        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoGlobalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
-            where TRecord : class;
-        IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
-            where TRecord : class;
-        IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
-        IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
         IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead = false)
             where TRecord : class;
         IDynamoTableBatchGetItems BatchGetItemsMixed(bool consistentRead = false);

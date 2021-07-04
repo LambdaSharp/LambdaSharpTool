@@ -103,8 +103,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, Expression<Func<TRecord, ISet<T>>> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, Expression<Func<TRecord, IDictionary<string, T>>> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, Expression<Func<TRecord, IList<T>>> value);
-        IDynamoTableUpdateItem<TRecord> Set(DynamoLocalIndexKey<TRecord> secondaryKey);
-        IDynamoTableUpdateItem<TRecord> Set(DynamoGlobalIndexKey<TRecord> secondaryKey);
+        IDynamoTableUpdateItem<TRecord> Set(DynamoLocalIndexKey secondaryKey);
+        IDynamoTableUpdateItem<TRecord> Set(DynamoGlobalIndexKey secondaryKey);
 
         // *** `REMOVE Brand` action ***
         IDynamoTableUpdateItem<TRecord> Remove<T>(Expression<Func<TRecord, T>> attribute);

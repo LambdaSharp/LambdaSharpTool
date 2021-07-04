@@ -23,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using LambdaSharp.DynamoDB.Native;
-using LambdaSharp.DynamoDB.Serialization;
 using Sample.DynamoDBNative.DataAccess.Models;
 
 namespace Sample.DynamoDBNative.DataAccess {
@@ -34,16 +33,6 @@ namespace Sample.DynamoDBNative.DataAccess {
         public static readonly DynamoTableOptions TableOptions = new DynamoTableOptions {
             ExpectedTypeNamespace = "Sample.DynamoDBNative.DataAccess.Models"
         };
-
-        //--- Class Methods ---
-        private static async Task<T> GetSingleItem<T>(IAsyncEnumerable<T> asyncEnumerable) {
-            var result = new List<T>();
-            await foreach(var item in asyncEnumerable) {
-                result.Add(item);
-                break;
-            }
-            return result.Single();
-        }
 
         //--- Constructors ---
         public ThriftBooksDataAccessClient(string tableName, IAmazonDynamoDB dynamoClient = null)
@@ -75,7 +64,7 @@ namespace Sample.DynamoDBNative.DataAccess {
         }
 
         public Task AddOrUpdateAddressAsync(string customerUsername, AddressRecord address, CancellationToken cancellationToken) {
-            return Table.UpdateItem(DataModel.MakeCustomerRecordPrimaryKey(customerUsername))
+            return Table.UpdateItem(DataModel.CustomerRecordPrimaryKey(customerUsername))
                 .Set(record => record.Addresses[address.Label], address)
                 .ExecuteAsync(cancellationToken);
         }
@@ -83,8 +72,8 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task<(CustomerRecord Customer, IEnumerable<OrderRecord> Orders)> GetCustomerWithMostRecentOrdersAsync(string customerUsername, int limit, CancellationToken cancellationToken) {
 
             // query all records under the customer name, which include the order records as well
-            var records = await Table.QueryMixed(DataModel.MakeCustomerAndOrdersQueryPattern(customerUsername), limit: 11, scanIndexForward: false)
-                .WhereSKMatchesAny()
+            var records = await Table.Query(DataModel.SelectCustomerAndOrders(customerUsername), limit: 11, scanIndexForward: false)
+                // TODO: this should not be needed
                 .WithTypeFilter<CustomerRecord>()
                 .WithTypeFilter<OrderRecord>()
                 .ExecuteAsync(cancellationToken: cancellationToken);
@@ -121,16 +110,13 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task UpdateOrderAsync(string orderId, OrderStatus orderStatus, CancellationToken cancellationToken) {
 
             // resolve order ID to primary key by querying the global secondary index
-            var gsi1Key = DataModel.MakeOrderQueryPattern(orderId);
-            var order = await GetSingleItem(
-                Table.Query(gsi1Key)
-                    .WhereSKEquals(gsi1Key.SortKeyValue)
-                    .Get(record => record.CustomerUsername)
-                    .ExecuteAsyncEnumerable(cancellationToken)
-            );
+            var order = (await Table.Query(DataModel.SelectOrders(orderId))
+                .Get(record => record.CustomerUsername)
+                .ExecuteAsync(cancellationToken)
+            ).FirstOrDefault();
 
             // update order with state
-            await Table.UpdateItem(DataModel.MakeOrderRecordPrimaryKey(order.CustomerUsername, order.OrderId))
+            await Table.UpdateItem(DataModel.OrderRecordPrimaryKey(order.CustomerUsername, order.OrderId))
                 .Set(record => record.Status, orderStatus)
                 .ExecuteAsync(cancellationToken);
         }
@@ -138,8 +124,8 @@ namespace Sample.DynamoDBNative.DataAccess {
         public async Task<(OrderRecord Order, IEnumerable<OrderItemRecord> Items)> GetOrderWithOrderItemsAsync(string orderId, CancellationToken cancellationToken) {
 
             // query all records under the order ID, which include the order item records as well
-            var records = await Table.QueryMixed(DataModel.MakeOrderAndOrderItemsQueryPattern(orderId))
-                .WhereSKMatchesAny()
+            var records = await Table.Query(DataModel.SelectOrderAndOrderItems(orderId))
+                // TODO: this should not be needed
                 .WithTypeFilter<OrderRecord>()
                 .WithTypeFilter<OrderItemRecord>()
                 .ExecuteAsync(cancellationToken);

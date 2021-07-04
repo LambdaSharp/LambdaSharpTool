@@ -24,27 +24,20 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
-    public interface IDynamoTableQuery {
-
-        //--- Methods ---
-        IDynamoTableQuery Where<TRecord>(Expression<Func<TRecord, bool>> filter) where TRecord : class;
-        IDynamoTableQuery WithTypeFilter<T>();
-        IDynamoTableQuery WithTypeFilter(Type type);
-        IDynamoTableQuery Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class;
-        IAsyncEnumerable<object> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
-        IAsyncEnumerable<object> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
-        Task<IEnumerable<object>> ExecuteAsync(CancellationToken cancellationToken = default);
-        Task<IEnumerable<object>> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
-    }
-
     public interface IDynamoTableQuery<TRecord> where TRecord : class {
 
         //--- Methods ---
         IDynamoTableQuery<TRecord> Where(Expression<Func<TRecord, bool>> filter);
+        IDynamoTableQuery<TRecord> WithTypeFilter<T>( );
+        IDynamoTableQuery<TRecord> WithTypeFilter(Type type);
         IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
-        IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default);
-        IAsyncEnumerable<TRecord> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default);
-        Task<IEnumerable<TRecord>> ExecuteAsync(CancellationToken cancellationToken = default);
-        Task<IEnumerable<TRecord>> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(bool fetchAllAttributes, CancellationToken cancellationToken = default);
+        Task<IEnumerable<TRecord>> ExecuteAsync(bool fetchAllAttributes, CancellationToken cancellationToken = default);
+
+        //--- Default Methods ---
+        IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default) => ExecuteAsyncEnumerable(fetchAllAttributes: false, cancellationToken);
+        IAsyncEnumerable<TRecord> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default) => ExecuteAsyncEnumerable(fetchAllAttributes: true, cancellationToken);
+        Task<IEnumerable<TRecord>> ExecuteAsync(CancellationToken cancellationToken = default) => ExecuteAsync(fetchAllAttributes: false, cancellationToken);
+        Task<IEnumerable<TRecord>> ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken = default) => ExecuteAsync(fetchAllAttributes: true, cancellationToken);
     }
 }

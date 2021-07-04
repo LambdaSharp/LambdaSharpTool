@@ -36,19 +36,6 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         //--- Types ---
         private class MyRecord {
 
-            //--- Types ---
-            public class PrimaryKey : DynamoPrimaryKey<MyRecord> {
-
-                //--- Constants ---
-                public const string PK_PATTERN = "MY-RECORD-ID#{0}";
-                public const string SK_PATTERN = "SUB-ID#{1}";
-
-                //--- Constructors ---
-                public PrimaryKey(MyRecord record) : this(record.Id, record.SubId) { }
-                public PrimaryKey(string id, string subId) : base(PK_PATTERN, SK_PATTERN, id, subId) { }
-
-            }
-
             //--- Properties ---
             public string Id { get; set; }
             public string SubId { get; set; }
@@ -57,29 +44,42 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
         private class MyOtherRecord {
 
-            //--- Types ---
-            public class PrimaryKey : DynamoPrimaryKey<MyOtherRecord> {
-
-                //--- Constants ---
-                public const string PK_PATTERN = "MY-RECORD-ID#{0}";
-                public const string SK_PATTERN = "OTHER-SUB-ID#{1}";
-
-                //--- Constructors ---
-                public PrimaryKey(MyOtherRecord record) : this(record.Id, record.SubId) { }
-                public PrimaryKey(string id, string subId) : base(PK_PATTERN, SK_PATTERN, id, subId) { }
-
-            }
-
             //--- Properties ---
             public string Id { get; set; }
             public string SubId { get; set; }
             public string Name { get; set; }
         }
 
+        private static class MyDataModel {
+
+            //--- Constants ---
+            public const string MY_RECORD_PK_PATTERN = "MY-RECORD-ID#{0}";
+            public const string MY_RECORD_SK_PATTERN = "SUB-ID#{1}";
+            public const string MY_OTHER_RECORD_PK_PATTERN = "MY-RECORD-ID#{0}";
+            public const string MY_OTHER_RECORD_SK_PATTERN = "OTHER-SUB-ID#{1}";
+
+            //--- Class Methods ---
+            public static DynamoPrimaryKey<MyRecord> GetPrimaryKey(MyRecord record) => MyRecordPrimaryKey(record.Id, record.SubId);
+            public static DynamoPrimaryKey<MyRecord> MyRecordPrimaryKey(string id, string subId) => new DynamoPrimaryKey<MyRecord>(MY_RECORD_PK_PATTERN, MY_RECORD_SK_PATTERN, id, subId);
+            public static DynamoPrimaryKey<MyOtherRecord> GetPrimaryKey(MyOtherRecord record) => MyOtherRecordPrimaryKey(record.Id, record.SubId);
+            public static DynamoPrimaryKey<MyOtherRecord> MyOtherRecordPrimaryKey(string id, string subId) => new DynamoPrimaryKey<MyOtherRecord>(MY_OTHER_RECORD_PK_PATTERN, MY_OTHER_RECORD_SK_PATTERN, id, subId);
+            public static IDynamoQuerySelect<MyRecord> SelectMyRecords(string recordId)
+                => DynamoQuery.SelectFormat<MyRecord>(MY_RECORD_PK_PATTERN, recordId)
+                    .WhereSKBeginsWith(string.Format(MY_RECORD_SK_PATTERN, "", ""));
+            public static IDynamoQuerySelect<object> SelectMyRecordsAndMyOtherRecords(string recordId)
+                => DynamoQuery.SelectFormat<object>(MY_RECORD_PK_PATTERN, recordId);
+        }
+
         //--- Constructors ---
         public DynamoTableOperations(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {
             DataAccessClient = new ThriftBooksDataAccessClient(dynamoDbFixture.TableName, dynamoDbFixture.DynamoClient);
             Table = new DynamoTable(TableName, DynamoClient, ThriftBooksDataAccessClient.TableOptions);
+            ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableRecordType {
+                Type = typeof(MyRecord)
+            });
+            ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableRecordType {
+                Type = typeof(MyOtherRecord)
+            });
         }
 
         //--- Properties ---
@@ -94,7 +94,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             // arrange
 
             // act
-            var result = await Table.GetItemAsync(DataModel.MakeCustomerRecordPrimaryKey("123456789"));
+            var result = await Table.GetItemAsync(DataModel.CustomerRecordPrimaryKey("123456789"));
 
             // assert
             result.Should().BeNull();
@@ -212,18 +212,16 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
                 SubId = GetRandomString(10),
                 Value = "Hello"
             };
-            await Table.PutItemAsync(record1, new MyRecord.PrimaryKey(record1));
+            await Table.PutItemAsync(record1, MyDataModel.GetPrimaryKey(record1));
             var record2 = new MyRecord {
                 Id = id,
                 SubId = GetRandomString(10),
                 Value = "World"
             };
-            await Table.PutItemAsync(record2, new MyRecord.PrimaryKey(record2));
+            await Table.PutItemAsync(record2, MyDataModel.GetPrimaryKey(record2));
 
             // act
-            var result = await Table.Query(new MyRecord.PrimaryKey(record1), consistentRead: true)
-                .WhereSKBeginsWith(string.Format(MyRecord.PrimaryKey.SK_PATTERN, "", ""))
-                .ExecuteAsync();
+            var result = await Table.Query(MyDataModel.SelectMyRecords(record1.Id), consistentRead: true).ExecuteAsync();
 
             // assert
             result.Should().HaveCount(2);
@@ -241,17 +239,16 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
                 SubId = GetRandomString(10),
                 Value = "Hello"
             };
-            await Table.PutItemAsync(record1, new MyRecord.PrimaryKey(record1));
+            await Table.PutItemAsync(record1, MyDataModel.GetPrimaryKey(record1));
             var record2 = new MyOtherRecord {
                 Id = id,
                 SubId = GetRandomString(10),
                 Name = "Bob"
             };
-            await Table.PutItemAsync(record2, new MyOtherRecord.PrimaryKey(record2));
+            await Table.PutItemAsync(record2, MyDataModel.GetPrimaryKey(record2));
 
             // act
-            var result = await Table.QueryMixed(new MyRecord.PrimaryKey(record1), consistentRead: true)
-                .WhereSKMatchesAny()
+            var result = await Table.Query(MyDataModel.SelectMyRecordsAndMyOtherRecords(record1.Id), consistentRead: true)
                 .WithTypeFilter<MyRecord>()
                 .WithTypeFilter<MyOtherRecord>()
                 .ExecuteAsync();

@@ -28,13 +28,6 @@ using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native {
 
-    public class DynamoTableOptions {
-
-        //--- Properties ---
-        public DynamoSerializerOptions SerializerOptions { get; set; } = new DynamoSerializerOptions();
-        public string? ExpectedTypeNamespace { get; set; }
-    }
-
     public class DynamoTable : IDynamoTable {
 
         //--- Constructors ---
@@ -89,51 +82,14 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
-        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoPrimaryKey<TRecord> partitionKey, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
+        public IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit, bool scanIndexForward, bool consistentRead)
             where TRecord : class
             => new DynamoTableQuery<TRecord>(this, new QueryRequest {
                 ConsistentRead = consistentRead,
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
                 TableName = TableName
-            }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
-
-        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoLocalIndexKey<TRecord> partitionKey, int limit, bool scanIndexForward, bool consistentRead)
-            where TRecord : class
-            => new DynamoTableQuery<TRecord>(this, new QueryRequest {
-                ConsistentRead = consistentRead,
-                IndexName = partitionKey.IndexName,
-                Limit = limit,
-                ScanIndexForward = scanIndexForward,
-                TableName = TableName
-            }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
-
-        public IDynamoTableQuerySortKeyCondition<TRecord> Query<TRecord>(DynamoGlobalIndexKey<TRecord> partitionKey, int limit, bool scanIndexForward, bool consistentRead)
-            where TRecord : class
-            => new DynamoTableQuery<TRecord>(this, new QueryRequest {
-                ConsistentRead = consistentRead,
-                IndexName = partitionKey.IndexName,
-                Limit = limit,
-                ScanIndexForward = scanIndexForward,
-                TableName = TableName
-            }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
-
-        public IDynamoTableQuerySortKeyCondition QueryMixed(DynamoPrimaryKey partitionKey, int limit, bool scanIndexForward = true, bool consistentRead = false)
-            => new DynamoTableQuery(this, new QueryRequest {
-                ConsistentRead = consistentRead,
-                Limit = limit,
-                ScanIndexForward = scanIndexForward,
-                TableName = TableName
-            }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
-
-        public IDynamoTableQuerySortKeyCondition QueryMixed(ADynamoSecondaryKey partitionKey, int limit, bool scanIndexForward, bool consistentRead)
-            => new DynamoTableQuery(this, new QueryRequest {
-                ConsistentRead = consistentRead,
-                IndexName = partitionKey.IndexName,
-                Limit = limit,
-                ScanIndexForward = scanIndexForward,
-                TableName = TableName
-            }, partitionKey.PartitionKeyName, partitionKey.SortKeyName, partitionKey.PartitionKeyValue);
+            }, (ADynamoQuerySelect<TRecord>)querySelect);
 
         public IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
             where TRecord : class
@@ -199,7 +155,7 @@ namespace LambdaSharp.DynamoDB.Native {
             }
 
             // add type details
-            attributes["_t"] = new AttributeValue(GetExpectedTypeName(typeof(TRecord)));
+            attributes["_t"] = new AttributeValue(Options.GetRecordTypeName(typeof(TRecord)));
 
             // add modified details
             attributes["_m"] = new AttributeValue {
@@ -236,31 +192,19 @@ namespace LambdaSharp.DynamoDB.Native {
         internal object? DeserializeItem(Dictionary<string, AttributeValue> item, Type? type)
             => DynamoSerializer.Deserialize(item, type, SerializerOptions);
 
-        internal object? DeserializeItem(Dictionary<string, AttributeValue> item, Dictionary<string, Type> possibleTypes) {
+        internal object? DeserializeItemUsingRecordType(Dictionary<string, AttributeValue> item, Type expectedRecordType) {
+            Type? type = null;
 
-            // determine deserialization type by expecting record meta-data
-            var type = typeof(object);
+            // determine deserialization type by inspecting record meta-data
             if(
                 item.TryGetValue("_t", out var itemTypeAttribute)
                 && !(itemTypeAttribute.S is null)
-                && possibleTypes.TryGetValue(itemTypeAttribute.S, out var foundTargetType)
             ) {
-                type = foundTargetType;
+                type = Options.GetRecordType(itemTypeAttribute.S);
             }
-            return DeserializeItem(item, type);
-        }
 
-        internal string GetExpectedTypeName(Type type) {
-            var result = type.FullName ?? "";
-
-            // check if the typename should be shortened
-            if(
-                !string.IsNullOrEmpty(Options.ExpectedTypeNamespace)
-                && result.StartsWith(Options.ExpectedTypeNamespace, StringComparison.InvariantCulture)
-            ) {
-                result = result.Substring(Options.ExpectedTypeNamespace.Length);
-            }
-            return result;
+            // fallback to expected record type
+            return DeserializeItem(item, type ?? expectedRecordType);
         }
     }
 }

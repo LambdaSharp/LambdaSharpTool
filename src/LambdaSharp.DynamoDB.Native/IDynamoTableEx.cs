@@ -29,19 +29,9 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class
             => table.GetItem(primaryKey, consistentRead).ExecuteAsync(cancellationToken);
 
-        public static async Task<TRecord?> QuerySingleAsync<TRecord>(this IDynamoTable table, DynamoLocalIndexKey<TRecord> secondaryKey, bool consistentRead = false, CancellationToken cancellationToken = default)
+        public static async Task<TRecord?> QuerySingleAsync<TRecord>(this IDynamoTable table, IDynamoQuerySelect<TRecord> querySelect, bool consistentRead = false, CancellationToken cancellationToken = default)
             where TRecord : class
-            => (await table.Query(secondaryKey, limit: 1, consistentRead: consistentRead)
-                .WhereSKEquals(secondaryKey.SortKeyValue)
-                .ExecuteFetchAllAttributesAsync(cancellationToken)
-            ).FirstOrDefault();
-
-        public static async Task<TRecord?> QuerySingleAsync<TRecord>(this IDynamoTable table, DynamoGlobalIndexKey<TRecord> secondaryKey, bool consistentRead = false, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => (await table.Query(secondaryKey, limit: 1, consistentRead: consistentRead)
-                .WhereSKEquals(secondaryKey.SortKeyValue)
-                .ExecuteFetchAllAttributesAsync(cancellationToken)
-            ).FirstOrDefault();
+            => (await table.Query(querySelect, limit: 1, consistentRead: consistentRead).ExecuteFetchAllAttributesAsync(cancellationToken)).FirstOrDefault();
 
         public static Task<bool> PutItemAsync<TRecord>(this IDynamoTable table, TRecord record, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
             where TRecord : class

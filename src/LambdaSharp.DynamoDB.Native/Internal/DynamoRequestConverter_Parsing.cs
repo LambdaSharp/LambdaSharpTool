@@ -85,7 +85,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                         throw new NotSupportedException($"base-expression must use lambda parameter: {expression}");
                     }
 
-                    // TODO: this break when the property name does not match the DynamoDB attribute name!!!
+                    // TODO: this breaks when the property name does not match the DynamoDB attribute name!!!
                     return Join(ParseAttributePath(memberExpression.Expression, depth + 1), GetAttributeName(memberExpression.Member.Name));
 
                 // check: base-expression "[" int|string "]"

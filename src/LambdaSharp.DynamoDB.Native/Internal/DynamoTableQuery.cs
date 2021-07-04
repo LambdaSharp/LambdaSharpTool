@@ -29,26 +29,26 @@ using LambdaSharp.DynamoDB.Native.Operations;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal sealed class DynamoTableQuery : IDynamoTableQuerySortKeyCondition, IDynamoTableQuery {
+    internal sealed class DynamoTableQuery<TRecord> : IDynamoTableQuery<TRecord> where TRecord : class {
 
         //--- Fields ---
         private readonly DynamoTable _table;
         private readonly QueryRequest _request;
         private readonly DynamoRequestConverter _converter;
-        private readonly Dictionary<string, Type> _expectedTypes = new Dictionary<string, Type>();
-        private string _sortKeyName;
+        private readonly ADynamoQuerySelect<TRecord> _queryPattern;
 
         //--- Constructors ---
-        public DynamoTableQuery(DynamoTable table, QueryRequest request, string primaryKeyName, string sortKeyName, string primaryKeyValue) {
+        public DynamoTableQuery(DynamoTable table, QueryRequest request, ADynamoQuerySelect<TRecord> querySelect) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
+            _queryPattern = querySelect ?? throw new ArgumentNullException(nameof(querySelect));
             _converter = new DynamoRequestConverter(_request.ExpressionAttributeNames, _request.ExpressionAttributeValues, _table.SerializerOptions);
-            _sortKeyName = sortKeyName;
-            _request.KeyConditionExpression = $"{_converter.GetAttributeName(primaryKeyName)} = {_converter.GetExpressionValueName(primaryKeyValue)}";
         }
 
         //--- Methods ---
         private void PrepareRequest(bool fetchAllAttributes) {
+            _request.IndexName = _queryPattern.IndexName;
+            _request.KeyConditionExpression = _queryPattern.GetKeyConditionExpression(_converter);
             _request.FilterExpression = _converter.ConvertConditions();
             _request.ProjectionExpression = _converter.ConvertProjections();
 
@@ -65,13 +65,13 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             }
         }
 
-        //--- IDynamoTableQuery Members ---
-        IDynamoTableQuery IDynamoTableQuery.Where<TRecord>(Expression<Func<TRecord, bool>> filter) where TRecord : class {
+        //--- IDynamoTableQuery<TRecord> Members ---
+        public IDynamoTableQuery<TRecord> Where(Expression<Func<TRecord, bool>> filter) {
             _converter.AddCondition(filter);
             return this;
         }
 
-        IDynamoTableQuery IDynamoTableQuery.Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class {
+        public IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute) {
             _converter.AddProjection(attribute.Body);
 
             // NOTE (2021-06-24, bjorg): we always fetch `_t` to allow polymorphic deserialization
@@ -79,118 +79,46 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return this;
         }
 
-        IDynamoTableQuery IDynamoTableQuery.WithTypeFilter<T>() {
-            var expectedTypeName = _table.GetExpectedTypeName(typeof(T));
+        public IDynamoTableQuery<TRecord> WithTypeFilter<T>() {
+            var expectedTypeName = _table.Options.RegisterTypeAndGetTypeName(typeof(T));
             _converter.AddTypeCondition(expectedTypeName);
-            _expectedTypes[expectedTypeName] = typeof(T);
             return this;
         }
 
-        IDynamoTableQuery IDynamoTableQuery.WithTypeFilter(Type type) {
-            var expectedTypeName = _table.GetExpectedTypeName(type ?? throw new ArgumentNullException(nameof(type)));
+        public IDynamoTableQuery<TRecord> WithTypeFilter(Type type) {
+            var expectedTypeName = _table.Options.RegisterTypeAndGetTypeName(type ?? throw new ArgumentNullException(nameof(type)));
             _converter.AddTypeCondition(expectedTypeName);
-            _expectedTypes[expectedTypeName] = type;
             return this;
         }
 
-        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken) {
-            PrepareRequest(fetchAllAttributes: false);
+        public async IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(bool fetchAllAttributes, [EnumeratorCancellation] CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItem(item, _expectedTypes);
-                    if(!(record is null)) {
-                        yield return record;
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord));
+                    if(!(record is null) && (record is TRecord typedRecord)) {
+                        yield return typedRecord;
                     }
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;
             } while(_request.ExclusiveStartKey.Any());
         }
 
-        async IAsyncEnumerable<object> IDynamoTableQuery.ExecuteFetchAllAttributesAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken) {
-            PrepareRequest(fetchAllAttributes: true);
+        public async Task<IEnumerable<TRecord>> ExecuteAsync(bool fetchAllAttributes, CancellationToken cancellationToken) {
+            PrepareRequest(fetchAllAttributes);
+            var result = new List<TRecord>();
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItem(item, _expectedTypes);
-                    if(!(record is null)) {
-                        yield return record;
-                    }
-                }
-                _request.ExclusiveStartKey = response.LastEvaluatedKey;
-            } while(_request.ExclusiveStartKey.Any());
-        }
-
-        async Task<IEnumerable<object>> IDynamoTableQuery.ExecuteAsync(CancellationToken cancellationToken) {
-            PrepareRequest(fetchAllAttributes: false);
-            var result = new List<object>();
-            do {
-                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
-                foreach(var item in response.Items) {
-                    var record = _table.DeserializeItem(item, _expectedTypes);
-                    if(!(record is null)) {
-                        result.Add(record);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord));
+                    if(!(record is null) && (record is TRecord typedRecord)) {
+                        result.Add(typedRecord);
                     }
                 }
                 _request.ExclusiveStartKey = response.LastEvaluatedKey;
             } while(_request.ExclusiveStartKey.Any());
             return result;
-        }
-
-        async Task<IEnumerable<object>> IDynamoTableQuery.ExecuteFetchAllAttributesAsync(CancellationToken cancellationToken) {
-            PrepareRequest(fetchAllAttributes: true);
-            var result = new List<object>();
-            do {
-                var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
-                foreach(var item in response.Items) {
-                    var record = _table.DeserializeItem(item, _expectedTypes);
-                    if(!(record is null)) {
-                        result.Add(record);
-                    }
-                }
-                _request.ExclusiveStartKey = response.LastEvaluatedKey;
-            } while(_request.ExclusiveStartKey.Any());
-            return result;
-        }
-
-        //--- IDynamoTableQuerySortKeyCondition Members ---
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKBeginsWith(string sortKeyValuePrefix) {
-            _request.KeyConditionExpression += $" AND begins_with({_converter.GetAttributeName(_sortKeyName)}, {_converter.GetExpressionValueName(sortKeyValuePrefix)})";
-            return this;
-        }
-
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKEquals(string sortKeyValue) {
-            _request.KeyConditionExpression += $" AND {_converter.GetAttributeName(_sortKeyName)} = {_converter.GetExpressionValueName(sortKeyValue)}";
-            return this;
-        }
-
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKIsBetween(string sortKeyValueLow, string sortKeyValueHigh) {
-            _request.KeyConditionExpression += $" AND {_converter.GetAttributeName(_sortKeyName)} BETWEEN {_converter.GetExpressionValueName(sortKeyValueLow)} AND {_converter.GetExpressionValueName(sortKeyValueHigh)}";
-            return this;
-        }
-
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKIsGreaterThan(string sortKeyValue) {
-            _request.KeyConditionExpression += $" AND {_converter.GetAttributeName(_sortKeyName)} > {_converter.GetExpressionValueName(sortKeyValue)}";
-            return this;
-        }
-
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKIsGreaterThanOrEquals(string sortKeyValue) {
-            _request.KeyConditionExpression += $" AND {_converter.GetAttributeName(_sortKeyName)} >= {_converter.GetExpressionValueName(sortKeyValue)}";
-            return this;
-        }
-
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKIsLessThan(string sortKeyValue) {
-            _request.KeyConditionExpression += $" AND {_converter.GetAttributeName(_sortKeyName)} < {_converter.GetExpressionValueName(sortKeyValue)}";
-            return this;
-        }
-
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKIsLessThanOrEquals(string sortKeyValue) {
-            _request.KeyConditionExpression += $" AND {_converter.GetAttributeName(_sortKeyName)} <= {_converter.GetExpressionValueName(sortKeyValue)}";
-            return this;
-        }
-
-        IDynamoTableQuery IDynamoTableQuerySortKeyCondition.WhereSKMatchesAny() {
-            return this;
         }
     }
 }

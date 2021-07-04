@@ -1,5 +1,7 @@
 > TODO: move docs to the right place
 
+> TODO: rename `partitionKeyValuePattern` to `partitionKeyValueFormat` or `pkValueFormat`
+
 > TODO: Ability to designated a property to hold the "_m" (modified) date-timestamp
 
 > TODO: Test deserialization of custom type derived from `IList<Foo>`
@@ -27,12 +29,78 @@
 > TODO: `GetAttributePath` should fail on record
 
 > TODO: the current `Query(keys)` mechanism is too complicated; it requires the dev to know the access pattern, which is not good; instead it should be:
->   * `_table.Query(new MySubRecord.GetSubRecordsBelongingTo(parentRecord))`
->   * `_table.Query(new CustomerRecord.AllCustomers())`
+> * `_table.Query(new MySubRecord.GetSubRecordsBelongingTo(parentRecord))`
+> * `_table.Query(new CustomerRecord.AllCustomers())`
 
 > TODO: only `PutItem()` operations need secondary keys
 
 > TODO: pre-defined key projections that are done by `PutItem()` and `UpdateItem()` when needed: `[DynamoProjectedAttribute("GS1PK", "ORDER#{OrderId}")]`
+> * register: `AddAttributeProjection("GS1PK", record => $"CUSTOMER#{record.CustomerId}")`
+> * implicitly registered: `AddAttributeProjection("_t", record => record.GetType().FullName")`
+> * implicitly registered: `AddAttributeProjection("_m", record => DateTimeOffset.UtcNow")`
+```csharp
+new DynamoTableOptions {
+    ExpectedTypeNamespace = "Foo",
+
+    Model = {
+        new() {
+            Type = typeof(OrderRecord),
+            Attributes = {
+                ["GS1PK"] = record => $"ORDER#{record.OrderId}"),
+                ["GSI1SK"] = record => $"INFO"
+            }
+        },
+        new() {
+            Type = typeof(OrderItemRecord),
+            Attributes = {
+                ["GS1PK"] = record => $"ORDER#{record.OrderId}"),
+                ["GSI1SK"] = record => $"ITEM#{record.ItemId}"
+            }
+        }
+    }
+}
+```
+
+> TODO: register in table options what types to expect so we can always properly deserialize
+
+> TODO: should we use the `_t` attribute to error out when deserializing the wrong row type?
+
+
+```csharp
+IDynamoTableQuery WhereSKEquals(string skValue);
+IDynamoTableQuery WhereSKBeginsWith(string skValuePrefix);
+IDynamoTableQuery WhereSKIsGreaterThan(string skValue);
+IDynamoTableQuery WhereSKIsGreaterThanOrEquals(string skValue);
+IDynamoTableQuery WhereSKIsLessThan(string skValue);
+IDynamoTableQuery WhereSKIsLessThanOrEquals(string skValue);
+IDynamoTableQuery WhereSKIsBetween(string skLowValue, string skHighValue);
+
+
+DynamoQueryPattern(string partitionKeyValuePattern, params string[] values); // use main index and (PK,SK) as primary key
+DynamoQueryPattern(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, params string[] values);
+
+
+ADynamoQueryPattern MakeCustomerAndOrdersQueryPattern(string customerUsername) =>
+    new DynamoQueryPattern(CUSTOMER_PK_PATTERN, customerUsername);
+
+
+ADynamoQueryPattern MakeCustomerAndOrdersQueryPattern(string customerUsername) =>
+    new DynamoQueryPattern(indexName: "GSI1", partitionKeyName: "GSI1PK", sortKeyName: "GSI1SK", CUSTOMER_PK_PATTERN, customerUsername)
+        .Where(sk => sk.BeginsWith("foo"));
+
+
+
+const string CUSTOMER_PK_PATTERN = "CUSTOMER#{0}";
+DynamoPrimaryKey MakeCustomerAndOrdersQueryPattern(string customerUsername) => new DynamoPrimaryKey(CUSTOMER_PK_PATTERN, "<NOT-USED>", customerUsername);
+
+
+
+
+Table.QueryMixed(DataModel.MakeCustomerAndOrdersQueryPattern(customerUsername), limit: 11, scanIndexForward: false)
+    .WithTypeFilter<CustomerRecord>()
+    .WithTypeFilter<OrderRecord>()
+    .ExecuteAsync(cancellationToken: cancellationToken);
+```
 
 # LambdaSharp.DynamoDB.Native
 
@@ -109,6 +177,31 @@
 |`NULL` (Null)      |`null`                         |`null`                         |
 |`S` (String)       |`string`                       |`string`                       |
 |`SS` (String Set)  |`HashSet<string>`              |`HashSet<string>`              |
+
+
+## Root Query Clause
+
+```csharp
+/*
+ * KEY EXPRESSION OPERATORS AND FUNCTIONS
+ * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions
+ *
+ * sort-key-condition ::=
+ *     operand comparator operand
+ *     | operand BETWEEN operand AND operand
+ *     | function
+ *
+ * comparator ::=
+ *     =
+ *     | <
+ *     | <=
+ *     | >
+ *     | >=
+ *
+ * function ::=
+ *     begins_with (path, substr)
+ */
+```
 
 
 ## Condition Expressions
