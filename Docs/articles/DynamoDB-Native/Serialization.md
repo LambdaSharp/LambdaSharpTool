@@ -263,6 +263,18 @@ The `DynamoSerializerOptions` has the following properties.
 
 <dl>
 
+<dt><code>Converters</code></dt>
+<dd>
+
+The <code>Converters</code> property lists additional custom converters to use when (de)serializing values. Custom converters take precedence over default converters. Default converters can be disabled entirely by setting the <code>UseDefaultConverters</code> property to <code>false</code>.
+
+<em>Type:</em> <code>List&lt;IDynamoAttributeConverter&gt;</code>
+
+<em>Default:</em> empty list
+
+</dd>
+
+
 <dt><code>IgnoreNullValues</code></dt>
 <dd>
 
@@ -284,16 +296,26 @@ The <code>UseDefaultConverters</code> property controls if the default DynamoDB 
 
 <em>Default:</em> <code>true</code>
 
-</dd>
-
-<dt><code>Converters</code></dt>
-<dd>
-
-The <code>Converters</code> property lists additional custom converters to use when (de)serializing values. Custom converters take precedence over default converters. Default converters can be disabled entirely by setting the <code>UseDefaultConverters</code> property to <code>false</code>.
-
-<em>Type:</em> <code>List&lt;IDynamoAttributeConverter&gt;</code>
-
-<em>Default:</em> empty list
+The default converters are:
+* `DynamoBoolConverter`
+* `DynamoIntConverter`
+* `DynamoLongConverter`
+* `DynamoDoubleConverter`
+* `DynamoDateTimeOffsetConverter`
+* `DynamoDecimalConverter`
+* `DynamoStringConverter`
+* `DynamoEnumConverter`
+* `DynamoByteArrayConverter`
+* `DynamoISetByteArrayConverter`
+* `DynamoISetStringConverter`
+* `DynamoISetIntConverter`
+* `DynamoISetLongConverter`
+* `DynamoISetDoubleConverter`
+* `DynamoISetDecimalConverter`
+* `DynamoIDictionarySetConverter`
+* `DynamoListConverter`
+* `DynamoJsonElementConverter`
+* `DynamoObjectConverter`
 
 </dd>
 
