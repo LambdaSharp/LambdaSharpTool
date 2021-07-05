@@ -30,6 +30,8 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
 
     public class Serialize {
 
+        // TODO: test what happens when serializing an empty set in a list (???)
+
         //--- Types ---
         public class MyCustomType {
 

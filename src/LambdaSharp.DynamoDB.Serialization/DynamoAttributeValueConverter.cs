@@ -41,11 +41,7 @@ namespace LambdaSharp.DynamoDB.Serialization {
                 writer.WriteEndObject();
             } else if(!(value.N is null)) {
                 writer.WriteStartObject();
-                if(double.TryParse(value.N, out var number)) {
-                    writer.WriteNumber("N", number);
-                } else {
-                    writer.WriteString("N", "***ERROR PARSING NUMBER***");
-                }
+                writer.WriteString("N", value.N);
                 writer.WriteEndObject();
             } else if(!(value.B is null)) {
                 writer.WriteStartObject();

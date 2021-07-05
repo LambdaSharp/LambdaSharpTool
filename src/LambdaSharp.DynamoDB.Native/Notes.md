@@ -45,75 +45,11 @@ new DynamoTableOptions {
 
 ### TODO (missing alternative for NULL and L)
 
-> TODO: IList<T> handling in serialization
-
-> TODO: enum handling in serialization
-
 > TODO: equivalence rules for SET update operations (T, IDictionary<string, T>, IList<T>, ISet<T>)
 
 > TODO: list all valid literal expressions (`"abc"`, `123`, `true`, `new string[0]`, `new[] { "hello" }`)
 
-|DynamoDB Data Type |Default .NET Type                      |Alternative .NET Type                  |
-|-------------------|---------------------------------------|---------------------------------------|
-|`B` (Binary)       |`byte[]`                               |N/A
-|`BOOL` (Boolean)   |`bool`                                 |`bool?`
-|`BS` (Binary Set)  |`HashSet<byte[]>`                      |implementations of `ISet<byte[]>`
-|`L` (List)         |`List<object>`                         |implementations of `IList<T>` where `T` is one of `object`, `bool`, `string`, `byte[]`, ...
-|`M` (Map)          |`Dictionary<string, object>`           |implementations of `IDictionary<string, T>` where `T` is one of  `object`, `bool`, `string`, `byte[]`, ...; or any concrete, constructor-less class
-|`N` (Number)       |`double`                               |`int`, `long`, `decimal`, `int?`, `long?`, `double?`, `decimal?`
-|`NS` (Number Set)  |`HashSet<double>`                      |implementations of `ISet<int>`, `ISet<long>`, `ISet<double>`, or `ISet<decimal>`
-|`NULL` (Null)      |N/A (`null` if true, error otherwise)  |any concrete class
-|`S` (String)       |`string`                               |N/A
-|`SS` (String Set)  |`HashSet<string>`                      |implementations of `ISet<string>`
-
 ### Attribute to .NET conversion without type hints
-
-|DynamoDB Data Type |.NET Data Type |
-|-------------------|---------------|
-|`B` (Binary)       |`byte[]`
-|`BOOL` (Boolean)   |`bool`
-|`BS` (Binary Set)  |`HashSet<byte[]>`
-|`L` (List)         |`List<object>`
-|`M` (Map)          |`Dictionary<string, object>`
-|`N` (Number)       |`double`
-|`NS` (Number Set)  |`HashSet<double>`
-|`NULL` (Null)      |`null`
-|`S` (String)       |`string`
-|`SS` (String Set)  |`HashSet<string>`
-
-
-### Attribute to .NET conversion with type hints
-
-|.NET Data Type Hint            |DynamoDB Value     |
-|-------------------------------|-------------------|
-|`bool`                         |`BOOL` (Boolean)   |
-|`byte[]`                       |`B` (Binary)       |
-|`HashSet<byte[]>`              |`BS` (Binary Set)  |
-|`List<object>`                 |`L` (List)         |
-|`Dictionary<string, object>`   |`M` (Map)          |
-|`double`                       |`N` (Number)       |
-|`HashSet<double>`              |`NS` (Number Set)  |
-|`null`                         |`NULL` (Null)      |
-|`string`                       |`S` (String)       |
-|`HashSet<string>`              |`SS` (String Set)  |
-
-
-|DynamoDB Data Type |.NET Declared Type             |.NET Actual Type               |
-|-------------------|-------------------------------|-------------------------------|
-|`B` (Binary)       |`byte[]`                       |`byte[]`                       |
-|`B` (Binary)       |N/A                            |`byte[]`                       |
-|`BOOL` (Boolean)   |`bool`                         |`bool`                         |
-|`BOOL` (Boolean)   |`bool?`                        |`bool`                         |
-|`BOOL` (Boolean)   |N/A                            |`bool`                         |
-|`BS` (Binary Set)  |`HashSet<byte[]>`              |`HashSet<byte[]>`              |
-|`BS` (Binary Set)  |`ISet<byte[]>`                 |`HashSet<byte[]>`              |
-|`L` (List)         |`List<object>`                 |`List<object>`                 |
-|`M` (Map)          |`Dictionary<string, object>`   |`Dictionary<string, object>`   |
-|`N` (Number)       |`double`                       |`double`                       |
-|`NS` (Number Set)  |`HashSet<double>`              |`HashSet<double>`              |
-|`NULL` (Null)      |`null`                         |`null`                         |
-|`S` (String)       |`string`                       |`string`                       |
-|`SS` (String Set)  |`HashSet<string>`              |`HashSet<string>`              |
 
 
 ## Root Query Clause

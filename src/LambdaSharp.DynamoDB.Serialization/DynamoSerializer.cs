@@ -27,12 +27,12 @@ namespace LambdaSharp.DynamoDB.Serialization {
     /* DYNAMODB DATA TYPES
      * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html#HowItWorks.DataTypes
      *
-     * Number (int, long, double, decimal, int?, long?, double?, decimal?)
+     * Number (int, int?, long, long?, double, double?, decimal, decimal?, DateTimeOffset, DateTimeOffset?)
      * String (string, enum)
      * Binary (byte[])
      * Boolean (bool, bool?)
-     * Null (bool?, int?, long?, double?, decimal?, List<object>, List<T>, Dictionary<string, object>, Dictionary<string, T>, HashSet<string|byte[]|int|long|double|decimal>)
-     * List (List<object>, List<T>)
+     * Null (any nullable type)
+     * List (List<T>)
      * Map (Dictionary<string, object>, Dictionary<string, T>, T)
      * Set of String values (ISet<string>)
      * Set of Number values (ISet<int>, ISet<long>, ISet<double>, ISet<decimal>)
@@ -92,6 +92,8 @@ namespace LambdaSharp.DynamoDB.Serialization {
 
             // handle missing value
             if(attribute == null) {
+
+                // TODO: I'm not sure this is the right thing to do
                 return FindConverter(typeof(object), "<default>", (converter, usedTargetType) => converter.GetDefaultValue(usedTargetType, options));
             }
 

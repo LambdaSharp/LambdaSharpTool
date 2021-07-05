@@ -36,6 +36,8 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
         // TODO: Test deserialization of custom type derived from `IList<Foo>`
         // TODO: IList<T> handling in serialization
         // TODO: enum handling in serialization
+        // TODO: add `[DynamoPropertyName("foo")]` attribute (test with `"_t"` and `"_m"`)
+        // TODO: add `[DynamoPropertyIgnore]` attribute (test with `"_t"` and `"_m"`)
 
         //--- Types ---
         private class MyType {
