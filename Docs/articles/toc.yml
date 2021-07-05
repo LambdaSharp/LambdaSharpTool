@@ -20,6 +20,15 @@
     - name: Serialization
       href: DynamoDB-Native/Serialization.md
 
+    - name: .NET Type Mappings
+      href: DynamoDB-Native/TypeMappings.md
+
+    - name: Custom Type Converters
+      href: DynamoDB-Native/CustomConverters.md
+
+    - name: Miscellaneous
+      href: DynamoDB-Native/MiscSerialization.md
+
 - name: Finalizer
   href: Finalizer.md
 
