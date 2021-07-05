@@ -71,8 +71,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         //--- Methods ---
         public IDynamoTableBatchGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
             _request.RequestItems.First().Value.Keys.Add(new Dictionary<string, AttributeValue> {
-                [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
             });
             _converter.AddExpectedType(typeof(TRecord));
             return new DynamoTableBatchGetItemsEntry<TRecord>(this);

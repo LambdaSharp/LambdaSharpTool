@@ -23,20 +23,22 @@ using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native {
 
+    // TODO: make generic
+    public class RecordType {
+
+        //--- Fields ---
+        private Type? _type;
+
+        //--- Properties ---
+        public Type Type {
+            get => _type ?? throw new InvalidOperationException();
+            set => _type = value ?? throw new ArgumentNullException();
+        }
+    }
+
     public class DynamoTableOptions {
 
         //--- TYpes ---
-        public class RecordType {
-
-            //--- Fields ---
-            private Type? _type;
-
-            //--- Properties ---
-            public Type Type {
-                get => _type ?? throw new InvalidOperationException();
-                set => _type = value ?? throw new ArgumentNullException();
-            }
-        }
 
         //--- Properties ---
         public DynamoSerializerOptions SerializerOptions { get; set; } = new DynamoSerializerOptions();

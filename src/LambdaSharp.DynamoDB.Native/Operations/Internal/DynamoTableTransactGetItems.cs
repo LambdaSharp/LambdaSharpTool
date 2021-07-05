@@ -78,8 +78,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
                 Get = new Get {
                     TableName = _table.TableName,
                     Key = new Dictionary<string, AttributeValue> {
-                        [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                        [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                        [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                        [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
                     }
                 }
             };

@@ -1,36 +1,13 @@
 > TODO: move docs to the right place
 
-> TODO: rename `partitionKeyValuePattern` to `partitionKeyValueFormat` or `pkValueFormat`
-
 > TODO: Ability to designated a property to hold the "_m" (modified) date-timestamp
 
-> TODO: Test deserialization of custom type derived from `IList<Foo>`
-
-> TODO: Add `ExecuteTransaction` operation
-
-> TODO: Add `Scan()` operation
 
 > TODO: Add link to serialization readme
 
-> TODO: Look for all `/*` comments to see if they should be pulled into the readme
-
-> TODO: Better name for `QueryMixed()` and `BatchGetMixed()`?
-
-> TODO: test if a `HashSet<string>` property could always be initialized to an empty site and round-tripped; it would make logic much simpler!
-
-> TODO: enum type are treated as string!
-
-> TODO: test `GetItem<>` when item doesn't exist
-
-> TODO: `TransactGetItems()` vs. `BatchGetItem()`: as is plural, the other is not
-
-> TODO: extension method to write more than 25 items in a batch
+> TODO: doc: enum type are treated as string!
 
 > TODO: `GetAttributePath` should fail on record
-
-> TODO: the current `Query(keys)` mechanism is too complicated; it requires the dev to know the access pattern, which is not good; instead it should be:
-> * `_table.Query(new MySubRecord.GetSubRecordsBelongingTo(parentRecord))`
-> * `_table.Query(new CustomerRecord.AllCustomers())`
 
 > TODO: only `PutItem()` operations need secondary keys
 
@@ -42,16 +19,14 @@
 new DynamoTableOptions {
     ExpectedTypeNamespace = "Foo",
 
-    Model = {
-        new() {
-            Type = typeof(OrderRecord),
+    RecordTypes = {
+        new DataTableRecordType<OrderRecord> {
             Attributes = {
                 ["GS1PK"] = record => $"ORDER#{record.OrderId}"),
                 ["GSI1SK"] = record => $"INFO"
             }
         },
-        new() {
-            Type = typeof(OrderItemRecord),
+        new DataTableRecordType<OrderItemRecord> {
             Attributes = {
                 ["GS1PK"] = record => $"ORDER#{record.OrderId}"),
                 ["GSI1SK"] = record => $"ITEM#{record.ItemId}"
@@ -61,46 +36,8 @@ new DynamoTableOptions {
 }
 ```
 
-> TODO: register in table options what types to expect so we can always properly deserialize
-
 > TODO: should we use the `_t` attribute to error out when deserializing the wrong row type?
 
-
-```csharp
-IDynamoTableQuery WhereSKEquals(string skValue);
-IDynamoTableQuery WhereSKBeginsWith(string skValuePrefix);
-IDynamoTableQuery WhereSKIsGreaterThan(string skValue);
-IDynamoTableQuery WhereSKIsGreaterThanOrEquals(string skValue);
-IDynamoTableQuery WhereSKIsLessThan(string skValue);
-IDynamoTableQuery WhereSKIsLessThanOrEquals(string skValue);
-IDynamoTableQuery WhereSKIsBetween(string skLowValue, string skHighValue);
-
-
-DynamoQueryPattern(string partitionKeyValuePattern, params string[] values); // use main index and (PK,SK) as primary key
-DynamoQueryPattern(string indexName, string partitionKeyName, string sortKeyName, string partitionKeyValuePattern, params string[] values);
-
-
-ADynamoQueryPattern MakeCustomerAndOrdersQueryPattern(string customerUsername) =>
-    new DynamoQueryPattern(CUSTOMER_PK_PATTERN, customerUsername);
-
-
-ADynamoQueryPattern MakeCustomerAndOrdersQueryPattern(string customerUsername) =>
-    new DynamoQueryPattern(indexName: "GSI1", partitionKeyName: "GSI1PK", sortKeyName: "GSI1SK", CUSTOMER_PK_PATTERN, customerUsername)
-        .Where(sk => sk.BeginsWith("foo"));
-
-
-
-const string CUSTOMER_PK_PATTERN = "CUSTOMER#{0}";
-DynamoPrimaryKey MakeCustomerAndOrdersQueryPattern(string customerUsername) => new DynamoPrimaryKey(CUSTOMER_PK_PATTERN, "<NOT-USED>", customerUsername);
-
-
-
-
-Table.QueryMixed(DataModel.MakeCustomerAndOrdersQueryPattern(customerUsername), limit: 11, scanIndexForward: false)
-    .WithTypeFilter<CustomerRecord>()
-    .WithTypeFilter<OrderRecord>()
-    .ExecuteAsync(cancellationToken: cancellationToken);
-```
 
 # LambdaSharp.DynamoDB.Native
 

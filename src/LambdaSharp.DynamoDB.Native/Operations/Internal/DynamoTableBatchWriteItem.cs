@@ -55,8 +55,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             _request.RequestItems.First().Value.Add(new WriteRequest {
                 DeleteRequest = new DeleteRequest {
                     Key = new Dictionary<string, AttributeValue> {
-                        [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                        [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                        [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                        [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
                     }
                 }
             });

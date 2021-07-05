@@ -50,8 +50,8 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class
             => new DynamoTableDeleteItem<TRecord>(this, new DeleteItemRequest {
                 Key = new Dictionary<string, AttributeValue> {
-                    [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                    [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                    [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                    [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
                 },
                 TableName = TableName
             });
@@ -61,8 +61,8 @@ namespace LambdaSharp.DynamoDB.Native {
             => new DynamoTableGetItem<TRecord>(this, new GetItemRequest {
                 ConsistentRead = consistentRead,
                 Key = new Dictionary<string, AttributeValue> {
-                    [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                    [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                    [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                    [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
                 },
                 TableName = TableName
             });
@@ -78,8 +78,8 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class
             => new DynamoTableUpdateItem<TRecord>(this, new UpdateItemRequest {
                 Key = new Dictionary<string, AttributeValue> {
-                    [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                    [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                    [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                    [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
                 },
                 TableName = TableName
             });
@@ -115,8 +115,8 @@ namespace LambdaSharp.DynamoDB.Native {
                     [TableName] = new KeysAndAttributes {
                         ConsistentRead = consistentRead,
                         Keys = primaryKeys.Select(primaryKey => new Dictionary<string, AttributeValue> {
-                            [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                            [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                            [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                            [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
                         }).ToList()
                     }
                 }
@@ -124,7 +124,7 @@ namespace LambdaSharp.DynamoDB.Native {
             return new DynamoTableBatchGetItems<TRecord>(this, request);
         }
 
-        public IDynamoTableBatchGetItems BatchGetItemsMixed(bool consistentRead)
+        public IDynamoTableBatchGetItems BatchGetItems(bool consistentRead)
             => new DynamoTableBatchGetItems(this, new BatchGetItemRequest {
                 RequestItems = {
                     [TableName] = new KeysAndAttributes {
@@ -146,14 +146,14 @@ namespace LambdaSharp.DynamoDB.Native {
                     Get = new Get {
                         TableName = TableName,
                         Key = new Dictionary<string, AttributeValue> {
-                            [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
-                            [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
+                            [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                            [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
                         }
                     }
                 }).ToList()
             });
 
-        public IDynamoTableTransactGetItems TransactGetItemsMixed()
+        public IDynamoTableTransactGetItems TransactGetItems()
             => new DynamoTableTransactGetItems(this, new TransactGetItemsRequest());
 
         internal Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, ADynamoSecondaryKey[] secondaryKeys)
@@ -173,8 +173,8 @@ namespace LambdaSharp.DynamoDB.Native {
             };
 
             // add primary key details
-            attributes[primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue);
-            attributes[primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue);
+            attributes[primaryKey.PKName] = new AttributeValue(primaryKey.PKValue);
+            attributes[primaryKey.SKName] = new AttributeValue(primaryKey.SKValue);
 
             // add secondary key details
             foreach(var secondaryKey in secondaryKeys) {
@@ -182,11 +182,11 @@ namespace LambdaSharp.DynamoDB.Native {
                 case DynamoLocalIndexKey localIndexKey:
 
                     // primary key is the same and should not be set again
-                    attributes[secondaryKey.SortKeyName] = new AttributeValue(secondaryKey.SortKeyValue);
+                    attributes[secondaryKey.SKName] = new AttributeValue(secondaryKey.SKValue);
                     break;
                 case DynamoGlobalIndexKey globalIndexKey:
-                    attributes[secondaryKey.PartitionKeyName] = new AttributeValue(secondaryKey.PartitionKeyValue);
-                    attributes[secondaryKey.SortKeyName] = new AttributeValue(secondaryKey.SortKeyValue);
+                    attributes[secondaryKey.PKName] = new AttributeValue(secondaryKey.PKValue);
+                    attributes[secondaryKey.SKName] = new AttributeValue(secondaryKey.SKValue);
                     break;
                 default:
                     throw new ArgumentException($"unrecognized key type: '{secondaryKey?.GetType().FullName ?? "<null>"}'");

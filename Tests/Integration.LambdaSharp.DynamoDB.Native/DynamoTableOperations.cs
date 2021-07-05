@@ -316,7 +316,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.SaveOrderAsync(order, items);
 
             // act
-            var result = await Table.BatchGetItemsMixed()
+            var result = await Table.BatchGetItems()
                 .GetItem(customer.GetPrimaryKey())
                 .GetItem(order.GetPrimaryKey())
                 .ExecuteAsync();
@@ -337,7 +337,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.SaveOrderAsync(order, items);
 
             // act
-            var result = await Table.BatchGetItemsMixed()
+            var result = await Table.BatchGetItems()
                 .StartGetItem(customer.GetPrimaryKey())
                     .Get(record => record.Username)
                 .End()

@@ -116,14 +116,14 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         public IDynamoTableUpdateItem<TRecord> Set(DynamoLocalIndexKey secondaryKey) {
 
             // NOTE (2021-06-23, bjorg): primary key is the same and cannot be set again
-            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.SortKeyName)} = {_converter.GetExpressionValueName(secondaryKey.SortKeyValue)}");
+            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.SKName)} = {_converter.GetExpressionValueName(secondaryKey.SKValue)}");
             return this;
         }
 
         // TODO: replace this with automatic attribute mappings
         public IDynamoTableUpdateItem<TRecord> Set(DynamoGlobalIndexKey secondaryKey) {
-            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.PartitionKeyName)} = {_converter.GetExpressionValueName(secondaryKey.PartitionKeyValue)}");
-            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.SortKeyName)} = {_converter.GetExpressionValueName(secondaryKey.SortKeyValue)}");
+            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.PKName)} = {_converter.GetExpressionValueName(secondaryKey.PKValue)}");
+            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.SKName)} = {_converter.GetExpressionValueName(secondaryKey.SKValue)}");
             return this;
         }
         #endregion

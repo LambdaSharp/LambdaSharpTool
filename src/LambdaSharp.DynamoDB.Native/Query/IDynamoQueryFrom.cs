@@ -27,17 +27,17 @@ namespace LambdaSharp.DynamoDB.Native.Query {
         IDynamoQuerySelect<TRecord> Select<TRecord>(string pkValue) where TRecord : class;
 
         //--- Default Methods ---
-        IDynamoQuerySelect SelectFormat(string partitionKeyValuePattern, params string[] values) {
+        IDynamoQuerySelect SelectFormat(string pkValueFormat, params string[] values) {
             for(var i = 0; i < values.Length; ++i) {
                 if(values[i] is null) {
                     throw new ArgumentException($"key[{i}] is null", nameof(values));
                 }
             }
-            var partitionKeyValue = string.Format(partitionKeyValuePattern ?? throw new ArgumentNullException(nameof(partitionKeyValuePattern)), values);
-            return Select(partitionKeyValue);
+            var pkValue = string.Format(pkValueFormat ?? throw new ArgumentNullException(nameof(pkValueFormat)), values);
+            return Select(pkValue);
         }
 
-        IDynamoQuerySelect<TRecord> SelectFormat<TRecord>(string partitionKeyValuePattern, params string[] values)
+        IDynamoQuerySelect<TRecord> SelectFormat<TRecord>(string pkValueFormat, params string[] values)
             where TRecord : class
         {
             for(var i = 0; i < values.Length; ++i) {
@@ -45,8 +45,8 @@ namespace LambdaSharp.DynamoDB.Native.Query {
                     throw new ArgumentException($"key[{i}] is null", nameof(values));
                 }
             }
-            var partitionKeyValue = string.Format(partitionKeyValuePattern ?? throw new ArgumentNullException(nameof(partitionKeyValuePattern)), values);
-            return Select<TRecord>(partitionKeyValue);
+            var pkValue = string.Format(pkValueFormat ?? throw new ArgumentNullException(nameof(pkValueFormat)), values);
+            return Select<TRecord>(pkValue);
         }
     }
 }

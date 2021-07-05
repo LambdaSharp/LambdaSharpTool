@@ -33,6 +33,9 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
     public class Deserialize {
 
         // TODO: missing tests for M
+        // TODO: Test deserialization of custom type derived from `IList<Foo>`
+        // TODO: IList<T> handling in serialization
+        // TODO: enum handling in serialization
 
         //--- Types ---
         private class MyType {

@@ -26,24 +26,24 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
     internal class DynamoQueryFrom : IDynamoQueryFrom {
 
         //--- Constructors ---
-        public DynamoQueryFrom(string? indexName, string partitionKeyName, string sortKeyName) {
+        public DynamoQueryFrom(string? indexName, string pkName, string skName) {
             IndexName = indexName;
-            PartitionKeyName = partitionKeyName ?? throw new ArgumentNullException(nameof(partitionKeyName));
-            SortKeyName = sortKeyName ?? throw new ArgumentNullException(nameof(sortKeyName));
+            PKName = pkName ?? throw new ArgumentNullException(nameof(pkName));
+            SKName = skName ?? throw new ArgumentNullException(nameof(skName));
         }
 
         //--- Properties ---
         public string? IndexName { get; }
-        public string PartitionKeyName { get; }
-        public string SortKeyName { get; }
+        public string PKName { get; }
+        public string SKName { get; }
 
         //--- Methods ---
         public IDynamoQuerySelect Select(string pkValue)
-            => new DynamoQuerySelectAny<object>(IndexName, PartitionKeyName, SortKeyName, pkValue, Enumerable.Empty<Type>());
+            => new DynamoQuerySelectAny<object>(IndexName, PKName, SKName, pkValue, Enumerable.Empty<Type>());
 
         public IDynamoQuerySelect<TRecord> Select<TRecord>(string pkValue)
             where TRecord : class
-            => new DynamoQuerySelectAny<TRecord>(IndexName, PartitionKeyName, SortKeyName, pkValue, Enumerable.Empty<Type>());
+            => new DynamoQuerySelectAny<TRecord>(IndexName, PKName, SKName, pkValue, Enumerable.Empty<Type>());
     }
 }
 

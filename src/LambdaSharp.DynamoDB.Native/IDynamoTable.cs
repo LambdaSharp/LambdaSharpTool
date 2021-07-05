@@ -24,6 +24,9 @@ namespace LambdaSharp.DynamoDB.Native {
 
     public interface IDynamoTable {
 
+        // TODO (2021-07-05, bjorg): add 'Scan()` API
+        // TODO (2021-07-05, bjorg): add 'TransactWriteItems()` API
+
         //--- Methods ---
         IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
@@ -33,15 +36,15 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class;
         IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
-        IDynamoTableQuery Query(IDynamoQuerySelect querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
-        IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
-            where TRecord : class;
         IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead = false)
             where TRecord : class;
-        IDynamoTableBatchGetItems BatchGetItemsMixed(bool consistentRead = false);
+        IDynamoTableBatchGetItems BatchGetItems(bool consistentRead = false);
         IDynamoTableBatchWriteItems BatchWriteItems();
         IDynamoTableTransactGetItems<TRecord> TransactGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys)
             where TRecord : class;
-        IDynamoTableTransactGetItems TransactGetItemsMixed();
+        IDynamoTableTransactGetItems TransactGetItems();
+        IDynamoTableQuery Query(IDynamoQuerySelect querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
+        IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
+            where TRecord : class;
     }
 }

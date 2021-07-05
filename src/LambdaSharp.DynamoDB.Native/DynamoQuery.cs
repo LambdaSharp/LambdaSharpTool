@@ -27,8 +27,8 @@ namespace LambdaSharp.DynamoDB.Native {
         //--- Class Methods ---
         public static IDynamoQueryFrom FromMainIndex() => new DynamoQueryFrom(indexName: null, "PK", "SK");
 
-        public static IDynamoQueryFrom FromIndex(string indexName, string partitionKeyName, string sortKeyName)
-            => new DynamoQueryFrom(indexName ?? throw new ArgumentNullException(nameof(indexName)), partitionKeyName, sortKeyName);
+        public static IDynamoQueryFrom FromIndex(string indexName, string pkName, string skName)
+            => new DynamoQueryFrom(indexName ?? throw new ArgumentNullException(nameof(indexName)), pkName, skName);
 
         public static IDynamoQuerySelect Select(string pkValue)
             => FromMainIndex().Select(pkValue);
@@ -37,23 +37,23 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class
             => FromMainIndex().Select<TRecord>(pkValue);
 
-        public static IDynamoQuerySelect SelectFormat(string partitionKeyValuePattern, params string[] values) {
+        public static IDynamoQuerySelect SelectFormat(string pkValueFormat, params string[] values) {
             for(var i = 0; i < values.Length; ++i) {
                 if(values[i] is null) {
                     throw new ArgumentException($"key[{i}] is null", nameof(values));
                 }
             }
-            var pkValue = string.Format(partitionKeyValuePattern ?? throw new ArgumentNullException(nameof(partitionKeyValuePattern)), values);
+            var pkValue = string.Format(pkValueFormat ?? throw new ArgumentNullException(nameof(pkValueFormat)), values);
             return Select(pkValue);
         }
 
-        public static IDynamoQuerySelect<TRecord> SelectFormat<TRecord>(string partitionKeyValuePattern, params string[] values) where TRecord : class {
+        public static IDynamoQuerySelect<TRecord> SelectFormat<TRecord>(string pkValueFormat, params string[] values) where TRecord : class {
             for(var i = 0; i < values.Length; ++i) {
                 if(values[i] is null) {
                     throw new ArgumentException($"key[{i}] is null", nameof(values));
                 }
             }
-            var pkValue = string.Format(partitionKeyValuePattern ?? throw new ArgumentNullException(nameof(partitionKeyValuePattern)), values);
+            var pkValue = string.Format(pkValueFormat ?? throw new ArgumentNullException(nameof(pkValueFormat)), values);
             return Select<TRecord>(pkValue);
         }
     }
