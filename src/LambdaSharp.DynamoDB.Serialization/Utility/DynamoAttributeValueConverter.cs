@@ -22,14 +22,31 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon.DynamoDBv2.Model;
 
-namespace LambdaSharp.DynamoDB.Serialization {
+namespace LambdaSharp.DynamoDB.Serialization.Utility {
 
+    /// <summary>
+    /// The <see cref="DynamoAttributeValueConverter"/> class converts a DynamoDB attribute value to JSON output.
+    /// </summary>
     public class DynamoAttributeValueConverter : JsonConverter<AttributeValue> {
 
         //--- Methods ---
+
+        /// <summary>
+        /// This operation is NOT supported.
+        /// </summary>
+        /// <param name="reader">The reader.</param>
+        /// <param name="typeToConvert">The type to convert.</param>
+        /// <param name="options">An object that specifies serialization options to use.</param>
+        /// <returns>The converted value.</returns>
         public override AttributeValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             => throw new NotSupportedException("converter only supports write operations");
 
+        /// <summary>
+        /// Writes a specified value as JSON.
+        /// </summary>
+        /// <param name="writer">The writer to write to.</param>
+        /// <param name="value">The value to convert to JSON.</param>
+        /// <param name="options">An object that specifies serialization options to use.</param>
         public override void Write(Utf8JsonWriter writer, AttributeValue value, JsonSerializerOptions options) {
             if(value.IsBOOLSet) {
                 writer.WriteStartObject();
@@ -74,12 +91,8 @@ namespace LambdaSharp.DynamoDB.Serialization {
                 writer.WriteStartObject();
                 writer.WritePropertyName("NS");
                 writer.WriteStartArray();
-                foreach(var item in value.NS) {
-                    if(double.TryParse(item, out var number)) {
-                        writer.WriteNumberValue(number);
-                    } else {
-                        writer.WriteStringValue("***ERROR PARSING NUMBER***");
-                    }
+                foreach(var number in value.NS) {
+                    writer.WriteStringValue(number);
                 }
                 writer.WriteEndArray();
                 writer.WriteEndObject();

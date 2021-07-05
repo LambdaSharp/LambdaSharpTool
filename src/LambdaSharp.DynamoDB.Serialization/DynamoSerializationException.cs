@@ -20,9 +20,17 @@ using System;
 
 namespace LambdaSharp.DynamoDB.Serialization {
 
+    /// <summary>
+    /// The <see cref="DynamoSerializationException"/> error is thrown when deserialization cannot proceed.
+    /// </summary>
     public class DynamoSerializationException : Exception {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Creates a new instance of <see cref="DynamoSerializationException"/>.
+        /// </summary>
+        /// <param name="message">The error message.</param>
         public DynamoSerializationException(string message) : base(message) { }
     }
 }

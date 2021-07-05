@@ -312,7 +312,7 @@ The default converters are:
 * `DynamoISetLongConverter`
 * `DynamoISetDoubleConverter`
 * `DynamoISetDecimalConverter`
-* `DynamoIDictionarySetConverter`
+* `DynamoIDictionaryConverter`
 * `DynamoListConverter`
 * `DynamoJsonElementConverter`
 * `DynamoObjectConverter`

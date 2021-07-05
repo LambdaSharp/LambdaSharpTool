@@ -24,9 +24,16 @@ using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Serialization.Converters {
 
+    /// <summary>
+    /// The <see cref="DynamoListConverter"/> class is used to convert <c>ILIst</c> or <c>List&lt;T&gt;</c> value to/from a DynamoDB attribute value.
+    /// </summary>
     public class DynamoListConverter : ADynamoAttributeConverter {
 
         //--- Class Fields ---
+
+        /// <summary>
+        /// The <see cref="Instance"/> class field exposes a reusable instance of the class.
+        /// </summary>
         public static readonly DynamoListConverter Instance = new DynamoListConverter();
 
         //--- Class Methods ---
@@ -41,11 +48,24 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         }
 
         //--- Methods ---
+
+        /// <summary>
+        /// The <see cref="CanConvert(Type)"/> method checks if this converter can handle the presented type.
+        /// </summary>
+        /// <param name="typeToConvert">The type to convert.</param>
+        /// <returns><c>true</c> if the converter can handle the type; otherwise, <c>false</c></returns>
         public override bool CanConvert(Type typeToConvert)
             => typeof(IList).IsAssignableFrom(typeToConvert)
                 || (typeToConvert.IsGenericType && (typeToConvert.GetGenericTypeDefinition() == typeof(IList<>)))
                 || typeToConvert.GetInterfaces().Any(i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof(IList<>)));
 
+        /// <summary>
+        /// The <see cref="ToAttributeValue(object,Type,DynamoSerializerOptions)"/> method converts an instance to a DynamoDB attribute value.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="targetType">The source value type.</param>
+        /// <param name="options">The serialization options.</param>
+        /// <returns>A DynamoDB attribute value, or <c>null</c> if the instance state cannot be represented in DynamoDB.</returns>
         public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var list = new List<AttributeValue>();
             foreach(var item in (IEnumerable)value) {
@@ -60,6 +80,13 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
             };
         }
 
+        /// <summary>
+        /// The <see cref="FromList(List{AttributeValue},Type,DynamoSerializerOptions)"/> method converts a DynamoDB L attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromList(List<AttributeValue> value, Type targetType, DynamoSerializerOptions options) {
             if(targetType.IsAssignableFrom(typeof(List<object>))) {
 

@@ -5,10 +5,7 @@
     <RootNamespace>LambdaSharp.DynamoDB.Serialization</RootNamespace>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
-
-    <!-- TODO: enable docs -->
-    <!-- <GenerateDocumentationFile>true</GenerateDocumentationFile> -->
-
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 

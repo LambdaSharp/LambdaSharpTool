@@ -26,6 +26,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.DynamoDB.Native.Internal;
 using LambdaSharp.DynamoDB.Serialization;
+using LambdaSharp.DynamoDB.Serialization.Utility;
 
 namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 

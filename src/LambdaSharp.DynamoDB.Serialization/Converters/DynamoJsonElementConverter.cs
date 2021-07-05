@@ -25,14 +25,34 @@ using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Serialization.Converters {
 
+    /// <summary>
+    /// The <see cref="DynamoJsonElementConverter"/> class is used to convert <c>JsonElement</c> value to/from a DynamoDB attribute value.
+    /// </summary>
     public class DynamoJsonElementConverter : ADynamoAttributeConverter {
 
         //--- Class Fields ---
+
+        /// <summary>
+        /// The <see cref="Instance"/> class field exposes a reusable instance of the class.
+        /// </summary>
         public static readonly DynamoJsonElementConverter Instance = new DynamoJsonElementConverter();
 
         //--- Methods ---
+
+        /// <summary>
+        /// The <see cref="CanConvert(Type)"/> method checks if this converter can handle the presented type.
+        /// </summary>
+        /// <param name="typeToConvert">The type to convert.</param>
+        /// <returns><c>true</c> if the converter can handle the type; otherwise, <c>false</c></returns>
         public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(JsonElement);
 
+        /// <summary>
+        /// The <see cref="ToAttributeValue(object,Type,DynamoSerializerOptions)"/> method converts an instance to a DynamoDB attribute value.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="targetType">The source value type.</param>
+        /// <param name="options">The serialization options.</param>
+        /// <returns>A DynamoDB attribute value, or <c>null</c> if the instance state cannot be represented in DynamoDB.</returns>
         public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var json = (JsonElement)value;
             switch(json.ValueKind) {
@@ -54,14 +74,85 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
             }
         }
 
+        /// <summary>
+        /// The <see cref="FromBool(bool,Type,DynamoSerializerOptions)"/> method converts a DynamoDB BOOL attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromBool(bool value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from BOOL is not supported");
+
+        /// <summary>
+        /// The <see cref="FromBinary(MemoryStream,Type,DynamoSerializerOptions)"/> method converts a DynamoDB B attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromBinary(MemoryStream value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from B is not supported");
+
+        /// <summary>
+        /// The <see cref="FromNumber(string,Type,DynamoSerializerOptions)"/> method converts a DynamoDB N attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromNumber(string value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from N is not supported");
+
+        /// <summary>
+        /// The <see cref="FromString(String,Type,DynamoSerializerOptions)"/> method converts a DynamoDB S attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromString(string value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from S is not supported");
+
+        /// <summary>
+        /// The <see cref="FromList(List{AttributeValue},Type,DynamoSerializerOptions)"/> method converts a DynamoDB L attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromList(List<AttributeValue> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from L is not supported");
+
+        /// <summary>
+        /// The <see cref="FromMap(Dictionary{string,AttributeValue},Type,DynamoSerializerOptions)"/> method converts a DynamoDB M attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromMap(Dictionary<string, AttributeValue> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from M is not supported");
+
+        /// <summary>
+        /// The <see cref="FromBinarySet(List{MemoryStream},Type,DynamoSerializerOptions)"/> method converts a DynamoDB BS attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromBinarySet(List<MemoryStream> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from BS is not supported");
+
+        /// <summary>
+        /// The <see cref="FromNumberSet(List{string},Type,DynamoSerializerOptions)"/> method converts a DynamoDB NS attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromNumberSet(List<string> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from NS is not supported");
+
+        /// <summary>
+        /// The <see cref="FromStringSet(List{string},Type,DynamoSerializerOptions)"/> method converts a DynamoDB SS attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromStringSet(List<string> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from SS is not supported");
 
         private AttributeValue WriteJsonObject(JsonElement json, DynamoSerializerOptions options) => new AttributeValue {

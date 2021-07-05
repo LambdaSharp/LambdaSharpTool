@@ -24,10 +24,17 @@ using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Serialization.Converters {
 
-    public class DynamoIDictionarySetConverter : ADynamoAttributeConverter {
+    /// <summary>
+    /// The <see cref="DynamoIDictionaryConverter"/> class is used to convert <c>IDictionary&lt;string,T&gt;</c> value to/from a DynamoDB attribute value.
+    /// </summary>
+    public class DynamoIDictionaryConverter : ADynamoAttributeConverter {
 
         //--- Class Fields ---
-        public static readonly DynamoIDictionarySetConverter Instance = new DynamoIDictionarySetConverter();
+
+        /// <summary>
+        /// The <see cref="Instance"/> class field exposes a reusable instance of the class.
+        /// </summary>
+        public static readonly DynamoIDictionaryConverter Instance = new DynamoIDictionaryConverter();
 
         //--- Class Methods ---
         private static Type GetDictionaryItemType(Type type) {
@@ -45,8 +52,21 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         }
 
         //--- Methods ---
+
+        /// <summary>
+        /// The <see cref="CanConvert(Type)"/> method checks if this converter can handle the presented type.
+        /// </summary>
+        /// <param name="typeToConvert">The type to convert.</param>
+        /// <returns><c>true</c> if the converter can handle the type; otherwise, <c>false</c></returns>
         public override bool CanConvert(Type typeToConvert) => typeof(IDictionary).IsAssignableFrom(typeToConvert);
 
+        /// <summary>
+        /// The <see cref="ToAttributeValue(object,Type,DynamoSerializerOptions)"/> method converts an instance to a DynamoDB attribute value.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="targetType">The source value type.</param>
+        /// <param name="options">The serialization options.</param>
+        /// <returns>A DynamoDB attribute value, or <c>null</c> if the instance state cannot be represented in DynamoDB.</returns>
         public override AttributeValue ToAttributeValue(object value, Type targetType, DynamoSerializerOptions options) {
             var mapDictionary = new Dictionary<string, AttributeValue>();
             foreach(DictionaryEntry? entry in (IDictionary)value) {
@@ -71,6 +91,13 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
             };
         }
 
+        /// <summary>
+        /// The <see cref="FromMap(Dictionary{string,AttributeValue},Type,DynamoSerializerOptions)"/> method converts a DynamoDB M attribute value to the type of the converter.
+        /// </summary>
+        /// <param name="value">The DynamoDB attribute value to convert.</param>
+        /// <param name="targetType">The expected return type.</param>
+        /// <param name="options">The deserialization options.</param>
+        /// <returns>An instance of type <paramref name="targetType"/>.</returns>
         public override object? FromMap(Dictionary<string, AttributeValue> value, Type targetType, DynamoSerializerOptions options) {
             if(targetType.IsAssignableFrom(typeof(Dictionary<string, object>))) {
                 return value.ToDictionary(kv => kv.Key, kv => DynamoSerializer.Deserialize(kv.Value, typeof(object), options));

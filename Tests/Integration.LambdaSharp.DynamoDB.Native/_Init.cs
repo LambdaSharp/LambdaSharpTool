@@ -21,10 +21,10 @@ using Amazon.DynamoDBv2;
 using System.Text.Json;
 using System;
 using System.Linq;
-using LambdaSharp.DynamoDB.Serialization;
 using LambdaSharp.DynamoDB.Native.Logger;
 using Sample.DynamoDBNative.DataAccess.Models;
 using System.Collections.Generic;
+using LambdaSharp.DynamoDB.Serialization.Utility;
 
 namespace Integration.LambdaSharp.DynamoDB.Native {
 

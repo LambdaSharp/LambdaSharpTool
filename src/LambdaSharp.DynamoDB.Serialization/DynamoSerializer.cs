@@ -24,27 +24,71 @@ using LambdaSharp.DynamoDB.Serialization.Converters;
 
 namespace LambdaSharp.DynamoDB.Serialization {
 
-    /* DYNAMODB DATA TYPES
-     * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html#HowItWorks.DataTypes
-     *
-     * Number (int, int?, long, long?, double, double?, decimal, decimal?, DateTimeOffset, DateTimeOffset?)
-     * String (string, enum)
-     * Binary (byte[])
-     * Boolean (bool, bool?)
-     * Null (any nullable type)
-     * List (List<T>)
-     * Map (Dictionary<string, object>, Dictionary<string, T>, T)
-     * Set of String values (ISet<string>)
-     * Set of Number values (ISet<int>, ISet<long>, ISet<double>, ISet<decimal>)
-     * Set of Binary values (ISet<byte[]>)
-     */
-
+    /// <summary>
+    /// The <see cref="DynamoSerializer"/> static class provides methods for (de)serializing values to/from DynamoDB attribute values.
+    /// The following list shows the default type mapping for DynamoDB attribute values:
+    /// <list type="bullet">
+    ///     <item>
+    ///         <term>Number</term>
+    ///         <description>int, int?, long, long?, double, double?, decimal, decimal?, DateTimeOffset, DateTimeOffset?</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>String</term>
+    ///         <description>string, enum</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Binary</term>
+    ///         <description>byte[]</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Boolean</term>
+    ///         <description>bool, bool?</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Null</term>
+    ///         <description>any nullable type</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>List</term>
+    ///         <description>List&lt;T&gt;</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Map</term>
+    ///         <description>Dictionary&lt;string, object&gt;, Dictionary&lt;string, T&gt;, T</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>String Set</term>
+    ///         <description>ISet&lt;string&gt;</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Number Set</term>
+    ///         <description>ISet&lt;int>, ISet&lt;long&gt;, ISet&lt;double&gt;, ISet&lt;decimal&gt;</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Binary Set</term>
+    ///         <description>ISet&lt;byte[]&gt;</description>
+    ///     </item>
+    /// </list>
+    /// </summary>
+    /// <seealso href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html#HowItWorks.DataTypes">DynamoDB Data Types</seealso>
     public static class DynamoSerializer {
 
         //--- Class Methods ---
+
+        /// <summary>
+        /// The <see cref="Serialize(object?)"/> method serializes an object to a DynamoDB attribute value using the default <see cref="DynamoSerializerOptions"/> instance.
+        /// </summary>
+        /// <param name="value">The object to serialize.</param>
+        /// <returns>A DynamoDB attribute value or <c>null</c> when the object state cannot be represented in DynamoDB.</returns>
         public static AttributeValue? Serialize(object? value)
             => Serialize(value, new DynamoSerializerOptions());
 
+        /// <summary>
+        /// The <see cref="Serialize(object?,DynamoSerializerOptions)"/> method serializes an object to a DynamoDB attribute value.
+        /// </summary>
+        /// <param name="value">The object to serialize.</param>
+        /// <param name="options">The serialization options to use.</param>
+        /// <returns>A DynamoDB attribute value or <c>null</c> when the object state cannot be represented in DynamoDB.</returns>
         public static AttributeValue? Serialize(object? value, DynamoSerializerOptions options) {
 
             // check for types mapped to attribute type 'NULL'
@@ -63,31 +107,70 @@ namespace LambdaSharp.DynamoDB.Serialization {
             return converter.ToAttributeValue(value, typeToConvert, options);
         }
 
+        /// <summary>
+        /// The <see cref="Deserialize(Dictionary{string, AttributeValue})"/> method deserializes a DynamoDB document into a <typeparamref name="TRecord"/> instance using the default <see cref="DynamoSerializerOptions"/> instance.
+        /// </summary>
+        /// <param name="document">The DynamoDB document to deserialize.</param>
+        /// <typeparam name="TRecord">The type to deserialize into.</typeparam>
+        /// <returns>An instance of <typeparamref name="TRecord"/> or <c>null</c> when the DynamoDB document is <c>null</c>.</returns>
         public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> document)
             where TRecord : class
             => Deserialize<TRecord>(document, new DynamoSerializerOptions());
 
+        /// <summary>
+        /// The <see cref="Deserialize(Dictionary{string, AttributeValue},DynamoSerializerOptions)"/> method deserializes a DynamoDB document into a <typeparamref name="TRecord"/> instance.
+        /// </summary>
+        /// <param name="document">The DynamoDB document to deserialize.</param>
+        /// <param name="options">The deserialization options to use.</param>
+        /// <typeparam name="TRecord">The type to deserialize into.</typeparam>
+        /// <returns>An instance of <typeparamref name="TRecord"/> or <c>null</c> when the DynamoDB document is <c>null</c>.</returns>
         public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> document, DynamoSerializerOptions options)
             where TRecord : class
             => (TRecord?)Deserialize(document, typeof(TRecord), options);
 
+        /// <summary>
+        /// The <see cref="Deserialize(Dictionary{string, AttributeValue},Type)"/> method deserializes a DynamoDB document into a <paramref name="targetType"/> instance using the default <see cref="DynamoSerializerOptions"/> instance.
+        /// </summary>
+        /// <param name="document">The DynamoDB document to deserialize.</param>
+        /// <param name="targetType">The type to deserialize into.</param>
+        /// <returns>An instance of <paramref name="targetType"/> or <c>null</c> when the DynamoDB document is <c>null</c>.</returns>
         public static object? Deserialize(Dictionary<string, AttributeValue> document, Type? targetType)
             => Deserialize(document, targetType, new DynamoSerializerOptions());
 
+        /// <summary>
+        /// The <see cref="Deserialize(Dictionary{string, AttributeValue},Type,DynamoSerializerOptions)"/> method deserializes a DynamoDB document into a <paramref name="targetType"/> instance.
+        /// </summary>
+        /// <param name="document">The DynamoDB document to deserialize.</param>
+        /// <param name="targetType">The type to deserialize into.</param>
+        /// <param name="options">The deserialization options to use.</param>
+        /// <returns>An instance of <paramref name="targetType"/> or <c>null</c> when the DynamoDB document is <c>null</c>.</returns>
         public static object? Deserialize(Dictionary<string, AttributeValue> document, Type? targetType, DynamoSerializerOptions options) {
             var usedTargetType = ((targetType is null) || (targetType == typeof(object)))
                 ? typeof(Dictionary<string, object>)
                 : targetType;
             var converter = options.GetConverters().FirstOrDefault(converter => converter.CanConvert(usedTargetType));
             if(converter == null) {
-                throw new DynamoSerializationException($"cannot convert attribute value {nameof(AttributeValue.M)} (given: {targetType?.FullName ?? "<null>"})");
+                throw new DynamoSerializationException($"cannot convert document {nameof(AttributeValue.M)} (given: {targetType?.FullName ?? "<null>"})");
             }
             return converter.FromMap(document, usedTargetType, options);
         }
 
+        /// <summary>
+        /// The <see cref="Deserialize(AttributeValue,Type)"/> method deserializes a DynamoDB attribute value into a <paramref name="targetType"/> instance using the default <see cref="DynamoSerializerOptions"/> instance.
+        /// </summary>
+        /// <param name="attribute">The DynamoDB attribute value to deserialize.</param>
+        /// <param name="targetType">The type to deserialize into.</param>
+        /// <returns>An instance of <paramref name="targetType"/> or <c>null</c> when the DynamoDB attribute value is <c>NULL</c>.</returns>
         public static object? Deserialize(AttributeValue? attribute, Type? targetType)
             => Deserialize(attribute, targetType, new DynamoSerializerOptions());
 
+        /// <summary>
+        /// The <see cref="Deserialize(AttributeValue,Type,DynamoSerializerOptions)"/> method deserializes a DynamoDB attribute value into a <paramref name="targetType"/> instance.
+        /// </summary>
+        /// <param name="attribute">The DynamoDB attribute value to deserialize.</param>
+        /// <param name="targetType">The type to deserialize into.</param>
+        /// <param name="options">The deserialization options to use.</param>
+        /// <returns>An instance of <paramref name="targetType"/> or <c>null</c> when the DynamoDB attribute value is <c>NULL</c>.</returns>
         public static object? Deserialize(AttributeValue? attribute, Type? targetType, DynamoSerializerOptions options) {
 
             // handle missing value

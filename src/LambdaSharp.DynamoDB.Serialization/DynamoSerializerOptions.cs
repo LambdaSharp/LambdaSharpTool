@@ -22,10 +22,13 @@ using LambdaSharp.DynamoDB.Serialization.Converters;
 
 namespace LambdaSharp.DynamoDB.Serialization {
 
+    /// <summary>
+    /// The <see cref="DynamoSerializerOptions"/> class provides properties to change the default (de)serialization behavior .
+    /// </summary>
     public class DynamoSerializerOptions {
 
         //--- Class Fields ---
-        public static readonly IEnumerable<IDynamoAttributeConverter> DefaultConverters = new List<IDynamoAttributeConverter> {
+        internal static readonly IEnumerable<IDynamoAttributeConverter> DefaultConverters = new List<IDynamoAttributeConverter> {
             DynamoBoolConverter.Instance,
             DynamoIntConverter.Instance,
             DynamoLongConverter.Instance,
@@ -41,15 +44,29 @@ namespace LambdaSharp.DynamoDB.Serialization {
             DynamoISetLongConverter.Instance,
             DynamoISetDoubleConverter.Instance,
             DynamoISetDecimalConverter.Instance,
-            DynamoIDictionarySetConverter.Instance,
+            DynamoIDictionaryConverter.Instance,
             DynamoListConverter.Instance,
             DynamoJsonElementConverter.Instance,
             DynamoObjectConverter.Instance
         };
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <c>IgnoreNullValues</c> property controls if <c>null</c> values are serialized as DynamoDB NULL attribute values or skipped.
+        /// </summary>
         public bool IgnoreNullValues { get; set; } = true;
+
+        /// <summary>
+        /// The <c>UseDefaultConverters</c> property controls if the default DynamoDB converters are enabled.
+        /// </summary>
         public bool UseDefaultConverters { get; set; } = true;
+
+        /// <summary>
+        /// The <c>Converters</c> property lists additional custom converters to use when (de)serializing values.
+        /// Custom converters take precedence over default converters. Default converters can be disabled entirely by
+        /// setting the <c>UseDefaultConverters</c> property to <c>false</c>.
+        /// </summary>
         public List<IDynamoAttributeConverter> Converters { get; set; } = new List<IDynamoAttributeConverter>();
 
         //--- Methods ---

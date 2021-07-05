@@ -20,17 +20,36 @@ using System;
 
 namespace LambdaSharp.DynamoDB.Serialization {
 
+    /// <summary>
+    /// The <see cref="ADynamoPropertyAttribute"/> is the base class for all <see cref="DynamoSerializer"/> property annotations.
+    /// </summary>
     public abstract class ADynamoPropertyAttribute : Attribute { }
 
+    /// <summary>
+    /// The <see cref="DynamoPropertyIgnoreAttribute"/> property attribute indicates that a property should be skipped by <see cref="DynamoSerializer"/> during (de)serialization.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class DynamoPropertyIgnoreAttribute : Attribute { }
 
+    /// <summary>
+    /// The <see cref="DynamoPropertyNameAttribute"/> property attribute modifies the DynamoDB attrivbute name used by <see cref="DynamoSerializer"/> during (de)serialization.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class DynamoPropertyNameAttribute : Attribute {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Create a new instance of <see cref="DynamoPropertyNameAttribute"/>.
+        /// </summary>
+        /// <param name="name">The DynamoDB attribute name.</param>
         public DynamoPropertyNameAttribute(string name) => Name = name ?? throw new ArgumentNullException(nameof(name));
 
+        //--- Properties ---
+
+        /// <summary>
+        /// The DynamoDB attribute name to use for this property.
+        /// </summary>
         public string Name { get; }
     }
 }
