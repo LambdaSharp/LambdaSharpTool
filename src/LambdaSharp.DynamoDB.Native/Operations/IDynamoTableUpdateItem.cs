@@ -30,6 +30,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableUpdateItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
 
         // *** `SET Foo.Bar = :value` action ***
+
+        // TODO: if value is null, should this be a 'Remove()' operation instead?
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, T>> attribute, T value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, ISet<T> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, IDictionary<string, T> value);
