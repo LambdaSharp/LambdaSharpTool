@@ -24,9 +24,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.DynamoDB.Native.Exceptions;
-using LambdaSharp.DynamoDB.Native.Operations;
+using LambdaSharp.DynamoDB.Native.Internal;
 
-namespace LambdaSharp.DynamoDB.Native.Internal {
+namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
     internal sealed class DynamoTableBatchGetItems<TRecord> : IDynamoTableBatchGetItems<TRecord>
         where TRecord : class

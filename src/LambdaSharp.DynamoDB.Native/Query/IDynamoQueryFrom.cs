@@ -18,7 +18,7 @@
 
 using System;
 
-namespace LambdaSharp.DynamoDB.Native {
+namespace LambdaSharp.DynamoDB.Native.Query {
 
     public interface IDynamoQueryFrom {
 

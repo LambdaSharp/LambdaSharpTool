@@ -22,36 +22,36 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoDB.Native.Operations;
+using LambdaSharp.DynamoDB.Native.Internal;
 
-namespace LambdaSharp.DynamoDB.Native.Internal {
+namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
-    internal sealed class DynamoTableDeleteItem<TRecord> : IDynamoTableDeleteItem<TRecord>
+    internal sealed class DynamoTablePutItem<TRecord> : IDynamoTablePutItem<TRecord>
         where TRecord : class
     {
 
         //--- Fields ---
         private readonly DynamoTable _table;
-        private readonly DeleteItemRequest _request;
+        private readonly PutItemRequest _request;
         private readonly DynamoRequestConverter _converter;
 
         //--- Constructors ---
-        public DynamoTableDeleteItem(DynamoTable table, DeleteItemRequest request) {
+        public DynamoTablePutItem(DynamoTable table, PutItemRequest request) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
             _converter = new DynamoRequestConverter(_request.ExpressionAttributeNames, _request.ExpressionAttributeValues, _table.SerializerOptions);
         }
 
         //--- Methods ---
-        public IDynamoTableDeleteItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition) {
+        public IDynamoTablePutItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition) {
             _converter.AddCondition(condition.Body);
             return this;
         }
 
         public async Task<bool> ExecuteAsync(CancellationToken cancellationToken) {
-            _request.ConditionExpression = _converter.ConvertConditions();
+            _request.ConditionExpression = _converter.ConvertConditions(_table.Options);
             try {
-                await _table.DynamoClient.DeleteItemAsync(_request);
+                await _table.DynamoClient.PutItemAsync(_request);
                 return true;
             } catch(ConditionalCheckFailedException) {
                 return false;
@@ -59,10 +59,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         public async Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken) {
-            _request.ConditionExpression = _converter.ConvertConditions();
+            _request.ConditionExpression = _converter.ConvertConditions(_table.Options);
             _request.ReturnValues = ReturnValue.ALL_OLD;
             try {
-                var response = await _table.DynamoClient.DeleteItemAsync(_request);
+                var response = await _table.DynamoClient.PutItemAsync(_request);
                 return _table.DeserializeItem<TRecord>(response.Attributes);
             } catch(ConditionalCheckFailedException) {
                 return default(TRecord);

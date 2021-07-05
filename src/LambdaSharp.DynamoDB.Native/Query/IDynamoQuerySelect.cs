@@ -16,20 +16,9 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.DynamoDB.Native {
+using System;
 
-    public interface IDynamoQuerySelect<TRecord> where TRecord : class {
-
-        //--- Methods ---
-        IDynamoQuerySelect<TRecord> WhereSKMatchesAny();
-        IDynamoQuerySelect<TRecord> WhereSKEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsGreaterThan(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsGreaterThanOrEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsLessThan(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsLessThanOrEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsBetween(string skLowerBound, string skUpperBound);
-        IDynamoQuerySelect<TRecord> WhereSKBeginsWith(string skValuePrefix);
-    }
+namespace LambdaSharp.DynamoDB.Native.Query {
 
     public interface IDynamoQuerySelect {
 
@@ -42,5 +31,22 @@ namespace LambdaSharp.DynamoDB.Native {
         IDynamoQuerySelect WhereSKIsLessThanOrEquals(string skValue);
         IDynamoQuerySelect WhereSKIsBetween(string skLowerBound, string skUpperBound);
         IDynamoQuerySelect WhereSKBeginsWith(string skValuePrefix);
+        IDynamoQuerySelect WithTypeFilter(Type type);
+
+        //--- Default Methods ---
+        IDynamoQuerySelect WithTypeFilter<T>( ) => WithTypeFilter(typeof(T));
+    }
+
+    public interface IDynamoQuerySelect<TRecord> where TRecord : class {
+
+        //--- Methods ---
+        IDynamoQuerySelect<TRecord> WhereSKMatchesAny();
+        IDynamoQuerySelect<TRecord> WhereSKEquals(string skValue);
+        IDynamoQuerySelect<TRecord> WhereSKIsGreaterThan(string skValue);
+        IDynamoQuerySelect<TRecord> WhereSKIsGreaterThanOrEquals(string skValue);
+        IDynamoQuerySelect<TRecord> WhereSKIsLessThan(string skValue);
+        IDynamoQuerySelect<TRecord> WhereSKIsLessThanOrEquals(string skValue);
+        IDynamoQuerySelect<TRecord> WhereSKIsBetween(string skLowerBound, string skUpperBound);
+        IDynamoQuerySelect<TRecord> WhereSKBeginsWith(string skValuePrefix);
     }
 }

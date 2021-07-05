@@ -18,6 +18,7 @@
 
 using System;
 using LambdaSharp.DynamoDB.Native.Internal;
+using LambdaSharp.DynamoDB.Native.Query;
 
 namespace LambdaSharp.DynamoDB.Native {
 

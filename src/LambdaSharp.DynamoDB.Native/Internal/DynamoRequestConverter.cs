@@ -115,16 +115,18 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         public Dictionary<string, string> ExpressionAttributes { get; }
         public Dictionary<string, AttributeValue>? ExpressionValues { get; }
         public DynamoSerializerOptions SerializerOptions { get; }
-        private List<(string Expression, DynamoRequestConverter.Precedence Precedence)> TypeConditions { get; } = new List<(string Expression, Precedence Precedence)>();
+        public Dictionary<string, Type> ExpectedTypes { get; } = new Dictionary<string, Type>();
         private List<(string Expression, DynamoRequestConverter.Precedence Precedence)> Conditions { get; } = new List<(string Expression, Precedence Precedence)>();
         private HashSet<string> ProjectionAttributes { get; } = new HashSet<string>();
 
         //--- Methods ---
+        public void AddExpectedType(Type type) {
+            var typeFullName = type.FullName ?? throw new ArgumentException("type name is <null>", nameof(type));
+            ExpectedTypes[typeFullName] = type;
+        }
+
         public void AddCondition(Expression condition)
             => Conditions.Add(ParseCondition(condition));
-
-        public void AddTypeCondition(string typeName)
-            => TypeConditions.Add((Expression: $"{GetAttributeName("_t")} = {GetExpressionValueName(typeName)}", Precedence: Precedence.ScalarComparison));
 
         public void AddProjection(Expression attribute)
             => ProjectionAttributes.Add(ParseAttributePath(attribute));
@@ -216,14 +218,20 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             }
         }
 
-        public string? ConvertConditions() {
+        public string? ConvertConditions(DynamoTableOptions options) {
 
             // combine type conditions with OR operator
             string? typeConditionsAccumulator = null;
-            if(TypeConditions.Any()) {
-                typeConditionsAccumulator = TypeConditions.First().Expression;
-                foreach(var typedCondition in TypeConditions.Skip(1)) {
-                    typeConditionsAccumulator = Combine("OR", Precedence.OrOperator, (typeConditionsAccumulator, Precedence.OrOperator), typedCondition).Expression;
+            if(ExpectedTypes.Any()) {
+                var firstExpectedType = ExpectedTypes.Values.First();
+                typeConditionsAccumulator = LiftToTypeConditionExpression(firstExpectedType);
+                foreach(var expectedType in ExpectedTypes.Values.Skip(1)) {
+                    typeConditionsAccumulator = Combine(
+                        "OR",
+                        Precedence.OrOperator,
+                        (typeConditionsAccumulator, Precedence.OrOperator),
+                        (Expression: LiftToTypeConditionExpression(expectedType), Precedence: Precedence.OrOperator)
+                    ).Expression;
                 }
             }
 
@@ -247,6 +255,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 return typeConditionsAccumulator;
             }
             return Combine("AND", Precedence.AndOperator, (conditionsAccumulator, Precedence.AndOperator), (typeConditionsAccumulator, Precedence.OrOperator)).Expression;
+
+            // local functions
+            string LiftToTypeConditionExpression(Type expectedType)
+                => $"{GetAttributeName("_t")} = {GetExpressionValueName(options.GetShortRecordTypeName(expectedType))}";
         }
 
         public string? ConvertProjections()
@@ -274,6 +286,14 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 attributeName = existingAttributeName;
             }
             return attributeName;
+        }
+
+        public Dictionary<string, Type> GetExpectedTypes(DynamoTableOptions options) {
+            var result = new Dictionary<string, Type>();
+            foreach(var (_, expectedType) in ExpectedTypes) {
+                result[options.GetShortRecordTypeName(expectedType)] = expectedType;
+            }
+            return result;
         }
     }
 }

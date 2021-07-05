@@ -25,9 +25,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoDB.Native.Operations;
+using LambdaSharp.DynamoDB.Native.Internal;
+using LambdaSharp.DynamoDB.Native.Query.Internal;
 
-namespace LambdaSharp.DynamoDB.Native.Internal {
+namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
     internal sealed class DynamoTableQuery<TRecord> : IDynamoTableQuery, IDynamoTableQuery<TRecord>
         where TRecord : class
@@ -37,22 +38,28 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         private readonly DynamoTable _table;
         private readonly QueryRequest _request;
         private readonly DynamoRequestConverter _converter;
-        private readonly ADynamoQuerySelect<TRecord> _queryPattern;
-        private readonly Dictionary<string, Type> _expectedTypes = new Dictionary<string, Type>();
+        private readonly ADynamoQuerySelect<TRecord> _querySelect;
 
         //--- Constructors ---
         public DynamoTableQuery(DynamoTable table, QueryRequest request, ADynamoQuerySelect<TRecord> querySelect) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
-            _queryPattern = querySelect ?? throw new ArgumentNullException(nameof(querySelect));
+            _querySelect = querySelect ?? throw new ArgumentNullException(nameof(querySelect));
             _converter = new DynamoRequestConverter(_request.ExpressionAttributeNames, _request.ExpressionAttributeValues, _table.SerializerOptions);
         }
 
         //--- Methods ---
         private void PrepareRequest(bool fetchAllAttributes) {
-            _request.IndexName = _queryPattern.IndexName;
-            _request.KeyConditionExpression = _queryPattern.GetKeyConditionExpression(_converter);
-            _request.FilterExpression = _converter.ConvertConditions();
+
+            // inherit the expected types from the query select construct
+            foreach(var expectedType in _querySelect.TypeFilters) {
+                _converter.AddExpectedType(expectedType);
+            }
+
+            // initialize request
+            _request.IndexName = _querySelect.IndexName;
+            _request.KeyConditionExpression = _querySelect.GetKeyConditionExpression(_converter);
+            _request.FilterExpression = _converter.ConvertConditions(_table.Options);
             _request.ProjectionExpression = _converter.ConvertProjections();
 
             // NOTE (2021-06-23, bjorg): the following logic matches the default behavior, but makes it explicit
@@ -86,8 +93,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             PrepareRequest(fetchAllAttributes);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         yield return typedRecord;
                     }
@@ -101,8 +109,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             var result = new List<TRecord>();
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         result.Add(typedRecord);
                     }
@@ -118,13 +127,6 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return this;
         }
 
-        IDynamoTableQuery IDynamoTableQuery.WithTypeFilter(Type type) {
-            var expectedTypeName = _table.Options.GetShortRecordTypeName(type);
-            _expectedTypes[expectedTypeName] = type;
-            _converter.AddTypeCondition(expectedTypeName);
-            return this;
-        }
-
         IDynamoTableQuery IDynamoTableQuery.Get<TRecord1, T>(Expression<Func<TRecord1, T>> attribute) {
             _converter.AddProjection(attribute.Body);
 
@@ -137,8 +139,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             PrepareRequest(fetchAllAttributes);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         yield return typedRecord;
                     }
@@ -152,8 +155,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             var result = new List<TRecord>();
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
+                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         result.Add(typedRecord);
                     }

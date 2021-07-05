@@ -17,6 +17,9 @@
  */
 
 using System;
+using System.Linq;
+using LambdaSharp.DynamoDB.Native.Query;
+using LambdaSharp.DynamoDB.Native.Query.Internal;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
@@ -36,11 +39,11 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
         //--- Methods ---
         public IDynamoQuerySelect Select(string pkValue)
-            => new DynamoQuerySelectAny<object>(IndexName, PartitionKeyName, SortKeyName, pkValue);
+            => new DynamoQuerySelectAny<object>(IndexName, PartitionKeyName, SortKeyName, pkValue, Enumerable.Empty<Type>());
 
         public IDynamoQuerySelect<TRecord> Select<TRecord>(string pkValue)
             where TRecord : class
-            => new DynamoQuerySelectAny<TRecord>(IndexName, PartitionKeyName, SortKeyName, pkValue);
+            => new DynamoQuerySelectAny<TRecord>(IndexName, PartitionKeyName, SortKeyName, pkValue, Enumerable.Empty<Type>());
     }
 }
 

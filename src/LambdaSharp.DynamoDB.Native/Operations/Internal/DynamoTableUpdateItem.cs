@@ -24,10 +24,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoDB.Native.Operations;
+using LambdaSharp.DynamoDB.Native.Internal;
 using LambdaSharp.DynamoDB.Serialization;
 
-namespace LambdaSharp.DynamoDB.Native.Internal {
+namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
     internal sealed class DynamoTableUpdateItem<TRecord> : IDynamoTableUpdateItem<TRecord>
         where TRecord : class
@@ -56,35 +56,6 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         #region *** SET Actions ***
-
-        /* SET EXPRESSION
-         * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.UpdateExpressions.html#Expressions.UpdateExpressions.SET
-         *
-         * set-action ::=
-         *     path = value-expression
-         *
-         * value-expression ::=
-         *     operand
-         *     | operand '+' operand
-         *     | operand '-' operand
-         *
-         * operand ::=
-         *     path | set-function
-         *
-         * set-function ::=
-         *     if_not_exists (path, value)
-         *     | list_append (operand, operand)
-         */
-
-        //  SET ProductCategory = :c, Price = :p
-        //  SET RelatedItems = :ri, ProductReviews = :pr
-        //  SET RelatedItems[1] = :ri
-        //  SET #pr.#5star[1] = :r5, #pr.#3star = :r3
-        //  SET Price = Price - :p
-        //  SET #ri = list_append(#ri, :vals)
-        //  SET #ri = list_append(:vals, #ri)
-        //  SET Price = if_not_exists(Price, :p)
-
         public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, T>> attribute, T value) {
             var path = _converter.ParseAttributePath(attribute.Body);
             var operand = _converter.GetExpressionValueName(value);
@@ -330,7 +301,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             }
 
             // update request
-            _request.ConditionExpression = _converter.ConvertConditions();
+            _request.ConditionExpression = _converter.ConvertConditions(_table.Options);
             _request.UpdateExpression = string.Join(" ", result);
         }
     }

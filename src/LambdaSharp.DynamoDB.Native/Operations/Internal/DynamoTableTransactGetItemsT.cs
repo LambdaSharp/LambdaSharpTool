@@ -22,9 +22,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoDB.Native.Operations;
+using LambdaSharp.DynamoDB.Native.Internal;
 
-namespace LambdaSharp.DynamoDB.Native.Internal {
+namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
     internal sealed class DynamoTableTransactGetItems<TRecord> : IDynamoTableTransactGetItems<TRecord>
         where TRecord : class

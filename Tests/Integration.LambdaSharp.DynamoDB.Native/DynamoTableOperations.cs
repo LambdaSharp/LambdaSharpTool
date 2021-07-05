@@ -24,6 +24,7 @@ using Sample.DynamoDBNative.DataAccess;
 using FluentAssertions;
 using System.Linq;
 using LambdaSharp.DynamoDB.Native;
+using LambdaSharp.DynamoDB.Native.Query;
 
 namespace Integration.LambdaSharp.DynamoDB.Native {
 
@@ -67,7 +68,9 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
                 => DynamoQuery.SelectFormat<MyRecord>(MY_RECORD_PK_PATTERN, recordId)
                     .WhereSKBeginsWith(string.Format(MY_RECORD_SK_PATTERN, "", ""));
             public static IDynamoQuerySelect SelectMyRecordsAndMyOtherRecords(string recordId)
-                => DynamoQuery.SelectFormat(MY_RECORD_PK_PATTERN, recordId);
+                => DynamoQuery.SelectFormat(MY_RECORD_PK_PATTERN, recordId)
+                    .WithTypeFilter<MyRecord>()
+                    .WithTypeFilter<MyOtherRecord>();
         }
 
         //--- Constructors ---
@@ -251,9 +254,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await Table.PutItemAsync(record2, MyDataModel.GetPrimaryKey(record2));
 
             // act
-            var result = await Table.QueryMixed(MyDataModel.SelectMyRecordsAndMyOtherRecords(record1.Id), consistentRead: true)
-                .WithTypeFilter<MyRecord>()
-                .WithTypeFilter<MyOtherRecord>()
+            var result = await Table.Query(MyDataModel.SelectMyRecordsAndMyOtherRecords(record1.Id), consistentRead: true)
                 .ExecuteAsync();
 
             // assert

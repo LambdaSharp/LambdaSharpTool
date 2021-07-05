@@ -28,13 +28,11 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
 
         //--- Methods ---
         IDynamoTableQuery Where<TRecord>(Expression<Func<TRecord, bool>> filter) where TRecord : class;
-        IDynamoTableQuery WithTypeFilter(Type type);
         IDynamoTableQuery Get<TRecord, T>(Expression<Func<TRecord, T>> attribute) where TRecord : class;
         IAsyncEnumerable<object> ExecuteAsyncEnumerable(bool fetchAllAttributes, CancellationToken cancellationToken = default);
         Task<IEnumerable<object>> ExecuteAsync(bool fetchAllAttributes, CancellationToken cancellationToken = default);
 
         //--- Default Methods ---
-        IDynamoTableQuery WithTypeFilter<T>( ) => WithTypeFilter(typeof(T));
         IAsyncEnumerable<object> ExecuteAsyncEnumerable(CancellationToken cancellationToken = default) => ExecuteAsyncEnumerable(fetchAllAttributes: false, cancellationToken);
         IAsyncEnumerable<object> ExecuteFetchAllAttributesAsyncEnumerable(CancellationToken cancellationToken = default) => ExecuteAsyncEnumerable(fetchAllAttributes: true, cancellationToken);
         Task<IEnumerable<object>> ExecuteAsync(CancellationToken cancellationToken = default) => ExecuteAsync(fetchAllAttributes: false, cancellationToken);

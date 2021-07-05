@@ -22,9 +22,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoDB.Native.Operations;
+using LambdaSharp.DynamoDB.Native.Internal;
 
-namespace LambdaSharp.DynamoDB.Native.Internal {
+namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
     internal sealed class DynamoTableTransactGetItems : IDynamoTableTransactGetItems {
 
@@ -62,7 +62,6 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         private readonly DynamoTable _table;
         private readonly TransactGetItemsRequest _request;
         private readonly List<DynamoRequestConverter> _converters;
-        private readonly Dictionary<string, Type> _expectedTypes = new Dictionary<string, Type>();
 
         //--- Constructors ---
         public DynamoTableTransactGetItems(DynamoTable table, TransactGetItemsRequest request) {
@@ -91,8 +90,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             _converters.Add(converter);
 
             // register expected type
-            var expectedTypeName = _table.Options.GetShortRecordTypeName(typeof(TRecord));
-            _expectedTypes[expectedTypeName] = typeof(TRecord);
+            converter.AddExpectedType(typeof(TRecord));
             return new DynamoTableTransactGetItemsEntry<TRecord>(this, converter);
         }
 
@@ -111,8 +109,16 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             try {
                 var result = new List<object>();
                 var response = await _table.DynamoClient.TransactGetItemsAsync(_request, cancellationToken);
+
+                // merge expected types from all converters
+                var expectedTypes = new Dictionary<string, Type>();
+                foreach(var (_, expectedType) in _converters.SelectMany(converter => converter.ExpectedTypes)) {
+
+                    // ignore collisions as they are more likely than conflicts
+                    expectedTypes[_table.Options.GetShortRecordTypeName(expectedType)] = expectedType;
+                }
                 foreach(var itemResponse in response.Responses) {
-                    var record = _table.DeserializeItemUsingRecordType(itemResponse.Item, typeof(object), _expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(itemResponse.Item, typeof(object), expectedTypes);
                     if(!(record is null)) {
                         result.Add(record);
                     }

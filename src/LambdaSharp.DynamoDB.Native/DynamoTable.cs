@@ -22,8 +22,10 @@ using System.Globalization;
 using System.Linq;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoDB.Native.Internal;
 using LambdaSharp.DynamoDB.Native.Operations;
+using LambdaSharp.DynamoDB.Native.Operations.Internal;
+using LambdaSharp.DynamoDB.Native.Query;
+using LambdaSharp.DynamoDB.Native.Query.Internal;
 using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native {
@@ -82,7 +84,7 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
-        public IDynamoTableQuery QueryMixed(IDynamoQuerySelect querySelect, int limit, bool scanIndexForward, bool consistentRead)
+        public IDynamoTableQuery Query(IDynamoQuerySelect querySelect, int limit, bool scanIndexForward, bool consistentRead)
             => new DynamoTableQuery<object>(this, new QueryRequest {
                 ConsistentRead = consistentRead,
                 Limit = limit,

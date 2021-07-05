@@ -22,10 +22,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
-using LambdaSharp.DynamoDB.Native.Operations;
 using LambdaSharp.DynamoDB.Native.Exceptions;
+using LambdaSharp.DynamoDB.Native.Internal;
 
-namespace LambdaSharp.DynamoDB.Native.Internal {
+namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
     internal sealed class DynamoTableBatchGetItems : IDynamoTableBatchGetItems {
 
@@ -60,7 +60,6 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         private readonly DynamoTable _table;
         private readonly BatchGetItemRequest _request;
         private readonly DynamoRequestConverter _converter;
-        private readonly Dictionary<string, Type> _expectedTypes = new Dictionary<string, Type>();
 
         //--- Constructors ---
         public DynamoTableBatchGetItems(DynamoTable table, BatchGetItemRequest request) {
@@ -75,8 +74,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 [primaryKey.PartitionKeyName] = new AttributeValue(primaryKey.PartitionKeyValue),
                 [primaryKey.SortKeyName] = new AttributeValue(primaryKey.SortKeyValue)
             });
-            var expectedTypeName = _table.Options.GetShortRecordTypeName(typeof(TRecord));
-            _expectedTypes[expectedTypeName] = typeof(TRecord);
+            _converter.AddExpectedType(typeof(TRecord));
             return new DynamoTableBatchGetItemsEntry<TRecord>(this);
         }
 
@@ -96,9 +94,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             do {
                 try {
                     var response = await _table.DynamoClient.BatchGetItemAsync(_request, cancellationToken);
+                    var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                     if(response.Responses.Any()) {
                         foreach(var item in response.Responses.Single().Value) {
-                            var record = _table.DeserializeItemUsingRecordType(item, typeof(object), _expectedTypes);
+                            var record = _table.DeserializeItemUsingRecordType(item, typeof(object), expectedTypes);
                             if(!(record is null)) {
                                 result.Add(record);
                             }

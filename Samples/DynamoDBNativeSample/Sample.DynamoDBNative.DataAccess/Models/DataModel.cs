@@ -17,6 +17,7 @@
  */
 
 using LambdaSharp.DynamoDB.Native;
+using LambdaSharp.DynamoDB.Native.Query;
 
 namespace Sample.DynamoDBNative.DataAccess.Models {
 
@@ -62,16 +63,14 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
         public static DynamoPrimaryKey<OrderItemRecord> OrderItemRecordPrimaryKey(string orderId, string itemId) => new DynamoPrimaryKey<OrderItemRecord>(ORDER_ITEM_PK_PATTERN, ORDER_ITEM_SK_PATTERN, orderId, itemId);
 
         public static IDynamoQuerySelect SelectCustomerAndOrders(string customerUsername)
-            => DynamoQuery.SelectFormat(CUSTOMER_PK_PATTERN, customerUsername);
-            // TODO
-            // .WithTypeFilter<CustomerRecord>()
-            // .WithTypeFilter<OrderRecord>()
+            => DynamoQuery.SelectFormat(CUSTOMER_PK_PATTERN, customerUsername)
+                .WithTypeFilter<CustomerRecord>()
+                .WithTypeFilter<OrderRecord>();
 
         public static IDynamoQuerySelect SelectOrderAndOrderItems(string orderId)
-            => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK").SelectFormat(ORDER_ITEM_GSI1_PK_PATTERN, orderId);
-            // TODO
-            // .WithTypeFilter<OrderRecord>()
-            // .WithTypeFilter<OrderItemRecord>()
+            => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK").SelectFormat(ORDER_ITEM_GSI1_PK_PATTERN, orderId)
+                .WithTypeFilter<OrderRecord>()
+                .WithTypeFilter<OrderItemRecord>();
 
         public static IDynamoQuerySelect<OrderRecord> SelectOrders(string orderId) => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK").SelectFormat<OrderRecord>(ORDER_GSI1_PK_PATTERN, orderId);
     }

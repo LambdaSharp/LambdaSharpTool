@@ -19,6 +19,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LambdaSharp.DynamoDB.Native.Query;
 
 namespace LambdaSharp.DynamoDB.Native {
 
