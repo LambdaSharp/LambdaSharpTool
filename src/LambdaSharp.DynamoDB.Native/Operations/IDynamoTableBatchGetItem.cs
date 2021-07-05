@@ -24,14 +24,6 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
-
-    public interface IDynamoTableBatchGetItems<TRecord> where TRecord : class {
-
-        //--- Methods ---
-        IDynamoTableBatchGetItems<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
-        Task<IEnumerable<TRecord>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
-    }
-
     public interface IDynamoTableBatchGetItems {
 
         //--- Methods ---
@@ -49,5 +41,12 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         //--- Methods ---
         IDynamoTableBatchGetItemsEntry<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
         IDynamoTableBatchGetItems End();
+    }
+
+    public interface IDynamoTableBatchGetItems<TRecord> where TRecord : class {
+
+        //--- Methods ---
+        IDynamoTableBatchGetItems<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+        Task<IEnumerable<TRecord>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
     }
 }

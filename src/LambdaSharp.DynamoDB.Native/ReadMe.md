@@ -275,6 +275,72 @@ Table.QueryMixed(DataModel.MakeCustomerAndOrdersQueryPattern(customerUsername), 
 
 * `DynamoSet.ListAppend(path, scalar)`
 
+        /*
+         * CONDITION EXPRESSION OPERATORS AND FUNCTIONS
+         * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
+         *
+         * condition-expression ::=
+         *     operand comparator operand
+         *     | operand BETWEEN operand AND operand
+         *     | operand IN ( operand (',' operand (, ...) ))
+         *     | function
+         *     | condition AND condition
+         *     | condition OR condition
+         *     | NOT condition
+         *     | ( condition )
+         *
+         * comparator ::=
+         *     =
+         *     | <>
+         *     | <
+         *     | <=
+         *     | >
+         *     | >=
+         *
+         * function ::=
+         *     attribute_exists (path)
+         *     | attribute_not_exists (path)
+         *     | attribute_type (path, type)
+         *     | begins_with (path, substr)
+         *     | contains (path, operand)
+         *     | size (path)
+         */
+
+        /* UPDATE EXPRESSION
+         * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.UpdateExpressions.html
+         *
+         * update-expression ::=
+         *     [ SET action [, action] ... ]
+         *     [ REMOVE action [, action] ...]
+         *     [ ADD action [, action] ... ]
+         *     [ DELETE action [, action] ...]
+         *
+         * set-action ::=
+         *     path = value-expression
+         *
+         * value-expression ::=
+         *     operand
+         *     | operand '+' operand
+         *     | operand '-' operand
+         *
+         * operand ::=
+         *     path | set-function
+         *
+         * set-function ::=
+         *     if_not_exists (path, value)
+         *     | list_append (operand, operand)
+         *
+         * remove-action ::=
+         *     path
+         *
+         * add-action ::=
+         *     path value
+         *
+         * delete-action ::=
+         *     path value
+         */
+
+
 /* SET EXPRESSION
     * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.UpdateExpressions.html#Expressions.UpdateExpressions.SET
 
