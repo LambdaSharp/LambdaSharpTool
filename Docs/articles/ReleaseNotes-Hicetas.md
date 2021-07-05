@@ -332,7 +332,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * SDK
   * Added new `ALambdaEventFunction<TMessage>` base class for handling CloudWatch events.
-  * Optimized cold-start times for by deserializing Amazon Lambda data-structures by using `LambdaSystemTextJsonSerializer`, which is built on _System.Text.Json_. This change avoids jitting the heavy _Newtonsoft.Json_ assembly unless required by the end-user code.
+  * Optimized cold-start times for by deserializing Amazon Lambda data structures by using `LambdaSystemTextJsonSerializer`, which is built on _System.Text.Json_. This change avoids jitting the heavy _Newtonsoft.Json_ assembly unless required by the end-user code.
   * Added constructor to customize serializer settings for `LambdaSystemTextJsonSerializer`.
   * Added constructor to customize serializer settings for `LambdaNewtonsoftJsonSerializer`.
   * Added null-aware annotations to _LambdaSharp_ assembly.

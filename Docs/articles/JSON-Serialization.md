@@ -17,7 +17,7 @@ Lambda functions using _System.Text.Json_ must declare `LambdaSystemTextJsonSeri
 [assembly: Amazon.Lambda.Core.LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaSystemTextJsonSerializer))]
 ```
 
-Microsoft has published an excellent [migration guide](https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0) for switching from _Newtonsoft.Json_ to _System.Text.Json_. In addition to the guide, the following sections explain how to migrate existing data-structures.
+Microsoft has published an excellent [migration guide](https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0) for switching from _Newtonsoft.Json_ to _System.Text.Json_. In addition to the guide, the following sections explain how to migrate existing data structures.
 
 Alternatively, functions can continue to use _Newtonsoft.Json_ as their JSON serializer by including the `LambdaSharp.Serialization.NewtonsoftJson` assembly from NuGet:
 ```csharp
