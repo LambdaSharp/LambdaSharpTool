@@ -63,18 +63,18 @@ namespace LambdaSharp.DynamoDB.Serialization {
             return converter.ToAttributeValue(value, typeToConvert, options);
         }
 
-        public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> attributes)
+        public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> document)
             where TRecord : class
-            => Deserialize<TRecord>(attributes, new DynamoSerializerOptions());
+            => Deserialize<TRecord>(document, new DynamoSerializerOptions());
 
-        public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> attributes, DynamoSerializerOptions options)
+        public static TRecord? Deserialize<TRecord>(Dictionary<string, AttributeValue> document, DynamoSerializerOptions options)
             where TRecord : class
-            => (TRecord?)Deserialize(attributes, typeof(TRecord), options);
+            => (TRecord?)Deserialize(document, typeof(TRecord), options);
 
-        public static object? Deserialize(Dictionary<string, AttributeValue> attributes, Type? targetType)
-            => Deserialize(attributes, targetType, new DynamoSerializerOptions());
+        public static object? Deserialize(Dictionary<string, AttributeValue> document, Type? targetType)
+            => Deserialize(document, targetType, new DynamoSerializerOptions());
 
-        public static object? Deserialize(Dictionary<string, AttributeValue> attributes, Type? targetType, DynamoSerializerOptions options) {
+        public static object? Deserialize(Dictionary<string, AttributeValue> document, Type? targetType, DynamoSerializerOptions options) {
             var usedTargetType = ((targetType is null) || (targetType == typeof(object)))
                 ? typeof(Dictionary<string, object>)
                 : targetType;
@@ -82,7 +82,7 @@ namespace LambdaSharp.DynamoDB.Serialization {
             if(converter == null) {
                 throw new DynamoSerializationException($"cannot convert attribute value {nameof(AttributeValue.M)} (given: {targetType?.FullName ?? "<null>"})");
             }
-            return converter.FromMap(attributes, usedTargetType, options);
+            return converter.FromMap(document, usedTargetType, options);
         }
 
         public static object? Deserialize(AttributeValue? attribute, Type? targetType)

@@ -34,7 +34,11 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.Internal {
                 N = ((TimeSpan)value).TotalSeconds.ToString(CultureInfo.InvariantCulture)
             };
 
-        public override object FromNumber(string value, Type targetType, DynamoSerializerOptions options)
-            => TimeSpan.FromSeconds(double.Parse(value, CultureInfo.InvariantCulture));
+        public override object FromNumber(string value, Type targetType, DynamoSerializerOptions options) {
+            if(!double.TryParse(value, System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var parsedValue)) {
+                throw new DynamoSerializationException("invalid value for TimeSpan");
+            }
+            return TimeSpan.FromSeconds(parsedValue);
+        }
     }
 }

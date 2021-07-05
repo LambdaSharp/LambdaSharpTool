@@ -17,6 +17,8 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Amazon.DynamoDBv2.Model;
@@ -52,7 +54,15 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
             }
         }
 
-        // TODO: add support to deserializing to JsonElement
+        public override object? FromBool(bool value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from BOOL is not supported");
+        public override object? FromBinary(MemoryStream value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from B is not supported");
+        public override object? FromNumber(string value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from N is not supported");
+        public override object? FromString(string value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from S is not supported");
+        public override object? FromList(List<AttributeValue> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from L is not supported");
+        public override object? FromMap(Dictionary<string, AttributeValue> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from M is not supported");
+        public override object? FromBinarySet(List<MemoryStream> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from BS is not supported");
+        public override object? FromNumberSet(List<string> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from NS is not supported");
+        public override object? FromStringSet(List<string> value, Type targetType, DynamoSerializerOptions options) => throw new DynamoSerializationException("conversion to JsonElement from SS is not supported");
 
         private AttributeValue WriteJsonObject(JsonElement json, DynamoSerializerOptions options) => new AttributeValue {
             M = json.EnumerateObject().ToDictionary(property => property.Name, property => ToAttributeValue(property.Value, typeof(JsonElement), options)),
