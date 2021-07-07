@@ -18,16 +18,31 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
     public interface IDynamoTableBatchWriteItems {
 
         //--- Methods ---
-        IDynamoTableBatchWriteItems PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
+        IDynamoTableBatchWriteItemsPutItem<TRecord> StartPutItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, TRecord record)
+            where TRecord : class;
+
+        // TODO: should this be a default method?
+        IDynamoTableBatchWriteItems PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
         IDynamoTableBatchWriteItems DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
         Task ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
+    }
+
+    public interface IDynamoTableBatchWriteItemsPutItem<TRecord> where TRecord : class {
+
+        //--- Methods ---
+        IDynamoTableBatchWriteItemsPutItem<TRecord> Set(string key, AttributeValue value);
+        IDynamoTableBatchWriteItems End();
+
+        //--- Default Methods ---
+        IDynamoTableBatchWriteItemsPutItem<TRecord> Set(string key, string value) => Set(key, new AttributeValue(value));
     }
 }

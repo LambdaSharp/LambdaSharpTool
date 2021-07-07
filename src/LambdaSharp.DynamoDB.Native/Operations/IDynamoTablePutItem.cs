@@ -20,10 +20,11 @@ using System;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
-    public interface IDynamoTablePutItem<TRecord> where TRecord : class {
 
+    public interface IDynamoTablePutItem<TRecord> where TRecord : class {
         /*
          * CONDITION EXPRESSION OPERATORS AND FUNCTIONS
          * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
@@ -57,7 +58,11 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
 
         //--- Methods ---
         IDynamoTablePutItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
+        IDynamoTablePutItem<TRecord> Set(string key, AttributeValue value);
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
         Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken = default);
+
+        //--- Default Methods ---
+        IDynamoTablePutItem<TRecord> Set(string key, string value) => Set(key, new AttributeValue(value));
     }
 }

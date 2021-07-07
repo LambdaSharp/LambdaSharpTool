@@ -67,10 +67,10 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
-        public IDynamoTablePutItem<TRecord> PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
+        public IDynamoTablePutItem<TRecord> PutItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, TRecord record)
             where TRecord : class
             => new DynamoTablePutItem<TRecord>(this, new PutItemRequest {
-                Item = SerializeItem(record, primaryKey, secondaryKeys),
+                Item = SerializeItem(record, primaryKey),
                 TableName = TableName
             });
 
@@ -156,7 +156,7 @@ namespace LambdaSharp.DynamoDB.Native {
         public IDynamoTableTransactGetItems TransactGetItems()
             => new DynamoTableTransactGetItems(this, new TransactGetItemsRequest());
 
-        internal Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, ADynamoSecondaryKey[] secondaryKeys)
+        internal Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class
         {
             var attributes = DynamoSerializer.Serialize(record, SerializerOptions)?.M;
@@ -175,23 +175,6 @@ namespace LambdaSharp.DynamoDB.Native {
             // add primary key details
             attributes[primaryKey.PKName] = new AttributeValue(primaryKey.PKValue);
             attributes[primaryKey.SKName] = new AttributeValue(primaryKey.SKValue);
-
-            // add secondary key details
-            foreach(var secondaryKey in secondaryKeys) {
-                switch(secondaryKey) {
-                case DynamoLocalIndexKey localIndexKey:
-
-                    // primary key is the same and should not be set again
-                    attributes[secondaryKey.SKName] = new AttributeValue(secondaryKey.SKValue);
-                    break;
-                case DynamoGlobalIndexKey globalIndexKey:
-                    attributes[secondaryKey.PKName] = new AttributeValue(secondaryKey.PKValue);
-                    attributes[secondaryKey.SKName] = new AttributeValue(secondaryKey.SKValue);
-                    break;
-                default:
-                    throw new ArgumentException($"unrecognized key type: '{secondaryKey?.GetType().FullName ?? "<null>"}'");
-                }
-            }
             return attributes;
         }
 

@@ -30,8 +30,6 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableUpdateItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
 
         // *** `SET Foo.Bar = :value` action ***
-
-        // TODO: if value is null, should this be a 'Remove()' operation instead?
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, T>> attribute, T value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, ISet<T> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, IDictionary<string, T> value);
@@ -40,11 +38,11 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, Expression<Func<TRecord, ISet<T>>> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, Expression<Func<TRecord, IDictionary<string, T>>> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, Expression<Func<TRecord, IList<T>>> value);
-        IDynamoTableUpdateItem<TRecord> Set(DynamoLocalIndexKey secondaryKey);
-        IDynamoTableUpdateItem<TRecord> Set(DynamoGlobalIndexKey secondaryKey);
+        IDynamoTableUpdateItem<TRecord> Set(string attribute, string value);
 
         // *** `REMOVE Brand` action ***
         IDynamoTableUpdateItem<TRecord> Remove<T>(Expression<Func<TRecord, T>> attribute);
+        IDynamoTableUpdateItem<TRecord> Remove(string attribute);
 
         // *** `ADD Color :c` action ***
         IDynamoTableUpdateItem<TRecord> Add(Expression<Func<TRecord, int>> attribute, int value);

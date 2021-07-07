@@ -57,74 +57,35 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         }
 
         #region *** SET Actions ***
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, T>> attribute, T value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.GetExpressionValueName(value);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, T>> attribute, T value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.GetExpressionValueName(value));
 
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, ISet<T> value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.GetExpressionValueName(value);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, ISet<T> value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.GetExpressionValueName(value));
 
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, IDictionary<string, T> value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.GetExpressionValueName(value);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, IDictionary<string, T> value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.GetExpressionValueName(value));
 
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, IList<T> value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.GetExpressionValueName(value);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, IList<T> value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.GetExpressionValueName(value));
 
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, T>> attribute, Expression<Func<TRecord, T>> value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.ParseValue(value.Body);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, T>> attribute, Expression<Func<TRecord, T>> value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.ParseValue(value.Body));
 
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, Expression<Func<TRecord, ISet<T>>> value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.ParseValue(value.Body);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, Expression<Func<TRecord, ISet<T>>> value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.ParseValue(value.Body));
 
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, Expression<Func<TRecord, IDictionary<string, T>>> value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.ParseValue(value.Body);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, Expression<Func<TRecord, IDictionary<string, T>>> value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.ParseValue(value.Body));
 
-        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, Expression<Func<TRecord, IList<T>>> value) {
-            var path = _converter.ParseAttributePath(attribute.Body);
-            var operand = _converter.ParseValue(value.Body);
-            _setOperations.Add($"{path} = {operand}");
-            return this;
-        }
+        public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, Expression<Func<TRecord, IList<T>>> value)
+            => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.ParseValue(value.Body));
 
-        // TODO: replace this with automatic attribute mappings
-        public IDynamoTableUpdateItem<TRecord> Set(DynamoLocalIndexKey secondaryKey) {
+        public IDynamoTableUpdateItem<TRecord> Set(string attribute, string value)
+            => SetAttributePathExpression(_converter.GetAttributeName(attribute), _converter.GetExpressionValueName(value));
 
-            // NOTE (2021-06-23, bjorg): primary key is the same and cannot be set again
-            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.SKName)} = {_converter.GetExpressionValueName(secondaryKey.SKValue)}");
-            return this;
-        }
-
-        // TODO: replace this with automatic attribute mappings
-        public IDynamoTableUpdateItem<TRecord> Set(DynamoGlobalIndexKey secondaryKey) {
-            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.PKName)} = {_converter.GetExpressionValueName(secondaryKey.PKValue)}");
-            _setOperations.Add($"{_converter.GetAttributeName(secondaryKey.SKName)} = {_converter.GetExpressionValueName(secondaryKey.SKValue)}");
+        private  IDynamoTableUpdateItem<TRecord> SetAttributePathExpression(string attributePath, string attributeValueExpression) {
+            _setOperations.Add($"{attributePath} = {attributeValueExpression}");
             return this;
         }
         #endregion
@@ -132,6 +93,11 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         #region *** REMOVE Actions ***
         public IDynamoTableUpdateItem<TRecord> Remove<T>(Expression<Func<TRecord, T>> attribute) {
             _removeOperations.Add(_converter.ParseAttributePath(attribute.Body));
+            return this;
+        }
+
+        public IDynamoTableUpdateItem<TRecord> Remove(string attribute) {
+            _removeOperations.Add(_converter.GetAttributeName(attribute));
             return this;
         }
         #endregion

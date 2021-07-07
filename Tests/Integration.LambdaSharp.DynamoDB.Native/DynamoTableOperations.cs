@@ -114,7 +114,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.CreateCustomerAsync(customer);
 
             // act
-            var result = await Table.PutItem(customer, customer.GetPrimaryKey())
+            var result = await Table.PutItem(customer.GetPrimaryKey(), customer)
                 .WithCondition(record => DynamoCondition.Exists(record))
                 .ExecuteAsync();
 
@@ -130,7 +130,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             await DataAccessClient.CreateCustomerAsync(customer);
 
             // act
-            var result = await Table.PutItem(customer, customer.GetPrimaryKey())
+            var result = await Table.PutItem(customer.GetPrimaryKey(), customer)
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync();
 

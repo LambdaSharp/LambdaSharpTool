@@ -17,6 +17,9 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using LambdaSharp.DynamoDB.Native.Operations;
 using LambdaSharp.DynamoDB.Native.Query;
 
@@ -30,7 +33,7 @@ namespace LambdaSharp.DynamoDB.Native {
         //--- Methods ---
         IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
-        IDynamoTablePutItem<TRecord> PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, params ADynamoSecondaryKey[] secondaryKeys)
+        IDynamoTablePutItem<TRecord> PutItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, TRecord record)
             where TRecord : class;
         IDynamoTableUpdateItem<TRecord> UpdateItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
@@ -46,5 +49,26 @@ namespace LambdaSharp.DynamoDB.Native {
         IDynamoTableQuery Query(IDynamoQuerySelect querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
         IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class;
+
+        //--- Default Methods ---
+        Task<TRecord?> GetItemAsync<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => GetItem(primaryKey, consistentRead).ExecuteAsync(cancellationToken);
+
+        Task<bool> PutItemAsync<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => PutItem(primaryKey, record).ExecuteAsync(cancellationToken);
+
+        async Task<TRecord?> QuerySingleAsync<TRecord>(IDynamoQuerySelect<TRecord> querySelect, bool consistentRead = false, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => (await Query(querySelect, limit: 1, consistentRead: consistentRead).ExecuteFetchAllAttributesAsync(cancellationToken)).FirstOrDefault();
+
+        Task<bool> DeleteItemAsync<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => DeleteItem(primaryKey).ExecuteAsync(cancellationToken);
+
+        Task<TRecord?> DeleteAndReturnItemAsync<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => DeleteItem(primaryKey).ExecuteReturnOldItemAsync(cancellationToken);
     }
 }

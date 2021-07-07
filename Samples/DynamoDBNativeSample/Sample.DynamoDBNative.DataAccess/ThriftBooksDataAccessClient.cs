@@ -50,7 +50,7 @@ namespace Sample.DynamoDBNative.DataAccess {
             }
 
             // TODO: wrap in a transaction
-            await Table.PutItem(customer, customer.GetPrimaryKey())
+            await Table.PutItem(customer.GetPrimaryKey(), customer)
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
 
@@ -58,7 +58,7 @@ namespace Sample.DynamoDBNative.DataAccess {
                 Username = customer.Username,
                 EmailAddress = customer.EmailAddress
             };
-            await Table.PutItem(customerEmail, customerEmail.GetPrimaryKey())
+            await Table.PutItem(customerEmail.GetPrimaryKey(), customerEmail)
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
                 .ExecuteAsync(cancellationToken);
         }
@@ -87,7 +87,10 @@ namespace Sample.DynamoDBNative.DataAccess {
 
                 // BatchWriteItem can take up to 25 operations
                 foreach(var orderItem in orderItems.Take(25)) {
-                    batch.PutItem(orderItem, orderItem.GetPrimaryKey(), orderItem.GetSecondaryKeys());
+                    batch.StartPutItem(orderItem.GetPrimaryKey(), orderItem)
+                        .Set("GSI1PK", string.Format(DataModel.ORDER_ITEM_GSI1_PK_PATTERN, orderItem.OrderId))
+                        .Set("GSI1SK", string.Format(DataModel.ORDER_ITEM_GSI1_SK_PATTERN, orderItem.OrderId, orderItem.ItemId))
+                    .End();
                 }
                 await batch.ExecuteAsync();
 
@@ -96,8 +99,11 @@ namespace Sample.DynamoDBNative.DataAccess {
             }
 
             // store order
-            var success = await Table.PutItem(order, order.GetPrimaryKey(), order.GetSecondaryKeys())
+            var success = await Table.PutItem(order.GetPrimaryKey(), order)
                 .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .Set("GSI1PK", string.Format(DataModel.ORDER_GSI1_PK_PATTERN, order.OrderId))
+                .Set("GSI1SK", string.Format(DataModel.ORDER_GSI1_SK_PATTERN, order.OrderId))
+                .Set("LSI1SK", string.Format(DataModel.ORDER_LSI1_SK_PATTERN, order.OrderId, order.Status))
                 .ExecuteAsync(cancellationToken);
             if(!success) {
                 throw new Exception("unable to store order");

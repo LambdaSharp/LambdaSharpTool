@@ -48,6 +48,11 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             return this;
         }
 
+        public IDynamoTablePutItem<TRecord> Set(string key, AttributeValue value) {
+            _request.Item[key] = value;
+            return this;
+        }
+
         public async Task<bool> ExecuteAsync(CancellationToken cancellationToken) {
             _request.ConditionExpression = _converter.ConvertConditions(_table.Options);
             try {

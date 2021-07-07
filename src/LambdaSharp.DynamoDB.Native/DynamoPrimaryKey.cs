@@ -18,8 +18,6 @@
 
 using System;
 
-// TODO: split and rename file
-
 namespace LambdaSharp.DynamoDB.Native {
 
     public class DynamoKey {
@@ -70,44 +68,5 @@ namespace LambdaSharp.DynamoDB.Native {
         //--- Constructors ---
         public DynamoPrimaryKey(string pk, string sk) : base(pk, sk) { }
         public DynamoPrimaryKey(string pkValueFormat, string skValueFormat, params string[] values) : base(pkValueFormat, skValueFormat, values) { }
-    }
-
-    public abstract class ADynamoSecondaryKey : DynamoKey {
-
-        //--- Constructors ---
-        public ADynamoSecondaryKey(string indexName, string pkName, string skName, string pkValue, string skValue)
-            : base(pkName, skName, pkValue, skValue)
-        {
-            IndexName = indexName ?? throw new ArgumentNullException(nameof(indexName));
-        }
-
-        public ADynamoSecondaryKey(string indexName, string pkName, string skName, string pkValueFormat, string skValueFormat, params string[] values)
-            : base(pkName, skName, pkValueFormat, skValueFormat, values)
-        {
-            IndexName = indexName ?? throw new ArgumentNullException(nameof(indexName));
-        }
-
-        //--- Properties ---
-        public string IndexName { get; }
-    }
-
-    public class DynamoLocalIndexKey : ADynamoSecondaryKey {
-
-        //--- Constructors ---
-        public DynamoLocalIndexKey(string indexName, string pkName, string skName, string pkValue, string skValue)
-            : base(indexName, pkName, skName, pkValue, skValue) { }
-
-        public DynamoLocalIndexKey(string indexName, string pkName, string skName, string pkValueFormat, string skValueFormat, params string[] values)
-            : base(indexName, pkName, skName, pkValueFormat, skValueFormat, values) { }
-    }
-
-    public class DynamoGlobalIndexKey : ADynamoSecondaryKey {
-
-        //--- Constructors ---
-        public DynamoGlobalIndexKey(string indexName, string pkName, string skName, string pkValue, string skValue)
-            : base(indexName, pkName, skName, pkValue, skValue) { }
-
-        public DynamoGlobalIndexKey(string indexName, string pkName, string skName, string pkValueFormat, string skValueFormat, params string[] values)
-            : base(indexName, pkName, skName, pkValueFormat, skValueFormat, values) { }
     }
 }
