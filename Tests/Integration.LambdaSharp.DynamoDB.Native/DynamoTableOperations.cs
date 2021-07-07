@@ -338,10 +338,10 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
 
             // act
             var result = await Table.BatchGetItems()
-                .StartGetItem(customer.GetPrimaryKey())
+                .BeginGetItem(customer.GetPrimaryKey())
                     .Get(record => record.Username)
                 .End()
-                .StartGetItem(order.GetPrimaryKey())
+                .BeginGetItem(order.GetPrimaryKey())
                     .Get(record => record.OrderId)
                 .End()
                 .ExecuteAsync();

@@ -75,7 +75,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             return this;
         }
 
-        public IDynamoTableBatchWriteItemsPutItem<TRecord> StartPutItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, TRecord record) where TRecord : class {
+        public IDynamoTableBatchWriteItemsPutItem<TRecord> BeginPutItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, TRecord record) where TRecord : class {
             var putRequest = new PutRequest {
                 Item = _table.SerializeItem(record, primaryKey)
             };

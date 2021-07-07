@@ -86,6 +86,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     }
 
                     // TODO: this breaks when the property name does not match the DynamoDB attribute name!!!
+                    //  => check for DynamoAttributeName attribute
                     return Join(ParseAttributePath(memberExpression.Expression, depth + 1), GetAttributeName(memberExpression.Member.Name));
 
                 // check: base-expression "[" int|string "]"

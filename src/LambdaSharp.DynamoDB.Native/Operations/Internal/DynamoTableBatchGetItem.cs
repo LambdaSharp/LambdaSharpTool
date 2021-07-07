@@ -69,7 +69,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         }
 
         //--- Methods ---
-        public IDynamoTableBatchGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
+        public IDynamoTableBatchGetItemsEntry<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
             _request.RequestItems.First().Value.Keys.Add(new Dictionary<string, AttributeValue> {
                 [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
                 [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)

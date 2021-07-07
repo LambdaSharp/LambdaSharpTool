@@ -27,13 +27,14 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     public interface IDynamoTableBatchGetItems {
 
         //--- Methods ---
-        IDynamoTableBatchGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
+        IDynamoTableBatchGetItemsEntry<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
         Task<IEnumerable<object>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
 
+        //--- Default Methods ---
         IDynamoTableBatchGetItems GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class
-            => StartGetItem(primaryKey, consistentRead).End();
+            => BeginGetItem(primaryKey, consistentRead).End();
     }
 
     public interface IDynamoTableBatchGetItemsEntry<TRecord> where TRecord : class {
