@@ -77,7 +77,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
         //--- IDynamoTableQuery<TRecord> Members ---
         IDynamoTableQuery<TRecord> IDynamoTableQuery<TRecord>.Where(Expression<Func<TRecord, bool>> filter) {
-            _converter.AddCondition(filter);
+            _converter.AddCondition(filter.Body);
             return this;
         }
 
@@ -123,7 +123,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
         //--- IDynamoTableQuery Members ---
         IDynamoTableQuery IDynamoTableQuery.Where<TRecord1>(Expression<Func<TRecord1, bool>> filter) {
-            _converter.AddCondition(filter);
+            _converter.AddCondition(filter.Body);
             return this;
         }
 
