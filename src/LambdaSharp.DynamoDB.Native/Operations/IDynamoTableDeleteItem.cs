@@ -28,6 +28,6 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         //--- Methods ---
         IDynamoTableDeleteItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
-        Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken = default);
+        Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken = default);
     }
 }

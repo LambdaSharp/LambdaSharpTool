@@ -60,7 +60,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTablePutItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
         IDynamoTablePutItem<TRecord> Set(string key, AttributeValue value);
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
-        Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken = default);
+        Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken = default);
 
         //--- Default Methods ---
         IDynamoTablePutItem<TRecord> Set(string key, string value) => Set(key, new AttributeValue(value));

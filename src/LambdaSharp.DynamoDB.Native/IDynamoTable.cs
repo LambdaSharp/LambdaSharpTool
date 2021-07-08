@@ -59,16 +59,15 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class
             => PutItem(primaryKey, record).ExecuteAsync(cancellationToken);
 
-        async Task<TRecord?> QuerySingleAsync<TRecord>(IDynamoQuerySelect<TRecord> querySelect, bool consistentRead = false, CancellationToken cancellationToken = default)
-            where TRecord : class
-            => (await Query(querySelect, limit: 1, consistentRead: consistentRead).ExecuteFetchAllAttributesAsync(cancellationToken)).FirstOrDefault();
-
         Task<bool> DeleteItemAsync<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
             where TRecord : class
             => DeleteItem(primaryKey).ExecuteAsync(cancellationToken);
 
         Task<TRecord?> DeleteAndReturnItemAsync<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, CancellationToken cancellationToken = default)
             where TRecord : class
-            => DeleteItem(primaryKey).ExecuteReturnOldItemAsync(cancellationToken);
-    }
+            => DeleteItem(primaryKey).ExecuteReturnOldRecordAsync(cancellationToken);
+
+        async Task<TRecord?> QuerySingleAsync<TRecord>(IDynamoQuerySelect<TRecord> querySelect, bool consistentRead = false, CancellationToken cancellationToken = default)
+            where TRecord : class
+            => (await Query(querySelect, limit: 1, consistentRead: consistentRead).ExecuteFetchAllAttributesAsync(cancellationToken)).FirstOrDefault();    }
 }

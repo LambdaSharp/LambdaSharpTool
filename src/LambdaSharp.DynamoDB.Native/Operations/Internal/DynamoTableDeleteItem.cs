@@ -58,7 +58,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             }
         }
 
-        public async Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken) {
+        public async Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken) {
             _request.ConditionExpression = _converter.ConvertConditions(_table.Options);
             _request.ReturnValues = ReturnValue.ALL_OLD;
             try {
