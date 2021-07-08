@@ -145,6 +145,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Features
 
+* CLI
+  * Added ability to override `Module::WebSocket` to allow a WebSocket to be defined in another module.
+
 * SDK
   * Added _LambdaSharp.DynamoDB.Native_ assembly to simplify working with DynamoDB tables.
 
