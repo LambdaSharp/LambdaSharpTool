@@ -66,13 +66,11 @@ The following resources and variables are defined when a module contains a funct
 |Variable                        |Type                            |Definition                                    |
 |--------------------------------|--------------------------------|----------------------------------------------|
 |`Module::WebSocket`             |AWS::ApiGatewayV2::Api        |WebSocket API resource.
-|`Module::WebSocket::Checksum`   |String                        |Checksum computed from all Lambda function and resources that depend on the WebSocket.
-|`Module::WebSocket::Deployment` |AWS::ApiGatewayV2::Deployment |Deployment for the WebSocket API; this resource changes whenever an WebSocket API resource or method is modified.
 |`Module::WebSocket::DomainName` |String                        |Domain name of the WebSocket API.
 |`Module::WebSocket::Stage`      |AWS::ApiGatewayV2::Stage      |Stage for deploying WebSocket API; the stage name is always `LATEST`.
 |`Module::WebSocket::Url`        |String                        |URL of the WebSocket API.
 
-**NOTE:** When overriding `Module::WebSocket`, `Module::WebSocket::Deployment` and `Module::WebSocket::Stage` are defined as empty strings since no WebSocket resources are generated.
+**NOTE:** When overriding `Module::WebSocket`, the `Module::WebSocket::Stage` is defined as empty strings since no resource is generated.
 
 ## Module Deployment Parameters
 

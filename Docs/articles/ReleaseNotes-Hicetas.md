@@ -143,6 +143,12 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.3.3) - TBD
 
+#### BREAKING CHANGES
+
+* CLI
+  * The module WebSocket resources now use the API Gateway v2 auto-deploy mechanism instead of generating a new deployment each time. This technique is more reliable and requires less code generation.
+  * The `Module::WebSocket::Deployment` global variable no longer exists since the WebSocket deployment is now automatic.
+
 #### Features
 
 * CLI

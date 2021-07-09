@@ -607,30 +607,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             }
 
-            // WebSocket deployment depends on all methods and their hash (to force redeployment in case of change)
-            var resourcesSignature = string.Join("\n", webSocketResources
-                .OrderBy(kv => kv.Key)
-                .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
-
-                // include dependency on AWS::ApiGatewayV2::Authorizer if one exists
-                .Union(_builder.Items
-                    .OfType<ResourceItem>()
-                    .Where(item => item.Type == "AWS::ApiGatewayV2::Authorizer")
-                    .Select(item => $"{item.FullName}={JsonConvert.SerializeObject(item.Resource)}")
-                )
-            );
-            string methodsChecksum = resourcesSignature.ToMD5Hash();
-            var methodsChecksumVariable = _builder.AddVariable(
-                parent: webSocket,
-                name: "Checksum",
-                description: "Checksum for WebSocket listeners",
-                type: "String",
-                scope: null,
-                value: methodsChecksum,
-                allow: null,
-                encryptionContext: null
-            );
-
             // add WebSocket url
             var webSocketDomainName = _builder.AddVariable(
                 parent: webSocket,
@@ -658,34 +634,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             // create additional resources for the generated web socket
             if(generateWebSocket) {
 
-                // NOTE (2018-06-21, bjorg): the WebSocket deployment depends on ALL route resources having been created;
-                //  a new name is used for the deployment to force the stage to be updated
-                var deploymentWithChecksum = _builder.AddResource(
-                    parent: webSocket,
-                    name: "Deployment" + methodsChecksum,
-                    description: "Module WebSocket Deployment",
-                    scope: null,
-                    resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Deployment") {
-                        ["ApiId"] = FnRef("Module::WebSocket"),
-                        ["Description"] = FnSub($"${{AWS::StackName}} WebSocket [${{Module::WebSocket::Checksum}}]")
-                    },
-                    resourceExportAttribute: null,
-                    dependsOn: webSocketResources.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
-                    condition: null,
-                    pragmas: null,
-                    deletionPolicy: null
-                );
-                var deployment = _builder.AddVariable(
-                    parent: webSocket,
-                    name: "Deployment",
-                    description: "Module WebSocket Deployment",
-                    type: "String",
-                    scope: null,
-                    value: FnRef(deploymentWithChecksum.FullName),
-                    allow: null,
-                    encryptionContext: null
-                );
-
                 // create log-group for WebSocket
                 var webSocketLogGroup = _builder.AddResource(
                     parent: webSocket,
@@ -702,7 +650,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     deletionPolicy: null
                 );
 
-                // WebSocket stage depends on deployment
+                // WebSocket stage depends on Module::WebSocket::LogGroup
                 _builder.AddResource(
                     parent: webSocket,
                     name: "Stage",
@@ -716,12 +664,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ["ApiId"] = FnRef("Module::WebSocket"),
                         ["StageName"] = FnRef("Module::WebSocket::StageName"),
                         ["Description"] = FnSub("Module WebSocket ${Module::WebSocket::StageName} Stage"),
-                        ["DeploymentId"] = FnRef(deployment.FullName),
-                        ["RouteSettings"] = _webSocketRoutes.ToDictionary(route => route.Source.RouteKey, route => new Dictionary<string, dynamic> {
+                        ["AutoDeploy"] = true,
+                        ["DefaultRouteSettings"] = new Dictionary<string, dynamic> {
                             ["DataTraceEnabled"] = true,
                             ["DetailedMetricsEnabled"] = true,
                             ["LoggingLevel"] = "INFO"
-                        })
+                        }
                     },
                     resourceExportAttribute: null,
                     dependsOn: new[] { webSocketLogGroup.FullName },
@@ -732,16 +680,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             } else {
 
                 // add blank placeholders so that reference can resolve during code analysis
-                var deployment = _builder.AddVariable(
-                    parent: webSocket,
-                    name: "Deployment",
-                    description: "Module WebSocket Deployment",
-                    type: "String",
-                    scope: null,
-                    value: "",
-                    allow: null,
-                    encryptionContext: null
-                );
                 _builder.AddVariable(
                     parent: webSocket,
                     name: "Stage",
