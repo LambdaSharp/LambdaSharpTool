@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.S3.IO
+Origin: lambdasharp
 Description: LambdaSharp S3 Utility Module
 Items:
 

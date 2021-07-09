@@ -24,6 +24,7 @@ namespace LambdaSharp.Tool.Model.AST {
 
         //--- Properties ---
         public string Module { get; set; }
+        public string Origin { get; set; }
         public string Version { get; set; }
         public string Description { get; set; }
         public IList<object> Pragmas { get; set; } = new List<object>();

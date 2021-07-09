@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.App.Api
+Origin: lambdasharp
 Description: LambdaSharp app API for CloudWatch Logs, Metrics, and Events
 Items:
 

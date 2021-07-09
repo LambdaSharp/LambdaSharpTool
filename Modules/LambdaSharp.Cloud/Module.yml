@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.Cloud
+Origin: lambdasharp
 Version: 1.0
 Description: LambdaSharp Cloud Services
 Items:

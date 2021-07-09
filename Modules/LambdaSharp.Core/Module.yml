@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.Core
+Origin: lambdasharp
 Description: LambdaSharp Core Resources and Services
 Pragmas:
   - no-lambdasharp-dependencies

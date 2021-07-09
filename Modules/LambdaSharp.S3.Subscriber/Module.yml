@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.S3.Subscriber
+Origin: lambdasharp
 Description: LambdaSharp S3 Lambda Function Subscriber
 Items:
 

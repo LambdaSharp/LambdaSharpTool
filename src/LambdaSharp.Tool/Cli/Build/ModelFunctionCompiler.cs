@@ -54,7 +54,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 _builder.AddGrant(
                     name: "DeploymentBucketReadOnly",
                     awsType: null,
-                    reference: FnSub($"arn:${{AWS::Partition}}:s3:::${{DeploymentBucketName}}/{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/*"),
+                    reference: FnSub($"arn:${{AWS::Partition}}:s3:::${{DeploymentBucketName}}/{_builder.ModuleInfo.Origin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/*"),
                     allow: "s3:GetObject",
                     condition: null
                 );

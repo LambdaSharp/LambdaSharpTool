@@ -156,7 +156,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add outputs
             _stack.Add("ModuleInfo", new Humidifier.Output {
-                Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
+                Value = _module.ModuleInfo.WithOrigin(_module.ModuleInfo.Origin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
             });
             _stack.Add("ModuleChecksum", new Humidifier.Output {
                 Value = Humidifier.Fn.Ref("DeploymentChecksum")

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.App.EventBus
+Origin: lambdasharp
 Description: Connect LambdaSharp app to Amazon EventBridge
 Pragmas:
   - Overrides:
