@@ -77,7 +77,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(module.Origin is null) {
                 Console.WriteLine($"Compiling: {Settings.InfoColor}{module.FullName}{Settings.ResetColor} (v{module.Version})");
             } else {
-                Console.WriteLine($"Compiling: {Settings.InfoColor}{module.FullName}@{module.Origin}{Settings.ResetColor} (v{module.Version})");
+                Console.WriteLine($"Compiling: {Settings.InfoColor}{module.FullName}{Settings.ResetColor} (v{module.Version}) @{module.Origin}");
             }
 
             // augment module definitions
