@@ -147,6 +147,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Added ability to override `Module::WebSocket` to allow a WebSocket to be defined in another module.
+  * Enhanced the default WebSocket logging settings to include more diagnostics information.
 
 * Syntax
   * Added `Origin` to module declaration syntax, which sets the name of the S3 origin bucket. The `--module-origin` option can be used to override this value. When omitted, the module origin defaults to the S3 bucket the module is being published to.
