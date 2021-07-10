@@ -190,7 +190,8 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         ///     | SET-FUNCTION
         ///     | LITERAL
         /// </code>
-        /// <param name="expression"></param>
+        /// <param name="expression">The expression to parse.</param>
+        /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <returns></returns>
         public bool TryParseSetOperand(Expression expression, [NotNullWhen(true)] out string? output)
             => TryParseSetFunction(expression, out output)
