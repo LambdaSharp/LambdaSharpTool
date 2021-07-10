@@ -52,11 +52,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => (string)null);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].NULL.Should().BeTrue();
         }
@@ -69,11 +69,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => true);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsBOOLSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].BOOL.Should().BeTrue();
@@ -87,11 +87,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => Encoding.UTF8.GetBytes("Hello"));
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].B.Should().NotBeNull();
             converter.ExpressionValues[":v_1"].B.ToArray().Should().BeEquivalentTo(Encoding.UTF8.GetBytes("Hello"));
@@ -105,11 +105,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => "Hello");
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].S.Should().NotBeNull();
             converter.ExpressionValues[":v_1"].S.Should().Be("Hello");
@@ -123,11 +123,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => 10);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().NotBeNull();
             converter.ExpressionValues[":v_1"].N.Should().Be("10");
@@ -141,11 +141,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => 10L);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().NotBeNull();
             converter.ExpressionValues[":v_1"].N.Should().Be("10");
@@ -159,11 +159,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => 10.0d);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().NotBeNull();
             converter.ExpressionValues[":v_1"].N.Should().Be("10");
@@ -177,11 +177,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => 10m);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().NotBeNull();
             converter.ExpressionValues[":v_1"].N.Should().Be("10");
@@ -195,11 +195,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new List<string>());
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsLSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].L.Count.Should().Be(0);
@@ -213,11 +213,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new List<string> { "Hello" });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsLSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].L.Count.Should().Be(1);
@@ -233,11 +233,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new ArrayList());
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsLSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].L.Count.Should().Be(0);
@@ -251,11 +251,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new ArrayList { "Hello" });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsLSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].L.Count.Should().Be(1);
@@ -270,11 +270,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new string[0]);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsLSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].L.Count.Should().Be(0);
@@ -288,11 +288,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new string[] { "Hello" });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsLSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].L.Count.Should().Be(1);
@@ -307,11 +307,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new Dictionary<string, object>());
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsMSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].M.Count.Should().Be(0);
@@ -328,11 +328,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
                 ["Key"] = "Value"
             };
             var expression = LambdaBody(record => closure);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].IsMSet.Should().BeTrue();
             converter.ExpressionValues[":v_1"].M.Count.Should().Be(1);
@@ -349,11 +349,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new HashSet<string> { "Hello" });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].SS.Count.Should().Be(1);
             converter.ExpressionValues[":v_1"].SS.Contains("Hello").Should().BeTrue();
@@ -367,11 +367,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new HashSet<int> { 123 });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].NS.Count.Should().Be(1);
             converter.ExpressionValues[":v_1"].NS.Contains("123").Should().BeTrue();
@@ -385,11 +385,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new HashSet<long> { 123L });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].NS.Count.Should().Be(1);
             converter.ExpressionValues[":v_1"].NS.Contains("123").Should().BeTrue();
@@ -403,11 +403,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new HashSet<double> { 123d });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].NS.Count.Should().Be(1);
             converter.ExpressionValues[":v_1"].NS.Contains("123").Should().BeTrue();
@@ -421,11 +421,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new HashSet<decimal> { 123m });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].NS.Count.Should().Be(1);
             converter.ExpressionValues[":v_1"].NS.Contains("123").Should().BeTrue();
@@ -440,11 +440,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => new HashSet<byte[]> { Encoding.UTF8.GetBytes("Hello") });
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].BS.Count.Should().Be(1);
             converter.ExpressionValues[":v_1"].BS.Should().Contain(item => item.ToArray().SequenceEqual(Encoding.UTF8.GetBytes("Hello")));
@@ -458,11 +458,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => MyEnum.EnumValue);
-            var success = converter.TryParseLiteral(expression, out var render);
+            var success = converter.TryParseLiteral(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($":v_1");
+            output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].S.Should().NotBeNull();
             converter.ExpressionValues[":v_1"].S.Should().Be("Hello");

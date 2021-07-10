@@ -46,11 +46,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Enum == MyEnum.EnumValue);
-            var success = converter.TryParseCondition(expression, out var render, out _);
+            var success = converter.TryParseCondition(expression, out var output, out _);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Enum = :v_1");
+            output.Should().Be("Enum = :v_1");
             converter.ExpressionAttributes.Should().BeEmpty();
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].S.Should().Be("EnumValue");
@@ -64,11 +64,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Enum != MyEnum.EnumValue);
-            var success = converter.TryParseCondition(expression, out var render, out _);
+            var success = converter.TryParseCondition(expression, out var output, out _);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Enum <> :v_1");
+            output.Should().Be("Enum <> :v_1");
             converter.ExpressionAttributes.Should().BeEmpty();
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].S.Should().Be("EnumValue");
@@ -85,11 +85,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
                 Enum = MyEnum.EnumValue
             };
             var expression = LambdaBody(record => record.Enum == rec.Enum);
-            var success = converter.TryParseCondition(expression, out var render, out _);
+            var success = converter.TryParseCondition(expression, out var output, out _);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Enum = :v_1");
+            output.Should().Be("Enum = :v_1");
             converter.ExpressionAttributes.Should().BeEmpty();
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].S.Should().Be("EnumValue");

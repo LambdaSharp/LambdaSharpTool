@@ -42,14 +42,14 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         ///     |  ATTRIBUTE-PATH '[' string-expression ']'
         /// </code>
         /// <param name="expression">The expression to parse.</param>
-        /// <param name="render">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
+        /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <returns>Returns <c>true</c> when the expression was parsed successfully.</returns>
-        public bool TryParseAttributePath(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseAttributePath(Expression expression, [NotNullWhen(true)] out string? output) {
             if(expression.IsParametric()) {
-                render = ParseAttributePath(expression, 1);
+                output = ParseAttributePath(expression, 1);
                 return true;
             }
-            render = null;
+            output = null;
             return false;
 
             // local functions
@@ -125,10 +125,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         public string ParseAttributePath(Expression expression) {
-            if(!TryParseAttributePath(expression, out var render)) {
+            if(!TryParseAttributePath(expression, out var output)) {
                 throw new NotSupportedException($"invalid attribute path expression: {expression}");
             }
-            return render;
+            return output;
         }
 
         /// <summary>
@@ -141,10 +141,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         ///     | SET-OPERAND '-' SET-OPERAND
         /// </code>
         /// <param name="expression">The expression to parse.</param>
-        /// <param name="render">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
+        /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <param name="precedence">The precedence level of the rendered expression.</param>
         /// <returns>Returns <c>true</c> when the expression was parsed successfully.</returns>
-        public bool TryParseValue(Expression expression, [NotNullWhen(true)] out string? render, out Precedence precedence) {
+        public bool TryParseValue(Expression expression, [NotNullWhen(true)] out string? output, out Precedence precedence) {
             switch(expression) {
             case BinaryExpression binaryExpression:
                 string op;
@@ -166,19 +166,19 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 if(!TryParseSetOperand(binaryExpression.Right, out var renderRight)) {
                     throw new NotSupportedException($"right value of '{op}' must be an operand expression: {binaryExpression.Right}");
                 }
-                (render, precedence) = Combine(op, Precedence.ScalarAddSubtract, (Expression: renderLeft, Precedence: Precedence.Atomic), (Expression: renderRight, Precedence: Precedence.Atomic));
+                (output, precedence) = Combine(op, Precedence.ScalarAddSubtract, (Expression: renderLeft, Precedence: Precedence.Atomic), (Expression: renderRight, Precedence: Precedence.Atomic));
                 return true;
             default:
                 precedence = Precedence.Atomic;
-                return TryParseSetOperand(expression, out render);
+                return TryParseSetOperand(expression, out output);
             }
         }
 
         public string ParseValue(Expression expression) {
-            if(!TryParseValue(expression, out var render, out _)) {
+            if(!TryParseValue(expression, out var output, out _)) {
                 throw new NotSupportedException($"invalid value expression: {expression}");
             }
-            return render;
+            return output;
         }
 
         /// <summary>
@@ -192,10 +192,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         /// </code>
         /// <param name="expression"></param>
         /// <returns></returns>
-        public bool TryParseSetOperand(Expression expression, [NotNullWhen(true)] out string? render)
-            => TryParseSetFunction(expression, out render)
-                || TryParseAttributePath(expression, out render)
-                || TryParseLiteral(expression, out render);
+        public bool TryParseSetOperand(Expression expression, [NotNullWhen(true)] out string? output)
+            => TryParseSetFunction(expression, out output)
+                || TryParseAttributePath(expression, out output)
+                || TryParseLiteral(expression, out output);
 
         /// <summary>
         /// Parses a LINQ expression as a literal value.
@@ -220,15 +220,15 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         ///     | decimal-set-expression
         /// </code>
         /// <param name="expression">The expression to parse.</param>
-        /// <param name="render">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
+        /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <returns>Returns <c>true</c> when the expression was parsed successfully.</returns>
-        public bool TryParseLiteral(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseLiteral(Expression expression, [NotNullWhen(true)] out string? output) {
             if(!expression.IsParametric()) {
                 var result = expression.Evaluate();
-                render = GetExpressionValueName(result);
+                output = GetExpressionValueName(result);
                 return true;
             }
-            render = null;
+            output = null;
             return false;
         }
 
@@ -241,11 +241,11 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         ///     | LIST-APPEND
         /// </code>
         /// <param name="expression">The expression to parse.</param>
-        /// <param name="render">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
+        /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <returns>Returns <c>true</c> when the expression was parsed successfully.</returns>
-        public bool TryParseSetFunction(Expression expression, [NotNullWhen(true)] out string? render) {
-            return TryParseIfNotExistsSetFunction(expression, out render)
-                || TryParseListAppendSetFunction(expression, out render);
+        public bool TryParseSetFunction(Expression expression, [NotNullWhen(true)] out string? output) {
+            return TryParseIfNotExistsSetFunction(expression, out output)
+                || TryParseListAppendSetFunction(expression, out output);
         }
 
         /// <summary>
@@ -256,9 +256,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         ///     'if_not_exists' '(' ATTRIBUTE-PATH, VALUE ')'
         /// </code>
         /// <param name="expression">The expression to parse.</param>
-        /// <param name="render">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
+        /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <returns>Returns <c>true</c> when the expression was parsed successfully.</returns>
-        public bool TryParseIfNotExistsSetFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseIfNotExistsSetFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(
                 (expression is MethodCallExpression methodCallExpression)
                 && (methodCallExpression.Method.DeclaringType == typeof(DynamoUpdate))
@@ -270,10 +270,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 if(!TryParseValue(methodCallExpression.Arguments[1], out var value, out _)) {
                     throw new NotSupportedException($"argument 'value' in 'if_not_exists' must be a value expression: {methodCallExpression.Arguments[1]}");
                 }
-                render = $"if_not_exists({attributePath}, {value})";
+                output = $"if_not_exists({attributePath}, {value})";
                 return true;
             }
-            render = null;
+            output = null;
             return false;
         }
 
@@ -285,9 +285,9 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         ///     'list_append' '(' SET-OPERAND, SET-OPERAND ')'
         /// </code>
         /// <param name="expression">The expression to parse.</param>
-        /// <param name="render">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
+        /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <returns>Returns <c>true</c> when the expression was parsed successfully.</returns>
-        public bool TryParseListAppendSetFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseListAppendSetFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(
                 (expression is MethodCallExpression methodCallExpression)
                 && (methodCallExpression.Method.DeclaringType == typeof(DynamoUpdate))
@@ -299,14 +299,14 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 if(!TryParseSetOperand(methodCallExpression.Arguments[1], out var list2)) {
                     throw new NotSupportedException($"argument 'list2' in 'list_append' must be an operand expression: {methodCallExpression.Arguments[1]}");
                 }
-                render = $"list_append({list1}, {list2})";
+                output = $"list_append({list1}, {list2})";
                 return true;
             }
-            render = null;
+            output = null;
             return false;
         }
 
-        public bool TryParseCondition(Expression expression, [NotNullWhen(true)] out string? render, out Precedence precedence) {
+        public bool TryParseCondition(Expression expression, [NotNullWhen(true)] out string? output, out Precedence precedence) {
 
             // check: binary operation
             if(expression is BinaryExpression binaryExpression) {
@@ -314,42 +314,42 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
                 // CONDITION-OPERAND '=' CONDITION-OPERAND
                 case ExpressionType.Equal:
-                    (render, precedence) = ParseBinaryOperands("=", Precedence.ScalarComparison, binaryExpression);
+                    (output, precedence) = ParseBinaryOperands("=", Precedence.ScalarComparison, binaryExpression);
                     return true;
 
                 // CONDITION-OPERAND '<>' CONDITION-OPERAND
                 case ExpressionType.NotEqual:
-                    (render, precedence) = ParseBinaryOperands("<>", Precedence.ScalarComparison, binaryExpression);
+                    (output, precedence) = ParseBinaryOperands("<>", Precedence.ScalarComparison, binaryExpression);
                     return true;
 
                 // CONDITION-OPERAND '<' CONDITION-OPERAND
                 case ExpressionType.LessThan:
-                    (render, precedence) = ParseBinaryOperands("<", Precedence.ScalarComparison, binaryExpression);
+                    (output, precedence) = ParseBinaryOperands("<", Precedence.ScalarComparison, binaryExpression);
                     return true;
 
                 // CONDITION-OPERAND '<=' CONDITION-OPERAND
                 case ExpressionType.LessThanOrEqual:
-                    (render, precedence) = ParseBinaryOperands("<=", Precedence.ScalarComparison, binaryExpression);
+                    (output, precedence) = ParseBinaryOperands("<=", Precedence.ScalarComparison, binaryExpression);
                     return true;
 
                 // CONDITION-OPERAND '>' CONDITION-OPERAND
                 case ExpressionType.GreaterThan:
-                    (render, precedence) = ParseBinaryOperands(">", Precedence.ScalarComparison, binaryExpression);
+                    (output, precedence) = ParseBinaryOperands(">", Precedence.ScalarComparison, binaryExpression);
                     return true;
 
                 // CONDITION-OPERAND '>=' CONDITION-OPERAND
                 case ExpressionType.GreaterThanOrEqual:
-                    (render, precedence) = ParseBinaryOperands(">=", Precedence.ScalarComparison, binaryExpression);
+                    (output, precedence) = ParseBinaryOperands(">=", Precedence.ScalarComparison, binaryExpression);
                     return true;
 
                 // condition-expression 'AND' condition-expression
                 case ExpressionType.AndAlso:
-                    (render, precedence) = ParseBinaryExpressions("AND", Precedence.AndOperator, binaryExpression);
+                    (output, precedence) = ParseBinaryExpressions("AND", Precedence.AndOperator, binaryExpression);
                     return true;
 
                 // condition-expression 'OR' condition-expression
                 case ExpressionType.OrElse:
-                    (render, precedence) = ParseBinaryExpressions("OR", Precedence.OrOperator, binaryExpression);
+                    (output, precedence) = ParseBinaryExpressions("OR", Precedence.OrOperator, binaryExpression);
                     return true;
                 }
             }
@@ -362,7 +362,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 if(!TryParseCondition(unaryExpression.Operand, out var notOperandRender, out var notOperandPrecedence)) {
                     throw new NotSupportedException($"value must be an operand expression: {unaryExpression.Operand}");
                 }
-                (render, precedence) = Prefix("NOT", Precedence.NotOperator, (notOperandRender, notOperandPrecedence));
+                (output, precedence) = Prefix("NOT", Precedence.NotOperator, (notOperandRender, notOperandPrecedence));
                 return true;
             }
 
@@ -384,7 +384,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseConditionOperand(methodCallExpression.Arguments[2], out var inBetweenUpperBoundRender)) {
                         throw new NotSupportedException($"upper-bound value must be an operand expression: {methodCallExpression.Arguments[2]}");
                     }
-                    render = $"{inBetweenOperandRender} BETWEEN {inBetweenLowerBoundRender} AND {inBetweenUpperBoundRender}";
+                    output = $"{inBetweenOperandRender} BETWEEN {inBetweenLowerBoundRender} AND {inBetweenUpperBoundRender}";
                     precedence = Precedence.BetweenOperator;
                     return true;
 
@@ -400,18 +400,18 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if((inCollection.Count() == 0) || (inCollection.Count() > 100)) {
                         throw new NotSupportedException("in collection must have at least 1 element and at most 100");
                     }
-                    render = $"{inOperandRender} IN ({string.Join(", ", inCollection.Select(item => GetExpressionValueName(item)))})";
+                    output = $"{inOperandRender} IN ({string.Join(", ", inCollection.Select(item => GetExpressionValueName(item)))})";
                     precedence = Precedence.InOperator;
                     return true;
                 }
             }
 
             // check: CONDITION-FUNCTION
-            if(TryParseConditionFunction(expression, out render)) {
+            if(TryParseConditionFunction(expression, out output)) {
                 precedence = Precedence.Atomic;
                 return true;
             }
-            render = null;
+            output = null;
             precedence = Precedence.Undefined;
             return false;
 
@@ -466,66 +466,66 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         }
 
         public (string Expression, Precedence precedence) ParseCondition(Expression expression) {
-            if(!TryParseCondition(expression, out var render, out var precedence)) {
+            if(!TryParseCondition(expression, out var output, out var precedence)) {
                 throw new NotSupportedException($"invalid condition expression: {expression}");
             }
-            return (render, precedence);
+            return (output, precedence);
         }
 
-        public bool TryParseConditionOperand(Expression expression, [NotNullWhen(true)] out string? render)
-            => TryParseConditionFunction(expression, out render)
-                || TryParseAttributePath(expression, out render)
-                || TryParseLiteral(expression, out render);
+        public bool TryParseConditionOperand(Expression expression, [NotNullWhen(true)] out string? output)
+            => TryParseConditionFunction(expression, out output)
+                || TryParseAttributePath(expression, out output)
+                || TryParseLiteral(expression, out output);
 
-        public bool TryParseConditionFunction(Expression expression, [NotNullWhen(true)] out string? render)
-            => TryParseAttributeExistsConditionFunction(expression, out render)
-                || TryParseAttributeDoesNotExistsConditionFunction(expression, out render)
-                || TryParseAttributeTypeConditionFunction(expression, out render)
-                || TryParseBeginsWithConditionFunction(expression, out render)
-                || TryParseContainsConditionFunction(expression, out render)
-                || TryParseSizeConditionFunction(expression, out render);
+        public bool TryParseConditionFunction(Expression expression, [NotNullWhen(true)] out string? output)
+            => TryParseAttributeExistsConditionFunction(expression, out output)
+                || TryParseAttributeDoesNotExistsConditionFunction(expression, out output)
+                || TryParseAttributeTypeConditionFunction(expression, out output)
+                || TryParseBeginsWithConditionFunction(expression, out output)
+                || TryParseContainsConditionFunction(expression, out output)
+                || TryParseSizeConditionFunction(expression, out output);
 
-        public bool TryParseAttributeExistsConditionFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseAttributeExistsConditionFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(
                 (expression is MethodCallExpression methodCallExpression)
                 && (methodCallExpression.Method.DeclaringType == typeof(DynamoCondition))
                 && (methodCallExpression.Method.Name == nameof(DynamoCondition.Exists))
             ) {
                 if(methodCallExpression.Arguments[0] is ParameterExpression) {
-                    render = $"attribute_exists(PK)";
+                    output = $"attribute_exists(PK)";
                     return true;
                 }
                 if(!TryParseAttributePath(methodCallExpression.Arguments[0], out var attributePath)) {
                     throw new NotSupportedException($"argument 'path' in 'attribute_exists' must be an attribute-path expression: {methodCallExpression.Arguments[0]}");
                 }
-                render = $"attribute_exists({attributePath})";
+                output = $"attribute_exists({attributePath})";
                 return true;
             }
-            render = null;
+            output = null;
             return false;
         }
 
-        public bool TryParseAttributeDoesNotExistsConditionFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseAttributeDoesNotExistsConditionFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(
                 (expression is MethodCallExpression methodCallExpression)
                 && (methodCallExpression.Method.DeclaringType == typeof(DynamoCondition))
                 && (methodCallExpression.Method.Name == nameof(DynamoCondition.DoesNotExist))
             ) {
                 if(methodCallExpression.Arguments[0] is ParameterExpression) {
-                    render = $"attribute_not_exists(PK)";
+                    output = $"attribute_not_exists(PK)";
                     return true;
                 }
                 if(!TryParseAttributePath(methodCallExpression.Arguments[0], out var attributePath)) {
                     throw new NotSupportedException($"argument 'path' in 'attribute_not_exists' must be an attribute-path expression: {methodCallExpression.Arguments[0]}");
                 }
-                render = $"attribute_not_exists({attributePath})";
+                output = $"attribute_not_exists({attributePath})";
                 return true;
             }
-            render = null;
+            output = null;
             return false;
         }
 
-        public bool TryParseAttributeTypeConditionFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseAttributeTypeConditionFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(ExpressionValues is null) {
                 throw new InvalidOperationException("instance was initialized without expression values");
             }
@@ -557,14 +557,14 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 default:
                     throw new NotSupportedException("type must be one of: B, BOOL, BS, L, M, N, NS, NULL, S, or SS");
                 }
-                render = $"attribute_type({attributePath}, {attributeType})";
+                output = $"attribute_type({attributePath}, {attributeType})";
                 return true;
             }
-            render = null;
+            output = null;
             return false;
         }
 
-        public bool TryParseBeginsWithConditionFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseBeginsWithConditionFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(expression is MethodCallExpression methodCallExpression) {
 
                 // check: `DynamoCondition.BeginsWith(expression, string-expression)` method invocation
@@ -578,7 +578,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseLiteral(methodCallExpression.Arguments[1], out var substrRender)) {
                         throw new NotSupportedException($"argument 'substr' in 'begins_with' must be a string expression: {methodCallExpression.Arguments[1]}");
                     }
-                    render = $"begins_with({attributePath}, {substrRender})";
+                    output = $"begins_with({attributePath}, {substrRender})";
                     return true;
                 }
 
@@ -596,15 +596,15 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseLiteral(methodCallExpression.Arguments[0], out var substrRender)) {
                         throw new NotSupportedException($"argument 'value' in 'String.BeginsWith(string-expression)' must be a string expression: {methodCallExpression.Arguments[0]}");
                     }
-                    render = $"begins_with({attributePath}, {substrRender})";
+                    output = $"begins_with({attributePath}, {substrRender})";
                     return true;
                 }
             }
-            render = null;
+            output = null;
             return false;
         }
 
-        public bool TryParseContainsConditionFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseContainsConditionFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(expression is MethodCallExpression methodCallExpression) {
 
                 // check: `DynamoCondition.Contains(attribute-path, operand)` method invocation
@@ -618,7 +618,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseConditionOperand(methodCallExpression.Arguments[1], out var operand)) {
                         throw new NotSupportedException($"argument 'operand' in 'contains' must be an operand expression: {methodCallExpression.Arguments[1]}");
                     }
-                    render = $"contains({attributePath}, {operand})";
+                    output = $"contains({attributePath}, {operand})";
                     return true;
                 }
 
@@ -636,7 +636,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseConditionOperand(methodCallExpression.Arguments[1], out var operand)) {
                         throw new NotSupportedException($"argument 'value' in 'Enumerable.Contains()' must be an operand expression: {methodCallExpression.Arguments[1]}");
                     }
-                    render = $"contains({attributePath}, {operand})";
+                    output = $"contains({attributePath}, {operand})";
                     return true;
                 }
 
@@ -655,7 +655,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseConditionOperand(methodCallExpression.Arguments[0], out var operand)) {
                         throw new NotSupportedException($"argument 'value' in 'IList.Contains(operand)' must be an operand expression: {methodCallExpression.Arguments[1]}");
                     }
-                    render = $"contains({attributePath}, {operand})";
+                    output = $"contains({attributePath}, {operand})";
                     return true;
                 }
 
@@ -677,15 +677,15 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseConditionOperand(methodCallExpression.Arguments[0], out var operand)) {
                         throw new NotSupportedException($"argument 'value' in 'IList.Contains()' must be an operand expression: {methodCallExpression.Arguments[1]}");
                     }
-                    render = $"contains({attributePath}, {operand})";
+                    output = $"contains({attributePath}, {operand})";
                     return true;
                 }
             }
-            render = null;
+            output = null;
             return false;
         }
 
-        public bool TryParseSizeConditionFunction(Expression expression, [NotNullWhen(true)] out string? render) {
+        public bool TryParseSizeConditionFunction(Expression expression, [NotNullWhen(true)] out string? output) {
             if(expression is MethodCallExpression methodCallExpression) {
 
                 // check: `DynamoCondition.Size(attribute-path)` method invocation
@@ -696,7 +696,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseAttributePath(methodCallExpression.Arguments[0], out var attributePath)) {
                         throw new NotSupportedException($"argument 'path' in 'size' must be an attribute-path expression: {methodCallExpression.Arguments[0]}");
                     }
-                    render = $"size({attributePath})";
+                    output = $"size({attributePath})";
                     return true;
                 }
 
@@ -711,7 +711,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(!TryParseAttributePath(methodCallExpression.Arguments[0], out var attributePath)) {
                         throw new NotSupportedException($"argument 'this' in 'Enumerable.Count()' must be an attribute-path expression: {methodCallExpression.Arguments[0]}");
                     }
-                    render = $"size({attributePath})";
+                    output = $"size({attributePath})";
                     return true;
                 }
             }
@@ -728,10 +728,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 if(!TryParseAttributePath(memberExpression.Expression, out var attributePath)) {
                     throw new NotSupportedException($"the 'Count' property must be applied to an attribute-path expression: {memberExpression.Expression}");
                 }
-                render = $"size({attributePath})";
+                output = $"size({attributePath})";
                 return true;
             }
-            render = null;
+            output = null;
             return false;
         }
     }

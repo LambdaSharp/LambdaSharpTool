@@ -50,11 +50,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => DynamoUpdate.IfNotExists(record.List, new List<string>()));
-            var success = converter.TryParseIfNotExistsSetFunction(expression, out var render);
+            var success = converter.TryParseIfNotExistsSetFunction(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be($"if_not_exists(#a_1, :v_1)");
+            output.Should().Be($"if_not_exists(#a_1, :v_1)");
             converter.ExpressionAttributes.ContainsKey("#a_1").Should().BeTrue();
             converter.ExpressionAttributes["#a_1"].Should().Be("List");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();

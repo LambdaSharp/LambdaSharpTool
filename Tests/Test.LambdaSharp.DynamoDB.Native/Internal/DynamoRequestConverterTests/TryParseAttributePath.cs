@@ -48,11 +48,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Name);
-            var success = converter.TryParseAttributePath(expression, out var render);
+            var success = converter.TryParseAttributePath(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("#a_1");
+            output.Should().Be("#a_1");
             converter.ExpressionAttributes.ContainsKey("#a_1").Should().BeTrue();
             converter.ExpressionAttributes["#a_1"].Should().Be("Name");
         }
@@ -65,11 +65,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Nested.Age);
-            var success = converter.TryParseAttributePath(expression, out var render);
+            var success = converter.TryParseAttributePath(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Nested.Age");
+            output.Should().Be("Nested.Age");
         }
 
         [Fact]
@@ -80,11 +80,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Array[5]);
-            var success = converter.TryParseAttributePath(expression, out var render);
+            var success = converter.TryParseAttributePath(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("#a_1[5]");
+            output.Should().Be("#a_1[5]");
             converter.ExpressionAttributes.ContainsKey("#a_1").Should().BeTrue();
             converter.ExpressionAttributes["#a_1"].Should().Be("Array");
         }
@@ -97,11 +97,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.ArrayList[5]);
-            var success = converter.TryParseAttributePath(expression, out var render);
+            var success = converter.TryParseAttributePath(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("ArrayList[5]");
+            output.Should().Be("ArrayList[5]");
         }
 
         [Fact]
@@ -112,11 +112,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.List[3]);
-            var success = converter.TryParseAttributePath(expression, out var render);
+            var success = converter.TryParseAttributePath(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("#a_1[3]");
+            output.Should().Be("#a_1[3]");
             converter.ExpressionAttributes.ContainsKey("#a_1").Should().BeTrue();
             converter.ExpressionAttributes["#a_1"].Should().Be("List");
         }
@@ -129,11 +129,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Map["key"]);
-            var success = converter.TryParseAttributePath(expression, out var render);
+            var success = converter.TryParseAttributePath(expression, out var output);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("#a_1.#a_2");
+            output.Should().Be("#a_1.#a_2");
             converter.ExpressionAttributes.ContainsKey("#a_1").Should().BeTrue();
             converter.ExpressionAttributes["#a_1"].Should().Be("Map");
             converter.ExpressionAttributes.ContainsKey("#a_2").Should().BeTrue();

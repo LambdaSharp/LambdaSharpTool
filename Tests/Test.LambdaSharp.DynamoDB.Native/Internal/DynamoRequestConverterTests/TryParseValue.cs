@@ -49,11 +49,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => 42);
-            var success = converter.TryParseValue(expression, out var render, out var precedence);
+            var success = converter.TryParseValue(expression, out var output, out var precedence);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be(":v_1");
+            output.Should().Be(":v_1");
             converter.ExpressionAttributes.Any().Should().BeFalse();
             precedence.Should().Be(DynamoRequestConverter.Precedence.Atomic);
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
@@ -69,11 +69,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
             // act
             var closure = 42;
             var expression = LambdaBody(record => closure);
-            var success = converter.TryParseValue(expression, out var render, out var precedence);
+            var success = converter.TryParseValue(expression, out var output, out var precedence);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be(":v_1");
+            output.Should().Be(":v_1");
             precedence.Should().Be(DynamoRequestConverter.Precedence.Atomic);
             converter.ExpressionAttributes.Any().Should().BeFalse();
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
@@ -88,11 +88,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Nested.Age + 42);
-            var success = converter.TryParseValue(expression, out var render, out var precedence);
+            var success = converter.TryParseValue(expression, out var output, out var precedence);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Nested.Age + :v_1");
+            output.Should().Be("Nested.Age + :v_1");
             precedence.Should().Be(DynamoRequestConverter.Precedence.ScalarAddSubtract);
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().Be("42");
@@ -106,11 +106,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
 
             // act
             var expression = LambdaBody(record => record.Nested.Age - 42);
-            var success = converter.TryParseValue(expression, out var render, out var precedence);
+            var success = converter.TryParseValue(expression, out var output, out var precedence);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Nested.Age - :v_1");
+            output.Should().Be("Nested.Age - :v_1");
             precedence.Should().Be(DynamoRequestConverter.Precedence.ScalarAddSubtract);
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().Be("42");
@@ -125,11 +125,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
             // act
             var closure = 42;
             var expression = LambdaBody(record => record.Nested.Age + closure);
-            var success = converter.TryParseValue(expression, out var render, out var precedence);
+            var success = converter.TryParseValue(expression, out var output, out var precedence);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Nested.Age + :v_1");
+            output.Should().Be("Nested.Age + :v_1");
             precedence.Should().Be(DynamoRequestConverter.Precedence.ScalarAddSubtract);
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().Be("42");
@@ -144,11 +144,11 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
             // act
             var closure = 42;
             var expression = LambdaBody(record => record.Nested.Age - closure);
-            var success = converter.TryParseValue(expression, out var render, out var precedence);
+            var success = converter.TryParseValue(expression, out var output, out var precedence);
 
             // assert
             success.Should().BeTrue();
-            render.Should().Be("Nested.Age - :v_1");
+            output.Should().Be("Nested.Age - :v_1");
             precedence.Should().Be(DynamoRequestConverter.Precedence.ScalarAddSubtract);
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].N.Should().Be("42");
