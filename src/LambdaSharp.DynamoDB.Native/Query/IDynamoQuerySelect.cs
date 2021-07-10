@@ -23,30 +23,26 @@ namespace LambdaSharp.DynamoDB.Native.Query {
     public interface IDynamoQuerySelect {
 
         //--- Methods ---
-        IDynamoQuerySelect WhereSKMatchesAny();
-        IDynamoQuerySelect WhereSKEquals(string skValue);
-        IDynamoQuerySelect WhereSKIsGreaterThan(string skValue);
-        IDynamoQuerySelect WhereSKIsGreaterThanOrEquals(string skValue);
-        IDynamoQuerySelect WhereSKIsLessThan(string skValue);
-        IDynamoQuerySelect WhereSKIsLessThanOrEquals(string skValue);
-        IDynamoQuerySelect WhereSKIsBetween(string skLowerBound, string skUpperBound);
-        IDynamoQuerySelect WhereSKBeginsWith(string skValuePrefix);
-        IDynamoQuerySelect WithTypeFilter(Type type);
-
-        //--- Default Methods ---
-        IDynamoQuerySelect WithTypeFilter<T>( ) => WithTypeFilter(typeof(T));
+        IDynamoQueryClause WhereSKMatchesAny();
+        IDynamoQueryClause WhereSKEquals(string skValue);
+        IDynamoQueryClause WhereSKIsGreaterThan(string skValue);
+        IDynamoQueryClause WhereSKIsGreaterThanOrEquals(string skValue);
+        IDynamoQueryClause WhereSKIsLessThan(string skValue);
+        IDynamoQueryClause WhereSKIsLessThanOrEquals(string skValue);
+        IDynamoQueryClause WhereSKIsBetween(string skLowerBound, string skUpperBound);
+        IDynamoQueryClause WhereSKBeginsWith(string skValuePrefix);
     }
 
     public interface IDynamoQuerySelect<TRecord> where TRecord : class {
 
         //--- Methods ---
-        IDynamoQuerySelect<TRecord> WhereSKMatchesAny();
-        IDynamoQuerySelect<TRecord> WhereSKEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsGreaterThan(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsGreaterThanOrEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsLessThan(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsLessThanOrEquals(string skValue);
-        IDynamoQuerySelect<TRecord> WhereSKIsBetween(string skLowerBound, string skUpperBound);
-        IDynamoQuerySelect<TRecord> WhereSKBeginsWith(string skValuePrefix);
+        IDynamoQueryClause<TRecord> WhereSKMatchesAny();
+        IDynamoQueryClause<TRecord> WhereSKEquals(string skValue);
+        IDynamoQueryClause<TRecord> WhereSKIsGreaterThan(string skValue);
+        IDynamoQueryClause<TRecord> WhereSKIsGreaterThanOrEquals(string skValue);
+        IDynamoQueryClause<TRecord> WhereSKIsLessThan(string skValue);
+        IDynamoQueryClause<TRecord> WhereSKIsLessThanOrEquals(string skValue);
+        IDynamoQueryClause<TRecord> WhereSKIsBetween(string skLowerBound, string skUpperBound);
+        IDynamoQueryClause<TRecord> WhereSKBeginsWith(string skValuePrefix);
     }
 }

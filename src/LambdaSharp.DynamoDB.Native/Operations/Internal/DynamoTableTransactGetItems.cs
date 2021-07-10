@@ -32,7 +32,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         private const int MILLISECOND_BACKOFF = 100;
 
         //--- Types ---
-        internal sealed class DynamoTableTransactGetItemsEntry<TRecord> : IDynamoTableTransactGetItemsEntry<TRecord>
+        internal sealed class DynamoTableTransactGetItemsEntry<TRecord> : IDynamoTableTransactGetItemsBegin<TRecord>
             where TRecord : class
         {
 
@@ -47,7 +47,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             }
 
             //--- Methods ---
-            public IDynamoTableTransactGetItemsEntry<TRecord> Get<T>(System.Linq.Expressions.Expression<Func<TRecord, T>> attribute) {
+            public IDynamoTableTransactGetItemsBegin<TRecord> Get<T>(System.Linq.Expressions.Expression<Func<TRecord, T>> attribute) {
                 _converter.AddProjection(attribute.Body);
 
                 // NOTE (2021-07-02, bjorg): we always fetch `_t` to allow polymorphic deserialization
@@ -71,7 +71,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         }
 
         //--- Methods ---
-        public IDynamoTableTransactGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
+        public IDynamoTableTransactGetItemsBegin<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
 
             // transaction GetItem
             var transactGetItem = new TransactGetItem {

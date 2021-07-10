@@ -22,6 +22,17 @@ using LambdaSharp.DynamoDB.Native.Query;
 
 namespace LambdaSharp.DynamoDB.Native {
 
+    public interface IDynamoQueryClause {
+
+        //--- Methods ---
+        IDynamoQueryClause WithTypeFilter(Type type);
+
+        //--- Default Methods ---
+        IDynamoQueryClause WithTypeFilter<T>( ) => WithTypeFilter(typeof(T));
+    }
+
+    public interface IDynamoQueryClause<TRecord> where TRecord : class { }
+
     public static class DynamoQuery {
 
         //--- Class Methods ---

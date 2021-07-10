@@ -25,36 +25,6 @@ using Amazon.DynamoDBv2.Model;
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
     public interface IDynamoTablePutItem<TRecord> where TRecord : class {
-        /*
-         * CONDITION EXPRESSION OPERATORS AND FUNCTIONS
-         * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
-         *
-         * condition-expression ::=
-         *     operand comparator operand
-         *     | operand BETWEEN operand AND operand
-         *     | operand IN ( operand (',' operand (, ...) ))
-         *     | function
-         *     | condition AND condition
-         *     | condition OR condition
-         *     | NOT condition
-         *     | ( condition )
-         *
-         * comparator ::=
-         *     =
-         *     | <>
-         *     | <
-         *     | <=
-         *     | >
-         *     | >=
-         *
-         * function ::=
-         *     attribute_exists (path)
-         *     | attribute_not_exists (path)
-         *     | attribute_type (path, type)
-         *     | begins_with (path, substr)
-         *     | contains (path, operand)
-         *     | size (path)
-         */
 
         //--- Methods ---
         IDynamoTablePutItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);

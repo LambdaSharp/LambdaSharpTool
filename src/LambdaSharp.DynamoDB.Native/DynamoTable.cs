@@ -24,7 +24,6 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using LambdaSharp.DynamoDB.Native.Operations;
 using LambdaSharp.DynamoDB.Native.Operations.Internal;
-using LambdaSharp.DynamoDB.Native.Query;
 using LambdaSharp.DynamoDB.Native.Query.Internal;
 using LambdaSharp.DynamoDB.Serialization;
 
@@ -84,7 +83,7 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
-        public IDynamoTableQuery Query(IDynamoQuerySelect querySelect, int limit, bool scanIndexForward, bool consistentRead)
+        public IDynamoTableQuery Query(IDynamoQueryClause querySelect, int limit, bool scanIndexForward, bool consistentRead)
             => new DynamoTableQuery<object>(this, new QueryRequest {
                 ConsistentRead = consistentRead,
                 Limit = limit,
@@ -92,7 +91,7 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             }, (ADynamoQuerySelect<object>)querySelect);
 
-        public IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit, bool scanIndexForward, bool consistentRead)
+        public IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQueryClause<TRecord> querySelect, int limit, bool scanIndexForward, bool consistentRead)
             where TRecord : class
             => new DynamoTableQuery<TRecord>(this, new QueryRequest {
                 ConsistentRead = consistentRead,
@@ -152,6 +151,10 @@ namespace LambdaSharp.DynamoDB.Native {
                     }
                 }).ToList()
             });
+
+        public IDynamoTableTransactWriteItems TransactWriteItems( ) {
+            throw new NotImplementedException();
+        }
 
         public IDynamoTableTransactGetItems TransactGetItems()
             => new DynamoTableTransactGetItems(this, new TransactGetItemsRequest());

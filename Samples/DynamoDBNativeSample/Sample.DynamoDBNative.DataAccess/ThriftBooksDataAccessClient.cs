@@ -48,19 +48,22 @@ namespace Sample.DynamoDBNative.DataAccess {
                 // initialize an empty dictionary for addresses so we can add to it easily later
                 customer.Addresses = new Dictionary<string, AddressRecord>();
             }
-
-            // TODO: wrap in a transaction
-            await Table.PutItem(customer.GetPrimaryKey(), customer)
-                .WithCondition(record => DynamoCondition.DoesNotExist(record))
-                .ExecuteAsync(cancellationToken);
-
             var customerEmail = new CustomerEmailRecord {
                 Username = customer.Username,
                 EmailAddress = customer.EmailAddress
             };
-            await Table.PutItem(customerEmail.GetPrimaryKey(), customerEmail)
-                .WithCondition(record => DynamoCondition.DoesNotExist(record))
-                .ExecuteAsync(cancellationToken);
+
+            var success = await Table.TransactWriteItems()
+                .BeginPutItem(customer.GetPrimaryKey(), customer)
+                    .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .End()
+                .BeginPutItem(customerEmail.GetPrimaryKey(), customerEmail)
+                    .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .End()
+            .ExecuteAsync();
+            if(!success) {
+                throw new Exception("operation failed");
+            }
         }
 
         public Task AddOrUpdateAddressAsync(string customerUsername, AddressRecord address, CancellationToken cancellationToken) {

@@ -21,7 +21,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LambdaSharp.DynamoDB.Native.Operations;
-using LambdaSharp.DynamoDB.Native.Query;
 
 namespace LambdaSharp.DynamoDB.Native {
 
@@ -46,8 +45,9 @@ namespace LambdaSharp.DynamoDB.Native {
         IDynamoTableTransactGetItems<TRecord> TransactGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys)
             where TRecord : class;
         IDynamoTableTransactGetItems TransactGetItems();
-        IDynamoTableQuery Query(IDynamoQuerySelect querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
-        IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQuerySelect<TRecord> querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
+        IDynamoTableTransactWriteItems TransactWriteItems();
+        IDynamoTableQuery Query(IDynamoQueryClause querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false);
+        IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQueryClause<TRecord> querySelect, int limit = int.MaxValue, bool scanIndexForward = true, bool consistentRead = false)
             where TRecord : class;
 
         //--- Default Methods ---
@@ -67,7 +67,7 @@ namespace LambdaSharp.DynamoDB.Native {
             where TRecord : class
             => DeleteItem(primaryKey).ExecuteReturnOldRecordAsync(cancellationToken);
 
-        async Task<TRecord?> QuerySingleAsync<TRecord>(IDynamoQuerySelect<TRecord> querySelect, bool consistentRead = false, CancellationToken cancellationToken = default)
+        async Task<TRecord?> QuerySingleAsync<TRecord>(IDynamoQueryClause<TRecord> querySelect, bool consistentRead = false, CancellationToken cancellationToken = default)
             where TRecord : class
             => (await Query(querySelect, limit: 1, consistentRead: consistentRead).ExecuteFetchAllAttributesAsync(cancellationToken)).FirstOrDefault();    }
 }

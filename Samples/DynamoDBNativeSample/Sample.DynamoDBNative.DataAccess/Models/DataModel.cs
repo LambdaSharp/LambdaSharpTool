@@ -17,7 +17,6 @@
  */
 
 using LambdaSharp.DynamoDB.Native;
-using LambdaSharp.DynamoDB.Native.Query;
 
 namespace Sample.DynamoDBNative.DataAccess.Models {
 
@@ -50,16 +49,22 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
         public static DynamoPrimaryKey<OrderRecord> OrderRecordPrimaryKey(string customerUsername, string orderId) => new DynamoPrimaryKey<OrderRecord>(ORDER_PK_PATTERN, ORDER_SK_PATTERN, customerUsername, orderId);
         public static DynamoPrimaryKey<OrderItemRecord> OrderItemRecordPrimaryKey(string orderId, string itemId) => new DynamoPrimaryKey<OrderItemRecord>(ORDER_ITEM_PK_PATTERN, ORDER_ITEM_SK_PATTERN, orderId, itemId);
 
-        public static IDynamoQuerySelect SelectCustomerAndOrders(string customerUsername)
+        public static IDynamoQueryClause SelectCustomerAndOrders(string customerUsername)
             => DynamoQuery.SelectFormat(CUSTOMER_PK_PATTERN, customerUsername)
+                .WhereSKMatchesAny()
                 .WithTypeFilter<CustomerRecord>()
                 .WithTypeFilter<OrderRecord>();
 
-        public static IDynamoQuerySelect SelectOrderAndOrderItems(string orderId)
-            => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK").SelectFormat(ORDER_ITEM_GSI1_PK_PATTERN, orderId)
+        public static IDynamoQueryClause SelectOrderAndOrderItems(string orderId)
+            => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK")
+                .SelectFormat(ORDER_ITEM_GSI1_PK_PATTERN, orderId)
+                .WhereSKMatchesAny()
                 .WithTypeFilter<OrderRecord>()
                 .WithTypeFilter<OrderItemRecord>();
 
-        public static IDynamoQuerySelect<OrderRecord> SelectOrders(string orderId) => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK").SelectFormat<OrderRecord>(ORDER_GSI1_PK_PATTERN, orderId);
+        public static IDynamoQueryClause<OrderRecord> SelectOrders(string orderId)
+            => DynamoQuery.FromIndex("GSI1", "GSI1PK", "GSI1SK")
+                .SelectFormat<OrderRecord>(ORDER_GSI1_PK_PATTERN, orderId)
+                .WhereSKMatchesAny();
     }
 }

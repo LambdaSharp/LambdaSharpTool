@@ -27,19 +27,20 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     public interface IDynamoTableTransactGetItems {
 
         //--- Methods ---
-        IDynamoTableTransactGetItemsEntry<TRecord> StartGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
+        IDynamoTableTransactGetItemsBegin<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
         Task<(bool Success, IEnumerable<object> Items)> TryExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
 
+        //--- Default Methods ---
         IDynamoTableTransactGetItems GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class
-            => StartGetItem(primaryKey, consistentRead).End();
+            => BeginGetItem(primaryKey, consistentRead).End();
     }
 
-    public interface IDynamoTableTransactGetItemsEntry<TRecord> where TRecord : class {
+    public interface IDynamoTableTransactGetItemsBegin<TRecord> where TRecord : class {
 
         //--- Methods ---
-        IDynamoTableTransactGetItemsEntry<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+        IDynamoTableTransactGetItemsBegin<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
         IDynamoTableTransactGetItems End();
     }
 

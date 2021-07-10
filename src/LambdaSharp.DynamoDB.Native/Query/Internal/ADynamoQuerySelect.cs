@@ -23,7 +23,7 @@ using LambdaSharp.DynamoDB.Native.Internal;
 
 namespace LambdaSharp.DynamoDB.Native.Query.Internal {
 
-    internal abstract class ADynamoQuerySelect<TRecord> : IDynamoQuerySelect, IDynamoQuerySelect<TRecord>
+    internal abstract class ADynamoQuerySelect<TRecord> : IDynamoQuerySelect, IDynamoQuerySelect<TRecord>, IDynamoQueryClause, IDynamoQueryClause<TRecord>
         where TRecord : class
     {
 
@@ -46,58 +46,60 @@ namespace LambdaSharp.DynamoDB.Native.Query.Internal {
         public abstract string GetKeyConditionExpression(DynamoRequestConverter converter);
 
         //--- IDynamoQuerySelect Members ---
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKMatchesAny( )
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKMatchesAny( )
             => new DynamoQuerySelectAny<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKEquals(string skValue)
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.Equals, skValue);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsGreaterThan(string skValue)
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKIsGreaterThan(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.GreaterThan, skValue);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsGreaterThanOrEquals(string skValue)
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKIsGreaterThanOrEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.GreaterThanOrEquals, skValue);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsLessThan(string skValue)
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKIsLessThan(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.LessThan, skValue);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsLessThanOrEquals(string skValue)
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKIsLessThanOrEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.LessThanOrEquals, skValue);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKIsBetween(string skLowerBound, string skUpperBound)
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKIsBetween(string skLowerBound, string skUpperBound)
             => new DynamoQuerySelectRange<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, skLowerBound, skUpperBound);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WhereSKBeginsWith(string skValuePrefix)
+        IDynamoQueryClause IDynamoQuerySelect.WhereSKBeginsWith(string skValuePrefix)
             => new DynamoQuerySelectBeginsWith<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, skValuePrefix);
 
-        IDynamoQuerySelect IDynamoQuerySelect.WithTypeFilter(Type type) {
+
+        //--- IDynamoQueryClause Members ---
+        IDynamoQueryClause IDynamoQueryClause.WithTypeFilter(Type type) {
             TypeFilters.Add(type ?? throw new ArgumentNullException(nameof(type)));
             return this;
         }
 
         //--- IDynamoQuerySelect<TRecord> Members ---
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKMatchesAny()
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKMatchesAny()
             => new DynamoQuerySelectAny<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters);
 
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKEquals(string skValue)
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.Equals, skValue);
 
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsGreaterThan(string skValue)
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsGreaterThan(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.GreaterThan, skValue);
 
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsGreaterThanOrEquals(string skValue)
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsGreaterThanOrEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.GreaterThanOrEquals, skValue);
 
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsLessThan(string skValue)
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsLessThan(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.LessThan, skValue);
 
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsLessThanOrEquals(string skValue)
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsLessThanOrEquals(string skValue)
             => new DynamoQuerySelectCompare<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, DynamoQueryComparison.LessThanOrEquals, skValue);
 
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsBetween(string skLowerBound, string skUpperBound)
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKIsBetween(string skLowerBound, string skUpperBound)
             => new DynamoQuerySelectRange<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, skLowerBound, skUpperBound);
 
-        IDynamoQuerySelect<TRecord> IDynamoQuerySelect<TRecord>.WhereSKBeginsWith(string skValuePrefix)
+        IDynamoQueryClause<TRecord> IDynamoQuerySelect<TRecord>.WhereSKBeginsWith(string skValuePrefix)
             => new DynamoQuerySelectBeginsWith<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, skValuePrefix);
     }
 
