@@ -5,13 +5,9 @@
     <RootNamespace>LambdaSharp.DynamoDB.Native</RootNamespace>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
-
-    <!-- TODO: enable docs -->
-    <!-- <GenerateDocumentationFile>true</GenerateDocumentationFile> -->
-
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-
 
     <PackageId>LambdaSharp.DynamoDB.Native</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
