@@ -21,7 +21,7 @@ using Amazon.DynamoDBv2;
 using System.Text.Json;
 using System;
 using System.Linq;
-using LambdaSharp.DynamoDB.Native.Logger;
+using LambdaSharp.DynamoDB.Native.Utility;
 using Sample.DynamoDBNative.DataAccess.Models;
 using System.Collections.Generic;
 using LambdaSharp.DynamoDB.Serialization.Utility;
@@ -83,7 +83,7 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         //--- Constructors ---
         protected _Init(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) {
             Output = output;
-            DynamoClient = new LoggingDynamoDbClient(new AmazonDynamoDBClient(), item => Output.WriteLine(JsonSerializer.Serialize(item, JsonOptions)));
+            DynamoClient = new InspectDynamoDbClient(new AmazonDynamoDBClient(), item => Output.WriteLine(JsonSerializer.Serialize(item, JsonOptions)));
             TableName = dynamoDbFixture.TableName;
         }
 
