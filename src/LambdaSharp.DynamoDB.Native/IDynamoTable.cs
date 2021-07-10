@@ -27,7 +27,6 @@ namespace LambdaSharp.DynamoDB.Native {
     public interface IDynamoTable {
 
         // TODO (2021-07-05, bjorg): add 'Scan()` API
-        // TODO (2021-07-05, bjorg): add 'TransactWriteItems()` API
 
         //--- Methods ---
         IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
