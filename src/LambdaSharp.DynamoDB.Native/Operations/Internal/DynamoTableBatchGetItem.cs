@@ -94,10 +94,9 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             do {
                 try {
                     var response = await _table.DynamoClient.BatchGetItemAsync(_request, cancellationToken);
-                    var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                     if(response.Responses.Any()) {
                         foreach(var item in response.Responses.Single().Value) {
-                            var record = _table.DeserializeItemUsingRecordType(item, typeof(object), expectedTypes);
+                            var record = _table.DeserializeItemUsingRecordType(item, typeof(object), _converter.ExpectedTypes);
                             if(!(record is null)) {
                                 result.Add(record);
                             }

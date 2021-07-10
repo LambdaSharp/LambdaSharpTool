@@ -18,22 +18,37 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native {
 
-    // TODO: make generic
     public class RecordType {
 
         //--- Fields ---
         private Type? _type;
+        private string? _shortTypeName;
 
         //--- Properties ---
         public Type Type {
             get => _type ?? throw new InvalidOperationException();
             set => _type = value ?? throw new ArgumentNullException();
         }
+
+        [AllowNull]
+        public string ShortTypeName {
+            get => _shortTypeName ?? FullTypeName;
+            set => _shortTypeName = value;
+        }
+
+        public string FullTypeName => Type.FullName ?? throw new InvalidOperationException();
+    }
+
+    public class RecordType<TRecord> : RecordType where TRecord : class {
+
+        //--- Constructors ---
+        public RecordType( ) => Type = typeof(TRecord);
     }
 
     public class DynamoTableOptions {
@@ -46,13 +61,19 @@ namespace LambdaSharp.DynamoDB.Native {
         public List<RecordType> RecordTypes { get; set; } = new List<RecordType>();
 
         //--- Methods ---
-        internal string GetShortRecordTypeName(Type type) {
+        internal string GetShortTypeName(Type type) {
             if(type is null) {
                 throw new ArgumentNullException(nameof(type));
             }
-            var result = type.FullName ?? "";
+            var result = type.FullName ?? throw new ArgumentException("missing type name", nameof(type));
 
-            // check if the typename should be shortened
+            // check if a custom short type name is defined
+            var recordType = RecordTypes.FirstOrDefault(recordType => recordType.Type == type);
+            if(!(recordType is null) && !(recordType.ShortTypeName is null)) {
+                return recordType.ShortTypeName;
+            }
+
+            // check if the type name has an expected prefix
             if(
                 !string.IsNullOrEmpty(ExpectedTypeNamespace)
                 && result.StartsWith(ExpectedTypeNamespace, StringComparison.InvariantCulture)
@@ -62,7 +83,15 @@ namespace LambdaSharp.DynamoDB.Native {
             return result;
         }
 
-        internal string GetFullRecordTypeName(string typeName) {
+        internal string GetFullTypeName(string typeName) {
+
+            // check if a type name corresponds to a custom short type name
+            var recordType = RecordTypes.FirstOrDefault(recordType => recordType.ShortTypeName == typeName);
+            if(!(recordType is null) && !(recordType.ShortTypeName is null)) {
+                return recordType.FullTypeName;
+            }
+
+            // check if the type name shorted an expected prefix
             if(typeName.StartsWith(".")) {
                 typeName = $"{ExpectedTypeNamespace}{typeName}";
             }
@@ -70,7 +99,7 @@ namespace LambdaSharp.DynamoDB.Native {
         }
 
         internal Type? GetRecordType(string typeName) {
-            var fullTypeName = GetFullRecordTypeName(typeName);
+            var fullTypeName = GetFullTypeName(typeName);
 
             // find type that matches full typename
             return RecordTypes.FirstOrDefault(recordType => recordType.Type.FullName == fullTypeName)?.Type;

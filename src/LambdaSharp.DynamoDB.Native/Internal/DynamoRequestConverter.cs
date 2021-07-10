@@ -258,7 +258,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
             // local functions
             string LiftToTypeConditionExpression(Type expectedType)
-                => $"{GetAttributeName("_t")} = {GetExpressionValueName(options.GetShortRecordTypeName(expectedType))}";
+                => $"{GetAttributeName("_t")} = {GetExpressionValueName(options.GetShortTypeName(expectedType))}";
         }
 
         public string? ConvertProjections()
@@ -286,14 +286,6 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 attributeName = existingAttributeName;
             }
             return attributeName;
-        }
-
-        public Dictionary<string, Type> GetExpectedTypes(DynamoTableOptions options) {
-            var result = new Dictionary<string, Type>();
-            foreach(var (_, expectedType) in ExpectedTypes) {
-                result[options.GetShortRecordTypeName(expectedType)] = expectedType;
-            }
-            return result;
         }
     }
 }

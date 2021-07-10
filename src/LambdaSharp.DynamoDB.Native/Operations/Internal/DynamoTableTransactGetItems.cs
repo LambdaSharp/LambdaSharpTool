@@ -111,14 +111,14 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
                 var response = await _table.DynamoClient.TransactGetItemsAsync(_request, cancellationToken);
 
                 // merge expected types from all converters
-                var expectedTypes = new Dictionary<string, Type>();
-                foreach(var (_, expectedType) in _converters.SelectMany(converter => converter.ExpectedTypes)) {
+                var mergedExpectedTypes = new Dictionary<string, Type>();
+                foreach(var (expectedTypeName, expectedType) in _converters.SelectMany(converter => converter.ExpectedTypes)) {
 
                     // ignore collisions as they are more likely than conflicts
-                    expectedTypes[_table.Options.GetShortRecordTypeName(expectedType)] = expectedType;
+                    mergedExpectedTypes[expectedTypeName] = expectedType;
                 }
                 foreach(var itemResponse in response.Responses) {
-                    var record = _table.DeserializeItemUsingRecordType(itemResponse.Item, typeof(object), expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(itemResponse.Item, typeof(object), mergedExpectedTypes);
                     if(!(record is null)) {
                         result.Add(record);
                     }

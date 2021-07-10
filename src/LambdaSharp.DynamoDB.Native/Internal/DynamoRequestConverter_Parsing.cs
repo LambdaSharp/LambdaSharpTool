@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
@@ -84,10 +86,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     if(memberExpression.Expression is null) {
                         throw new NotSupportedException($"base-expression must use lambda parameter: {expression}");
                     }
-
-                    // TODO: this breaks when the property name does not match the DynamoDB attribute name!!!
-                    //  => check for DynamoAttributeName attribute
-                    return Join(ParseAttributePath(memberExpression.Expression, depth + 1), GetAttributeName(memberExpression.Member.Name));
+                    return Join(ParseAttributePath(memberExpression.Expression, depth + 1), GetMemberName(memberExpression.Member));
 
                 // check: base-expression "[" int|string "]"
                 case MethodCallExpression methodCallExpression when (methodCallExpression.Method.Name == "get_Item") && (methodCallExpression.Arguments.Count == 1):
@@ -113,6 +112,15 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
 
                 // local functions
                 static string Join(string left, string right) => (left.Length == 0) ? right : (left + "." + right);
+            }
+
+            string GetMemberName(MemberInfo memberInfo) {
+
+                // check if the serialization property name is overwritten by DynamoPropertyNameAttribute
+                var attribute = memberInfo.GetCustomAttribute<DynamoPropertyNameAttribute>();
+                return (attribute is null)
+                    ? GetAttributeName(memberInfo.Name)
+                    : GetAttributeName(attribute.Name);
             }
         }
 

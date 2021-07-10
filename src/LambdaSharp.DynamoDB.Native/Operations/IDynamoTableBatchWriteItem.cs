@@ -27,8 +27,6 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         //--- Methods ---
         IDynamoTableBatchWriteItemsPutItem<TRecord> BeginPutItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, TRecord record)
             where TRecord : class;
-
-        // TODO: should this be a default method?
         IDynamoTableBatchWriteItems PutItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class;
         IDynamoTableBatchWriteItems DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)

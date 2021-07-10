@@ -168,7 +168,7 @@ namespace LambdaSharp.DynamoDB.Native {
             }
 
             // add type details
-            attributes["_t"] = new AttributeValue(Options.GetShortRecordTypeName(typeof(TRecord)));
+            attributes["_t"] = new AttributeValue(Options.GetShortTypeName(typeof(TRecord)));
 
             // add modified details
             attributes["_m"] = new AttributeValue {
@@ -194,8 +194,14 @@ namespace LambdaSharp.DynamoDB.Native {
                 item.TryGetValue("_t", out var itemTypeAttribute)
                 && !(itemTypeAttribute.S is null)
             ) {
-                if((requestExpectedTypes is null) || !requestExpectedTypes.TryGetValue(itemTypeAttribute.S, out type)) {
-                    type = Options.GetRecordType(itemTypeAttribute.S);
+
+                // resolve stored type name to an actual type
+                var fullTypeName = Options.GetFullTypeName(itemTypeAttribute.S);
+                if(
+                    (requestExpectedTypes is null)
+                    || !requestExpectedTypes.TryGetValue(fullTypeName, out type)
+                ) {
+                    type = Options.GetRecordType(fullTypeName);
                 }
             }
 

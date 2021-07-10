@@ -93,9 +93,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             PrepareRequest(fetchAllAttributes);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
-                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _converter.ExpectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         yield return typedRecord;
                     }
@@ -109,9 +108,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             var result = new List<TRecord>();
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
-                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _converter.ExpectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         result.Add(typedRecord);
                     }
@@ -139,9 +137,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             PrepareRequest(fetchAllAttributes);
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
-                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _converter.ExpectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         yield return typedRecord;
                     }
@@ -155,9 +152,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             var result = new List<TRecord>();
             do {
                 var response = await _table.DynamoClient.QueryAsync(_request, cancellationToken);
-                var expectedTypes = _converter.GetExpectedTypes(_table.Options);
                 foreach(var item in response.Items) {
-                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), expectedTypes);
+                    var record = _table.DeserializeItemUsingRecordType(item, typeof(TRecord), _converter.ExpectedTypes);
                     if(!(record is null) && (record is TRecord typedRecord)) {
                         result.Add(typedRecord);
                     }

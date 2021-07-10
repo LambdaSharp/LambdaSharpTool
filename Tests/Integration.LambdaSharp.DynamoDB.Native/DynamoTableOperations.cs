@@ -24,7 +24,6 @@ using Sample.DynamoDBNative.DataAccess;
 using FluentAssertions;
 using System.Linq;
 using LambdaSharp.DynamoDB.Native;
-using LambdaSharp.DynamoDB.Native.Query;
 
 namespace Integration.LambdaSharp.DynamoDB.Native {
 
@@ -64,11 +63,12 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
             public static DynamoPrimaryKey<MyRecord> MyRecordPrimaryKey(string id, string subId) => new DynamoPrimaryKey<MyRecord>(MY_RECORD_PK_PATTERN, MY_RECORD_SK_PATTERN, id, subId);
             public static DynamoPrimaryKey<MyOtherRecord> GetPrimaryKey(MyOtherRecord record) => MyOtherRecordPrimaryKey(record.Id, record.SubId);
             public static DynamoPrimaryKey<MyOtherRecord> MyOtherRecordPrimaryKey(string id, string subId) => new DynamoPrimaryKey<MyOtherRecord>(MY_OTHER_RECORD_PK_PATTERN, MY_OTHER_RECORD_SK_PATTERN, id, subId);
-            public static IDynamoQuerySelect<MyRecord> SelectMyRecords(string recordId)
+            public static IDynamoQueryClause<MyRecord> SelectMyRecords(string recordId)
                 => DynamoQuery.SelectFormat<MyRecord>(MY_RECORD_PK_PATTERN, recordId)
                     .WhereSKBeginsWith(string.Format(MY_RECORD_SK_PATTERN, "", ""));
-            public static IDynamoQuerySelect SelectMyRecordsAndMyOtherRecords(string recordId)
+            public static IDynamoQueryClause SelectMyRecordsAndMyOtherRecords(string recordId)
                 => DynamoQuery.SelectFormat(MY_RECORD_PK_PATTERN, recordId)
+                    .WhereSKMatchesAny()
                     .WithTypeFilter<MyRecord>()
                     .WithTypeFilter<MyOtherRecord>();
         }
@@ -77,15 +77,6 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         public DynamoTableOperations(DynamoDbFixture dynamoDbFixture, ITestOutputHelper output) : base(dynamoDbFixture, output) {
             DataAccessClient = new ThriftBooksDataAccessClient(dynamoDbFixture.TableName, dynamoDbFixture.DynamoClient);
             Table = new DynamoTable(TableName, DynamoClient, ThriftBooksDataAccessClient.TableOptions);
-
-            // TODO: this is only being added to one of the two Dynamo table wrappers!
-
-            // ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableOptions.RecordType {
-            //     Type = typeof(MyRecord)
-            // });
-            // ThriftBooksDataAccessClient.TableOptions.RecordTypes.Add(new DynamoTableOptions.RecordType {
-            //     Type = typeof(MyOtherRecord)
-            // });
         }
 
         //--- Properties ---
