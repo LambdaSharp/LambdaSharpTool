@@ -175,8 +175,6 @@ namespace LambdaSharp.DynamoDB.Serialization {
 
             // handle missing value
             if(attribute == null) {
-
-                // TODO: I'm not sure this is the right thing to do
                 return FindConverter(typeof(object), "<default>", (converter, usedTargetType) => converter.GetDefaultValue(usedTargetType, options));
             }
 

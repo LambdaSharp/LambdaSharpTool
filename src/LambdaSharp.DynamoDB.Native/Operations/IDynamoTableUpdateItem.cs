@@ -66,7 +66,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
 
         // *** Execute UpdateItem ***
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
-        Task<TRecord?> ExecuteReturnNewItemAsync(CancellationToken cancellationToken);
-        Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken);
+        Task<TRecord?> ExecuteReturnNewRecordAsync(CancellationToken cancellationToken);
+        Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken);
     }
 }

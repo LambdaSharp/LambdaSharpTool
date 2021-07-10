@@ -228,7 +228,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             }
         }
 
-        public async Task<TRecord?> ExecuteReturnNewItemAsync(CancellationToken cancellationToken) {
+        public async Task<TRecord?> ExecuteReturnNewRecordAsync(CancellationToken cancellationToken) {
             PrepareRequest();
             _request.ReturnValues = ReturnValue.ALL_NEW;
             try {
@@ -239,7 +239,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             }
         }
 
-        public async Task<TRecord?> ExecuteReturnOldItemAsync(CancellationToken cancellationToken) {
+        public async Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken) {
             PrepareRequest();
             _request.ReturnValues = ReturnValue.ALL_OLD;
             try {

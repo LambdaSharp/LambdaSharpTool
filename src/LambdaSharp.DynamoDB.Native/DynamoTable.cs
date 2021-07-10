@@ -181,7 +181,6 @@ namespace LambdaSharp.DynamoDB.Native {
             return attributes;
         }
 
-        // TODO: review usages
         internal TRecord? DeserializeItem<TRecord>(Dictionary<string, AttributeValue> item)
             where TRecord : class
             => DynamoSerializer.Deserialize<TRecord>(item, SerializerOptions);
