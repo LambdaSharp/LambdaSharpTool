@@ -26,6 +26,11 @@ using Amazon.Runtime;
 
 namespace LambdaSharp.DynamoDB.Native.Utility {
 
+    /// <summary>
+    /// The <see cref="InspectDynamoDbClient"/> class inserts a callback for IAmazonDynamoDB operations that
+    /// captures the request and respose (or exception) of the operation. This class is useful for inspecting
+    /// or logging what information actually goes across the wire when calling the DynamoDB API.
+    /// </summary>
     public class InspectDynamoDbClient : IAmazonDynamoDB {
 
         //--- Fields ---
@@ -33,9 +38,15 @@ namespace LambdaSharp.DynamoDB.Native.Utility {
         private readonly Action<object> _callback;
 
         //--- Constructors ---
-        public InspectDynamoDbClient(IAmazonDynamoDB dynamoDBClient, Action<object> log) {
+
+        /// <summary>
+        /// Create new instance of <see cref="InspectDynamoDbClient"/>.
+        /// </summary>
+        /// <param name="dynamoDBClient">The DynamoDB client to wrap.</param>
+        /// <param name="callback">The inspection callback.</param>
+        public InspectDynamoDbClient(IAmazonDynamoDB dynamoDBClient, Action<object> callback) {
             _dynamoDBClient = dynamoDBClient ?? throw new ArgumentNullException(nameof(dynamoDBClient));
-            _callback = log;
+            _callback = callback;
         }
 
         //--- IDisposable Members ---
