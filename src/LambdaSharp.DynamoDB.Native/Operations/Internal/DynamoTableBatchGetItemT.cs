@@ -86,7 +86,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
                 // use exponential backoff before attempting next operation
                 if(attempts >= maxAttempts) {
-                    throw new DynamoTableBatchGetItemMaxAttemptsExceededException(result);
+                    throw new DynamoTableBatchGetItemsMaxAttemptsExceededException(result);
                 }
                 await Task.Delay(TimeSpan.FromMilliseconds(MILLISECOND_BACKOFF << (attempts++ - 1)));
             } while(true);

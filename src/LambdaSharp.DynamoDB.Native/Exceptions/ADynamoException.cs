@@ -18,38 +18,67 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Native.Exceptions {
 
+    /// <summary>
+    /// The <see cref="ADynamoException"/> is the base class for all exceptions thrown the LambdaSharp.DynamoDB.Native library.
+    /// </summary>
     public abstract class ADynamoException : Exception {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Initialize new instance of <see cref="ADynamoException"/>.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
         protected ADynamoException(string? message) : base(message) { }
-        protected ADynamoException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+
+        /// <summary>
+        /// Initialize new instance of <see cref="ADynamoException"/>.
+        /// </summary>
+        /// <param name="message">The error message that explains the reason for the exception.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference.</param>
         protected ADynamoException(string? message, Exception? innerException) : base(message, innerException) { }
     }
 
-    public class DynamoTableBatchGetItemMaxAttemptsExceededException : ADynamoException {
+    /// <summary>
+    /// The <see cref="DynamoTableBatchGetItemsMaxAttemptsExceededException"/> exception is throw when
+    /// <see cref="IDynamoTable.BatchGetItems{TRecord}(IEnumerable{DynamoPrimaryKey{TRecord}}, bool)"/>
+    /// or <see cref="IDynamoTable.BatchGetItems(bool)"/> have reached they retry limit.
+    /// </summary>
+    public class DynamoTableBatchGetItemsMaxAttemptsExceededException : ADynamoException {
 
         //--- Constructors ---
-        internal DynamoTableBatchGetItemMaxAttemptsExceededException(IEnumerable<object> items)
-            : base("max attempts exceeded")
+        internal DynamoTableBatchGetItemsMaxAttemptsExceededException(IEnumerable<object> items)
+            : base("max BatchGetItems attempts exceeded")
             => Items = items ?? throw new ArgumentNullException(nameof(items));
 
         //--- Properties ---
+
+        /// <summary>
+        /// The items that were successfully retrieved by the BatchGetItems operation.
+        /// </summary>
         public IEnumerable<object> Items { get; }
     }
 
-    public class DynamoTableBatchWriteItemMaxAttemptsExceededException : ADynamoException {
+    /// <summary>
+    /// The <see cref="DynamoTableBatchWriteItemsMaxAttemptsExceededException"/> exception is throw when
+    /// <see cref="IDynamoTable.BatchWriteItems()"/> has reached its retry limit.
+    /// </summary>
+    public class DynamoTableBatchWriteItemsMaxAttemptsExceededException : ADynamoException {
 
         //--- Constructors ---
-        internal DynamoTableBatchWriteItemMaxAttemptsExceededException(IEnumerable<WriteRequest> unprocessedItems)
-            : base("max attempts exceeded")
+        internal DynamoTableBatchWriteItemsMaxAttemptsExceededException(IEnumerable<WriteRequest> unprocessedItems)
+            : base("max BatchWriteItems attempts exceeded")
             => UnprocessedItems = unprocessedItems ?? throw new ArgumentNullException(nameof(unprocessedItems));
 
         //--- Properties ---
+
+        /// <summary>
+        /// The items that were not successfully written by the BatchWriteItems operation.
+        /// </summary>
         public IEnumerable<WriteRequest> UnprocessedItems { get; }
     }
 }
