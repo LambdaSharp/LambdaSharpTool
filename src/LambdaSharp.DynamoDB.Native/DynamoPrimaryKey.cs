@@ -20,53 +20,83 @@ using System;
 
 namespace LambdaSharp.DynamoDB.Native {
 
-    public class DynamoKey {
+    /// <summary>
+    /// Represents an untyped DynamoDB primary key.
+    /// </summary>
+    public class DynamoPrimaryKey {
 
         //--- Constructors ---
-        public DynamoKey(string pkName, string skName, string pkValue, string skValue) {
-            PKName = pkName ?? throw new ArgumentNullException(nameof(pkName));
-            SKName = skName ?? throw new ArgumentNullException(nameof(skName));
+
+        /// <summary>
+        /// Creates a new <see cref="DynamoPrimaryKey"/> instance.
+        /// </summary>
+        /// <param name="pkValue">The partition key (PK) value.</param>
+        /// <param name="skValue">The sort key (SK) value.</param>
+        public DynamoPrimaryKey(string pkValue, string skValue) {
             PKValue = pkValue ?? throw new ArgumentNullException(nameof(pkValue));
             SKValue = skValue ?? throw new ArgumentNullException(nameof(skValue));
         }
 
-        public DynamoKey(string pkName, string skName, string pkValueFormat, string skValueFormat, params string[] values) {
+        /// <summary>
+        /// Creates a new <see cref="DynamoPrimaryKey"/> instance.
+        /// </summary>
+        /// <param name="pkValueFormat">The format string for the partition key (PK) value.</param>
+        /// <param name="skValueFormat">The format string for the sort key (PK) value.</param>
+        /// <param name="values">A string array that contains zero or more strings for both format strings.</param>
+        public DynamoPrimaryKey(string pkValueFormat, string skValueFormat, params string[] values) {
             for(var i = 0; i < values.Length; ++i) {
                 if(values[i] is null) {
                     throw new ArgumentException($"key[{i}] is null", nameof(values));
                 }
             }
-            PKName = pkName ?? throw new ArgumentNullException(nameof(pkName));
-            SKName = skName ?? throw new ArgumentNullException(nameof(skName));
             PKValue = string.Format(pkValueFormat ?? throw new ArgumentNullException(nameof(pkValueFormat)), values);
             SKValue = string.Format(skValueFormat ?? throw new ArgumentNullException(nameof(skValueFormat)), values);
         }
 
         //--- Properties ---
-        public string PKName { get; }
-        public string SKName { get; }
+
+        /// <summary>
+        /// The partition key (PK) name.
+        /// </summary>
+        public string PKName => "PK";
+
+        /// <summary>
+        /// The sort key (SK) name.
+        /// </summary>
+        public string SKName => "SK";
+
+        /// <summary>
+        /// The partition key (PK) value.
+        /// </summary>
         public string PKValue { get; }
+
+        /// <summary>
+        /// The sort key (SK) value.
+        /// </summary>
         public string SKValue { get; }
     }
 
-    public class DynamoPrimaryKey : DynamoKey {
-
-        //--- Constructors ---
-        public DynamoPrimaryKey(string pk, string sk) : base("PK", "SK", pk, sk) { }
-
-        public DynamoPrimaryKey(string pkName, string skName, string pkValue, string skValue)
-            : base(pkName, skName, pkValue, skValue) { }
-
-        public DynamoPrimaryKey(string pkValueFormat, string skValueFormat, params string[] values) : base("PK", "SK", pkValueFormat, skValueFormat, values) { }
-
-        public DynamoPrimaryKey(string pkName, string skName, string pkValueFormat, string skValueFormat, params string[] values)
-            : base(pkName, skName, pkValueFormat, skValueFormat, values) { }
-    }
-
+    /// <summary>
+    /// Represents a typed DynamoDB primary key.
+    /// </summary>
+    /// <typeparam name="TRecord">The record type.</typeparam>
     public class DynamoPrimaryKey<TRecord> : DynamoPrimaryKey where TRecord : class {
 
         //--- Constructors ---
-        public DynamoPrimaryKey(string pk, string sk) : base(pk, sk) { }
+
+        /// <summary>
+        /// Creates a new <see cref="DynamoPrimaryKey{TRecord}"/> instance.
+        /// </summary>
+        /// <param name="pkValue">The partition key (PK) value.</param>
+        /// <param name="skValue">The sort key (SK) value.</param>
+        public DynamoPrimaryKey(string pkValue, string skValue) : base(pkValue, skValue) { }
+
+        /// <summary>
+        /// Creates a new <see cref="DynamoPrimaryKey{TRecord}"/> instance.
+        /// </summary>
+        /// <param name="pkValueFormat">The format string for the partition key (PK) value.</param>
+        /// <param name="skValueFormat">The format string for the sort key (PK) value.</param>
+        /// <param name="values">A string array that contains zero or more strings for both format strings.</param>
         public DynamoPrimaryKey(string pkValueFormat, string skValueFormat, params string[] values) : base(pkValueFormat, skValueFormat, values) { }
     }
 }
