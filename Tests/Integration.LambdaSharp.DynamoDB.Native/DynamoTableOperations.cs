@@ -222,13 +222,13 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
                 SubId = GetRandomString(10),
                 Value = "Hello"
             };
-            await Table.PutItemAsync(record1, MyDataModel.GetPrimaryKey(record1));
+            await Table.PutItemAsync(MyDataModel.GetPrimaryKey(record1), record1);
             var record2 = new MyRecord {
                 Id = id,
                 SubId = GetRandomString(10),
                 Value = "World"
             };
-            await Table.PutItemAsync(record2, MyDataModel.GetPrimaryKey(record2));
+            await Table.PutItemAsync(MyDataModel.GetPrimaryKey(record2), record2);
 
             // act
             var result = await Table.Query(MyDataModel.SelectMyRecords(record1.Id), consistentRead: true).ExecuteAsync();
@@ -249,13 +249,13 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
                 SubId = GetRandomString(10),
                 Value = "Hello"
             };
-            await Table.PutItemAsync(record1, MyDataModel.GetPrimaryKey(record1));
+            await Table.PutItemAsync(MyDataModel.GetPrimaryKey(record1), record1);
             var record2 = new MyOtherRecord {
                 Id = id,
                 SubId = GetRandomString(10),
                 Name = "Bob"
             };
-            await Table.PutItemAsync(record2, MyDataModel.GetPrimaryKey(record2));
+            await Table.PutItemAsync(MyDataModel.GetPrimaryKey(record2), record2);
 
             // act
             var result = await Table.Query(MyDataModel.SelectMyRecordsAndMyOtherRecords(record1.Id), consistentRead: true)
