@@ -29,9 +29,19 @@ using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native {
 
+    /// <summary>
+    /// Implementation for accessing DynamoDB operations in a type-safe mannter using LINQ expressions.
+    /// </summary>
     public class DynamoTable : IDynamoTable {
 
         //--- Constructors ---
+
+        /// <summary>
+        /// Create a new <see cref="DynamoTable"/> instance.
+        /// </summary>
+        /// <param name="tableName">The name of the table.</param>
+        /// <param name="dynamoClient">The <c>IAmazonDynamoDB</c> client to use.</param>
+        /// <param name="options">The table access options.</param>
         public DynamoTable(string tableName, IAmazonDynamoDB? dynamoClient = null, DynamoTableOptions? options = null) {
             TableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
             DynamoClient = dynamoClient ?? new AmazonDynamoDBClient();
@@ -39,22 +49,34 @@ namespace LambdaSharp.DynamoDB.Native {
         }
 
         //--- Properties ---
+
+        /// <summary>
+        /// The <c>IAmazonDynamoDB</c> client.
+        /// </summary>
         public IAmazonDynamoDB DynamoClient { get; }
+
+        /// <summary>
+        /// The table access options.
+        /// </summary>
+        /// <value></value>
         public DynamoTableOptions Options { get; set; }
+
+        /// <summary>
+        /// The DynamoDB table name.
+        /// </summary>
+        /// <value></value>
         public string TableName { get; }
+
         internal DynamoSerializerOptions SerializerOptions => Options.SerializerOptions;
 
         //--- Methods ---
-        public IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
-            where TRecord : class
-            => new DynamoTableDeleteItem<TRecord>(this, new DeleteItemRequest {
-                Key = new Dictionary<string, AttributeValue> {
-                    [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
-                    [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
-                },
-                TableName = TableName
-            });
 
+        /// <summary>
+        /// Specify the GetItem operation for the given primary key.
+        /// </summary>
+        /// <param name="primaryKey">Primary key of the item to retrieve.</param>
+        /// <param name="consistentRead">Boolean indicating if the read operation should be performed against the main partition (2x cost compared to eventual consistent read).</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
         public IDynamoTableGetItem<TRecord> GetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class
             => new DynamoTableGetItem<TRecord>(this, new GetItemRequest {
@@ -66,6 +88,12 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
+        /// <summary>
+        /// Specify the PutItem operation for the given primary key and record. When successful, this operation creates a new row or replaces all attributes of the matching row.
+        /// </summary>
+        /// <param name="primaryKey">Primary key of the item to write.</param>
+        /// <param name="record">The record to write</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
         public IDynamoTablePutItem<TRecord> PutItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, TRecord record)
             where TRecord : class
             => new DynamoTablePutItem<TRecord>(this, new PutItemRequest {
@@ -73,6 +101,11 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
+        /// <summary>
+        /// Specify the UpdateItem operation for the given primary key.
+        /// </summary>
+        /// <param name="primaryKey">Primary key of the item to update.</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
         public IDynamoTableUpdateItem<TRecord> UpdateItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class
             => new DynamoTableUpdateItem<TRecord>(this, new UpdateItemRequest {
@@ -83,23 +116,27 @@ namespace LambdaSharp.DynamoDB.Native {
                 TableName = TableName
             });
 
-        public IDynamoTableQuery Query(IDynamoQueryClause querySelect, int limit, bool scanIndexForward, bool consistentRead)
-            => new DynamoTableQuery<object>(this, new QueryRequest {
-                ConsistentRead = consistentRead,
-                Limit = limit,
-                ScanIndexForward = scanIndexForward,
-                TableName = TableName
-            }, (ADynamoQuerySelect<object>)querySelect);
-
-        public IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQueryClause<TRecord> querySelect, int limit, bool scanIndexForward, bool consistentRead)
+        /// <summary>
+        /// /// Specify the DeleteItem operation for the given primary key.
+        /// </summary>
+        /// <param name="primaryKey">Primary key of the item to delete.</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
+        public IDynamoTableDeleteItem<TRecord> DeleteItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class
-            => new DynamoTableQuery<TRecord>(this, new QueryRequest {
-                ConsistentRead = consistentRead,
-                Limit = limit,
-                ScanIndexForward = scanIndexForward,
+            => new DynamoTableDeleteItem<TRecord>(this, new DeleteItemRequest {
+                Key = new Dictionary<string, AttributeValue> {
+                    [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
+                    [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
+                },
                 TableName = TableName
-            }, (ADynamoQuerySelect<TRecord>)querySelect);
+            });
 
+        /// <summary>
+        /// Specify the BatchGetItems operation for a list of primary keys that all share the same record type.
+        /// </summary>
+        /// <param name="primaryKeys">List of primary keys to retrieve.</param>
+        /// <param name="consistentRead">Boolean indicating if the read operations should be performed against the main partition (2x cost compared to eventual consistent read).</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
         public IDynamoTableBatchGetItems<TRecord> BatchGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys, bool consistentRead)
             where TRecord : class
         {
@@ -123,6 +160,10 @@ namespace LambdaSharp.DynamoDB.Native {
             return new DynamoTableBatchGetItems<TRecord>(this, request);
         }
 
+        /// <summary>
+        /// Specify the BatchGetItems operation with mixed record types.
+        /// </summary>
+        /// <param name="consistentRead">Boolean indicating if the read operations should be performed against the main partition (2x cost compared to eventual consistent read).</param>
         public IDynamoTableBatchGetItems BatchGetItems(bool consistentRead)
             => new DynamoTableBatchGetItems(this, new BatchGetItemRequest {
                 RequestItems = {
@@ -132,6 +173,9 @@ namespace LambdaSharp.DynamoDB.Native {
                 }
             });
 
+        /// <summary>
+        /// Specify the BatchWriteItems operation to write or delete rows.
+        /// </summary>
         public IDynamoTableBatchWriteItems BatchWriteItems( )
             => new DynamoTableBatchWriteItems(this, new BatchWriteItemRequest {
                 RequestItems = {
@@ -139,6 +183,11 @@ namespace LambdaSharp.DynamoDB.Native {
                 }
             });
 
+        /// <summary>
+        /// Specify the TransactGetItems operation for a list of primary keys that all share the same record type.
+        /// </summary>
+        /// <param name="primaryKeys">List of primary keys to retrieve.</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
         public IDynamoTableTransactGetItems<TRecord> TransactGetItems<TRecord>(IEnumerable<DynamoPrimaryKey<TRecord>> primaryKeys) where TRecord : class
             => new DynamoTableTransactGetItems<TRecord>(this, new TransactGetItemsRequest {
                 TransactItems = primaryKeys.Select(primaryKey => new TransactGetItem {
@@ -152,12 +201,50 @@ namespace LambdaSharp.DynamoDB.Native {
                 }).ToList()
             });
 
+        /// <summary>
+        /// /// Specify the TransactGetItems operation with mixed record types.
+        /// </summary>
+        public IDynamoTableTransactGetItems TransactGetItems()
+            => new DynamoTableTransactGetItems(this, new TransactGetItemsRequest());
+
+        /// <summary>
+        /// Specify the TransactWriteItems to created, put, update, or delete records in a transaction.
+        /// </summary>
         public IDynamoTableTransactWriteItems TransactWriteItems( ) {
             throw new NotImplementedException();
         }
 
-        public IDynamoTableTransactGetItems TransactGetItems()
-            => new DynamoTableTransactGetItems(this, new TransactGetItemsRequest());
+        /// <summary>
+        /// Specify the Query operation to fetch a list of records of the same type.
+        /// </summary>
+        /// <param name="queryClause">The query clause that specifies the index and sort-key constraints.</param>
+        /// <param name="limit">The maximum number of records to read.</param>
+        /// <param name="scanIndexForward">The direction of index scan.</param>
+        /// <param name="consistentRead">Boolean indicating if the read operations should be performed against the main partition (2x cost compared to eventual consistent read).</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
+        public IDynamoTableQuery<TRecord> Query<TRecord>(IDynamoQueryClause<TRecord> queryClause, int limit, bool scanIndexForward, bool consistentRead)
+            where TRecord : class
+            => new DynamoTableQuery<TRecord>(this, new QueryRequest {
+                ConsistentRead = consistentRead,
+                Limit = limit,
+                ScanIndexForward = scanIndexForward,
+                TableName = TableName
+            }, (ADynamoQuerySelect<TRecord>)queryClause);
+
+        /// <summary>
+        /// Specify the Query operation to fetch a list of mixed records type.
+        /// </summary>
+        /// <param name="queryClause">The query clause that specifies the index and sort-key constraints.</param>
+        /// <param name="limit">The maximum number of records to read.</param>
+        /// <param name="scanIndexForward">The direction of index scan.</param>
+        /// <param name="consistentRead">Boolean indicating if the read operations should be performed against the main partition (2x cost compared to eventual consistent read).</param>
+        public IDynamoTableQuery Query(IDynamoQueryClause queryClause, int limit, bool scanIndexForward, bool consistentRead)
+            => new DynamoTableQuery<object>(this, new QueryRequest {
+                ConsistentRead = consistentRead,
+                Limit = limit,
+                ScanIndexForward = scanIndexForward,
+                TableName = TableName
+            }, (ADynamoQuerySelect<object>)queryClause);
 
         internal Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class
