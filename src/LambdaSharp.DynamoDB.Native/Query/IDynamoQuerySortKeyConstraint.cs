@@ -20,7 +20,7 @@ using System;
 
 namespace LambdaSharp.DynamoDB.Native.Query {
 
-    public interface IDynamoQuerySelect {
+    public interface IDynamoQuerySortKeyConstraint {
 
         //--- Methods ---
         IDynamoQueryClause WhereSKMatchesAny();
@@ -33,7 +33,7 @@ namespace LambdaSharp.DynamoDB.Native.Query {
         IDynamoQueryClause WhereSKBeginsWith(string skValuePrefix);
     }
 
-    public interface IDynamoQuerySelect<TRecord> where TRecord : class {
+    public interface IDynamoQuerySortKeyConstraint<TRecord> where TRecord : class {
 
         //--- Methods ---
         IDynamoQueryClause<TRecord> WhereSKMatchesAny();

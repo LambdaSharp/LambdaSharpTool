@@ -20,14 +20,14 @@ using System;
 
 namespace LambdaSharp.DynamoDB.Native.Query {
 
-    public interface IDynamoQueryFrom {
+    public interface IDynamoQueryPartitionKeyConstraint {
 
         //--- Methods ---
-        IDynamoQuerySelect Select(string pkValue);
-        IDynamoQuerySelect<TRecord> Select<TRecord>(string pkValue) where TRecord : class;
+        IDynamoQuerySortKeyConstraint Select(string pkValue);
+        IDynamoQuerySortKeyConstraint<TRecord> Select<TRecord>(string pkValue) where TRecord : class;
 
         //--- Default Methods ---
-        IDynamoQuerySelect SelectFormat(string pkValueFormat, params string[] values) {
+        IDynamoQuerySortKeyConstraint SelectFormat(string pkValueFormat, params string[] values) {
             for(var i = 0; i < values.Length; ++i) {
                 if(values[i] is null) {
                     throw new ArgumentException($"key[{i}] is null", nameof(values));
@@ -37,7 +37,7 @@ namespace LambdaSharp.DynamoDB.Native.Query {
             return Select(pkValue);
         }
 
-        IDynamoQuerySelect<TRecord> SelectFormat<TRecord>(string pkValueFormat, params string[] values)
+        IDynamoQuerySortKeyConstraint<TRecord> SelectFormat<TRecord>(string pkValueFormat, params string[] values)
             where TRecord : class
         {
             for(var i = 0; i < values.Length; ++i) {

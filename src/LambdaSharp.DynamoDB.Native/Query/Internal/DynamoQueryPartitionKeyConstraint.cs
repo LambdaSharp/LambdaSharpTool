@@ -23,10 +23,10 @@ using LambdaSharp.DynamoDB.Native.Query.Internal;
 
 namespace LambdaSharp.DynamoDB.Native.Internal {
 
-    internal class DynamoQueryFrom : IDynamoQueryFrom {
+    internal class DynamoQueryPartitionKeyConstraint : IDynamoQueryPartitionKeyConstraint {
 
         //--- Constructors ---
-        public DynamoQueryFrom(string? indexName, string pkName, string skName) {
+        public DynamoQueryPartitionKeyConstraint(string? indexName, string pkName, string skName) {
             IndexName = indexName;
             PKName = pkName ?? throw new ArgumentNullException(nameof(pkName));
             SKName = skName ?? throw new ArgumentNullException(nameof(skName));
@@ -38,10 +38,10 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         public string SKName { get; }
 
         //--- Methods ---
-        public IDynamoQuerySelect Select(string pkValue)
+        public IDynamoQuerySortKeyConstraint Select(string pkValue)
             => new DynamoQuerySelectAny<object>(IndexName, PKName, SKName, pkValue, Enumerable.Empty<Type>());
 
-        public IDynamoQuerySelect<TRecord> Select<TRecord>(string pkValue)
+        public IDynamoQuerySortKeyConstraint<TRecord> Select<TRecord>(string pkValue)
             where TRecord : class
             => new DynamoQuerySelectAny<TRecord>(IndexName, PKName, SKName, pkValue, Enumerable.Empty<Type>());
     }
