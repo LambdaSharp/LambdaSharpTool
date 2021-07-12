@@ -23,10 +23,26 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
+    /// <summary>
+    /// Interface to specify the GetItem operation.
+    /// </summary>
+    /// <typeparam name="TRecord">The record type.</typeparam>
     public interface IDynamoTableGetItem<TRecord> where TRecord : class {
 
         //--- Methods ---
+
+        /// <summary>
+        /// Selects a record property to fetch.
+        /// </summary>
+        /// <param name="attribute">A lambda expression that returns the record property.</param>
+        /// <typeparam name="T">The property type.</typeparam>
         IDynamoTableGetItem<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+
+        /// <summary>
+        /// Execute the GetItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns><c>null</c> if the record could not be found.</returns>
         Task<TRecord?> ExecuteAsync(CancellationToken cancellationToken = default);
     }
 }
