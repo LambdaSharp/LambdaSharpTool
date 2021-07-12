@@ -21,12 +21,22 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
+    /// <summary>
+    /// Interface to specify a UpdateItem operation.
+    /// </summary>
+    /// <typeparam name="TRecord">The record type.</typeparam>
     public interface IDynamoTableUpdateItem<TRecord> where TRecord : class {
 
         //--- Methods ---
+
+        /// <summary>
+        /// Add condition for UpdateItem operation.
+        /// </summary>
+        /// <param name="condition">A lambda predicate representing the DynamoDB condition.</param>
         IDynamoTableUpdateItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
 
         // *** `SET Foo.Bar = :value` action ***
@@ -38,7 +48,13 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, ISet<T>>> attribute, Expression<Func<TRecord, ISet<T>>> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IDictionary<string, T>>> attribute, Expression<Func<TRecord, IDictionary<string, T>>> value);
         IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, Expression<Func<TRecord, IList<T>>> value);
-        IDynamoTableUpdateItem<TRecord> Set(string attribute, string value);
+
+        /// <summary>
+        /// Set the value of a DynamoDB item attribute. Used for storing attributes used by local/global secondary indices.
+        /// </summary>
+        /// <param name="key">Name of attribute.</param>
+        /// <param name="value">Value of attribute.</param>
+        IDynamoTableUpdateItem<TRecord> Set(string key, AttributeValue value);
 
         // *** `REMOVE Brand` action ***
         IDynamoTableUpdateItem<TRecord> Remove<T>(Expression<Func<TRecord, T>> attribute);
@@ -65,8 +81,36 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         IDynamoTableUpdateItem<TRecord> Delete(Expression<Func<TRecord, ISet<decimal>>> attribute, IEnumerable<decimal> values);
 
         // *** Execute UpdateItem ***
+
+        /// <summary>
+        /// Execute the UpdateItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>True, when successful. False, when condition is not met.</returns>
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Execute the UpdateItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Updated record when found and condition is met. <c>null</c>, otherwise.</returns>
         Task<TRecord?> ExecuteReturnNewRecordAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Execute the UpdateItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Old record when found and condition is met. <c>null</c>, otherwise.</returns>
         Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken);
+
+        //--- Default Methods ---
+
+        /// <summary>
+        /// Set the value of a DynamoDB item attribute. Used for storing attributes used by local/global secondary indices.
+        /// </summary>
+        /// <param name="key">Name of attribute.</param>
+        /// <param name="value">Value of attribute.</param>
+        IDynamoTableUpdateItem<TRecord> Set(string key, string value)
+            => Set(key, new AttributeValue(value));
     }
 }

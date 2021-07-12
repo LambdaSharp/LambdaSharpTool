@@ -68,7 +68,6 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         /// </summary>
         /// <param name="targetType">The expected return type.</param>
         /// <param name="options">The deserialization options.</param>
-        /// <returns></returns>
         public override object? GetDefaultValue(Type targetType, DynamoSerializerOptions options)
             => CreateInstance(targetType);
 

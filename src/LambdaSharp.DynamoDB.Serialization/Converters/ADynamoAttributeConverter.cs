@@ -53,7 +53,6 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         /// </summary>
         /// <param name="targetType">The expected return type.</param>
         /// <param name="options">The deserialization options.</param>
-        /// <returns></returns>
         public virtual object? GetDefaultValue(Type targetType, DynamoSerializerOptions options)
             => (targetType.IsValueType && (Nullable.GetUnderlyingType(targetType) == null))
                 ? Activator.CreateInstance(targetType)

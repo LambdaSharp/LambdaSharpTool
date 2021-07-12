@@ -131,7 +131,6 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         /// </summary>
         /// <param name="targetType">The expected return type.</param>
         /// <param name="options">The deserialization options.</param>
-        /// <returns></returns>
         object? GetDefaultValue(Type targetType, DynamoSerializerOptions options);
 
         /// <summary>

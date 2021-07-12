@@ -154,7 +154,7 @@ namespace LambdaSharp.DynamoDB.Native {
             => PutItem(primaryKey, record).ExecuteAsync(cancellationToken);
 
         /// <summary>
-        /// Performs a DeleteItems operation to delete the given primary key.
+        /// Performs a DeleteItem operation to delete the given primary key.
         ///
         /// This method is the same: <c>DeleteItem(primaryKey).ExecuteAsync(cancellationToken)</c>.
         /// </summary>
@@ -166,7 +166,7 @@ namespace LambdaSharp.DynamoDB.Native {
             => DeleteItem(primaryKey).ExecuteAsync(cancellationToken);
 
         /// <summary>
-        /// Performs a DeleteItems operation to delete the given primary key and returns the previous value.
+        /// Performs a DeleteItem operation to delete the given primary key and returns the previous value.
         ///
         /// This method is the same: <c>DeleteItem(primaryKey).ExecuteReturnOldRecordAsync(cancellationToken)</c>.
         /// </summary>

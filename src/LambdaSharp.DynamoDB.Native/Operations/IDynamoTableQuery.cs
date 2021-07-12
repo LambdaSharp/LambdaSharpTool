@@ -43,7 +43,14 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
 
         //--- Methods ---
         IDynamoTableQuery<TRecord> Where(Expression<Func<TRecord, bool>> filter);
+
+        /// <summary>
+        /// Selects a record property to fetch.
+        /// </summary>
+        /// <param name="attribute">A lambda expression that returns the record property.</param>
+        /// <typeparam name="T">The property type.</typeparam>
         IDynamoTableQuery<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+
         IAsyncEnumerable<TRecord> ExecuteAsyncEnumerable(bool fetchAllAttributes, CancellationToken cancellationToken = default);
         Task<IEnumerable<TRecord>> ExecuteAsync(bool fetchAllAttributes, CancellationToken cancellationToken = default);
 
