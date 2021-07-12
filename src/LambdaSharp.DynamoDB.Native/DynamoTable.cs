@@ -227,7 +227,7 @@ namespace LambdaSharp.DynamoDB.Native {
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
                 TableName = TableName
-            }, (ADynamoQuerySelect<TRecord>)queryClause);
+            }, (ADynamoQueryClause<TRecord>)queryClause);
 
         /// <summary>
         /// Specify the Query operation to fetch a list of mixed records type.
@@ -242,7 +242,7 @@ namespace LambdaSharp.DynamoDB.Native {
                 Limit = limit,
                 ScanIndexForward = scanIndexForward,
                 TableName = TableName
-            }, (ADynamoQuerySelect<object>)queryClause);
+            }, (ADynamoQueryClause<object>)queryClause);
 
         internal Dictionary<string, AttributeValue> SerializeItem<TRecord>(TRecord record, DynamoPrimaryKey<TRecord> primaryKey)
             where TRecord : class

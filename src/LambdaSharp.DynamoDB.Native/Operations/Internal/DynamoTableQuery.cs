@@ -38,13 +38,13 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         private readonly DynamoTable _table;
         private readonly QueryRequest _request;
         private readonly DynamoRequestConverter _converter;
-        private readonly ADynamoQuerySelect<TRecord> _querySelect;
+        private readonly ADynamoQueryClause<TRecord> _queryClause;
 
         //--- Constructors ---
-        public DynamoTableQuery(DynamoTable table, QueryRequest request, ADynamoQuerySelect<TRecord> querySelect) {
+        public DynamoTableQuery(DynamoTable table, QueryRequest request, ADynamoQueryClause<TRecord> queryClause) {
             _table = table ?? throw new ArgumentNullException(nameof(table));
             _request = request ?? throw new ArgumentNullException(nameof(request));
-            _querySelect = querySelect ?? throw new ArgumentNullException(nameof(querySelect));
+            _queryClause = queryClause ?? throw new ArgumentNullException(nameof(queryClause));
             _converter = new DynamoRequestConverter(_request.ExpressionAttributeNames, _request.ExpressionAttributeValues, _table.SerializerOptions);
         }
 
@@ -52,13 +52,13 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         private void PrepareRequest(bool fetchAllAttributes) {
 
             // inherit the expected types from the query select construct
-            foreach(var expectedType in _querySelect.TypeFilters) {
+            foreach(var expectedType in _queryClause.TypeFilters) {
                 _converter.AddExpectedType(expectedType);
             }
 
             // initialize request
-            _request.IndexName = _querySelect.IndexName;
-            _request.KeyConditionExpression = _querySelect.GetKeyConditionExpression(_converter);
+            _request.IndexName = _queryClause.IndexName;
+            _request.KeyConditionExpression = _queryClause.GetKeyConditionExpression(_converter);
             _request.FilterExpression = _converter.ConvertConditions(_table.Options);
             _request.ProjectionExpression = _converter.ConvertProjections();
 

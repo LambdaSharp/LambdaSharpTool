@@ -23,16 +23,16 @@ using LambdaSharp.DynamoDB.Native.Internal;
 
 namespace LambdaSharp.DynamoDB.Native.Query.Internal {
 
-    internal abstract class ADynamoQuerySortKeyConstraint<TRecord> :
-        IDynamoQuerySortKeyConstraint,
-        IDynamoQuerySortKeyConstraint<TRecord>,
+    internal abstract class ADynamoQueryClause<TRecord> :
         IDynamoQueryClause,
-        IDynamoQueryClause<TRecord>
+        IDynamoQueryClause<TRecord>,
+        IDynamoQuerySortKeyConstraint,
+        IDynamoQuerySortKeyConstraint<TRecord>
         where TRecord : class
     {
 
         //--- Constructors ---
-        protected ADynamoQuerySortKeyConstraint(string? indexName, string pkName, string skName, string pkValue, IEnumerable<Type> typeFilters) {
+        protected ADynamoQueryClause(string? indexName, string pkName, string skName, string pkValue, IEnumerable<Type> typeFilters) {
             PKName = pkName ?? throw new ArgumentNullException(nameof(pkName));
             SKName = skName ?? throw new ArgumentNullException(nameof(skName));
             PKValue = pkValue ?? throw new ArgumentNullException(nameof(pkValue));
@@ -107,7 +107,7 @@ namespace LambdaSharp.DynamoDB.Native.Query.Internal {
             => new DynamoQuerySelectBeginsWith<TRecord>(IndexName, PKName, SKName, PKValue, TypeFilters, skValuePrefix);
     }
 
-    internal class DynamoQuerySelectAny<TRecord> : ADynamoQuerySortKeyConstraint<TRecord> where TRecord : class {
+    internal class DynamoQuerySelectAny<TRecord> : ADynamoQueryClause<TRecord> where TRecord : class {
 
         //--- Constructors ---
         public DynamoQuerySelectAny(string? indexName, string pkName, string skName, string pkValue, IEnumerable<Type> typeFilters)
@@ -126,7 +126,7 @@ namespace LambdaSharp.DynamoDB.Native.Query.Internal {
         LessThanOrEquals
     }
 
-    internal class DynamoQuerySelectCompare<TRecord> : ADynamoQuerySortKeyConstraint<TRecord> where TRecord : class {
+    internal class DynamoQuerySelectCompare<TRecord> : ADynamoQueryClause<TRecord> where TRecord : class {
 
         //--- Constructors ---
         public DynamoQuerySelectCompare(string? indexName, string pkName, string skName, string pkValue, IEnumerable<Type> typeFilters, DynamoQueryComparison sortKeyComparison, string sortKeyComparisonOperand)
@@ -154,7 +154,7 @@ namespace LambdaSharp.DynamoDB.Native.Query.Internal {
             => $"{converter.GetAttributeName(PKName)} = {converter.GetExpressionValueName(PKValue)} AND {converter.GetAttributeName(SKName)} {SortKeyComparisonOperator} {converter.GetExpressionValueName(SortKeyComparisonOperand)}";
     }
 
-    internal class DynamoQuerySelectRange<TRecord> : ADynamoQuerySortKeyConstraint<TRecord> where TRecord : class {
+    internal class DynamoQuerySelectRange<TRecord> : ADynamoQueryClause<TRecord> where TRecord : class {
 
         //--- Constructors ---
         public DynamoQuerySelectRange(string? indexName, string pkName, string skName, string pkValue, IEnumerable<Type> typeFilters, string sortKeyLowerBound, string sortKeyUpperBound)
@@ -173,7 +173,7 @@ namespace LambdaSharp.DynamoDB.Native.Query.Internal {
             => $"{converter.GetAttributeName(PKName)} = {converter.GetExpressionValueName(PKValue)} AND {converter.GetAttributeName(SKName)} BETWEEN {converter.GetExpressionValueName(SortKeyLowerBound)} AND  {converter.GetExpressionValueName(SortKeyUpperBound)}";
     }
 
-    internal class DynamoQuerySelectBeginsWith<TRecord> : ADynamoQuerySortKeyConstraint<TRecord> where TRecord : class {
+    internal class DynamoQuerySelectBeginsWith<TRecord> : ADynamoQueryClause<TRecord> where TRecord : class {
 
         //--- Constructors ---
         public DynamoQuerySelectBeginsWith(string? indexName, string pkName, string skName, string pkValue, IEnumerable<Type> typeFilters, string sortKeyPrefix)

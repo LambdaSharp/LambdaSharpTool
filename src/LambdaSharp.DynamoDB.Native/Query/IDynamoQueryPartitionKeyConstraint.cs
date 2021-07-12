@@ -20,13 +20,33 @@ using System;
 
 namespace LambdaSharp.DynamoDB.Native.Query {
 
+    /// <summary>
+    /// Interface for specifying the partition key (PK) constraint.
+    /// </summary>
     public interface IDynamoQueryPartitionKeyConstraint {
 
         //--- Methods ---
+
+        /// <summary>
+        /// Add an untyped partition key (PK) constraint.
+        /// </summary>
+        /// <param name="pkValue">Partition key (PK) value.</param>
         IDynamoQuerySortKeyConstraint Select(string pkValue);
+
+        /// <summary>
+        /// Add a partition key (PK) constraint.
+        /// </summary>
+        /// <param name="pkValue">The partition key (PK) value.</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
         IDynamoQuerySortKeyConstraint<TRecord> Select<TRecord>(string pkValue) where TRecord : class;
 
         //--- Default Methods ---
+
+        /// <summary>
+        /// Add an untyped partition key (PK) constraint.
+        /// </summary>
+        /// <param name="pkValueFormat">Format string for the partition key (PK) value.</param>
+        /// <param name="values">A string array that contains zero or more strings for the partition key format string.</param>
         IDynamoQuerySortKeyConstraint SelectFormat(string pkValueFormat, params string[] values) {
             for(var i = 0; i < values.Length; ++i) {
                 if(values[i] is null) {
@@ -37,6 +57,12 @@ namespace LambdaSharp.DynamoDB.Native.Query {
             return Select(pkValue);
         }
 
+        /// <summary>
+        /// Add a partition key (PK) constraint.
+        /// </summary>
+        /// <param name="pkValueFormat">Format string for the partition key (PK) value.</param>
+        /// <param name="values">A string array that contains zero or more strings for the partition key format string.</param>
+        /// <typeparam name="TRecord">The record type.</typeparam>
         IDynamoQuerySortKeyConstraint<TRecord> SelectFormat<TRecord>(string pkValueFormat, params string[] values)
             where TRecord : class
         {
