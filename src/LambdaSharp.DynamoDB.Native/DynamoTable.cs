@@ -51,20 +51,18 @@ namespace LambdaSharp.DynamoDB.Native {
         //--- Properties ---
 
         /// <summary>
-        /// The <c>IAmazonDynamoDB</c> client.
+        /// Get the <c>IAmazonDynamoDB</c> client.
         /// </summary>
         public IAmazonDynamoDB DynamoClient { get; }
 
         /// <summary>
-        /// The table access options.
+        /// Get/set the table access options.
         /// </summary>
-        /// <value></value>
         public DynamoTableOptions Options { get; set; }
 
         /// <summary>
-        /// The DynamoDB table name.
+        /// Get the DynamoDB table name.
         /// </summary>
-        /// <value></value>
         public string TableName { get; }
 
         internal DynamoSerializerOptions SerializerOptions => Options.SerializerOptions;

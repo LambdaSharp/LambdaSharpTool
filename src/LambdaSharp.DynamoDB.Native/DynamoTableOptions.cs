@@ -18,47 +18,33 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using LambdaSharp.DynamoDB.Native.Options;
 using LambdaSharp.DynamoDB.Serialization;
 
 namespace LambdaSharp.DynamoDB.Native {
 
-    public class RecordType {
-
-        //--- Fields ---
-        private Type? _type;
-        private string? _shortTypeName;
-
-        //--- Properties ---
-        public Type Type {
-            get => _type ?? throw new InvalidOperationException();
-            set => _type = value ?? throw new ArgumentNullException();
-        }
-
-        [AllowNull]
-        public string ShortTypeName {
-            get => _shortTypeName ?? FullTypeName;
-            set => _shortTypeName = value;
-        }
-
-        public string FullTypeName => Type.FullName ?? throw new InvalidOperationException();
-    }
-
-    public class RecordType<TRecord> : RecordType where TRecord : class {
-
-        //--- Constructors ---
-        public RecordType( ) => Type = typeof(TRecord);
-    }
-
+    /// <summary>
+    /// Defines the access options for <see cref="DynamoTable"/>.
+    /// </summary>
     public class DynamoTableOptions {
 
         //--- TYpes ---
 
         //--- Properties ---
+
+        /// <summary>
+        /// Get/set serialization options for records.
+        /// </summary>
         public DynamoSerializerOptions SerializerOptions { get; set; } = new DynamoSerializerOptions();
+
+        /// <summary>
+        /// Get/set expected type namespace for stored record type names.
+        /// </summary>
         public string? ExpectedTypeNamespace { get; set; }
-        public List<RecordType> RecordTypes { get; set; } = new List<RecordType>();
+
+        // TODO (2021-07-11, bjorg): not ready to be public
+        internal List<RecordType> RecordTypes { get; set; } = new List<RecordType>();
 
         //--- Methods ---
         internal string GetShortTypeName(Type type) {
