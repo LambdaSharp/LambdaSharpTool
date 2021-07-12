@@ -23,11 +23,32 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
+    /// <summary>
+    /// Interface to specify a DeleteItem operation.
+    /// </summary>
+    /// <typeparam name="TRecord">The record type.</typeparam>
     public interface IDynamoTableDeleteItem<TRecord> where TRecord : class {
 
         //--- Methods ---
+
+        /// <summary>
+        /// Add condition for DeleteItem operation.
+        /// </summary>
+        /// <param name="condition">A lambda predicate representing the DynamoDB condition.</param>
         IDynamoTableDeleteItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
+
+        /// <summary>
+        /// Execute the DeleteItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>True, when successful. False, when condition is not met.</returns>
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Execute the DeleteItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Old record when found and condition is met. <c>null</c>, otherwise.</returns>
         Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken = default);
     }
 }

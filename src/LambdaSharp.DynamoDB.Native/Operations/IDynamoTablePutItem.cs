@@ -24,15 +24,49 @@ using Amazon.DynamoDBv2.Model;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
+    /// <summary>
+    /// Interface to specify a PutItem operation.
+    /// </summary>
+    /// <typeparam name="TRecord">The record type.</typeparam>
     public interface IDynamoTablePutItem<TRecord> where TRecord : class {
 
         //--- Methods ---
+
+        /// <summary>
+        /// Add condition for PutItem operation.
+        /// </summary>
+        /// <param name="condition">A lambda predicate representing the DynamoDB condition.</param>
         IDynamoTablePutItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
+
+        /// <summary>
+        /// Set the value of a DynamoDB item attribute. Used for storing attributes used by local/global secondary indices.
+        /// </summary>
+        /// <param name="key">Name of attribute.</param>
+        /// <param name="value">Value of attribute.</param>
         IDynamoTablePutItem<TRecord> Set(string key, AttributeValue value);
+
+        /// <summary>
+        /// Execute the PutItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>True, when successful. False, when condition is not met.</returns>
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Execute the PutItem operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Old record when found. <c>null</c>, otherwise.</returns>
         Task<TRecord?> ExecuteReturnOldRecordAsync(CancellationToken cancellationToken = default);
 
         //--- Default Methods ---
-        IDynamoTablePutItem<TRecord> Set(string key, string value) => Set(key, new AttributeValue(value));
+
+        /// <summary>
+        /// Set the value of a DynamoDB item attribute. Used for storing attributes used by local/global secondary indices.
+        /// </summary>
+        /// <param name="key">Name of attribute.</param>
+        /// <param name="value">Value of attribute.</param>
+        IDynamoTablePutItem<TRecord> Set(string key, string value)
+            => Set(key, new AttributeValue(value));
     }
 }

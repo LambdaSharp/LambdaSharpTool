@@ -66,7 +66,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     /// <summary>
     /// Interface to specify a typed GetItem operation for TranactGetItems with mixed record types.
     /// </summary>
-    /// <typeparam name="TRecord"></typeparam>
+    /// <typeparam name="TRecord">The record type.</typeparam>
     public interface IDynamoTableTransactGetItemsBegin<TRecord> where TRecord : class {
 
         //--- Methods ---

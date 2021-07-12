@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LambdaSharp.DynamoDB.Native.Exceptions;
 
 namespace LambdaSharp.DynamoDB.Native.Operations {
 
@@ -46,6 +47,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         /// <param name="maxAttempts">Maximum number of attempts with exponential back when encountering provisioned throughput is exceeded.</param>
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>List of found items.</returns>
+        /// <exception cref="DynamoTableBatchGetItemsMaxAttemptsExceededException">Thrown when the maximum number of attempts is exceeded.</exception>
         Task<IEnumerable<object>> ExecuteAsync(int maxAttempts = 5, CancellationToken cancellationToken = default);
 
         //--- Default Methods ---
@@ -66,7 +68,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     /// <summary>
     /// Interface to specify a typed GetItem operation for BatchGetItems with mixed record types.
     /// </summary>
-    /// <typeparam name="TRecord"></typeparam>
+    /// <typeparam name="TRecord">The record type.</typeparam>
     public interface IDynamoTableBatchGetItemsEntry<TRecord> where TRecord : class {
 
         //--- Methods ---

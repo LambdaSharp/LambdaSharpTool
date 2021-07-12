@@ -81,7 +81,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         public IDynamoTableUpdateItem<TRecord> Set<T>(Expression<Func<TRecord, IList<T>>> attribute, Expression<Func<TRecord, IList<T>>> value)
             => SetAttributePathExpression(_converter.ParseAttributePath(attribute.Body), _converter.ParseValue(value.Body));
 
-        public IDynamoTableUpdateItem<TRecord> Set(string attribute, string value)
+        public IDynamoTableUpdateItem<TRecord> Set(string attribute, AttributeValue value)
             => SetAttributePathExpression(_converter.GetAttributeName(attribute), _converter.GetExpressionValueName(value));
 
         private  IDynamoTableUpdateItem<TRecord> SetAttributePathExpression(string attributePath, string attributeValueExpression) {

@@ -42,7 +42,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         /// Execute the GetItem operation.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns><c>null</c> if the record could not be found.</returns>
+        /// <returns>The record when found and condition is met. <c>null</c>, otherwise.</returns>
         Task<TRecord?> ExecuteAsync(CancellationToken cancellationToken = default);
     }
 }
