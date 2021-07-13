@@ -10,6 +10,12 @@
 - name: LambdaSharp.CustomResource
   href: LambdaSharp.CustomResource/toc.yml
 
+- name: LambdaSharp.DynamoDB.Native
+  href: LambdaSharp.DynamoDB.Native/toc.yml
+
+- name: LambdaSharp.DynamoDB.Serialization
+  href: LambdaSharp.DynamoDB.Serialization/toc.yml
+
 - name: LambdaSharp.EventBridge
   href: LambdaSharp.EventBridge/toc.yml
 
