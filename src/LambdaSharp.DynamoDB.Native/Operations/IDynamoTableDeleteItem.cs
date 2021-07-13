@@ -34,7 +34,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         /// <summary>
         /// Add condition for DeleteItem operation.
         /// </summary>
-        /// <param name="condition">A lambda predicate representing the DynamoDB condition.</param>
+        /// <param name="condition">A lambda predicate representing the DynamoDB condition expression.</param>
         IDynamoTableDeleteItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
 
         /// <summary>

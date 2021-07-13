@@ -96,8 +96,8 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             return this;
         }
 
-        public IDynamoTableUpdateItem<TRecord> Remove(string attribute) {
-            _removeOperations.Add(_converter.GetAttributeName(attribute));
+        public IDynamoTableUpdateItem<TRecord> Remove(string key) {
+            _removeOperations.Add(_converter.GetAttributeName(key));
             return this;
         }
         #endregion
