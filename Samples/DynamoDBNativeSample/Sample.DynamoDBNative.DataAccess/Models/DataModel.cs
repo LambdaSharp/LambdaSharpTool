@@ -25,7 +25,7 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
         //--- Constants ---
         public const string CUSTOMER_PK_PATTERN = "CUSTOMER#{0}";
         public const string CUSTOMER_SK_PATTERN = "INFO";
-        public const string CUSTOMER_EMAIL_PK_PATTERN = "CUSTOMEREMAIL#{0}";
+        public const string CUSTOMER_EMAIL_PK_PATTERN = "EMAIL#{0}";
         public const string CUSTOMER_EMAIL_SK_PATTERN = "INFO";
         public const string ORDER_PK_PATTERN = "CUSTOMER#{0}";
         public const string ORDER_SK_PATTERN = "#ORDER#{1}";

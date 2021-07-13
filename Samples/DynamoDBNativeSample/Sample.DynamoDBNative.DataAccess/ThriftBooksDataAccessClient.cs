@@ -53,23 +53,15 @@ namespace Sample.DynamoDBNative.DataAccess {
                 EmailAddress = customer.EmailAddress
             };
 
-            var success = await Table.PutItem(customer.GetPrimaryKey(), customer)
-                .WithCondition(record => DynamoCondition.DoesNotExist(record))
-                .ExecuteAsync();
-            success = success | await Table.PutItem(customerEmail.GetPrimaryKey(), customerEmail)
-                .WithCondition(record => DynamoCondition.DoesNotExist(record))
-                .ExecuteAsync();
-
-            // TODO: use this instead once supported
-            // var success = await Table.TransactWriteItems()
-            //     .BeginPutItem(customer.GetPrimaryKey(), customer)
-            //         .WithCondition(record => DynamoCondition.DoesNotExist(record))
-            //     .End()
-            //     .BeginPutItem(customerEmail.GetPrimaryKey(), customerEmail)
-            //         .WithCondition(record => DynamoCondition.DoesNotExist(record))
-            //     .End()
-            // .ExecuteAsync();
-
+            // check if both records can be written
+            var success = await Table.TransactWriteItems()
+                .BeginPutItem(customer.GetPrimaryKey(), customer)
+                    .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .End()
+                .BeginPutItem(customerEmail.GetPrimaryKey(), customerEmail)
+                    .WithCondition(record => DynamoCondition.DoesNotExist(record))
+                .End()
+            .TryExecuteAsync();
             if(!success) {
                 throw new Exception("operation failed");
             }

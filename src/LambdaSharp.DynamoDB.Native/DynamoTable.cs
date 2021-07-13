@@ -208,9 +208,8 @@ namespace LambdaSharp.DynamoDB.Native {
         /// <summary>
         /// Specify the TransactWriteItems to created, put, update, or delete records in a transaction.
         /// </summary>
-        public IDynamoTableTransactWriteItems TransactWriteItems( ) {
-            throw new NotImplementedException();
-        }
+        public IDynamoTableTransactWriteItems TransactWriteItems( )
+            => new DynamoTableTransactWriteItems(this, new TransactWriteItemsRequest());
 
         /// <summary>
         /// Specify the Query operation to fetch a list of records of the same type.
