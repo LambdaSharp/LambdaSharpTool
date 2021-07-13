@@ -38,7 +38,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         /// <param name="primaryKey">Primary key of the item to retrieve.</param>
         /// <param name="consistentRead">Boolean indicating if the read operation should be performed against the main partition (2x cost compared to eventual consistent read).</param>
         /// <typeparam name="TRecord">The record type.</typeparam>
-        IDynamoTableBatchGetItemsEntry<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
+        IDynamoTableBatchGetItemsGetItem<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false)
             where TRecord : class;
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
     /// Interface to specify a typed GetItem operation for BatchGetItems with mixed record types.
     /// </summary>
     /// <typeparam name="TRecord">The record type.</typeparam>
-    public interface IDynamoTableBatchGetItemsEntry<TRecord> where TRecord : class {
+    public interface IDynamoTableBatchGetItemsGetItem<TRecord> where TRecord : class {
 
         //--- Methods ---
 
@@ -78,7 +78,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         /// </summary>
         /// <param name="attribute">A lambda expression that returns the record property.</param>
         /// <typeparam name="T">The property type.</typeparam>
-        IDynamoTableBatchGetItemsEntry<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
+        IDynamoTableBatchGetItemsGetItem<TRecord> Get<T>(Expression<Func<TRecord, T>> attribute);
 
         /// <summary>
         /// End specification of the GetItem operation for BatchGetItems.

@@ -33,7 +33,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         private const int MILLISECOND_BACKOFF = 100;
 
         //--- Types ---
-        internal sealed class DynamoTableBatchGetItemsEntry<TRecord> : IDynamoTableBatchGetItemsEntry<TRecord>
+        internal sealed class DynamoTableBatchGetItemsGetItem<TRecord> : IDynamoTableBatchGetItemsGetItem<TRecord>
             where TRecord : class
         {
 
@@ -41,11 +41,11 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
             private readonly DynamoTableBatchGetItems _parent;
 
             //--- Constructors ---
-            public DynamoTableBatchGetItemsEntry(DynamoTableBatchGetItems parent)
+            public DynamoTableBatchGetItemsGetItem(DynamoTableBatchGetItems parent)
                 => _parent = parent ?? throw new ArgumentNullException(nameof(parent));
 
             //--- Methods ---
-            public IDynamoTableBatchGetItemsEntry<TRecord> Get<T>(System.Linq.Expressions.Expression<Func<TRecord, T>> attribute) {
+            public IDynamoTableBatchGetItemsGetItem<TRecord> Get<T>(System.Linq.Expressions.Expression<Func<TRecord, T>> attribute) {
                 _parent._converter.AddProjection(attribute.Body);
 
                 // NOTE (2021-06-24, bjorg): we always fetch `_t` to allow polymorphic deserialization
@@ -69,13 +69,13 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
         }
 
         //--- Methods ---
-        public IDynamoTableBatchGetItemsEntry<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
+        public IDynamoTableBatchGetItemsGetItem<TRecord> BeginGetItem<TRecord>(DynamoPrimaryKey<TRecord> primaryKey, bool consistentRead = false) where TRecord : class {
             _request.RequestItems.First().Value.Keys.Add(new Dictionary<string, AttributeValue> {
                 [primaryKey.PKName] = new AttributeValue(primaryKey.PKValue),
                 [primaryKey.SKName] = new AttributeValue(primaryKey.SKValue)
             });
             _converter.AddExpectedType(typeof(TRecord));
-            return new DynamoTableBatchGetItemsEntry<TRecord>(this);
+            return new DynamoTableBatchGetItemsGetItem<TRecord>(this);
         }
 
         public async Task<IEnumerable<object>> ExecuteAsync(int maxAttempts, CancellationToken cancellationToken = default) {
