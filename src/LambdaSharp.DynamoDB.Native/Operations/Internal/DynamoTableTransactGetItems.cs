@@ -96,10 +96,10 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
 
         public async Task<(bool Success, IEnumerable<object> Items)> TryExecuteAsync(int maxAttempts, CancellationToken cancellationToken = default) {
             if(!_request.TransactItems.Any()) {
-                throw new ArgumentException("primary keys cannot be empty");
+                throw new InvalidOperationException("BatchGetItems cannot be empty");
             }
             if(_request.TransactItems.Count > 25) {
-                throw new ArgumentException("too many primary keys");
+                throw new InvalidOperationException("BatchGetItems too many operations");
             }
             for(var i = 0; i < _request.TransactItems.Count; ++i) {
                 _request.TransactItems[i].Get.ProjectionExpression = _converters[i].ConvertProjections();

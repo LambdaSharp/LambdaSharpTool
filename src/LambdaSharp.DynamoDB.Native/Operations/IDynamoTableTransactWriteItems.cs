@@ -66,7 +66,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>True, when successful.</returns>
-        Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
+        Task<bool> TryExecuteAsync(CancellationToken cancellationToken = default);
 
         //--- Default Methods ---
 
@@ -107,6 +107,13 @@ namespace LambdaSharp.DynamoDB.Native.Operations {
         /// </summary>
         /// <param name="condition">A lambda predicate representing the DynamoDB condition expression.</param>
         IDynamoTableTransactWriteItemsPutItem<TRecord> WithCondition(Expression<Func<TRecord, bool>> condition);
+
+        /// <summary>
+        /// Set the value of a DynamoDB item attribute. Used for storing attributes used by local/global secondary indices.
+        /// </summary>
+        /// <param name="key">Name of attribute.</param>
+        /// <param name="value">Value of attribute.</param>
+        IDynamoTableTransactWriteItemsPutItem<TRecord> Set(string key, AttributeValue value);
 
         /// <summary>
         /// End specification of the PutItem operation for TransactWriteItems.
