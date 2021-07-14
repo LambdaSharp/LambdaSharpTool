@@ -1,5 +1,5 @@
 /*
- * LambdaSharp (λ#)
+ * LambdaSharp (λ=)
  * Copyright (C) 2018-2021
  * lambdasharp.net
  *
@@ -23,19 +23,19 @@ namespace Sample.DynamoDBNative.DataAccess.Models {
     public static class DataModel {
 
         //--- Constants ---
-        public const string CUSTOMER_PK_PATTERN = "CUSTOMER#{0}";
+        public const string CUSTOMER_PK_PATTERN = "CUSTOMER={0}";
         public const string CUSTOMER_SK_PATTERN = "INFO";
-        public const string CUSTOMER_EMAIL_PK_PATTERN = "EMAIL#{0}";
+        public const string CUSTOMER_EMAIL_PK_PATTERN = "EMAIL={0}";
         public const string CUSTOMER_EMAIL_SK_PATTERN = "INFO";
-        public const string ORDER_PK_PATTERN = "CUSTOMER#{0}";
-        public const string ORDER_SK_PATTERN = "#ORDER#{1}";
-        public const string ORDER_GSI1_PK_PATTERN = "ORDER#{0}";
+        public const string ORDER_PK_PATTERN = "CUSTOMER={0}";
+        public const string ORDER_SK_PATTERN = "=ORDER={1}";
+        public const string ORDER_GSI1_PK_PATTERN = "ORDER={0}";
         public const string ORDER_GSI1_SK_PATTERN = "INFO";
-        public const string ORDER_LSI1_SK_PATTERN = "STATUS#{1}";
-        public const string ORDER_ITEM_PK_PATTERN = "ORDER#{0}#ITEM#{1}";
+        public const string ORDER_LSI1_SK_PATTERN = "STATUS={1}";
+        public const string ORDER_ITEM_PK_PATTERN = "ORDER={0}|ITEM={1}";
         public const string ORDER_ITEM_SK_PATTERN = "INFO";
-        public const string ORDER_ITEM_GSI1_PK_PATTERN = "ORDER#{0}";
-        public const string ORDER_ITEM_GSI1_SK_PATTERN = "ITEM#{1}";
+        public const string ORDER_ITEM_GSI1_PK_PATTERN = "ORDER={0}";
+        public const string ORDER_ITEM_GSI1_SK_PATTERN = "ITEM={1}";
 
         //--- Extension Methods ---
         public static DynamoPrimaryKey<CustomerRecord> GetPrimaryKey(this CustomerRecord record) => CustomerRecordPrimaryKey(record.Username);

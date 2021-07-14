@@ -53,10 +53,10 @@ namespace Integration.LambdaSharp.DynamoDB.Native {
         private static class MyDataModel {
 
             //--- Constants ---
-            public const string MY_RECORD_PK_PATTERN = "MY-RECORD-ID#{0}";
-            public const string MY_RECORD_SK_PATTERN = "SUB-ID#{1}";
-            public const string MY_OTHER_RECORD_PK_PATTERN = "MY-RECORD-ID#{0}";
-            public const string MY_OTHER_RECORD_SK_PATTERN = "OTHER-SUB-ID#{1}";
+            public const string MY_RECORD_PK_PATTERN = "MY-RECORD-ID={0}";
+            public const string MY_RECORD_SK_PATTERN = "SUB-ID={1}";
+            public const string MY_OTHER_RECORD_PK_PATTERN = "MY-RECORD-ID={0}";
+            public const string MY_OTHER_RECORD_SK_PATTERN = "OTHER-SUB-ID={1}";
 
             //--- Class Methods ---
             public static DynamoPrimaryKey<MyRecord> GetPrimaryKey(MyRecord record) => MyRecordPrimaryKey(record.Id, record.SubId);
