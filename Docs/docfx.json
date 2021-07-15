@@ -186,6 +186,40 @@
       "dest": "sdk/LambdaSharp.Slack",
       "filter": "filterConfig.yml",
       "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.DynamoDB.Serialization/LambdaSharp.DynamoDB.Serialization.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.DynamoDB.Serialization",
+      "filter": "filterConfig.yml",
+      "force": true
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "LambdaSharp.DynamoDB.Native/LambdaSharp.DynamoDB.Native.csproj"
+          ],
+          "exclude": [
+            "**/obj/**",
+            "**/bin/**"
+          ],
+          "src": "../src/"
+        }
+      ],
+      "dest": "sdk/LambdaSharp.DynamoDB.Native",
+      "filter": "filterConfig.yml",
+      "force": true
     }
   ],
   "build": {

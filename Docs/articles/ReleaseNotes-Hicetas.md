@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.3.2) - 2021-06-17
+# LambdaSharp "Hicetas" Release (v0.8.3.3) - TBD
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -140,6 +140,30 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 
 ## Releases
+
+### (v0.8.3.3) - TBD
+
+#### BREAKING CHANGES
+
+* CLI
+  * The module WebSocket resources now use the API Gateway v2 auto-deploy mechanism instead of generating a new deployment each time. This technique is more reliable and requires less code generation.
+  * The `Module::WebSocket::Deployment` global variable no longer exists since the WebSocket deployment is now automatic.
+
+#### Features
+
+* CLI
+  * Added ability to override `Module::WebSocket` to allow a WebSocket to be defined in another module.
+  * Enhanced the default WebSocket logging settings to include more diagnostics information.
+
+* Syntax
+  * Added `Origin` to module declaration syntax, which sets the name of the S3 origin bucket. The `--module-origin` option can be used to override this value. When omitted, the module origin defaults to the S3 bucket the module is being published to.
+
+* SDK
+  * Added _LambdaSharp.DynamoDB.Native_ assembly to simplify working with DynamoDB tables.
+
+* Samples
+  * Added `Samples/DynamoDBNativeSample` module showing how to use the new _LambdaSharp.DynamoDB.Native_ assembly.
+
 
 ### (v0.8.3.2) - 2021-06-17
 
@@ -321,7 +345,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * SDK
   * Added new `ALambdaEventFunction<TMessage>` base class for handling CloudWatch events.
-  * Optimized cold-start times for by deserializing Amazon Lambda data-structures by using `LambdaSystemTextJsonSerializer`, which is built on _System.Text.Json_. This change avoids jitting the heavy _Newtonsoft.Json_ assembly unless required by the end-user code.
+  * Optimized cold-start times for by deserializing Amazon Lambda data structures by using `LambdaSystemTextJsonSerializer`, which is built on _System.Text.Json_. This change avoids jitting the heavy _Newtonsoft.Json_ assembly unless required by the end-user code.
   * Added constructor to customize serializer settings for `LambdaSystemTextJsonSerializer`.
   * Added constructor to customize serializer settings for `LambdaNewtonsoftJsonSerializer`.
   * Added null-aware annotations to _LambdaSharp_ assembly.
