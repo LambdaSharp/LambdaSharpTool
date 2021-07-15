@@ -54,7 +54,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
                 }
             };
             _request.TransactItems.Add(transactWriteItem);
-            var converter = new DynamoRequestConverter(transactWriteItem.ConditionCheck.ExpressionAttributeNames, _table.SerializerOptions);
+            var converter = new DynamoRequestConverter(transactWriteItem.ConditionCheck.ExpressionAttributeNames, transactWriteItem.ConditionCheck.ExpressionAttributeValues, _table.SerializerOptions);
             return new DynamoTableTransactWriteItemsConditionCheck<TRecord>(this, transactWriteItem.ConditionCheck, converter);
         }
 
@@ -69,7 +69,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
                 }
             };
             _request.TransactItems.Add(transactWriteItem);
-            var converter = new DynamoRequestConverter(transactWriteItem.Delete.ExpressionAttributeNames, _table.SerializerOptions);
+            var converter = new DynamoRequestConverter(transactWriteItem.Delete.ExpressionAttributeNames, transactWriteItem.Delete.ExpressionAttributeValues, _table.SerializerOptions);
             return new DynamoTableTransactWriteItemsDeleteItem<TRecord>(this, transactWriteItem.Delete, converter);
         }
 
@@ -81,7 +81,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
                 }
             };
             _request.TransactItems.Add(transactWriteItem);
-            var converter = new DynamoRequestConverter(transactWriteItem.Put.ExpressionAttributeNames, _table.SerializerOptions);
+            var converter = new DynamoRequestConverter(transactWriteItem.Put.ExpressionAttributeNames, transactWriteItem.Put.ExpressionAttributeValues, _table.SerializerOptions);
             return new DynamoTableTransactWriteItemsPutItem<TRecord>(this, transactWriteItem.Put, converter);
         }
 
@@ -96,7 +96,7 @@ namespace LambdaSharp.DynamoDB.Native.Operations.Internal {
                 }
             };
             _request.TransactItems.Add(transactWriteItem);
-            var converter = new DynamoRequestConverter(transactWriteItem.Update.ExpressionAttributeNames, _table.SerializerOptions);
+            var converter = new DynamoRequestConverter(transactWriteItem.Update.ExpressionAttributeNames, transactWriteItem.Update.ExpressionAttributeValues, _table.SerializerOptions);
             return new DynamoTableTransactWriteItemsUpdateItem<TRecord>(this, transactWriteItem.Update, converter);
         }
 
