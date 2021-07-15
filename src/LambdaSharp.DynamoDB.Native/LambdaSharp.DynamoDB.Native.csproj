@@ -30,4 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="../LambdaSharp.DynamoDB.Serialization/LambdaSharp.DynamoDB.Serialization.csproj"/>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
 </Project>
