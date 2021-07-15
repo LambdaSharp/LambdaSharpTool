@@ -24,6 +24,7 @@ The LambdaSharp CLI `build` command compiles the module into a CloudFormation te
 ```yaml
 Module: String
 Version: String
+Origin: String
 Description: String
 Pragmas:
   - PragmaDefinition
@@ -67,6 +68,16 @@ The <code>Module</code> attribute specifies the full name of the module. It must
 The module namespace and name can be retrieved using the <code>!Ref</code> operations with <code>Module::Namespace</code> and <code>Module::Name</code>, respectively. Alternatively, the full name can be retrieved using <code>Module::FullName</code>.
 
 <i>Required:</i> Yes
+
+<i>Type:</i> String
+</dd>
+
+<dt><code>Origin</code></dt>
+<dd>
+
+The <code>Origin</code> attribute specifies the origin S3 bucket of the module. When omitted, the origin information is filled in when the module is published to an S3 bucket.
+
+<i>Required:</i> No
 
 <i>Type:</i> String
 </dd>

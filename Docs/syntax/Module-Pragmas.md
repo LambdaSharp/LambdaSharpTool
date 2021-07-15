@@ -26,9 +26,12 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`Module::RestApi.EndpointConfiguration`     |Expression for setting the REST API endpoint.                                       |(none)                                 |
 |`Module::RestApi.Policy`                    |Expression for setting the REST API policy.                                         |(none)                                 |
 |`Module::Role.PermissionsBoundary`          |Expression for setting the PermissionsBoundary attribute on the function IAM role.  |(none)                                 |
+|`Module::WebSocket`                         |Expression for the WebSocket ID.                                                    |(none)                                 |
 |`Module::WebSocket::StageName`              |Expression for setting the WebSocket stage name.                                    |`LATEST`                               |
 |`Module::WebSocket.ApiKeySelectionExpression`|Expression for determining the WebSocket API key.                                  |(none)                                 |
 |`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                                     |`$request.body.action`                 |
+
+**NOTE**: No WebSocket resources are generated when `Module::WebSocket` is defined in the overrides section. When defining `Module::WebSocket`, also consider defining `Module::RestApi::StageName` which is used to grant permission to post back on a WebSocket connection.
 
 ### Examples
 

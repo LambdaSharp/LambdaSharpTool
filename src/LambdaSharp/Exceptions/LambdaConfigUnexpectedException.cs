@@ -35,7 +35,6 @@ namespace LambdaSharp.Exceptions {
         /// <param name="innerException">The inner exception instance.</param>
         /// <param name="path">The configuration key path.</param>
         /// <param name="action">A description of the action that was being performed.</param>
-        /// <returns></returns>
         public LambdaConfigUnexpectedException(Exception innerException, string path, string action) : base(innerException, "unexpected error accessing: '{0}' ({1})", path, action) { }
     }
 }

@@ -77,7 +77,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // update module origin
-            var moduleInfo = manifest.ModuleInfo.WithOrigin(moduleOrigin ?? Settings.DeploymentBucketName);
+            var moduleInfo = manifest.ModuleInfo.WithOrigin(moduleOrigin ?? manifest.ModuleInfo.Origin ?? Settings.DeploymentBucketName);
             manifest.ModuleInfo = moduleInfo;
 
             // check if we want to always publish
