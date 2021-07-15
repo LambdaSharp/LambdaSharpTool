@@ -36,13 +36,12 @@ namespace LambdaSharp.Serialization {
         /// <param name="reader">The reader.</param>
         /// <param name="typeToConvert">The type to convert.</param>
         /// <param name="options">An object that specifies serialization options to use.</param>
-        /// <returns></returns>
         public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             if(reader.TokenType == JsonTokenType.Number) {
                 return DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64());
             } else if((reader.TokenType == JsonTokenType.String) && options.NumberHandling.HasFlag(JsonNumberHandling.AllowReadingFromString)) {
                 if(!long.TryParse(reader.GetString(), out var number)) {
-                throw new JsonSerializerException("string value must a number");
+                    throw new JsonSerializerException("string value must a number");
                 }
                 return DateTimeOffset.FromUnixTimeSeconds(number);
             } else {

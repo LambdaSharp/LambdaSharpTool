@@ -31,6 +31,8 @@ namespace LambdaSharp.App.EventBus {
     public sealed class DataTable : ADataTable {
 
         //--- Constants ---
+
+        // TODO (2021-07-13, bjorg): convert to using DynamoTable!
         private const string VALID_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private const string CONNECTION_PREFIX = "WS#";
         private const string TOUCH_PREFIX = "TOUCH#";

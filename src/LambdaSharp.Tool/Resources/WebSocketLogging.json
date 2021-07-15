@@ -14,5 +14,7 @@
     "stage": "$context.stage",
     "connectionId": "$context.connectionId",
     "route": "$context.routeKey",
-    "error":"$context.error.message"
+    "error": "$context.error.message",
+    "responseType": "$context.error.responseType",
+    "validationErrorString": "$context.error.validationErrorString"
 }

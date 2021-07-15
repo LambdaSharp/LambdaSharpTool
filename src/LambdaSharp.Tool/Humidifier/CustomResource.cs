@@ -21,7 +21,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Tool;
-using LambdaSharp.Tool.Model;
 
 namespace Humidifier {
     using static ModelFunctions;
