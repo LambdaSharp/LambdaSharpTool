@@ -69,6 +69,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Namespace = moduleNamespace,
                     Name = moduleName,
                     Version = version,
+                    Origin = module.Origin,
                     Description = module.Description
                 });
 
@@ -114,7 +115,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogError("invalid module reference format");
                     return;
                 }
-                if(moduleInfo.Origin == null) {
+                if(moduleInfo.Origin is null) {
 
                     // default to deployment bucket as origin
                     moduleInfo = moduleInfo.WithOrigin(Settings.DeploymentBucketName);
@@ -514,7 +515,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                             LogError("invalid module reference format");
                             return null;
                         }
-                        if(innerModuleInfo.Origin == null) {
+                        if(innerModuleInfo.Origin is null) {
 
                             // default to deployment bucket as origin
                             innerModuleInfo = innerModuleInfo.WithOrigin(Settings.DeploymentBucketName);
