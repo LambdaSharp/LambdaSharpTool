@@ -290,6 +290,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         new Humidifier.ApiGateway.StageTypes.MethodSetting {
                             DataTraceEnabled = true,
                             HttpMethod = "*",
+
+                            // TODO: only make it "INFO" if debug mode is enabled; otherwise, use "ERROR"
                             LoggingLevel = "INFO",
                             ResourcePath = "/*",
                             MetricsEnabled = true
