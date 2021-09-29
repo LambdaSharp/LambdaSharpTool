@@ -35,7 +35,7 @@ namespace LambdaSharp.CloudFormation.Syntax.Functions {
 
         // TODO:
         //  * does the function take a literal, list, or map?
-        //  * it literal, does it need to be a string or number?
+        //  * if literal, does it need to be a string or number?
         //  * if list, how many items and what are their names?
         //  * if map, what are the allowed/required keys
     }
