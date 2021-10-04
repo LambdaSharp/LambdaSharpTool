@@ -67,6 +67,7 @@ namespace LambdaSharp.Tool.Model {
         public bool HasSecretType => Type == "Secret";
         public bool HasTypeValidation => !HasPragma("no-type-validation");
         public bool IsPublic => Scope.Contains("public");
+        public bool IsStackOutput => Scope.Contains("stack");
 
         //--- Methods ---
         public virtual object GetExportReference() => Reference;
@@ -234,11 +235,9 @@ namespace LambdaSharp.Tool.Model {
             IList<AFunctionSource> sources,
             string condition,
             IList<object> pragmas,
-            Humidifier.Lambda.Function function
-
-            // TODO (2019-01-05, bjorg): add 'dependsOn'
-
-        ) : base(parent, name, description, function.AWSTypeName, scope, reference: null, dependsOn: null, condition: condition, pragmas) {
+            Humidifier.Lambda.Function function,
+            IList<string> dependsOn
+        ) : base(parent, name, description, function.AWSTypeName, scope, reference: null, dependsOn: dependsOn, condition: condition, pragmas) {
             Project = project;
             Language = language;
             Environment = environment;

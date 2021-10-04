@@ -156,7 +156,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add outputs
             _stack.Add("ModuleInfo", new Humidifier.Output {
-                Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
+                Value = _module.ModuleInfo.WithOrigin(_module.ModuleInfo.Origin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
             });
             _stack.Add("ModuleChecksum", new Humidifier.Output {
                 Value = Humidifier.Fn.Ref("DeploymentChecksum")
@@ -178,6 +178,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             case PackageItem _:
                 if(item.IsPublic) {
                     AddExport(item);
+                } else if(item.IsStackOutput) {
+                    AddStackOutput(item);
                 }
                 break;
             case ResourceItem resourceItem:
@@ -193,12 +195,16 @@ namespace LambdaSharp.Tool.Cli.Build {
                 );
                 if(item.IsPublic) {
                     AddExport(item);
+                } else if(item.IsStackOutput) {
+                    AddStackOutput(item);
                 }
                 break;
             case ParameterItem parameterItem:
                 _stack.Add(parameterItem.LogicalId, parameterItem.Parameter);
                 if(item.IsPublic) {
                     AddExport(item);
+                } else if(item.IsStackOutput) {
+                    AddStackOutput(item);
                 }
                 break;
             case FunctionItem functionItem:
@@ -210,6 +216,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 );
                 if(item.IsPublic) {
                     AddExport(item);
+                } else if(item.IsStackOutput) {
+                    AddStackOutput(item);
                 }
                 break;
             case ConditionItem conditionItem:
@@ -271,6 +279,31 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Export = new Dictionary<string, dynamic> {
                             ["Name"] = Humidifier.Fn.Sub($"${{AWS::StackName}}::{exportItem.FullName}")
                         }
+                    });
+                }
+            }
+
+            void AddStackOutput(AModuleItem exportItem) {
+                var value = exportItem.GetExportReference();
+
+                // TODO (2020-07-14, bjorg): add support for negated condition (requires us to generate an intermediate condition)
+                //  !If [ Condition, !Ref AWS::NoValue, !Ref Value ]
+
+                // check if this is a conditional output value
+                if(
+                    TryGetFnIf(value, out var condition, out var ifTrue, out var ifFalse)
+                    && TryGetFnRef(ifFalse, out var key)
+                    && (key == "AWS::NoValue")
+                ) {
+                    _stack.Add(exportItem.LogicalId, new Humidifier.Output {
+                        Description = exportItem.Description,
+                        Condition = condition,
+                        Value = ifTrue
+                    });
+                } else {
+                    _stack.Add(exportItem.LogicalId, new Humidifier.Output {
+                        Description = exportItem.Description,
+                        Value = value
                     });
                 }
             }

@@ -468,7 +468,7 @@ This module runs a Twitter query on a regular interval and publishes newly found
 
 ### Class `ALambdaFinalizerFunction`
 
-This new base class was introduced for creating a module finalizer. This base class defines the proper request and response data-structures. See the [Finalizer Example](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/FinalizerSample) for its use.
+This new base class was introduced for creating a module finalizer. This base class defines the proper request and response data structures. See the [Finalizer Example](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/FinalizerSample) for its use.
 
 ### Class `ALambdaCustomResourceFunction`
 

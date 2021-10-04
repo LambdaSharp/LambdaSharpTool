@@ -45,7 +45,7 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleBuilder : AModelProcessor {
 
         //--- Class Methods ---
-        private static object GetModuleArtifactExpression(string filename) => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
+        private static object GetModuleArtifactExpression(string origin, string filename) => FnSub($"{origin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
 
         //--- Fields ---
         private string _namespace;
@@ -68,6 +68,7 @@ namespace LambdaSharp.Tool.Model {
             _namespace = module.Namespace;
             _name = module.Name;
             Version = module.Version;
+            Origin = module.Origin;
             _description = module.Description;
             _pragmas = new List<object>(module.Pragmas ?? Array.Empty<object>());
             _secrets = new List<object>(module.Secrets ?? Array.Empty<object>());
@@ -102,9 +103,10 @@ namespace LambdaSharp.Tool.Model {
         public string Namespace => _namespace;
         public string Name => _name;
         public string FullName => $"{_namespace}.{_name}";
-        public string Info => $"{FullName}:{Version}";
-        public ModuleInfo ModuleInfo => new ModuleInfo(Namespace, Name, Version, origin: ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
+        public string Info => (Origin is null) ? "{FullName}:{Version}" : "{FullName}:{Version}@{Origin}";
+        public ModuleInfo ModuleInfo => new ModuleInfo(Namespace, Name, Version, Origin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
         public VersionInfo Version { get; set; }
+        public string Origin { get; set; }
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
         public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
@@ -876,7 +878,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // update the package variable to use the package-name variable
-            package.Reference = GetModuleArtifactExpression($"${{{packageName.FullName}}}");
+            package.Reference = GetModuleArtifactExpression(Origin, $"${{{packageName.FullName}}}");
             return package;
         }
 
@@ -895,7 +897,8 @@ namespace LambdaSharp.Tool.Model {
             string runtime,
             string memory,
             string handler,
-            IDictionary<string, object> properties
+            IDictionary<string, object> properties,
+            IList<string> dependsOn
         ) {
             var definition = (properties != null)
                 ? new Dictionary<string, object>(properties)
@@ -957,7 +960,8 @@ namespace LambdaSharp.Tool.Model {
                 sources: sources ?? Array.Empty<AFunctionSource>(),
                 condition: null,
                 pragmas: pragmas ?? Array.Empty<object>(),
-                function: resource
+                function: resource,
+                dependsOn: dependsOn
             );
             AddItem(function);
 
@@ -985,7 +989,7 @@ namespace LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
-            function.Function.Code.S3Key = GetModuleArtifactExpression($"${{{packageName.FullName}}}");
+            function.Function.Code.S3Key = GetModuleArtifactExpression(Origin, $"${{{packageName.FullName}}}");
 
             // create function log-group with retention window
             AddResource(
@@ -1150,7 +1154,7 @@ namespace LambdaSharp.Tool.Model {
                 dependsOn: null,
                 parameters: new Dictionary<string, object> {
                     ["CloudFrontOriginAccessIdentity"] = bucketCloudFrontOriginAccessIdentity ?? "",
-                    ["Package"] = GetModuleArtifactExpression($"${{{appPackageName.FullName}}}"),
+                    ["Package"] = GetModuleArtifactExpression(Origin, $"${{{appPackageName.FullName}}}"),
                     ["ContentEncoding"] = bucketContentEncoding ?? "DEFAULT"
                 }
             );
@@ -1287,7 +1291,9 @@ namespace LambdaSharp.Tool.Model {
             IList<object> pragmas,
             string timeout,
             string memory,
-            string code
+            string code,
+            IList<string> dependsOn,
+            object role
         ) {
 
             // create function resource
@@ -1301,7 +1307,7 @@ namespace LambdaSharp.Tool.Model {
                 Runtime = Amazon.Lambda.Runtime.Nodejs12X.ToString(),
                 MemorySize = memory,
                 Handler = "index.handler",
-                Role = FnGetAtt("Module::Role", "Arn"),
+                Role = role,
                 Environment = new Humidifier.Lambda.FunctionTypes.Environment {
                     Variables = new Dictionary<string, dynamic>()
                 },
@@ -1322,7 +1328,8 @@ namespace LambdaSharp.Tool.Model {
                 sources: sources ?? Array.Empty<AFunctionSource>(),
                 condition: condition,
                 pragmas: pragmas ?? Array.Empty<object>(),
-                function: resource
+                function: resource,
+                dependsOn: dependsOn
             );
             AddItem(function);
             return function;
@@ -1414,24 +1421,27 @@ namespace LambdaSharp.Tool.Model {
             } else {
 
                 // add role resource statement
-                var statement = new Humidifier.Statement {
+                AddRoleStatement(new Humidifier.Statement {
                     Sid = name.ToIdentifier(),
                     Effect = "Allow",
                     Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
                     Action = allowStatements.Distinct().OrderBy(text => text).ToList()
-                };
-
-                // check if an existing statement is being updated
-                for(var i = 0; i < _resourceStatements.Count; ++i) {
-                    if(_resourceStatements[i].Sid == name) {
-                        _resourceStatements[i] = statement;
-                        return;
-                    }
-                }
-
-                // add new statement
-                _resourceStatements.Add(statement);
+                });
             }
+        }
+
+        public void AddRoleStatement(Humidifier.Statement statement) {
+
+            // check if an existing statement is being updated
+            for(var i = 0; i < _resourceStatements.Count; ++i) {
+                if(_resourceStatements[i].Sid == statement.Sid) {
+                    _resourceStatements[i] = statement;
+                    return;
+                }
+            }
+
+            // add new statement
+            _resourceStatements.Add(statement);
         }
 
         public void VisitAll(ModuleVisitorDelegate visitor) {
@@ -1476,6 +1486,7 @@ namespace LambdaSharp.Tool.Model {
                 Namespace = _namespace,
                 Name = _name,
                 Version = Version,
+                Origin = Origin,
                 Description = _description,
                 Pragmas = _pragmas,
                 Secrets = _secrets,

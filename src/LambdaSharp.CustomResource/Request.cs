@@ -105,5 +105,12 @@ namespace LambdaSharp.CustomResource {
         /// that were declared previous to the update request.
         /// </summary>
         public TProperties? OldResourceProperties { get; set; }
+
+        //--- Methods ---
+
+        /// <summary>
+        /// Check if the custom resource has a physical ID.
+        /// </summary>
+        public bool HasPhysicalResourceId() => !string.IsNullOrEmpty(PhysicalResourceId) && (PhysicalResourceId != "no-physical-id");
     }
 }

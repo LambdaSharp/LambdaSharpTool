@@ -34,11 +34,11 @@ using Tweetinvi.Models;
 using Tweetinvi.Parameters;
 
 namespace LambdaSharp.Twitter.QueryFunction {
-    using TwitterSearch = Tweetinvi.Search;
 
     public sealed class Function : ALambdaScheduleFunction {
 
         //--- Fields ---
+        private ITwitterClient? _twitterClient;
         private string? _twitterSearchQuery;
         private HashSet<string> _twitterLanguageFilter = new HashSet<string>();
         private string? _twitterSentimentFilter;
@@ -48,6 +48,7 @@ namespace LambdaSharp.Twitter.QueryFunction {
         private string? _notificationTopic;
 
         //--- Properties ---
+        private ITwitterClient TwitterClient => _twitterClient ?? throw new InvalidOperationException();
         private string TwitterSearchQuery => _twitterSearchQuery ?? throw new InvalidOperationException();
         private string TwitterSentimentFilter => _twitterSentimentFilter ?? throw new InvalidOperationException();
         private Table Table => _table ?? throw new InvalidOperationException();
@@ -59,10 +60,9 @@ namespace LambdaSharp.Twitter.QueryFunction {
         public override async Task InitializeAsync(LambdaConfig config) {
 
             // initialize twitter client
-            Auth.SetApplicationOnlyCredentials(
+            _twitterClient = new TwitterClient(
                 config.ReadText("TwitterApiKey"),
-                config.ReadText("TwitterApiSecretKey"),
-                true
+                config.ReadText("TwitterApiSecretKey")
             );
             _twitterSearchQuery = config.ReadText("TwitterQuery");
             _twitterLanguageFilter = new HashSet<string>(config.ReadCommaDelimitedList("TwitterLanguageFilter"));
@@ -96,9 +96,9 @@ namespace LambdaSharp.Twitter.QueryFunction {
 
             // query for tweets since last id
             LogInfo($"searching for tweets: query='{_twitterSearchQuery}', last_id={lastId}");
-            var tweets = TwitterSearch.SearchTweets(new SearchTweetsParameters(_twitterSearchQuery) {
+            var tweets = await TwitterClient.Search.SearchTweetsAsync(new SearchTweetsParameters(_twitterSearchQuery) {
                 Lang = null,
-                TweetSearchType = TweetSearchType.OriginalTweetsOnly,
+                SearchType = SearchResultType.Recent,
                 SinceId = lastId
             }) ?? Enumerable.Empty<ITweet>();
 
@@ -112,7 +112,7 @@ namespace LambdaSharp.Twitter.QueryFunction {
                 var tasks = tweets
 
                     // convert tweet object back to JSON to extract the ISO language
-                    .Select(tweet => JObject.Parse(tweet.ToJson()))
+                    .Select(tweet => JObject.Parse(TwitterClient.Json.Serialize(tweet)))
                     .Select(json => new {
                         Json = json,
                         IsoLanguage = (string?)json["metadata"]?["iso_language_code"] ?? ""

@@ -192,10 +192,18 @@ namespace LambdaSharp.Build.CSharp.Internal {
                             if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
 
                                 // show error as warning instead since this package reference will not be used anyway
-                                logWarn?.Invoke($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                if(outdated) {
+                                    logWarn?.Invoke($"csproj file contains an outdated assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                } else {
+                                    logWarn?.Invoke($"csproj file contains an unexpected assembly reference for {library} (found: '{libraryVersionText}')");
+                                }
                             } else {
                                 success = false;
-                                logError?.Invoke($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                if(outdated) {
+                                    logError?.Invoke($"csproj file contains an outdated assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                } else {
+                                    logError?.Invoke($"csproj file contains an unexpected assembly reference for {library} (found: '{libraryVersionText}')");
+                                }
                             }
                         } else if(outdated) {
 

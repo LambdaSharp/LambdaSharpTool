@@ -81,10 +81,10 @@ lash new function MyNewFunction
 (optional) Override module build date [yyyyMMddHHmmss]
 </dd>
 
-<dt><code>--from-origin &lt;ORIGIN&gt;</code></dt>
+<dt><code>--from-bucket &lt;BUCKET&gt;</code></dt>
 <dd>
 
-(optional) Use specified origin to import module instead of module origin
+(optional) Use specified S3 bucket to import module from instead of module origin
 </dd>
 
 <dt><code>--force-build</code></dt>

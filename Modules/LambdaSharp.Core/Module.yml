@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.Core
+Origin: lambdasharp
 Description: LambdaSharp Core Resources and Services
 Pragmas:
   - no-lambdasharp-dependencies
@@ -196,7 +197,7 @@ Items:
                 Resource: !GetAtt LoggingStreamAnalyzerFunction.Arn
 
   - Function: LoggingStreamAnalyzerFunction
-    Memory: 1792
+    Memory: 1769
     Timeout: 300
 
   - Resource: LoggingStreamAnalyzerFunctionPermission

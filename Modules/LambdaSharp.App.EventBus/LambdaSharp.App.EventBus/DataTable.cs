@@ -19,144 +19,187 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
 using LambdaSharp.App.EventBus.Records;
 
 namespace LambdaSharp.App.EventBus {
 
-    public sealed class DataTable {
+    public sealed class DataTable : ADataTable {
 
         //--- Constants ---
+
+        // TODO (2021-07-13, bjorg): convert to using DynamoTable!
         private const string VALID_SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private const string CONNECTION_PREFIX = "WS#";
+        private const string TOUCH_PREFIX = "TOUCH#";
         private const string RULE_PREFIX = "RULE#";
         private const string INFO = "INFO";
 
         //--- Class Fields ---
         private readonly static Random _random = new Random();
 
-        private readonly static PutItemOperationConfig CreateItemConfig = new PutItemOperationConfig {
-            ConditionalExpression = new Expression {
-                ExpressionStatement = "attribute_not_exists(#PK)",
-                ExpressionAttributeNames = {
-                    ["#PK"] = "PK"
-                }
-            }
-        };
-
-        private readonly static PutItemOperationConfig UpdateItemConfig = new PutItemOperationConfig {
-            ConditionalExpression = new Expression {
-                ExpressionStatement = "attribute_exists(#PK)",
-                ExpressionAttributeNames = {
-                    ["#PK"] = "PK"
-                }
-            }
-        };
-
         //--- Class Methods ---
         public static string GetRandomString(int length)
             => new string(Enumerable.Repeat(VALID_SYMBOLS, length).Select(chars => chars[_random.Next(chars.Length)]).ToArray());
 
-        private static T Deserialize<T>(Document record)
-            => (record != null)
-                ? JsonSerializer.Deserialize<T>(record.ToJson())
-                : default;
-
-        private async static Task<IEnumerable<T>> DoSearchAsync<T>(Search search, CancellationToken cancellationToken = default) {
-            var results = new List<T>();
-            do {
-                var documents = await search.GetNextSetAsync(cancellationToken);
-                results.AddRange(documents.Select(document => Deserialize<T>(document)));
-            } while(!search.IsDone);
-            return results;
-        }
-
-        //--- Fields ---
-        private readonly IAmazonDynamoDB _dynamoDbClient;
-        private readonly Table _table;
-
         //--- Constructors ---
-        public DataTable(string tableName, IAmazonDynamoDB dynamoDbClient = null) {
-            TableName = tableName ?? throw new System.ArgumentNullException(nameof(tableName));
-            _dynamoDbClient = dynamoDbClient ?? new AmazonDynamoDBClient();
-            _table = Table.LoadTable(dynamoDbClient, tableName);
-        }
-
-        //--- Properties ---
-        public string TableName { get; }
+        public DataTable(string tableName, IAmazonDynamoDB dynamoDbClient = null) : base(tableName, dynamoDbClient) { }
 
         //--- Methods ---
 
         #region Connection Record
-        public async Task<ConnectionRecord> GetConnectionAsync(string connectionId, CancellationToken cancellationToken = default)
-            => Deserialize<ConnectionRecord>(await _table.GetItemAsync(CONNECTION_PREFIX + connectionId, INFO, cancellationToken));
+        public async Task<ConnectionRecord> GetConnectionRecordAsync(string connectionId, CancellationToken cancellationToken = default)
+            => Deserialize<ConnectionRecord>(await GetItemAsync(CONNECTION_PREFIX + connectionId, INFO, cancellationToken));
 
-        public Task CreateConnectionAsync(ConnectionRecord record, CancellationToken cancellationToken = default)
-            => PutItemsAsync(
+        public Task CreateConnectionRecordAsync(ConnectionRecord record, CancellationToken cancellationToken = default)
+            => CreateItemAsync(
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
-                CreateItemConfig,
                 cancellationToken
             );
 
-        public Task UpdateConnectionAsync(ConnectionRecord record, CancellationToken cancellationToken = default)
-            => PutItemsAsync(
+        public Task UpdateConnectionRecordAsync(ConnectionRecord record, CancellationToken cancellationToken = default)
+            => UpdateItemAsync(
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: INFO,
-                UpdateItemConfig,
                 cancellationToken
             );
 
-        public Task DeleteConnectionAsync(string connectionId, CancellationToken cancellationToken = default)
-            => _table.DeleteItemAsync(CONNECTION_PREFIX + connectionId, INFO);
+        public async Task<bool> SetConnectionRecordStateAsync(ConnectionRecord record, ConnectionState state, CancellationToken cancellationToken = default) {
+            try {
+                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue> {
+                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
+                        ["SK"] = new AttributeValue(INFO)
+                    },
+                    UpdateExpression = "SET #State = :state, #Modified = :modified",
+                    ExpressionAttributeNames = {
+                        ["#State"] = nameof(record.State),
+                        ["#Modified"] = "_Modified"
+                    },
+                    ExpressionAttributeValues = {
+                        [":state"] = new AttributeValue(state.ToString()),
+                        [":modified"] = new AttributeValue {
+                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
+                        }
+                    }
+                });
+                record.State = state;
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateConnectionRecordStateAsync(ConnectionRecord record, ConnectionState state, CancellationToken cancellationToken = default) {
+            try {
+                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue> {
+                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
+                        ["SK"] = new AttributeValue(INFO)
+                    },
+                    ConditionExpression = "#State = :expectedState",
+                    UpdateExpression = "SET #State = :state, #Modified = :modified",
+                    ExpressionAttributeNames = {
+                        ["#State"] = nameof(record.State),
+                        ["#Modified"] = "_Modified"
+                    },
+                    ExpressionAttributeValues = {
+                        [":expectedState"] = new AttributeValue(record.State.ToString()),
+                        [":state"] = new AttributeValue(state.ToString()),
+                        [":modified"] = new AttributeValue {
+                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
+                        }
+                    }
+                });
+                record.State = state;
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateConnectionRecordStateAndSubscriptionAsync(
+            ConnectionRecord record,
+            ConnectionState state,
+            string subscriptionArn,
+            CancellationToken cancellationToken = default
+        ) {
+            try {
+                await DynamoDbClient.UpdateItemAsync(new UpdateItemRequest {
+                    TableName = TableName,
+                    Key = new Dictionary<string, AttributeValue> {
+                        ["PK"] = new AttributeValue(CONNECTION_PREFIX + record.ConnectionId),
+                        ["SK"] = new AttributeValue(INFO)
+                    },
+                    ConditionExpression = "#State = :expectedState",
+                    UpdateExpression = "SET #State = :state, #ARN = :arn, #Modified = :modified",
+                    ExpressionAttributeNames = {
+                        ["#State"] = nameof(record.State),
+                        ["#ARN"] = nameof(record.SubscriptionArn),
+                        ["#Modified"] = "_Modified"
+                    },
+                    ExpressionAttributeValues = {
+                        [":expectedState"] = new AttributeValue(record.State.ToString()),
+                        [":state"] = new AttributeValue(state.ToString()),
+                        [":arn"] = new AttributeValue(subscriptionArn),
+                        [":modified"] = new AttributeValue {
+                            N = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()
+                        }
+                    }
+                });
+                record.State = state;
+                record.SubscriptionArn = subscriptionArn;
+                return true;
+            } catch(ConditionalCheckFailedException) {
+                return false;
+            }
+        }
+
+        public Task DeleteConnectionRecordAsync(string connectionId, CancellationToken cancellationToken = default)
+            => DeleteItemAsync(
+                pk: CONNECTION_PREFIX + connectionId,
+                sk: INFO,
+                cancellationToken
+            );
         #endregion
 
         #region Rule Record
-        public Task CreateOrUpdateRuleAsync(RuleRecord record, CancellationToken cancellationToken = default)
-            => PutItemsAsync(
+        public Task CreateOrUpdateRuleRecordAsync(RuleRecord record, CancellationToken cancellationToken = default)
+            => CreateOrUpdateItemAsync(
                 record,
                 pk: CONNECTION_PREFIX + record.ConnectionId,
                 sk: RULE_PREFIX + record.Rule,
-                config: null,
                 cancellationToken
             );
-        public Task DeleteRuleAsync(string connectionId, string ruleId, CancellationToken cancellationToken = default)
-            => _table.DeleteItemAsync(CONNECTION_PREFIX + connectionId, RULE_PREFIX + ruleId);
+        public Task DeleteRuleRecordAsync(string connectionId, string ruleId, CancellationToken cancellationToken = default)
+            => DeleteItemAsync(
+                pk: CONNECTION_PREFIX + connectionId,
+                sk: RULE_PREFIX + ruleId,
+                cancellationToken
+            );
+
+        public async Task<IEnumerable<RuleRecord>> GetAllRuleRecordAsync(string connectionId, CancellationToken cancellationToken = default)
+            => (await Search(
+                pk: CONNECTION_PREFIX + connectionId,
+                skOperator: QueryOperator.BeginsWith,
+                skValue: RULE_PREFIX,
+                cancellationToken
+            )).Select(document => Deserialize<RuleRecord>(document)).ToList();
+
+        public Task DeleteAllRuleRecordAsync(IEnumerable<RuleRecord> records, CancellationToken cancellationToken = default)
+            => DeleteItemsAsync(records.Select(record => (
+                PK: CONNECTION_PREFIX + record.ConnectionId,
+                SK: RULE_PREFIX + record.Rule
+            )), cancellationToken);
         #endregion
-
-        #region Record Queries
-        public Task<IEnumerable<RuleRecord>> GetConnectionRulesAsync(string connectionId, CancellationToken cancellationToken = default)
-            => DoSearchAsync<RuleRecord>(_table.QueryBeginsWith(CONNECTION_PREFIX + connectionId, RULE_PREFIX), cancellationToken);
-
-        public Task DeleteAllRulesAsync(IEnumerable<RuleRecord> records, CancellationToken cancellationToken = default)
-            => DeleteItemsAsync(records.Select(record => (PK: CONNECTION_PREFIX + record.ConnectionId, SK: RULE_PREFIX + record.Rule)));
-        #endregion
-
-        private Task PutItemsAsync<T>(T item, string pk, string sk, PutItemOperationConfig config, CancellationToken cancellationToken = default) {
-            var document = Document.FromJson(JsonSerializer.Serialize(item));
-            document["_Type"] = item.GetType().Name;
-            document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
-            document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
-            return _table.PutItemAsync(document, config, cancellationToken);
-        }
-
-        private Task PutItemsAsync<T>(T item, string pk, string sk, string gs1pk, string gs1sk, PutItemOperationConfig config, CancellationToken cancellationToken = default) {
-            var document = Document.FromJson(JsonSerializer.Serialize(item));
-            document["_Type"] = item.GetType().Name;
-            document["PK"] = pk ?? throw new ArgumentNullException(nameof(pk));
-            document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
-            document["GS1PK"] = gs1pk ?? throw new ArgumentNullException(nameof(gs1pk));
-            document["GS1SK"] = gs1sk ?? throw new ArgumentNullException(nameof(gs1sk));
-            return _table.PutItemAsync(document, config, cancellationToken);
-        }
-
-        private Task DeleteItemsAsync(IEnumerable<(string PK, string SK)> keys, CancellationToken cancellationToken = default)
-            => Task.WhenAll(keys.Select(key => _table.DeleteItemAsync(key.PK, key.SK)));
     }
 }

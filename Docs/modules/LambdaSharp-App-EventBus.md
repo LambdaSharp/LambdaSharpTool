@@ -42,12 +42,6 @@ The <code>DevMode</code> parameter specifies if the app EventBus API should run 
 The <code>DevMode</code> parameter must have one of the following values:
 <dl>
 
-<dt><code>Enabled</code></dt>
-<dd>
-
-The API key is solely based on the CloudFormation stack identifer. Debug logging is enabled in the app.
-</dd>
-
 <dt><code>Disabled</code></dt>
 <dd>
 
@@ -55,6 +49,12 @@ The API key is based on teh CloudFormation stack identifier and the app version 
 </dd>
 
 </dl>
+</dd>
+
+<dt><code>Enabled</code></dt>
+<dd>
+
+The API key is solely based on the CloudFormation stack identifer. Debug logging is enabled in the app.
 </dd>
 
 </dl>
@@ -72,6 +72,14 @@ The <code>ApiKey</code> output contains the CloudFormation stack identifier port
 <i>Type:</i> String
 </dd>
 
+<dt><code>EventTopicArn</code></dt>
+<dd>
+
+The <code>EventTopicArn</code> output contains the SNS topic ARN for broadcasting events to the app event bus.
+
+<i>Type:</i> AWS::SNS::Topic
+</dd>
+
 <dt><code>Url</code></dt>
 <dd>
 
@@ -80,12 +88,12 @@ The <code>Url</code> output contains the URL of the api endpoint used by the <co
 <i>Type:</i> String
 </dd>
 
-<dt><code>EventTopicArn</code></dt>
+<dt><code>WebSocketApiId</code></dt>
 <dd>
 
-The <code>EventTopicArn</code> output contains the SNS topic ARN for broadcasting events to the app event bus.
+The <code>WebSocketApiId</code> output contains the ID of the WebSocket API.
 
-<i>Type:</i> AWS::SNS::Topic
+<i>Type:</i> AWS::ApiGatewayV2::Api
 </dd>
 
 </dl>

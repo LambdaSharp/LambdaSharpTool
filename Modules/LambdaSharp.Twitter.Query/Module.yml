@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.Twitter.Query
+Origin: lambdasharp
 Description: Search Twitter at regular intervals and publish new found tweets
 Items:
 
@@ -72,7 +73,7 @@ Items:
   - Resource: TweetTopic
     Description: This topic publishes tweets that match the query
     Scope:
-      - public
+      - stack
       - QueryFunction
     Type: AWS::SNS::Topic
     Allow: Publish

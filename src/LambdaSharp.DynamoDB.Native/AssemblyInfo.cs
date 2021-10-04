@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -16,22 +16,6 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using System.Runtime.CompilerServices;
 
-namespace LambdaSharp.App.EventBus.BroadcastFunction {
-
-    public sealed class CloudWatchEventPayload {
-
-        //--- Properties ---
-
-        [JsonPropertyName("source")]
-        public string Source { get; set; }
-
-        [JsonPropertyName("detail-type")]
-        public string DetailType { get; set; }
-
-        [JsonPropertyName("resources")]
-        public List<string> Resources { get; set; }
-    }
-}
+[assembly: InternalsVisibleTo("Test.LambdaSharp.DynamoDB.Native")]

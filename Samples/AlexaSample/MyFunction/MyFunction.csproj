@@ -7,7 +7,7 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Alexa.NET" Version="1.14.0" />
+    <PackageReference Include="Alexa.NET" Version="1.15.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />

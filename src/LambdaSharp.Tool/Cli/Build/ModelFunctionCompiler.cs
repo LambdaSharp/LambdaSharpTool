@@ -54,7 +54,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 _builder.AddGrant(
                     name: "DeploymentBucketReadOnly",
                     awsType: null,
-                    reference: FnSub($"arn:${{AWS::Partition}}:s3:::${{DeploymentBucketName}}/{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/*"),
+                    reference: FnSub($"arn:${{AWS::Partition}}:s3:::${{DeploymentBucketName}}/{_builder.ModuleInfo.Origin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/*"),
                     allow: "s3:GetObject",
                     condition: null
                 );
@@ -138,28 +138,65 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
-            // recursively create resources as needed
-            var apiDeclarations = new Dictionary<string, object>();
+            // add CORS Origin variable
             _builder.TryGetOverride("Module::RestApi::CorsOrigin", out var moduleRestApiCorsOrigin);
+            object moduleRestApiCorsOriginExpression;
             if(moduleRestApiCorsOrigin != null) {
+                _builder.AddVariable(
+                    parent: restApi,
+                    name: "CorsOrigin",
+                    description: "CORS Origin for REST API",
+                    type: "String",
+                    scope: null,
+                    value: moduleRestApiCorsOrigin,
+                    allow: null,
+                    encryptionContext: null
+                );
+
+                // NOTE (2021-04-01, bjorg): we should always assign the CORS_ORIGIN environment variable even
+                //  when the we know the value is `!Ref AWS::NoValue`. The `lash` compiler should be smart enough
+                //  to remove these properties again and simplify the datastructure accordingly.
 
                 // add CORS origin value to Lambda environment variables
                 foreach(var restApiRoute in _restApiRoutes) {
+
+                    // check if Environment needs to be initialized
                     if(restApiRoute.Function.Function.Environment == null) {
                         restApiRoute.Function.Function.Environment = new Humidifier.Lambda.FunctionTypes.Environment();
                     }
+
+                    // check if Environment.Variables needs to be initialized
                     if(restApiRoute.Function.Function.Environment.Variables == null) {
                         restApiRoute.Function.Function.Environment.Variables = new Dictionary<string, dynamic>();
                     }
+
+                    // add CORS_ORIGIN environment variable to Lambda function
                     restApiRoute.Function.Function.Environment.Variables.TryAdd("CORS_ORIGIN", moduleRestApiCorsOrigin);
                 }
 
                 // convert into a quoted expression
-                moduleRestApiCorsOrigin = FnSub("'${CorsOrigin}'", new Dictionary<string, object> {
+                moduleRestApiCorsOriginExpression = FnSub("'${CorsOrigin}'", new Dictionary<string, object> {
                     ["CorsOrigin"] = moduleRestApiCorsOrigin
                 });
+            } else {
+
+                // add placeholder variable
+                _builder.AddVariable(
+                    parent: restApi,
+                    name: "CorsOrigin",
+                    description: "CORS Origin for REST API",
+                    type: "String",
+                    scope: null,
+                    value: FnRef("AWS::NoValue"),
+                    allow: null,
+                    encryptionContext: null
+                );
+                moduleRestApiCorsOriginExpression = null;
             }
-            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiDeclarations, moduleRestApiCorsOrigin);
+
+            // recursively create resources as needed
+            var apiDeclarations = new Dictionary<string, object>();
+            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiDeclarations, moduleRestApiCorsOriginExpression);
 
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
             string apiDeclarationsChecksum = string.Join("\n", apiDeclarations
@@ -271,38 +308,47 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void AddWebSocketResources(IEnumerable<FunctionItem> functions) {
             var moduleItem = _builder.GetItem("Module");
 
-            // give permission to the Lambda functions to communicate back over the WebSocket
-            _builder.AddGrant(
-                name: "WebSocketConnections",
-                awsType: null,
-                reference: FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/POST/@connections/*"),
-                allow: new[] {
-                    "execute-api:ManageConnections"
-                },
-                condition: null
-            );
+            // check if we need to generate the websocket or if we're given a reference to it
+            AModuleItem webSocket = null;
+            var generateWebSocket = !_builder.TryGetOverride("Module::WebSocket", out var webSocketFullName);
+            if(generateWebSocket) {
 
-            // create a WebSocket API
-            _builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression);
-            _builder.TryGetOverride("Module::WebSocket.ApiKeySelectionExpression", out var apiKeySelectionExpression);
-            var webSocket = _builder.AddResource(
-                parent: moduleItem,
-                name: "WebSocket",
-                description: "Module WebSocket",
-                scope: null,
-                resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Api") {
-                    ["Name"] = FnSub("${AWS::StackName} Module WebSocket"),
-                    ["ProtocolType"] = "WEBSOCKET",
-                    ["Description"] = FnSub("${Module::FullName} WebSocket (v${Module::Version})"),
-                    ["RouteSelectionExpression"] = routeSelectionExpression ?? "$request.body.action",
-                    ["ApiKeySelectionExpression"] = apiKeySelectionExpression
-                },
-                resourceExportAttribute: null,
-                dependsOn: null,
-                condition: null,
-                pragmas: null,
-                deletionPolicy: null
-            );
+                // create a WebSocket API
+                _builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression);
+                _builder.TryGetOverride("Module::WebSocket.ApiKeySelectionExpression", out var apiKeySelectionExpression);
+                webSocket = _builder.AddResource(
+                    parent: moduleItem,
+                    name: "WebSocket",
+                    description: "Module WebSocket",
+                    scope: null,
+                    resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Api") {
+                        ["Name"] = FnSub("${AWS::StackName} Module WebSocket"),
+                        ["ProtocolType"] = "WEBSOCKET",
+                        ["Description"] = FnSub("${Module::FullName} WebSocket (v${Module::Version})"),
+                        ["RouteSelectionExpression"] = routeSelectionExpression ?? "$request.body.action",
+                        ["ApiKeySelectionExpression"] = apiKeySelectionExpression
+                    },
+                    resourceExportAttribute: null,
+                    dependsOn: null,
+                    condition: null,
+                    pragmas: null,
+                    deletionPolicy: null
+                );
+                webSocketFullName = FnRef(webSocket.FullName);
+            } else {
+
+                // create variable to hold the web socket reference
+                webSocket = _builder.AddVariable(
+                    parent: moduleItem,
+                    name: "WebSocket",
+                    description: "Module WebSocket (reference)",
+                    type: "String",
+                    scope: null,
+                    value: webSocketFullName,
+                    allow: null,
+                    encryptionContext: null
+                );
+            }
 
             // create variable to hold stage name
             _builder.TryGetOverride("Module::WebSocket::StageName", out var stageName);
@@ -317,6 +363,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
+            // give permission to the Lambda functions to communicate back over the WebSocket
+            _builder.AddGrant(
+                name: "WebSocketConnections",
+                awsType: null,
+                reference: FnSub("arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/POST/@connections/*"),
+                allow: new[] {
+                    "execute-api:ManageConnections"
+                },
+                condition: null
+            );
+
             // create resources as needed
             var webSocketResources = new Dictionary<string, object>();
             foreach(var webSocketRouteByFunction in _webSocketRoutes.GroupBy(route => route.Function.FullName)) {
@@ -324,7 +381,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // add integration resource (only need one per end-point function)
                 var integrationResource = new Humidifier.CustomResource("AWS::ApiGatewayV2::Integration") {
-                    ["ApiId"] = FnRef(webSocket.FullName),
+                    ["ApiId"] = webSocketFullName,
                     ["Description"] = $"WebSocket Integration for '{function.FullName}'",
                     ["IntegrationType"] = "AWS_PROXY",
                     ["IntegrationUri"] = FnSub($"arn:${{AWS::Partition}}:apigateway:${{AWS::Region}}:lambda:path/2015-03-31/functions/${{{function.FullName}.Arn}}/invocations"),
@@ -352,7 +409,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // add route resource
                     var routeResource = new Humidifier.CustomResource("AWS::ApiGatewayV2::Route") {
-                        ["ApiId"] = FnRef(webSocket.FullName),
+                        ["ApiId"] = webSocketFullName,
                         ["RouteKey"] = webSocketRoute.Source.RouteKey,
                         ["ApiKeyRequired"] = webSocketRoute.Source.ApiKeyRequired,
                         ["AuthorizationType"] = webSocketRoute.Source.AuthorizationType ?? "NONE",
@@ -376,7 +433,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     webSocketResources.Add(route.FullName, routeResource);
 
                     // add optional request/response models
-                    if(!webSocketRoute.Source.RouteKey.StartsWith("$", StringComparison.Ordinal)) {
+                    if(
+                        !webSocketRoute.Source.RouteKey.Equals("$connect", StringComparison.Ordinal)
+                        && !webSocketRoute.Source.RouteKey.Equals("$disconnect", StringComparison.Ordinal)
+                    ) {
 
                         // add request model
                         switch(webSocketRoute.Source.RequestSchema) {
@@ -405,7 +465,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 description: null,
                                 scope: null,
                                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Model") {
-                                    ["ApiId"] = FnRef(webSocket.FullName),
+                                    ["ApiId"] = webSocketFullName,
                                     ["ContentType"] = webSocketRoute.Source.RequestContentType,
                                     ["Name"] = $"{route.LogicalId}RequestModel",
                                     ["Schema"] = webSocketRoute.Source.RequestSchema
@@ -439,7 +499,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                             // add route response resource to return non-validated JSON response
                             var routeResponseResource = new Humidifier.CustomResource("AWS::ApiGatewayV2::RouteResponse") {
-                                ["ApiId"] = FnRef(webSocket.FullName),
+                                ["ApiId"] = webSocketFullName,
                                 ["RouteId"] = FnRef(route.FullName),
                                 ["RouteResponseKey"] = "$default"
                             };
@@ -477,7 +537,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 description: null,
                                 scope: null,
                                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Model") {
-                                    ["ApiId"] = FnRef(webSocket.FullName),
+                                    ["ApiId"] = webSocketFullName,
                                     ["ContentType"] = webSocketRoute.Source.ResponseContentType,
                                     ["Name"] = $"{route.LogicalId}ResponseModel",
                                     ["Schema"] = webSocketRoute.Source.ResponseSchema
@@ -492,7 +552,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                             // add route response resource
                             routeResponseResource = new Humidifier.CustomResource("AWS::ApiGatewayV2::RouteResponse") {
-                                ["ApiId"] = FnRef(webSocket.FullName),
+                                ["ApiId"] = webSocketFullName,
                                 ["RouteId"] = FnRef(route.FullName),
                                 ["RouteResponseKey"] = "$default",
                                 ["ModelSelectionExpression"] = "default",
@@ -547,20 +607,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             }
 
-            // WebSocket deployment depends on all methods and their hash (to force redeployment in case of change)
-            var resourcesSignature = string.Join("\n", webSocketResources
-                .OrderBy(kv => kv.Key)
-                .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
-
-                // include dependency on AWS::ApiGatewayV2::Authorizer if one exists
-                .Union(_builder.Items
-                    .OfType<ResourceItem>()
-                    .Where(item => item.Type == "AWS::ApiGatewayV2::Authorizer")
-                    .Select(item => $"{item.FullName}={JsonConvert.SerializeObject(item.Resource)}")
-                )
-            );
-            string methodsChecksum = resourcesSignature.ToMD5Hash();
-
             // add WebSocket url
             var webSocketDomainName = _builder.AddVariable(
                 parent: webSocket,
@@ -568,7 +614,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: "Module WebSocket Domain Name",
                 type: "String",
                 scope: null,
-                value: FnSub($"${{{webSocket.FullName}}}.execute-api.${{AWS::Region}}.${{AWS::URLSuffix}}"),
+                value: FnSub($"${{WebSocketFullName}}.execute-api.${{AWS::Region}}.${{AWS::URLSuffix}}", new Dictionary<string, object> {
+                    ["WebSocketFullName"] = webSocketFullName
+                }),
                 allow: null,
                 encryptionContext: null
             );
@@ -578,82 +626,71 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: "Module WebSocket URL",
                 type: "String",
                 scope: new List<string> { "all" },
-                value: FnSub($"wss://${{{webSocketDomainName.FullName}}}/${{Module::WebSocket::StageName}}"),
+                value: FnSub($"wss://${{Module::WebSocket::DomainName}}/${{Module::WebSocket::StageName}}"),
                 allow: null,
                 encryptionContext: null
             );
 
-            // NOTE (2018-06-21, bjorg): the WebSocket deployment depends on ALL route resources having been created;
-            //  a new name is used for the deployment to force the stage to be updated
-            var deploymentWithChecksum = _builder.AddResource(
-                parent: webSocket,
-                name: "Deployment" + methodsChecksum,
-                description: "Module WebSocket Deployment",
-                scope: null,
-                resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Deployment") {
-                    ["ApiId"] = FnRef("Module::WebSocket"),
-                    ["Description"] = FnSub($"${{AWS::StackName}} WebSocket [{methodsChecksum}]")
-                },
-                resourceExportAttribute: null,
-                dependsOn: webSocketResources.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
-                condition: null,
-                pragmas: null,
-                deletionPolicy: null
-            );
-            var deployment = _builder.AddVariable(
-                parent: webSocket,
-                name: "Deployment",
-                description: "Module WebSocket Deployment",
-                type: "String",
-                scope: null,
-                value: FnRef(deploymentWithChecksum.FullName),
-                allow: null,
-                encryptionContext: null
-            );
+            // create additional resources for the generated web socket
+            if(generateWebSocket) {
 
-            // create log-group for WebSocket
-            var webSocketLogGroup = _builder.AddResource(
-                parent: webSocket,
-                name: "LogGroup",
-                description: null,
-                scope: null,
-                resource: new Humidifier.CustomResource("AWS::Logs::LogGroup") {
-                    ["RetentionInDays"] = FnRef("Module::LogRetentionInDays")
-                },
-                resourceExportAttribute: null,
-                dependsOn: null,
-                condition: null,
-                pragmas: null,
-                deletionPolicy: null
-            );
-
-            // WebSocket stage depends on deployment
-            _builder.AddResource(
-                parent: webSocket,
-                name: "Stage",
-                description: "Module WebSocket Stage",
-                scope: null,
-                resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Stage") {
-                    ["AccessLogSettings"] = new Dictionary<string, dynamic> {
-                        ["DestinationArn"] = FnSub($"arn:${{AWS::Partition}}:logs:${{AWS::Region}}:${{AWS::AccountId}}:log-group:${{{webSocketLogGroup.FullName}}}"),
-                        ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.WebSocketLogging.json")), Formatting.None)
+                // create log-group for WebSocket
+                var webSocketLogGroup = _builder.AddResource(
+                    parent: webSocket,
+                    name: "LogGroup",
+                    description: null,
+                    scope: null,
+                    resource: new Humidifier.CustomResource("AWS::Logs::LogGroup") {
+                        ["RetentionInDays"] = FnRef("Module::LogRetentionInDays")
                     },
-                    ["ApiId"] = FnRef("Module::WebSocket"),
-                    ["StageName"] = FnRef("Module::WebSocket::StageName"),
-                    ["Description"] = FnSub("Module WebSocket ${Module::WebSocket::StageName} Stage"),
-                    ["DeploymentId"] = FnRef(deployment.FullName),
-                    ["RouteSettings"] = _webSocketRoutes.ToDictionary(route => route.Source.RouteKey, route => new Dictionary<string, dynamic> {
-                        ["DataTraceEnabled"] = true,
-                        ["DetailedMetricsEnabled"] = true,
-                        ["LoggingLevel"] = "INFO"
-                    })
-                },
-                resourceExportAttribute: null,
-                dependsOn: new[] { webSocketLogGroup.FullName },
-                condition: null,
-                pragmas: null,
-                deletionPolicy: null
-            );
+                    resourceExportAttribute: null,
+                    dependsOn: null,
+                    condition: null,
+                    pragmas: null,
+                    deletionPolicy: null
+                );
+
+                // WebSocket stage depends on Module::WebSocket::LogGroup
+                _builder.AddResource(
+                    parent: webSocket,
+                    name: "Stage",
+                    description: "Module WebSocket Stage",
+                    scope: null,
+                    resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Stage") {
+                        ["AccessLogSettings"] = new Dictionary<string, dynamic> {
+                            ["DestinationArn"] = FnSub($"arn:${{AWS::Partition}}:logs:${{AWS::Region}}:${{AWS::AccountId}}:log-group:${{{webSocketLogGroup.FullName}}}"),
+                            ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.WebSocketLogging.json")), Formatting.None)
+                        },
+                        ["ApiId"] = FnRef("Module::WebSocket"),
+                        ["StageName"] = FnRef("Module::WebSocket::StageName"),
+                        ["Description"] = FnSub("Module WebSocket ${Module::WebSocket::StageName} Stage"),
+                        ["AutoDeploy"] = true,
+                        ["DefaultRouteSettings"] = new Dictionary<string, dynamic> {
+                            ["DataTraceEnabled"] = true,
+                            ["DetailedMetricsEnabled"] = true,
+                            ["LoggingLevel"] = "INFO"
+                        }
+                    },
+                    resourceExportAttribute: null,
+                    dependsOn: new[] { webSocketLogGroup.FullName },
+                    condition: null,
+                    pragmas: null,
+                    deletionPolicy: null
+                );
+            } else {
+
+                // add blank placeholders so that reference can resolve during code analysis
+                _builder.AddVariable(
+                    parent: webSocket,
+                    name: "Stage",
+                    description: "Module WebSocket Stage",
+                    type: "String",
+                    scope: null,
+                    value: "",
+                    allow: null,
+                    encryptionContext: null
+                );
+            }
         }
 
         private void AddRestApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<(FunctionItem Function, RestApiSource Source)> routes, Dictionary<string, object> apiDeclarations, object moduleRestApiCorsOrigin) {

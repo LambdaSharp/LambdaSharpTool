@@ -1,0 +1,4 @@
+Expression: !Sub
+  - "${project} built in ${location}"
+  - project: "LambdaSharp"
+    location: "San Diego"

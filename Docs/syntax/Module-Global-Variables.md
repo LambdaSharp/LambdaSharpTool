@@ -52,23 +52,25 @@ The following resources and variables are defined when a module contains a funct
 
 |Variable                      |Type                          |Definition                                    |
 |------------------------------|------------------------------|----------------------------------------------|
-|`Module::RestApi`             |AWS::ApiGateway::RestApi      |REST API resource
-|`Module::RestApi::Deployment` |AWS::ApiGateway::Deployment   |Deployment for the REST API; this resource changes whenever a REST API resource or method is modified
-|`Module::RestApi::DomainName` |String                        |Domain name of theREST API
-|`Module::RestApi::Stage`      |AWS::ApiGateway::Stage        |Stage for deploying REST API; the stage name is always `LATEST`
-|`Module::RestApi::Url`        |String                        |URL of the REST API
+|`Module::RestApi`             |AWS::ApiGateway::RestApi      |REST API resource.
+|`Module::RestApi::CorsOrigin` |String                        |CORS Origin for REST API; is `!Ref AWS::NoValue` when not set.
+|`Module::RestApi::Deployment` |AWS::ApiGateway::Deployment   |Deployment for the REST API; this resource changes whenever a REST API resource or method is modified.
+|`Module::RestApi::DomainName` |String                        |Domain name of theREST API.
+|`Module::RestApi::Stage`      |AWS::ApiGateway::Stage        |Stage for deploying REST API; the stage name is always `LATEST`.
+|`Module::RestApi::Url`        |String                        |URL of the REST API.
 
 ## Module WebSocket API Variables
 
 The following resources and variables are defined when a module contains a function that uses an API Gateway V2 source. Otherwise, these resources and variables are not defined.
 
-|Variable                      |Type                            |Definition                                    |
-|------------------------------|--------------------------------|----------------------------------------------|
-|`Module::WebSocket`             |AWS::ApiGatewayV2::Api        |WebSocket API resource
-|`Module::WebSocket::Deployment` |AWS::ApiGatewayV2::Deployment |Deployment for the WebSocket API; this resource changes whenever an WebSocket API resource or method is modified
-|`Module::WebSocket::DomainName` |String                        |Domain name of the WebSocket API
-|`Module::WebSocket::Stage`      |AWS::ApiGatewayV2::Stage      |Stage for deploying WebSocket API; the stage name is always `LATEST`
-|`Module::WebSocket::Url`        |String                        |URL of the WebSocket API
+|Variable                        |Type                            |Definition                                    |
+|--------------------------------|--------------------------------|----------------------------------------------|
+|`Module::WebSocket`             |AWS::ApiGatewayV2::Api        |WebSocket API resource.
+|`Module::WebSocket::DomainName` |String                        |Domain name of the WebSocket API.
+|`Module::WebSocket::Stage`      |AWS::ApiGatewayV2::Stage      |Stage for deploying WebSocket API; the stage name is always `LATEST`.
+|`Module::WebSocket::Url`        |String                        |URL of the WebSocket API.
+
+**NOTE:** When overriding `Module::WebSocket`, the `Module::WebSocket::Stage` is defined as empty strings since no resource is generated.
 
 ## Module Deployment Parameters
 
@@ -76,7 +78,7 @@ The following parameters are set by LambdaSharp CLI when deploying a module.
 
 |Variable                      |Type                           |Definition                                    |
 |------------------------------|-------------------------------|----------------------------------------------|
-|`DeploymentBucketName`        |String                         |S3 Bucket name from which the module is being deployed from
-|`DeploymentChecksum`          |String                         |Module checksum; changes whenever the module definition changes
-|`DeploymentPrefix`            |String                         |Deployment tier prefix used to isolate resources
-|`DeploymentPrefixLowercase`   |String                         |Deployment tier prefix in lowercase characters; used by resources that require only lowercase characters (e.g. S3 buckets)
+|`DeploymentBucketName`        |String                         |S3 Bucket name from which the module is being deployed from.
+|`DeploymentChecksum`          |String                         |Module checksum; changes whenever the module definition changes.
+|`DeploymentPrefix`            |String                         |Deployment tier prefix used to isolate resources.
+|`DeploymentPrefixLowercase`   |String                         |Deployment tier prefix in lowercase characters; used by resources that require only lowercase characters (e.g. S3 buckets).

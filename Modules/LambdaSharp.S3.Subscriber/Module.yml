@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.S3.Subscriber
+Origin: lambdasharp
 Description: LambdaSharp S3 Lambda Function Subscriber
 Items:
 
@@ -22,7 +23,6 @@ Items:
     Description: Resource type for S3 bucket subscriptions
     Handler: CustomResourceTopic
     Properties:
-
       - Name: Bucket
         Description: S3 bucket ARN/name to subscribe to
         Type: String
@@ -39,7 +39,6 @@ Items:
         Required: true
 
     Attributes:
-
       - Name: Result
         Description: S3 bucket URL
         Type: String
@@ -48,8 +47,8 @@ Items:
     Description: LambdaSharpS3Subscriber requires notification configuration access to all S3 buckets
     Type: AWS::S3::Bucket
     Allow:
-      - "s3:GetBucketNotification"
-      - "s3:PutBucketNotification"
+      - s3:GetBucketNotification
+      - s3:PutBucketNotification
     Value: !Sub "arn:aws:s3:::${Deployment::TierPrefixLowercase}*"
 
   - Resource: CustomResourceTopic
@@ -59,9 +58,14 @@ Items:
 
   - Function: ResourceHandler
     Description: LambdaSharp S3 Subscription handler
-    Memory: 256
+    Memory: 512
     Timeout: 30
     Properties:
       ReservedConcurrentExecutions: 1
     Sources:
       - Topic: CustomResourceTopic
+
+  - Variable: ResourceHandlerRole
+    Description: Custom resource IAM role name used to update notifications on S3 buckets
+    Scope: public
+    Value: !Ref Module::Role

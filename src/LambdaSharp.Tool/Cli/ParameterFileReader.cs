@@ -61,8 +61,8 @@ namespace LambdaSharp.Tool.Cli {
 
             //--- Methods ---
             public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
-                if(reader.Current is NodeEvent node) {
-                    switch(node.Tag) {
+                if((reader.Current is NodeEvent node) && node.Tag.IsLocal) {
+                    switch(node.Tag.Value) {
                     case "!GetConfig":
                         return GetConfig(node, reader, expectedType, nestedObjectDeserializer, out value);
                     case "!GetEnv":
@@ -473,7 +473,7 @@ namespace LambdaSharp.Tool.Cli {
             Dictionary<string, object> ParseYamlFile(string text, bool findDependencies) {
                 parameterStoreDeserializer.FindDependencies = findDependencies;
                 return new DeserializerBuilder()
-                    .WithNamingConvention(new PascalCaseNamingConvention())
+                    .WithNamingConvention(PascalCaseNamingConvention.Instance)
                     .WithNodeDeserializer(parameterStoreDeserializer)
                     .WithTagMapping("!GetConfig", typeof(CloudFormationListFunction))
                     .WithTagMapping("!GetEnv", typeof(CloudFormationListFunction))

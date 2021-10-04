@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2021
  * lambdasharp.net
@@ -16,19 +16,15 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.App.EventBus.Actions {
+namespace Sample.DynamoDBNative.ApiFunction.Models {
 
-    /// <summary>
-    /// The abstract <see cref="ARuleAction"/> class is used by LambdaSharp
-    /// App EventBus actions that reference a subscription.
-    /// </summary>
-    public abstract class ARuleAction : AnAction {
+    public class AddOrUpdateAddressRequest {
 
         //--- Properties ---
-
-        /// <summary>
-        /// The <see cref="Rule"/> property holds the subscription rule name.
-        /// </summary>
-        public string Rule { get; set; }
+        public string Street { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
     }
+
+    public class AddOrUpdateAddressResponse { }
 }

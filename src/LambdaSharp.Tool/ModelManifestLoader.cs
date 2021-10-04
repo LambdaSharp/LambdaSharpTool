@@ -235,11 +235,16 @@ namespace LambdaSharp.Tool {
                         return (Origin: bucketName, Version: null, Manifest: null);
                     }
 
-                    // NOTE (2019-08-12, bjorg): if the module is nested, we filter the list of found versions to
+                    // NOTE (2019-08-12, bjorg): if the module is nested or root, we filter the list of found versions to
                     //  only contain versions that meet the module version constraint; for shared modules, we want to
                     //  keep the latest version that is compatible with the tool and is equal-or-greater than the
                     //  module version constraint.
-                    if((dependencyType == ModuleManifestDependencyType.Nested) && (moduleInfo.Version != null)) {
+                    if(
+                        (
+                            (dependencyType == ModuleManifestDependencyType.Root)
+                            || (dependencyType == ModuleManifestDependencyType.Nested)
+                        ) && (moduleInfo.Version != null)
+                    ) {
                         found = found.Where(version => {
                             if(!version.MatchesConstraint(moduleInfo.Version)) {
                                 LogInfoVerbose($"... rejected v{version}: does not match version constraint {moduleInfo.Version}");
@@ -297,9 +302,10 @@ namespace LambdaSharp.Tool {
                         var cachedManifestFolder = GetCachedManifestDirectory(bucketName, moduleOrigin, moduleInfo.Namespace, moduleInfo.Name);
                         if(cachedManifestFolder != null) {
                             cachedManifestVersionsFilePath = Path.Combine(cachedManifestFolder, "versions.json");
-
-                            // TODO (2021-02-24, bjorg): make ignoring the cached value after 10 minutes configurable
-                            if(File.Exists(cachedManifestVersionsFilePath) && (File.GetLastWriteTimeUtc(cachedManifestVersionsFilePath).AddMinutes(10) > DateTime.UtcNow)) {
+                            if(
+                                File.Exists(cachedManifestVersionsFilePath)
+                                && (File.GetLastWriteTimeUtc(cachedManifestVersionsFilePath).Add(Settings.CachedManifestListingExpiration) > DateTime.UtcNow)
+                            ) {
                                 cached = true;
                                 var cachedManifestVersions = JsonSerializer.Deserialize<ModuleManifestVersions>(File.ReadAllText(cachedManifestVersionsFilePath), Settings.JsonSerializerOptions);
                                 region = cachedManifestVersions.Region;

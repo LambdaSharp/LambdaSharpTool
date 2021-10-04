@@ -6,7 +6,7 @@ Items:
 
   - Variable: MyAppWebsiteUrl
     Description: MyApp Website URL
-    Scope: public
+    Scope: stack
     Value: !GetAtt MyApp::Bucket.Outputs.WebsiteUrl
 
   - Function: MyApiGatewayFunction

@@ -299,6 +299,9 @@ namespace LambdaSharp.Tool {
         public BuildPolicy BuildPolicy { get; set; }
         public bool AllowImport => BuildPolicy == null;
 
+        // TODO (2021-02-24, bjorg): make ignoring the cached value after 10 minutes configurable
+        public TimeSpan CachedManifestListingExpiration = TimeSpan.FromMinutes(10);
+
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)
             => new List<Tag> {

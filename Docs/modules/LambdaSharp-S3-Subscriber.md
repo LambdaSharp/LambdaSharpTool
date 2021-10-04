@@ -20,4 +20,39 @@ This module requires no parameters.
 
 ## Output Values
 
-This module has no output values.
+<dl>
+
+<dt><code>ResourceHandlerRole</code></dt>
+<dd>
+
+The <code>ResourceHandlerRole</code> output contains the module IAM role ARN. This enables other modules to give additional permissions to the resource handler when required.
+
+<i>Type:</i> AWS::IAM::Role
+
+The following module sample shows how to import the `ResourceHandlerRole` output value and use it to attach additional permission to the S3 subscription handler.
+
+```yaml
+- Import: SubscriberRole
+  Module: LambdaSharp.S3.Subscriber::ResourceHandlerRole
+
+- Resource: S3SubscriberAccess
+  Type: AWS::IAM::Policy
+  Properties:
+    PolicyName: !Sub "${AWS::StackName}S3BucketPolicy"
+    PolicyDocument:
+      Version: 2012-10-17
+      Statement:
+        - Sid: S3BucketPermissions
+          Effect: Allow
+          Action:
+            - s3:GetBucketNotification
+            - s3:PutBucketNotification
+          Resource: !Ref MyBucket
+    Roles:
+      - !Ref SubscriberRole
+```
+
+</dd>
+
+</dl>
+

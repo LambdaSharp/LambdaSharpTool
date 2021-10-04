@@ -1,20 +1,43 @@
-- name: Setup
-  href: Setup.md
-
 - name: Why LambdaSharp?
   href: WhyLambdaSharp.md
 
-- name: Using Amazon Linux 2 on WSL
-  href: Amazon-Linux-2-WSL.md
+- name: Setup
+  href: Setup.md
 
 - name: Video Tutorials
   href: VideoTutorials.md
 
+- name: API Gateway for .NET
+  href: APIGateway.md
+
+- name: DynamoDB for .NET
+  href: DynamoDB-Native/Overview.md
+  items:
+
+    - name: Serialization
+      href: DynamoDB-Native/Serialization.md
+      items:
+
+      - name: .NET Type Mappings
+        href: DynamoDB-Native/Serialization-TypeMappings.md
+
+      - name: Custom Type Converters
+        href: DynamoDB-Native/Serialization-CustomConverters.md
+
+      - name: AttributeValue to JSON Converter
+        href: DynamoDB-Native/Serialization-AttributeValueJson.md
+
+    - name: Condition/Filter Specification
+      href: DynamoDB-Native/Condition-Filter-Specification.md
+
+    - name: UpdateItem SET Expression Specification
+      href: DynamoDB-Native/UpdateItem-Set-Specification.md
+
 - name: Finalizer
   href: Finalizer.md
 
-- name: API Gateway for .NET
-  href: APIGateway.md
+- name: Using Amazon Linux 2 on WSL
+  href: Amazon-Linux-2-WSL.md
 
 - name: CI/CD Pipeline
   href: CICD.md
@@ -57,7 +80,7 @@
 - name: Releases
   items:
 
-    - name: Hicetas (v0.8.2.2)
+    - name: Hicetas (v0.8.3.4)
       href: ReleaseNotes-Hicetas.md
 
     - name: Geminus (v0.7.0.17)
