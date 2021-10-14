@@ -33,6 +33,7 @@ namespace LambdaSharp.DynamoDB.Serialization {
             DynamoIntConverter.Instance,
             DynamoLongConverter.Instance,
             DynamoDoubleConverter.Instance,
+            DynamoFloatConverter.Instance,
             DynamoDateTimeOffsetConverter.Instance,
             DynamoDecimalConverter.Instance,
             DynamoStringConverter.Instance,
