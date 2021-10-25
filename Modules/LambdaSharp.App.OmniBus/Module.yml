@@ -1,0 +1,339 @@
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2021
+# lambdasharp.net
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.App.OmniBus
+Origin: lambdasharp
+Description: Connect LambdaSharp App to Omni directional communication bus
+Pragmas:
+  - Overrides:
+      Module::WebSocket.RouteSelectionExpression: $request.body.Action
+      Module::WebSocket::StageName: _socket
+
+Items:
+
+  ###
+  # Module Parameters
+  ###
+
+  - Parameter: DataTableCapacity
+    Description: Read/Write capacity for DynamoDB table (empty value means on-demand)
+    Section: App OmniBus
+    Label: Read/Write Capacity
+    Type: String
+    Default: ""
+    AllowedPattern: (\d+,\d+)?
+    ConstraintDescription: Value must either be two number separated by a comma (e.g. "5,5") or empty for on-demand
+
+  - Condition: DataTableCapacityIsOnDemand
+    Value: !Equals [ !Ref DataTableCapacity, "" ]
+
+  - Parameter: AuthorizerFunctionArn
+    Description: Authorizer function for WebSocket connections
+    Section: App OmniBus
+    Label: WebSocket Authorizer ARN
+    Type: AWS::Lambda::Function
+    Default: ""
+
+  - Condition: AuthorizerFunctionArnIsProvided
+    Value: !Not [ !Equals [ !Ref AuthorizerFunctionArn, "" ] ]
+
+  - Parameter: DevMode
+    Description: Developer mode
+    Section: App OmniBus
+    Label: Developer mode disables JWT validation authentication and enables debug output in CloudWatch logs
+    Type: String
+    AllowedValues:
+      - Enabled
+      - Disabled
+    Default: Disabled
+
+  - Condition: DevModeIsEnabled
+    Value: !Equals [ !Ref DevMode, "Enabled" ]
+
+  ###
+  # Stack Outputs
+  ###
+
+  - Variable: OmniBusEventTopicArn
+    Scope: public
+    Description: SNS topic ARN for broadcasting events to App OmniBus
+    Value: !Ref EventTopic
+
+  - Variable: OmniBusWebSocket
+    Scope: public
+    Description: WebSocket ID of App OmniBus
+    Value: !Ref Module::WebSocket
+
+  - Variable: WebSocketUrl
+    Scope: public
+    Description: WebSocket URL for connecting to App OmniBus
+    Value: !Ref Module::WebSocket::Url
+
+  ###
+  # WebSocket Connection Listening
+  ###
+
+  - Function: ListenerFunction
+    Description: Lambda function listening on the WebSocket connection
+    Memory: 1769
+    Timeout: 30
+    Properties:
+      Environment:
+        Variables:
+          DEBUG_LOGGING_ENABLED: !If [ DevModeIsEnabled, "true", "false" ]
+    Sources:
+
+      # OmniBus actions
+      - WebSocket: $connect
+        Invoke: OpenConnection
+        AuthorizationType: !If [ AuthorizerFunctionArnIsProvided, CUSTOM, !Ref AWS::NoValue ]
+        AuthorizerId: !If [ AuthorizerFunctionArnIsProvided, !Ref JwtAuthorizer, !Ref AWS::NoValue ]
+
+      - WebSocket: $disconnect
+        Invoke: CloseConnection
+
+      - WebSocket: $default
+        Invoke: UnrecognizedAction
+
+      - WebSocket: KeepAlive
+        Invoke: KeepAlive
+
+      # Events Actions
+      - WebSocket: Events/Subscribe
+        Invoke: Subscribe
+
+      - WebSocket: Events/Unsubscribe
+        Invoke: Unsubscribe
+
+  ###
+  # WebSocket Authorization
+  ###
+
+  - Resource: JwtAuthorizer
+    If: AuthorizerFunctionArnIsProvided
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: JwtAuthorizer
+      ApiId: !Ref Module::WebSocket
+      AuthorizerType: REQUEST
+      AuthorizerUri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizerFunctionArn}/invocations"
+      AuthorizerCredentialsArn: !GetAtt JwtAuthorizerRole.Arn
+      IdentitySource:
+        - route.request.querystring.header
+
+  - Resource: JwtAuthorizerRole
+    If: AuthorizerFunctionArnIsProvided
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: lambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:invokeFunction
+                Resource: !Ref AuthorizerFunctionArn
+
+  - Resource: JwtAuthorizerPermission
+    If: AuthorizerFunctionArnIsProvided
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthorizerFunctionArn
+      Principal: !Sub "apigateway.${AWS::URLSuffix}"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/${Module::WebSocket::StageName}/$connect"
+
+  ###
+  # Event Broadcasting
+  ###
+
+  - Resource: EventTopic
+    Scope:
+      - ListenerFunction
+      - BroadcastFunction
+    Description: SNS topic for broadcast events to all open WebSocket connections
+    Type: AWS::SNS::Topic
+    Allow:
+      - sns:Subscribe
+      - sns:Unsubscribe
+
+  - Resource: EventTopicPolicy
+    Description: SNS topic policy to allow EventBridge rules to invoke the event topic
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: EventsPublish
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref EventTopic
+      Topics:
+        - !Ref EventTopic
+
+  - Variable: HttpApiInvocationToken
+    Scope:
+      - ListenerFunction
+      - BroadcastFunction
+    Description: Token used to restrict invocations of the HTTP API
+    Value:
+      Fn::Base64: !Select [ 2, !Split [ "/", !Ref AWS::StackId ]]
+
+  - Resource: EventBroadcastApi
+    Description: HTTP API used for SNS topic subscriptions to broadcast across all open WebSocket connections
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub "${Module::Id}-HttpApi"
+      Description: Event Broadcast HTTP API
+      ProtocolType: HTTP
+      Target: !GetAtt  BroadcastFunction.Arn
+
+  - Function: BroadcastFunction
+    Description: Lambda function for broadcasting EventBridge events to a WebSocket connection
+    Memory: 1769
+    Timeout: 30
+    Properties:
+      Environment:
+        Variables:
+          DEBUG_LOGGING_ENABLED: !If [ DevModeIsEnabled, "true", "false" ]
+
+  - Resource: BroadcastFunctionPermission
+    Description: Lambda permission to allow HTTP API to invoke broadcast function
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BroadcastFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${EventBroadcastApi}/*/$default"
+
+  - Variable: EventBroadcastApiUrl
+    Scope: ListenerFunction
+    Description: HTTP API endpoint for broadcasting events
+    Value: !Sub "${EventBroadcastApi.ApiEndpoint}/$default"
+
+  ###
+  # EventBridge OmniBus and Rule to forward events
+  ###
+
+  - Resource: Rule
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: default
+      EventPattern:
+
+        # only capture events meant for the OmniBus channel and this deployment tier
+        detail-type:
+            - LambdaSharp.App.OmniBus.Protocol.OmniBusEvent
+        resources:
+          - !Sub "lambdasharp:tier:${Deployment::Tier}"
+      Targets:
+
+        # forward matching events to SNS topic
+        - Id: EventTopic
+          Arn: !Ref OmniBusEventTopicArn
+          InputTransformer:
+            InputPathsMap:
+              id: $.detail.Id
+              source: $.detail.Source
+              time: $.detail.Time
+              content-type: $.detail.ContentType
+              body: $.detail.Body
+              audience: $.detail.Audience
+            InputTemplate: >-
+              {
+                "Id": <id>,
+                "Source": <source>,
+                "Time": <time>,
+                "Audience": <audience>,
+                "ContentType": <content-type>,
+                "Body": <body>
+              }
+
+  ###
+  # Connection Keep-Alive Event
+  ###
+
+  - Resource: KeepAlive
+    Description: CloudWatch schedule rule for regularly sending a keep-alive message on each open WebSocket connection
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(1 minute)
+      Targets:
+        - Id: EventTopic
+          Arn: !Ref EventTopic
+
+          # convert to OmniBus event format
+          InputTransformer:
+            InputPathsMap:
+              id: $.id
+              time: $.time
+            InputTemplate: >-
+              {
+                "Id": <id>,
+                "Source": "LambdaSharp.App.OmniBus::KeepAlive",
+                "Time": <time>,
+                "Audience": [ ],
+                "ContentType": "text/plain",
+                "Body": ""
+              }
+
+  - Variable: KeepAliveRuleArn
+    Scope: BroadcastFunction
+    Description: ARN for CloudWatch schedule rule used to differentiate between keep-alive message and other scheduled events
+    Value: !GetAtt KeepAlive.Arn
+
+  ###
+  # Subscription State Management
+  ###
+
+  - Resource: DataTable
+    Scope:
+      - ListenerFunction
+      - BroadcastFunction
+    Description: DynamoDB table for storing webSocket connection information and EventBridge rules
+    Type: AWS::DynamoDB::Table
+    Allow: ReadWrite
+    Properties:
+      BillingMode: !If [ DataTableCapacityIsOnDemand, PAY_PER_REQUEST, PROVISIONED ]
+      ProvisionedThroughput: !If
+        - DataTableCapacityIsOnDemand
+        - !Ref AWS::NoValue
+        - ReadCapacityUnits: !Select [ 0, !Split [ ",", !Ref DataTableCapacity ]]
+          WriteCapacityUnits: !Select [ 1, !Split [ ",", !Ref DataTableCapacity ]]
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: Expiration
+        Enabled: true

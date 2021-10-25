@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>LambdaSharp.App.OmniBus.ListenerFunction</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\Actions\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LambdaSharp.App.OmniBus.Events\LambdaSharp.App.OmniBus.Events.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.ApiGateway\LambdaSharp.ApiGateway.csproj" />
+  </ItemGroup>
+</Project>
