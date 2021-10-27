@@ -25,7 +25,7 @@ namespace LambdaSharp.App.Bus.Protocol {
     public sealed class BusErrorPayload {
 
         //--- Constants ---
-        public const string MIME_TYPE = "application/vnd.lambdasharp.omnibus.error2106+json";
+        public const string MIME_TYPE = "application/vnd.lambdasharp.bus.error2106+json";
 
         //--- Properties ---
         public string Message { get; set; }

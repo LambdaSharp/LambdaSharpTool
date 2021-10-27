@@ -219,7 +219,7 @@ namespace LambdaSharp.App.Bus.ListenerFunction {
                 try {
 
                     // retrieve audience claim from authorization context
-                    if(!CurrentRequest.RequestContext.Authorizer.TryGetValue("omnibus:aud", out var audienceJson)) {
+                    if(!CurrentRequest.RequestContext.Authorizer.TryGetValue("lambdasharp:bus:aud", out var audienceJson)) {
                         audienceJson = "{}";
                     }
 

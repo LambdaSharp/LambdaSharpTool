@@ -26,7 +26,7 @@ namespace LambdaSharp.App.Bus.Events.Actions {
 
         //--- Constants ---
         public const string ACTION = "Events/Subscribe";
-        public const string MIME_TYPE = "application/vnd.lambdasharp.omnibus.subscribe2106+json";
+        public const string MIME_TYPE = "application/vnd.lambdasharp.bus.subscribe2106+json";
 
         //--- Properties ---
 

@@ -29,7 +29,7 @@ namespace LambdaSharp.App.Bus.Events.Payloads {
 
         //--- Constants ---
         public const string ACTION = "Events/Match";
-        public const string MIME_TYPE = "application/vnd.lambdasharp.omnibus.event2106+json";
+        public const string MIME_TYPE = "application/vnd.lambdasharp.bus.event2106+json";
 
         //--- Properties ---
         public string Id { get; set; }

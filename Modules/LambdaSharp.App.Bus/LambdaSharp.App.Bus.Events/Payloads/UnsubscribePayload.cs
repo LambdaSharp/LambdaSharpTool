@@ -28,7 +28,7 @@ namespace LambdaSharp.App.Bus.Events.Payloads {
 
         //--- Constants ---
         public const string ACTION = "Events/Unsubscribe";
-        public const string MIME_TYPE = "application/vnd.lambdasharp.omnibus.unsubscribe2106+json";
+        public const string MIME_TYPE = "application/vnd.lambdasharp.bus.unsubscribe2106+json";
 
         //--- Properties ---
 
