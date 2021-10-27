@@ -57,7 +57,7 @@ This assembly is used to build and generate CloudFormation templates.
         * parameter 3 (SecondLevelKey)
             * allowed functions: `!FindInMap`, `!Ref`
             * must be string or int literal
-    * `!GetAz`: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getavailabilityzones.html
+    * `!GetAZs`: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getavailabilityzones.html
         * must have 1 expression
         * parameter 1 (region)
             * allowed functions: `!Ref`
@@ -96,14 +96,27 @@ This assembly is used to build and generate CloudFormation templates.
             * must be a string literal
         * parameter 2 (source string)
             * must be a string expression
-    * `!Sub` string
+    * `!Sub` string (short form)
         * must have 1 expression
-        * parameter 1 ()
-            * TODO
+        * parameter 1 (format string)
+            * process `${Foo}` pattern as `!Ref Foo` expression
+            * process `${Foo.Bar}` pattern as `!GetAtt Foo.Bar` expression
+    * `!Sub` list (long form)
+        * must have 1 or 2 expressions
+        * parameter 1 (format string)
+            * process `${Foo}` pattern as a placeholder variable or, when not found, as a `!Ref Foo` expression
+            * process `${Foo.Bar}` pattern as `!GetAtt Foo.Bar` expression
+        * parameter 2 (map)
+            * placeholder variable name with a string expression
+            * ensure placeholder variable is used in format string
     * `!Ref`
-        * check that a resource with the given name exists
+        * check that a resource or parameter with the given name exists
         * if referenced resource has a condition
             * ensure the `!Ref` expression is nested inside an `!If` expression
             * ensure the corresponding `!If` branch is only taken when the resource condition is true
     * `!GetAtt`
-        * TODO
+        * check that a resource with the given name exists
+        * if referenced resource has a condition
+            * ensure the `!Ref` expression is nested inside an `!If` expression
+            * ensure the corresponding `!If` branch is only taken when the resource condition is true
+        * check that attribute exists on resource
