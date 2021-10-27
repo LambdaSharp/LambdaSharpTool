@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>LambdaSharp.App.Bus.Events</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Core" Version="3.7.0.37" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.1.7" />
+
+    <!-- TODO (2021-01-02, bjorg): remove Newtonsoft.Json -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.App.Bus.Protocol\LambdaSharp.App.Bus.Protocol.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.DynamoDB.Native\LambdaSharp.DynamoDB.Native.csproj" />
+  </ItemGroup>
+</Project>
