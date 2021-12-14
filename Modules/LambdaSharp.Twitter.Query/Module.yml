@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.Twitter.Query
+Origin: lambdasharp
 Description: Search Twitter at regular intervals and publish new found tweets
 Items:
 

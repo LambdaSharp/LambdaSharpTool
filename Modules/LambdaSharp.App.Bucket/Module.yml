@@ -15,6 +15,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.App.Bucket
+Origin: lambdasharp
 Description: Deploy LambdaSharp app package to an S3 bucket
 Using:
   - Module: LambdaSharp.S3.IO@lambdasharp
