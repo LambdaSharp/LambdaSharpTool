@@ -2,7 +2,7 @@
 
 # LambdaSharp - Serverless .NET on AWS
 
-**[Read what's new in the v0.8.2 "Hicetas" release.](https://lambdasharp.net/articles/ReleaseNotes-Hicetas.html)**
+**[Read what's new in the v0.8.3 "Hicetas" release.](https://lambdasharp.net/articles/ReleaseNotes-Hicetas.html)**
 
 LambdaSharp is a CLI and framework for serverless .NET Core application development on AWS. LambdaSharp uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
