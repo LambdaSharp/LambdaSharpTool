@@ -17,14 +17,13 @@
  */
 
 using LambdaSharp.CloudFormation.Syntax;
-using LambdaSharp.CloudFormation.Syntax.Declarations;
-using LambdaSharp.CloudFormation.Syntax.Expressions;
 using LambdaSharp.CloudFormation.Syntax.Validators;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.CloudFormation.Syntax {
 
+    // TODO: rename tests to 'CloudFormationSyntaxTemplateValidatorTests.Validate' since that is what is being tested here
     public class TemplateTests {
 
         //--- Constructors ---
@@ -40,7 +39,7 @@ namespace Tests.LambdaSharp.CloudFormation.Syntax {
 
             // arrange
             var report = new Report(Output);
-            var template = new CloudFormationSyntaxTemplate();
+            CloudFormationSyntaxTemplate template = new();
 
             // act
             new CloudFormationSyntaxTemplateValidator(report).Validate(template);
@@ -57,11 +56,11 @@ namespace Tests.LambdaSharp.CloudFormation.Syntax {
 
             // arrange
             var report = new Report(Output);
-            var template = new CloudFormationSyntaxTemplate {
-                AWSTemplateFormatVersion = new CloudFormationSyntaxLiteral("2010-09-119"),
-                Resources = new CloudFormationSyntaxList<CloudFormationSyntaxResource> {
-                    new CloudFormationSyntaxResource(new CloudFormationSyntaxLiteral("MyResource")) {
-                        Type = new CloudFormationSyntaxLiteral("AWS::SNS::Topic")
+            CloudFormationSyntaxTemplate template = new() {
+                AWSTemplateFormatVersion = new("2010-09-119"),
+                Resources = new() {
+                    new(new("MyResource")) {
+                        Type = new("AWS::SNS::Topic")
                     }
                 }
             };
@@ -81,10 +80,10 @@ namespace Tests.LambdaSharp.CloudFormation.Syntax {
 
             // arrange
             var report = new Report(Output);
-            var template = new CloudFormationSyntaxTemplate {
-                Resources = new CloudFormationSyntaxList<CloudFormationSyntaxResource> {
-                    new CloudFormationSyntaxResource(new CloudFormationSyntaxLiteral("MyResource")) {
-                        Type = new CloudFormationSyntaxLiteral("AWS::SNS::Topic")
+            CloudFormationSyntaxTemplate template = new() {
+                Resources = new() {
+                    new(new("MyResource")) {
+                        Type = new("AWS::SNS::Topic")
                     }
                 }
             };
