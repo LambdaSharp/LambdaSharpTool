@@ -22,14 +22,15 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`Module::LoggingStreamRole`                 |Expression for determining the module logging stream role.                          |`!Ref LambdaSharp::LoggingStreamRole`  |
 |`Module::LogRetentionInDays`                |Expression for determining the number days CloudWatch Log streams are retained for. |`30`                                   |
 |`Module::RestApi::CorsOrigin`               |Expression for setting the REST API CORS origin header.                             |(none)                                 |
+|`Module::RestApi::LoggingLevel`             |Expression for setting REST API logging level.                                      |`INFO`                                 |
 |`Module::RestApi::StageName`                |Expression for setting the REST API stage name.                                     |`LATEST`                               |
 |`Module::RestApi.EndpointConfiguration`     |Expression for setting the REST API endpoint.                                       |(none)                                 |
 |`Module::RestApi.Policy`                    |Expression for setting the REST API policy.                                         |(none)                                 |
 |`Module::Role.PermissionsBoundary`          |Expression for setting the PermissionsBoundary attribute on the function IAM role.  |(none)                                 |
-|`Module::WebSocket`                         |Expression for the WebSocket ID.                                                    |(none)                                 |
 |`Module::WebSocket::StageName`              |Expression for setting the WebSocket stage name.                                    |`LATEST`                               |
 |`Module::WebSocket.ApiKeySelectionExpression`|Expression for determining the WebSocket API key.                                  |(none)                                 |
 |`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                                     |`$request.body.action`                 |
+|`Module::WebSocket`                         |Expression for the WebSocket ID.                                                    |(none)                                 |
 
 **NOTE**: No WebSocket resources are generated when `Module::WebSocket` is defined in the overrides section. When defining `Module::WebSocket`, also consider defining `Module::RestApi::StageName` which is used to grant permission to post back on a WebSocket connection.
 
