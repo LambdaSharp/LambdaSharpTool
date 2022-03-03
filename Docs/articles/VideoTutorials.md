@@ -61,3 +61,9 @@ In this presentation, I dive into DynamoDB, Amazon's serverless NoSQL database. 
 In this presentation, I show how to build a Lambda function from scratch with decoupled business logic. We use the `DependencyProvider` pattern to separate IO operations and make testing much easier. We have used this pattern for many years in our microservices and Lambda functions with great success.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/cf7Gy9wyFeA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Serverless .NET Patterns: Writing a Real-Time Serverless Game
+
+In this presentation, I will dive into LambdaRobots, a real-time strategy game where you pit Lambda-powered bots against each other. See how it works in behind the scenes, learn about the design decisions that went in, and how you can get started building your own battle bots.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/haewUAF2p3U" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
