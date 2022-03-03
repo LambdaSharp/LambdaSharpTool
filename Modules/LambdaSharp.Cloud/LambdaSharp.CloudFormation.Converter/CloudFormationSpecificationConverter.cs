@@ -174,7 +174,9 @@ namespace LambdaSharp.CloudFormation.Converter {
 
                 // store extended specification document
                 var patch = JsonConvert.DeserializeObject<JsonPatchDocument<ExtendedCloudFormationSpecification>>(text);
-                regionalExtendedSpecifications.Add(key, patch);
+                if(patch != null) {
+                    regionalExtendedSpecifications.Add(key, patch);
+                }
             }
         }
 
@@ -203,7 +205,9 @@ namespace LambdaSharp.CloudFormation.Converter {
 
                 // store extended specification document
                 var patch = JsonConvert.DeserializeObject<JsonPatchDocument<ExtendedCloudFormationSpecification>>(text);
-                regionalExtendedSpecifications.Add(key, patch);
+                if(patch != null) {
+                    regionalExtendedSpecifications.Add(key, patch);
+                }
             }
         }
     }

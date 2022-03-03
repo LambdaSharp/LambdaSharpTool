@@ -8,9 +8,9 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Comprehend" Version="3.7.1.17" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.22" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.1.7" />
+    <PackageReference Include="AWSSDK.Comprehend" Version="3.7.5.12" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.3.31" />
 
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

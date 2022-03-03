@@ -25,7 +25,7 @@
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.CloudFormation" Version="3.7.2.6" />
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.7.9.9" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.CustomResource\LambdaSharp.CustomResource.csproj" />

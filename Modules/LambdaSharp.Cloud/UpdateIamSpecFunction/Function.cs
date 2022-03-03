@@ -47,7 +47,7 @@ namespace LambdaSharp.Cloud.UpdateIamSpecFunction {
             var compressedJsonSpecificationStream = new MemoryStream();
             using(var brotliStream = new BrotliStream(compressedJsonSpecificationStream, CompressionLevel.Optimal, leaveOpen: true)) {
                 await JsonSerializer.SerializeAsync(brotliStream, specification, new JsonSerializerOptions {
-                    IgnoreNullValues = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     IncludeFields = true,
                     NumberHandling = JsonNumberHandling.AllowReadingFromString,
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping

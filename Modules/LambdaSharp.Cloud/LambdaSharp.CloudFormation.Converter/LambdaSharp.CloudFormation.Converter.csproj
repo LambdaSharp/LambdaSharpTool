@@ -21,8 +21,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.33" />
-    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="5.0.6" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Libraries\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />

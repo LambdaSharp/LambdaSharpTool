@@ -8,8 +8,8 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.0.21" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.22" />
+    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.0.132" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />

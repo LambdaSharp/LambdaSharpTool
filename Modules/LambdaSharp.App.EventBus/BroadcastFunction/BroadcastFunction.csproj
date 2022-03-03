@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.4.0" />
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="2.0.0" />
-    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.0.21" />
+    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.0.132" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.App.EventBus\LambdaSharp.App.EventBus.csproj" />

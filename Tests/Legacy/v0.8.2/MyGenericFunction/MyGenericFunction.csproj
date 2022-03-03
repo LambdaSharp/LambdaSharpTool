@@ -8,7 +8,6 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="0.8.2.*"/>
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj" />
+    <PackageReference Include="LambdaSharp" Version="0.8.2.*"/>
   </ItemGroup>
 </Project>
