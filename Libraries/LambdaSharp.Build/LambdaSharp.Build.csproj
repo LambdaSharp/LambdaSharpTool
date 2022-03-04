@@ -2,8 +2,10 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.Build</RootNamespace>
-    <NoWarn>CS1998</NoWarn>
     <Nullable>enable</Nullable>
+    <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <PackageId>LambdaSharp.Build.CSharp</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
@@ -30,7 +32,7 @@
     <!-- TODO (2021-05-16, bjorg): upgrade NJsonScheam to 10.4.x -->
     <PackageReference Include="NJsonSchema" Version="9.14.1" />
 
-    <PackageReference Include="SharpZipLib" Version="1.3.2" />
+    <PackageReference Include="SharpZipLib" Version="1.3.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.Modules\LambdaSharp.Modules.csproj" />

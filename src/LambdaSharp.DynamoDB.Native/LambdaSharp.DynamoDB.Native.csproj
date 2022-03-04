@@ -5,6 +5,8 @@
     <RootNamespace>LambdaSharp.DynamoDB.Native</RootNamespace>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -25,10 +27,10 @@
     <PackageTags>AWS;DynamoDB;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.30"/>
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../LambdaSharp.DynamoDB.Serialization/LambdaSharp.DynamoDB.Serialization.csproj"/>
+    <ProjectReference Include="../LambdaSharp.DynamoDB.Serialization/LambdaSharp.DynamoDB.Serialization.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />

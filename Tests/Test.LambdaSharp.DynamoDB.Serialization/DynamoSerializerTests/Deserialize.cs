@@ -427,23 +427,23 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
             // assert
             var map = result.Should().BeOfType<Dictionary<string, object>>().Subject;
             map.Should().ContainKey("String")
-                .WhichValue.Should().Be("abc");
+                .WhoseValue.Should().Be("abc");
             map.Should().ContainKey("Number")
-                .WhichValue.Should().BeOfType<double>()
+                .WhoseValue.Should().BeOfType<double>()
                 .Which.Should().Be(123);
             map.Should().ContainKey("List")
-                .WhichValue.Should().BeOfType<List<object>>()
+                .WhoseValue.Should().BeOfType<List<object>>()
                 .Which.Equals(new List<object> {
                     "def",
                     456.0d
                 });
             map.Should().ContainKey("Map")
-                .WhichValue.Should().Equals(new Dictionary<string, object> {
+                .WhoseValue.Should().BeEquivalentTo(new Dictionary<string, object> {
                     ["First"] = "ghi",
                     ["Second"] = 789.0d
                 });
             map.Should().ContainKey("Binary")
-                .WhichValue.Equals(Encoding.UTF8.GetBytes("Hellow World!"));
+                .WhoseValue.Should().BeEquivalentTo(Encoding.UTF8.GetBytes("Hello World!"));
         }
         #endregion
 

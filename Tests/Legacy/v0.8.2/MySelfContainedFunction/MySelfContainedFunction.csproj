@@ -24,7 +24,6 @@
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="0.8.2.*"/>
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj" />
+    <PackageReference Include="LambdaSharp" Version="0.8.2.*"/>
   </ItemGroup>
 </Project>

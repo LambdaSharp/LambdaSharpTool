@@ -276,6 +276,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // RestApi stage depends on API gateway deployment and API gateway account
+            _builder.TryGetOverride("Module::RestApi::LoggingLevel", out var restApiStageLoggingLevel);
             _builder.AddResource(
                 parent: restApi,
                 name: "Stage",
@@ -290,7 +291,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         new Humidifier.ApiGateway.StageTypes.MethodSetting {
                             DataTraceEnabled = true,
                             HttpMethod = "*",
-                            LoggingLevel = "INFO",
+                            LoggingLevel = restApiStageLoggingLevel ?? "INFO",
                             ResourcePath = "/*",
                             MetricsEnabled = true
                         }

@@ -35,7 +35,7 @@ namespace LambdaSharp.CloudFormation.Converter {
     public sealed class CloudFormationSpecificationConverter {
 
         //--- Constants ---
-        private const string CFN_LINT_SOURCE = "https://github.com/aws-cloudformation/cfn-python-lint/archive/master.zip";
+        private const string CFN_LINT_SOURCE = "https://github.com/aws-cloudformation/cfn-lint/archive/main.zip";
 
         //--- Class Fields ---
 
@@ -149,7 +149,7 @@ namespace LambdaSharp.CloudFormation.Converter {
         }
 
         public async Task InitializeExtendedCloudFormationSpecificationsFromGitHubAsync() {
-            const string PREFIX = "cfn-python-lint-master/src/cfnlint/data/ExtendedSpecs/";
+            const string PREFIX = "cfn-lint-main/src/cfnlint/data/ExtendedSpecs/";
             var response = await _httpClient.GetAsync(CFN_LINT_SOURCE);
             using var zip = new ZipArchive(await response.Content.ReadAsStreamAsync());
             foreach(var entry in zip.Entries.Where(entry => entry.FullName.StartsWith(PREFIX, StringComparison.Ordinal) && entry.FullName.EndsWith(".json", StringComparison.Ordinal))) {
@@ -174,7 +174,9 @@ namespace LambdaSharp.CloudFormation.Converter {
 
                 // store extended specification document
                 var patch = JsonConvert.DeserializeObject<JsonPatchDocument<ExtendedCloudFormationSpecification>>(text);
-                regionalExtendedSpecifications.Add(key, patch);
+                if(patch != null) {
+                    regionalExtendedSpecifications.Add(key, patch);
+                }
             }
         }
 
@@ -203,7 +205,9 @@ namespace LambdaSharp.CloudFormation.Converter {
 
                 // store extended specification document
                 var patch = JsonConvert.DeserializeObject<JsonPatchDocument<ExtendedCloudFormationSpecification>>(text);
-                regionalExtendedSpecifications.Add(key, patch);
+                if(patch != null) {
+                    regionalExtendedSpecifications.Add(key, patch);
+                }
             }
         }
     }

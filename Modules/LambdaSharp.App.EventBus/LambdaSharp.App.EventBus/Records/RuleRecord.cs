@@ -21,8 +21,8 @@ namespace LambdaSharp.App.EventBus.Records {
     public sealed class RuleRecord {
 
         //--- Properties ---
-        public string Rule { get; set; }
-        public string Pattern { get; set; }
-        public string ConnectionId { get; set; }
+        public string? Rule { get; set; }
+        public string? Pattern { get; set; }
+        public string? ConnectionId { get; set; }
     }
 }

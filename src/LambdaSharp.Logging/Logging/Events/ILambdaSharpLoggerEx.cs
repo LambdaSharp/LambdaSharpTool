@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LambdaSharp.Logging.Events.Models;
 using LambdaSharp.Logging.Internal;
 
@@ -33,8 +34,8 @@ namespace LambdaSharp.Logging.Events {
         //--- Class Fields ---
         private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            IgnoreNullValues = true,
-            WriteIndented = false
+            WriteIndented = false,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
         //--- Extension Methods ---

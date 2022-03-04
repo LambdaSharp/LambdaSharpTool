@@ -430,7 +430,7 @@ namespace LambdaSharp.Tool.Cli {
                     var arguments = publishedModulesArgument.Values.Any()
                         ? publishedModulesArgument.Values
                         : new List<string> { Directory.GetCurrentDirectory() };
-                    Console.WriteLine($"Readying module for deployment tier '{settings.TierName}'");
+                    Console.WriteLine($"Readying module for deployment tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
 
                     // check if a module version number is supplied
                     VersionInfo moduleVersion = null;

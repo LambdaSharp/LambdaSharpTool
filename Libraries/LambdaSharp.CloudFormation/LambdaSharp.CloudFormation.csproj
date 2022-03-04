@@ -2,8 +2,10 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.CloudFormation</RootNamespace>
-    <NoWarn>CS1998</NoWarn>
     <Nullable>enable</Nullable>
+    <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <PackageId>LambdaSharp.CloudFormation</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
@@ -20,6 +22,6 @@
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.0.23" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.8.3" />
   </ItemGroup>
 </Project>

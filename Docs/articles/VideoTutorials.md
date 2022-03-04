@@ -49,3 +49,21 @@ In this presentation, I cover configuration management for your serverless solut
 In this presentation, I cover the differences between Kinesis Stream, Firehose, and SQS for event-driven architectures. We will build a sample application with each. Then we will combine them to get the best of both worlds using a scatter-gather pattern.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/4mybJ5G0S9Q" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Serverless .NET Patterns: DynamoDB for Fun and Glory!
+
+In this presentation, I dive into DynamoDB, Amazon's serverless NoSQL database. DynamoDB is a powerful tool that comes with a steep learning curve, but offers many rewards to those willing to climb it. Until now, the API has also been difficult to use, but in the session I will showcase a new library that makes it both easy and safe for .NET developers to leverage DynamoDB in their applications. First, I cover the fundamental mechanics of DynamoDB and then write some actual code samples.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/qK804VcZTKo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Serverless .NET Patterns: Writing Testable Lambda Business Logic
+
+In this presentation, I show how to build a Lambda function from scratch with decoupled business logic. We use the `DependencyProvider` pattern to separate IO operations and make testing much easier. We have used this pattern for many years in our microservices and Lambda functions with great success.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/cf7Gy9wyFeA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Serverless .NET Patterns: Writing a Real-Time Serverless Game
+
+In this presentation, I will dive into LambdaRobots, a real-time strategy game where you pit Lambda-powered bots against each other. See how it works in behind the scenes, learn about the design decisions that went in, and how you can get started building your own battle bots.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/haewUAF2p3U" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
