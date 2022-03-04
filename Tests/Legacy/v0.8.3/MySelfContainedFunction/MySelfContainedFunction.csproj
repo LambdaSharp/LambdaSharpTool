@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>Legacy.ModuleV082.MySelfContainedFunction</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
+
+    <!-- Required to create self-contained Lambda package -->
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bootstrap</AssemblyName>
+
+    <!-- The following optional settings reduce the self-contained Lambda package size -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TrimMode>link</TrimMode>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <EventSourceSupport>false</EventSourceSupport>
+    <DebuggerSupport>false</DebuggerSupport>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="LambdaSharp" Version="0.8.3.*"/>
+  </ItemGroup>
+</Project>
