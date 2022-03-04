@@ -28,7 +28,7 @@ To add a specific declaration directly, use one of the following commands:
 
 ### Create a new module in an empty folder
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new
 ```
@@ -44,7 +44,7 @@ Done (finished: 12/16/2020 9:38:43 PM; duration: 00:00:03.8781610)
 
 ### Add a declaration to a module
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new
 ```

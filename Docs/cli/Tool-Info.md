@@ -65,7 +65,7 @@ The `info` command is used to show information about the current CLI profile, La
 
 ### Show information for Default profile and Sandbox tier
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash info --tier Sandbox
 ```

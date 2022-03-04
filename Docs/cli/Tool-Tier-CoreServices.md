@@ -71,7 +71,7 @@ The `tier coreservices` command is used to show and updates the LambdaSharp Core
 
 ### Show LambdaSharp Core Services status for all deployed modules
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash tier coreservices --tier Sandbox
 ```
@@ -92,7 +92,7 @@ Done (finished: 6/26/2019 10:16:45 PM; duration: 00:00:02.7702739)
 
 ### Disable LambdaSharp Core Services for all deployed modules
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash tier coreservices --tier Sandbox --disabled
 ```

@@ -59,7 +59,7 @@ The `util show-parameters` command is used to process a YAML parameters file and
 
 ### Process a YAML parameters file and show the outcome
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash util show-lambdas myVpcParameters.yml
 ```

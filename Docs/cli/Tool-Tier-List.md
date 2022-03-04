@@ -59,7 +59,7 @@ The `tier list` command lists all deployment tiers with their version and showin
 
 ### List all deployed modules
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash tier list --tier Sandbox
 ```

@@ -24,7 +24,7 @@ export PATH=$HOME/.dotnet/tools:$PATH
 
 The LambdaSharp CLI can be installed as a global `dotnet` tool by running the `dotnet` tool installation command:
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 dotnet tool install -g LambdaSharp.Tool
 ```
@@ -33,7 +33,7 @@ Alternatively, for LambdaSharp contributors, the CLI can be setup using the [Git
 
 Once installed, validate that the command works by running it.
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash
 ```
@@ -72,7 +72,7 @@ A deployment tier can be initialized with or without LambdaSharp.Core services. 
 
 As a convenience, the `--quick-start` option streamlines the process of setting up a deployment tier and is recommended for personal work and demos.
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash init --quick-start
 ```
@@ -94,7 +94,7 @@ Done (finished: 8/15/2019 2:53:45 PM; duration: 00:00:33.2020715)
 
 The LambdaSharp.Core services provide functionality for tracking errors across deployed modules and are recommended for testing, staging, and production deployment tiers. An existing deployment tier can easily be updated to enable or disable the LambdaSharp.Core services.
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash init --core-services enabled
 ```
@@ -105,12 +105,7 @@ The following environment variables are checked when their corresponding options
 * `LAMBDASHARP_TIER`: Replaces the need for the `--tier` option.
 * `AWS_PROFILE`: Replaces the need for the `--aws-profile` option.
 
-__Using PowerShell:__
-```powershell
-New-Variable -Name LAMBDASHARP_TIER -Value Sandbox
-```
-
-__Using Bash:__
+__Command Line (Bash):__
 ```bash
 export LAMBDASHARP_TIER=Sandbox
 ```
@@ -152,7 +147,7 @@ Alternatively, the API Gateway role can be created manually. This might be requi
 
 LambdaSharp is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the LambdaSharp repository.
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 git clone https://github.com/LambdaSharp/LambdaSharpTool.git
 ```
@@ -161,17 +156,7 @@ Define the `LAMBDASHARP` environment variable to point to the folder of the `Lam
 
 The following script assumes LambdaSharp was cloned into the `/Repos/LambdaSharpTool` directory.
 
-__Using PowerShell:__
-```powershell
-$Env:LAMBDASHARP="\Repos\LambdaSharpTool"
-$Env:LAMBDASHARP\Scripts\Set-Lash-Version.ps1
-function Run-LambdaSharp-Project {
-    dotnet run --project $env:LAMBDASHARP\src\LambdaSharp.Tool\LambdaSharp.Tool.csproj -- $args
-}
-New-Alias -Name lst -Value Run-LambdaSharp-Project -Description "Run LambdaSharp from project" -Force
-```
-
-__Using Bash:__
+__Command Line (Bash):__
 ```bash
 export LAMBDASHARP=/Repos/LambdaSharpTool
 source $LAMBDASHARP/Scripts/set-lash-version.sh

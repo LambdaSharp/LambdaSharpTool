@@ -67,7 +67,7 @@ lash new function MyNewFunction
 
 ### Create a new, generic Lambda C# function
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new function --type generic MyNewFunction
 ```
@@ -83,7 +83,7 @@ Done (finished: 1/18/2019 1:17:14 PM; duration: 00:00:00.1047835)
 
 ### Create a new Javascript function
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new function --language javascript MyNewFunction
 ```

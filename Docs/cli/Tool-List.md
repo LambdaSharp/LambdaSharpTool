@@ -59,7 +59,7 @@ The `list` command lists all deployed modules on a deployment tier.
 
 ### List all deployed modules
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash list --tier Sandbox
 ```

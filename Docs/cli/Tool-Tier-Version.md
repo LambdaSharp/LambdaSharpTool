@@ -82,7 +82,7 @@ Done (finished: 6/18/2020 9:28:34 PM; duration: 00:00:00.9270535)
 
 ### Check if Deployment Tier Version is Equal or Greater to 0.8.0.5
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash tier version --min-version 0.8.0.5
 ```
@@ -98,7 +98,7 @@ Done (finished: 6/18/2020 9:29:21 PM; duration: 00:00:00.9652105)
 
 ### Check if Deployment Tier Version is Equal or Greater to 0.8.0.5 without Output
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash tier version --min-version 0.8.0.5 --quiet
 echo $?

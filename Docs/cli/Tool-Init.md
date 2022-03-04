@@ -145,7 +145,7 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 
 ### Creating a new deployment tier using the `--quick-start` option
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash init --tier Sandbox --quick-start
 ```
