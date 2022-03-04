@@ -123,7 +123,7 @@ namespace LambdaSharp.Tool {
 
         public static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            IgnoreNullValues = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = true,
             NumberHandling = JsonNumberHandling.AllowReadingFromString
         };

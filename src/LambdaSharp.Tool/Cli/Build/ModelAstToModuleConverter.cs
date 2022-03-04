@@ -1042,6 +1042,10 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 case "net5.0":
                     runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
                     break;
+                case "net6":
+                case "net6.0":
+                    runtime = Amazon.Lambda.Runtime.Dotnet6.ToString();
+                    break;
                 default:
                     LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
                     break;

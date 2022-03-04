@@ -21,6 +21,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
@@ -68,7 +69,8 @@ namespace LambdaSharp.CloudFormation {
                     log?.Invoke("downloading new CloudFormation specification");
 
                     // write new CloudFormation specification
-                    Directory.CreateDirectory(Path.GetDirectoryName(cloudFormationSpecFile));
+                    var cloudFormationSpecFolder = Path.GetDirectoryName(cloudFormationSpecFile) ?? throw new InvalidOperationException("Path.GetDirectoryName(cloudFormationSpecFile) returned null");
+                    Directory.CreateDirectory(cloudFormationSpecFolder);
                     using(var outputStream = File.OpenWrite(cloudFormationSpecFile)) {
                         await response.ResponseStream.CopyToAsync(outputStream);
                     }
@@ -82,7 +84,7 @@ namespace LambdaSharp.CloudFormation {
                         var document = await JsonSerializer.DeserializeAsync<object>(decompressionStream);
                         await File.WriteAllTextAsync(Path.Combine(lambdaSharpDirectory, "src", "CloudFormationResourceSpecification.json"), JsonSerializer.Serialize(document, new JsonSerializerOptions {
                             WriteIndented = true,
-                            IgnoreNullValues = true,
+                            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                         }));
                     }

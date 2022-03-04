@@ -23,6 +23,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LambdaSharp.Build.CSharp.Internal;
 using LambdaSharp.Build.Internal;
 using LambdaSharp.Modules;
@@ -129,7 +130,7 @@ namespace LambdaSharp.Build.CSharp {
                         try {
 
                             // attempt to load extract assembly metadata
-                            var appMetadata = JsonSerializer.Deserialize<LambdaSharpTool.AssemblyMetadata>(File.ReadAllText(appMetadataFilepath));
+                            var appMetadata = JsonSerializer.Deserialize<LambdaSharpTool.AssemblyMetadata>(File.ReadAllText(appMetadataFilepath)) ?? throw new ArgumentException("app metadata deserialized to null");
                             if(appMetadata.ModuleVersionId != null) {
                                 Provider.WriteLine($"=> Skipping app {Provider.InfoColor}{app.FullName}{Provider.ResetColor} (no changes found)");
 
@@ -342,7 +343,7 @@ namespace LambdaSharp.Build.CSharp {
                                 if(appSettings != null) {
                                     AddLambdaSharpSettings(appSettings);
                                     appSettingsText = JsonSerializer.Serialize(appSettings, new JsonSerializerOptions {
-                                        IgnoreNullValues = true,
+                                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                                         WriteIndented = false
                                     });
                                 }
@@ -352,7 +353,7 @@ namespace LambdaSharp.Build.CSharp {
                                 var appSettings = new Dictionary<string, object?>();
                                 AddLambdaSharpSettings(appSettings);
                                 appSettingsText = JsonSerializer.Serialize(appSettings, new JsonSerializerOptions {
-                                    IgnoreNullValues = true,
+                                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                                     WriteIndented = false
                                 });
                             }

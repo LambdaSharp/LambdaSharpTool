@@ -30,7 +30,8 @@ namespace LambdaSharp.CloudFormation.Specification.TypeSystem {
 
         //--- Class Methods ---
         public static async Task<CloudFormationTypeSystem> LoadFromAsync(string source, Stream stream) {
-            var specification = await JsonSerializer.DeserializeAsync<ExtendedCloudFormationSpecification>(stream);
+            var specification = await JsonSerializer.DeserializeAsync<ExtendedCloudFormationSpecification>(stream)
+                ?? throw new ArgumentException("stream deserialized to null");
             return new CloudFormationTypeSystem(source, specification);
         }
 

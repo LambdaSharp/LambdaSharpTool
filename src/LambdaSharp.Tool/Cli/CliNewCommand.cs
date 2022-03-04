@@ -557,7 +557,6 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // create function project
-            var isNetCore31OrLater = VersionInfoCompatibility.IsNetCore3OrLater(framework);
             var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,

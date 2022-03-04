@@ -78,7 +78,7 @@ namespace LambdaSharp.Build.CSharp.Internal {
 
                 // local functions
                 string GetFilePathFromIncludeAttribute(XElement element)
-                    => Path.GetFullPath(Path.Combine(projectFolder, MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(element.Attribute("Include").Value))));
+                    => Path.GetFullPath(Path.Combine(projectFolder, MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(element.Attribute("Include")?.Value ?? throw new InvalidOperationException("missing Include attribute")))));
 
             } catch(Exception e) {
                 errorCallback?.Invoke($"error while analyzing '{filePath}'", e);
@@ -135,7 +135,7 @@ namespace LambdaSharp.Build.CSharp.Internal {
             _csproj = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
             _mainPropertyGroup = _csproj.Element("Project")?.Element("PropertyGroup");
             ProjectName = _mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(filePath);
-            TargetFramework = _mainPropertyGroup?.Element("TargetFramework").Value ?? throw new InvalidDataException("missing <TargetFramework>");
+            TargetFramework = _mainPropertyGroup?.Element("TargetFramework")?.Value ?? throw new InvalidDataException("missing <TargetFramework>");
             RootNamespace = _mainPropertyGroup?.Element("RootNamespace")?.Value;
             OutputType = _mainPropertyGroup?.Element("OutputType")?.Value;
             AssemblyName = _mainPropertyGroup?.Element("AssemblyName")?.Value;
@@ -154,7 +154,7 @@ namespace LambdaSharp.Build.CSharp.Internal {
             var obsoleteNodes = _csproj.Descendants()
                 .Where(element =>
                     (element.Name == "DotNetCliToolReference")
-                    && ((string)element.Attribute("Include") == "Amazon.Lambda.Tools")
+                    && ((string?)element.Attribute("Include") == "Amazon.Lambda.Tools")
                 )
                 .ToList();
             if(!obsoleteNodes.Any()) {
@@ -167,7 +167,7 @@ namespace LambdaSharp.Build.CSharp.Internal {
                 obsoleteNode.Remove();
 
                 // remove parent if no children are left
-                if(!parent.Elements().Any()) {
+                if((parent is not null) && !parent.Elements().Any()) {
                     parent.Remove();
                 }
             }
@@ -179,7 +179,7 @@ namespace LambdaSharp.Build.CSharp.Internal {
             var includes = PackageReferences.Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false);
             foreach(var include in includes) {
                 var expectedVersion = VersionInfoCompatibility.GetLambdaSharpAssemblyWildcardVersion(toolVersion, TargetFramework);
-                var library = include.Attribute("Include").Value;
+                var library = include.Attribute("Include")?.Value;
                 var libraryVersionText = include.Attribute("Version")?.Value;
                 if(libraryVersionText == null) {
                     success = false;

@@ -25,6 +25,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LambdaSharp.Build.CSharp.Internal;
 using LambdaSharp.Build.Internal;
 using LambdaSharp.Modules;
@@ -65,7 +66,7 @@ namespace LambdaSharp.Build.CSharp.Function {
         //--- Class Fields ---
         private static JsonSerializerOptions _jsonOptions = new JsonSerializerOptions {
             WriteIndented = false,
-            IgnoreNullValues = true
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
         //--- Class Methods ---
@@ -219,9 +220,9 @@ namespace LambdaSharp.Build.CSharp.Function {
             var projectFile = new CSharpProjectFile(function.Project);
 
             // compile function project
-            var isNetCore31OrLater = VersionInfoCompatibility.IsNetCore3OrLater(projectFile.TargetFramework);
+            var isReadyToRunSupported = VersionInfoCompatibility.IsReadyToRunSupported(projectFile.TargetFramework);
             var isAmazonLinux2 = Provider.IsAmazonLinux2();
-            var isReadyToRun = isNetCore31OrLater && isAmazonLinux2;
+            var isReadyToRun = isReadyToRunSupported && isAmazonLinux2;
             var isSelfContained = (projectFile.OutputType == "Exe")
                 || (projectFile.AssemblyName == "bootstrap");
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
@@ -260,7 +261,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             }
 
             // build project with AWS dotnet CLI lambda tool
-            if(!DotNetPublish(projectFile.TargetFramework, buildConfiguration, projectDirectory, forceBuild, isNetCore31OrLater, isAmazonLinux2, isReadyToRun, isSelfContained, out var publishFolder)) {
+            if(!DotNetPublish(projectFile.TargetFramework, buildConfiguration, projectDirectory, forceBuild, isReadyToRunSupported, isAmazonLinux2, isReadyToRun, isSelfContained, out var publishFolder)) {
 
                 // nothing to do; error was already reported
                 return;
@@ -328,7 +329,7 @@ namespace LambdaSharp.Build.CSharp.Function {
                     }
                 }
                 hashStream.FlushFinalBlock();
-                hash = md5.Hash.ToHexString();
+                hash = md5.Hash!.ToHexString();
             }
 
             // genereate function package with hash
@@ -357,7 +358,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             string buildConfiguration,
             string projectDirectory,
             bool forceBuild,
-            bool isNetCore31OrLater,
+            bool isReadyToRunSupported,
             bool isAmazonLinux2,
             bool isReadyToRun,
             bool isSelfContained,
@@ -391,7 +392,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             };
 
             // for .NET Core 3.1 and later, disable tiered compilation since Lambda functions are generally short lived
-            if(isNetCore31OrLater) {
+            if(isReadyToRunSupported) {
                 publishParameters.Add("/p:TieredCompilation=false");
                 publishParameters.Add("/p:TieredCompilationQuickJit=false");
             }
@@ -580,7 +581,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             bool silent = false
         ) {
             Provider.ExistingPackages.Remove(schemaFile);
-            var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonSerializer.Deserialize<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile));
+            var schemas = JsonSerializer.Deserialize<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile)) ?? throw new ArgumentException("schema file deserialized to null");
 
             // process schema contents
             var success = true;

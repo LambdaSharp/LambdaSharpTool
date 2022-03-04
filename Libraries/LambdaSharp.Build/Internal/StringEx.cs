@@ -115,7 +115,7 @@ namespace LambdaSharp.Build.Internal {
                     }
                 }
                 hashStream.FlushFinalBlock();
-                return md5.Hash.ToHexString();
+                return md5.Hash!.ToHexString();
             }
         }
 
@@ -127,9 +127,9 @@ namespace LambdaSharp.Build.Internal {
                 methodName = null;
                 return false;
             }
-            methodName = parts.FirstOrDefault();
-            className = parts.Skip(1).FirstOrDefault();
-            assemblyName = parts.Skip(2).FirstOrDefault();
+            methodName = parts.First();
+            className = parts.Skip(1).First();
+            assemblyName = parts.Skip(2).First();
             return true;
         }
     }
