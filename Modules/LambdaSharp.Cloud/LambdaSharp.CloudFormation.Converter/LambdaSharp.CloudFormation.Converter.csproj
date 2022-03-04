@@ -2,8 +2,10 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.CloudFormation.Preprocessor</RootNamespace>
-    <NoWarn>CS1998</NoWarn>
     <Nullable>enable</Nullable>
+    <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <PackageId>LambdaSharp.CloudFormation.Preprocessor</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
@@ -23,9 +25,8 @@
 
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.33" />
-    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="5.0.6" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Libraries\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />

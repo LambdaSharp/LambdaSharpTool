@@ -8,7 +8,6 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.CustomResource" Version="0.8.2.*"/>
-    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp.CustomResource\LambdaSharp.CustomResource.csproj" />
+    <PackageReference Include="LambdaSharp.CustomResource" Version="0.8.2.*"/>
   </ItemGroup>
 </Project>

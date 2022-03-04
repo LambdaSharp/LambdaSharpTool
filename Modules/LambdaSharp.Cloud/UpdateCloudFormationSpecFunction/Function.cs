@@ -33,9 +33,14 @@ namespace LambdaSharp.Cloud.UpdateCloudFormationSpecFunction {
     public sealed class Function : ALambdaScheduleFunction {
 
         //--- Fields ---
-        private string _destinationBucketName;
-        private CloudFormationSpecificationConverter _converter;
-        private IAmazonS3 _s3Client;
+        private string? _destinationBucketName;
+        private CloudFormationSpecificationConverter? _converter;
+        private IAmazonS3? _s3Client;
+
+        //--- Properties ---
+        private string DestinationBucketName => _destinationBucketName ?? throw new InvalidOperationException();
+        private CloudFormationSpecificationConverter Converter => _converter ?? throw new InvalidOperationException();
+        private IAmazonS3 S3Client => _s3Client ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -60,7 +65,7 @@ namespace LambdaSharp.Cloud.UpdateCloudFormationSpecFunction {
 
             // generate extended CloudFormation specification for region
             LogInfo($"fetching latest CloudFormation specification for {region}");
-            var specification = await _converter.GenerateCloudFormationSpecificationAsync(region);
+            var specification = await Converter.GenerateCloudFormationSpecificationAsync(region);
             if(specification.Warnings.Any()) {
                 LogWarn($"CloudFormation specification generator [{region}]:\n{string.Join("\n", specification.Warnings)}");
             }
@@ -87,7 +92,7 @@ namespace LambdaSharp.Cloud.UpdateCloudFormationSpecFunction {
 
             // check if a new CloudFormation specification was generated
             var destinationKey = $"AWS/{region}/CloudFormationResourceSpecification.json.br";
-            var existingETag = await GetExistingETagAsync(_destinationBucketName, destinationKey);
+            var existingETag = await GetExistingETagAsync(DestinationBucketName, destinationKey);
             LogInfo($"existing CloudFormation specification ETag is {existingETag ?? "<null>"} [{region}]");
             if(string.Equals(newETag, existingETag ?? "", StringComparison.Ordinal)) {
                 LogInfo($"CloudFormation specifications are the same; nothing further to do");
@@ -96,8 +101,8 @@ namespace LambdaSharp.Cloud.UpdateCloudFormationSpecFunction {
 
             // update compressed CloudFormation specification in S3
             LogInfo($"uploading new CloudFormation specification [{region}]");
-            await _s3Client.PutObjectAsync(new PutObjectRequest {
-                BucketName = _destinationBucketName,
+            await S3Client.PutObjectAsync(new PutObjectRequest {
+                BucketName = DestinationBucketName,
                 Key = $"AWS/{region}/CloudFormationResourceSpecification.json.br",
                 InputStream = compressedJsonSpecificationStream,
                 MD5Digest = Convert.ToBase64String(newMD5Hash),
@@ -110,9 +115,9 @@ namespace LambdaSharp.Cloud.UpdateCloudFormationSpecFunction {
             LogInfo($"done [{region}]");
         }
 
-        private async Task<string> GetExistingETagAsync(string bucketName, string key) {
+        private async Task<string?> GetExistingETagAsync(string bucketName, string key) {
             try {
-                var metadata = await _s3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                var metadata = await S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
                     BucketName = bucketName,
                     Key = key,
                     RequestPayer = RequestPayer.Requester

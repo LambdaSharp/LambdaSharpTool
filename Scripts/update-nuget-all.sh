@@ -32,6 +32,7 @@ update() {
         --configuration Release
 
     dotnet nuget push \
+        --skip-duplicate \
         --api-key $LAMBDASHARP_NUGET_KEY \
         --source https://api.nuget.org/v3/index.json \
         `ls bin/Release/*.nupkg`
@@ -108,6 +109,7 @@ dotnet pack \
     --output ./
 
 dotnet nuget push \
+    --skip-duplicate \
     --api-key $LAMBDASHARP_NUGET_KEY \
     --source https://api.nuget.org/v3/index.json \
     `ls *.nupkg`

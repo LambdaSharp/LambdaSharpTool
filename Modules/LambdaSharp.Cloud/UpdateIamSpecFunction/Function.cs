@@ -17,9 +17,14 @@ namespace LambdaSharp.Cloud.UpdateIamSpecFunction {
     public sealed class Function : ALambdaScheduleFunction {
 
         //--- Fields ---
-        private string _destinationBucketName;
-        private IamPermissionsConverter _converter;
-        private IAmazonS3 _s3Client;
+        private string? _destinationBucketName;
+        private IamPermissionsConverter? _converter;
+        private IAmazonS3? _s3Client;
+
+        //--- Properties ---
+        private string DestinationBucketName => _destinationBucketName ?? throw new InvalidOperationException();
+        private IamPermissionsConverter Converter => _converter ?? throw new InvalidOperationException();
+        private IAmazonS3 S3Client => _s3Client ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -41,13 +46,13 @@ namespace LambdaSharp.Cloud.UpdateIamSpecFunction {
 
             // generate extended IAM specification for region
             LogInfo($"fetching latest IAM specification");
-            var specification = await _converter.GenerateIamSpecificationAsync();
+            var specification = await Converter.GenerateIamSpecificationAsync();
 
             // serialize IAM specification into a brotli compressed stream
             var compressedJsonSpecificationStream = new MemoryStream();
             using(var brotliStream = new BrotliStream(compressedJsonSpecificationStream, CompressionLevel.Optimal, leaveOpen: true)) {
                 await JsonSerializer.SerializeAsync(brotliStream, specification, new JsonSerializerOptions {
-                    IgnoreNullValues = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     IncludeFields = true,
                     NumberHandling = JsonNumberHandling.AllowReadingFromString,
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -67,8 +72,8 @@ namespace LambdaSharp.Cloud.UpdateIamSpecFunction {
 
             // update compressed IAM specification in S3
             LogInfo($"uploading new IAM specification");
-            await _s3Client.PutObjectAsync(new PutObjectRequest {
-                BucketName = _destinationBucketName,
+            await S3Client.PutObjectAsync(new PutObjectRequest {
+                BucketName = DestinationBucketName,
                 Key = $"AWS/IamSpecification.json.br",
                 InputStream = compressedJsonSpecificationStream,
                 MD5Digest = Convert.ToBase64String(newMD5Hash),

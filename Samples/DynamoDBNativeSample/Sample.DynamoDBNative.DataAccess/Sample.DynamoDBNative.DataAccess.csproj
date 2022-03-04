@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.30" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp.DynamoDB.Native\LambdaSharp.DynamoDB.Native.csproj" />

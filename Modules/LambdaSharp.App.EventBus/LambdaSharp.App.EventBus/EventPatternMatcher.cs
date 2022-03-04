@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using Newtonsoft.Json.Linq;
@@ -44,9 +45,9 @@ namespace LambdaSharp.App.EventBus {
                     _ => false
                 };
 
-        private static bool TryGetText(JToken token, out string text) {
-            if(token.Type == JTokenType.String) {
-                text = (string)((JValue)token).Value;
+        private static bool TryGetText(JToken? token, [NotNullWhen(true)] out string? text) {
+            if(token?.Type == JTokenType.String) {
+                text = (string)((JValue)token).Value!;
                 return true;
             } else {
                 text = null;
@@ -54,11 +55,11 @@ namespace LambdaSharp.App.EventBus {
             }
         }
 
-        private static bool TryGetNumeric(JToken token, out double numeric) {
-            switch(token.Type) {
+        private static bool TryGetNumeric(JToken? token, out double numeric) {
+            switch(token?.Type) {
             case JTokenType.Integer:
             case JTokenType.Float:
-                numeric = (double)Convert.ChangeType(((JValue)token).Value, typeof(double));
+                numeric = (double)Convert.ChangeType(((JValue)token).Value!, typeof(double));
                 return true;
             default:
                 numeric = 0.0;
@@ -68,7 +69,7 @@ namespace LambdaSharp.App.EventBus {
 
         private static bool TryGetBoolean(JToken token, out bool boolean) {
             if(token.Type == JTokenType.Boolean) {
-                boolean = (bool)((JValue)token).Value;
+                boolean = (bool)((JValue)token).Value!;
                 return true;
             } else {
                 boolean = false;
@@ -197,7 +198,7 @@ namespace LambdaSharp.App.EventBus {
                     if((contentPatternOperation.Value is JValue cidrFilterValue) && (cidrFilterValue.Type == JTokenType.String)) {
 
                         // Sample value: "10.0.0.0/24"
-                        var parts = ((string)cidrFilterValue.Value).Split('/');
+                        var parts = ((string)cidrFilterValue.Value!).Split('/');
                         if(
                             (parts.Length == 2)
                             && int.TryParse(parts[1], out var prefixValue)
@@ -290,7 +291,7 @@ namespace LambdaSharp.App.EventBus {
             return true;
 
             // local functions
-            bool IsContentMatch(JToken data, JToken pattern) {
+            bool IsContentMatch(JToken? data, JToken pattern) {
                 if(pattern is JValue literalPattern) {
                     if(!(data is JValue dataValue)) {
                         return false;
@@ -309,12 +310,13 @@ namespace LambdaSharp.App.EventBus {
                     var contentPatternOperation = contentPattern.Properties().Single();
                     switch(contentPatternOperation.Name) {
                     case "prefix":
-                        if(!TryGetText(data, out var dataText)) {
+                        var prefix = (string?)contentPatternOperation.Value;
+                        if((prefix == null) || !TryGetText(data, out var dataText)) {
                             return false;
                         }
 
                         // { "prefix": "TEXT" }
-                        return dataText.StartsWith((string)contentPatternOperation.Value, StringComparison.Ordinal);
+                        return dataText.StartsWith(prefix, StringComparison.Ordinal);
                     case "anything-but":
                         if(contentPatternOperation.Value is JArray disallowedValues) {
 
@@ -337,17 +339,17 @@ namespace LambdaSharp.App.EventBus {
 
                             // { "numeric": [ "<", NUMERIC ] }
                             return CheckNumericOperation(
-                                (string)((JValue)numericFilterValues[0]),
+                                (string?)((JValue)numericFilterValues[0]),
                                 (double)Convert.ChangeType((JValue)numericFilterValues[1], typeof(double))
                             );
                         case 4:
 
                             // { "numeric": [ ">", NUMERIC, "<=", NUMERIC ] }
                             return CheckNumericOperation(
-                                (string)((JValue)numericFilterValues[0]),
+                                (string?)((JValue)numericFilterValues[0]),
                                 (double)Convert.ChangeType((JValue)numericFilterValues[1], typeof(double))
                             ) && CheckNumericOperation(
-                                (string)((JValue)numericFilterValues[2]),
+                                (string?)((JValue)numericFilterValues[2]),
                                 (double)Convert.ChangeType((JValue)numericFilterValues[3], typeof(double))
                             );
                         default:
@@ -355,7 +357,7 @@ namespace LambdaSharp.App.EventBus {
                         }
 
                         // local functions
-                        bool CheckNumericOperation(string operation, double comparand)
+                        bool CheckNumericOperation(string? operation, double comparand)
                             => operation switch {
                                 "<" => dataNumeric < comparand,
                                 "<=" => dataNumeric <= comparand,
@@ -371,13 +373,16 @@ namespace LambdaSharp.App.EventBus {
                         }
 
                         // { "cidr": "10.0.0.0/24" }
-                        return IsInCidrRange(dataIpAddress, (string)contentPatternOperation.Value);
+                        return IsInCidrRange(dataIpAddress, (string?)contentPatternOperation.Value);
                     case "exists":
 
                         // { "exists": BOOLEAN  }
-                        return ((bool)((JValue)contentPatternOperation.Value).Value)
-                            ? ((data as JValue) != null)
-                            : ((data as JValue) == null);
+                        if((contentPatternOperation.Value is JValue expectedBooleanValue) && (expectedBooleanValue.Value is bool exists)) {
+                            return exists
+                                ? ((data as JValue) != null)
+                                : ((data as JValue) == null);
+                        }
+                        return false;
                     }
 
                     // unrecognized content filter
@@ -387,7 +392,10 @@ namespace LambdaSharp.App.EventBus {
                 }
             }
 
-            bool IsInCidrRange(string ipValue, string cidrRange) {
+            bool IsInCidrRange(string? ipValue, string? cidrRange) {
+                if((ipValue == null) || (cidrRange == null)) {
+                    return false;
+                }
                 try {
                     var ipAndPrefix = cidrRange.Split('/');
                     var ipAddress = BitConverter.ToInt32(IPAddress.Parse(ipAndPrefix[0]).GetAddressBytes(), 0);

@@ -24,6 +24,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using LambdaSharp.App.Config;
@@ -69,7 +70,7 @@ namespace LambdaSharp.App {
         private static readonly TimeSpan Frequency = TimeSpan.FromSeconds(1);
         private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            IgnoreNullValues = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = false
         };
 

@@ -47,7 +47,7 @@ namespace LambdaSharp.App.EventBus {
             => new string(Enumerable.Repeat(VALID_SYMBOLS, length).Select(chars => chars[_random.Next(chars.Length)]).ToArray());
 
         //--- Constructors ---
-        public DataTable(string tableName, IAmazonDynamoDB dynamoDbClient = null) : base(tableName, dynamoDbClient) { }
+        public DataTable(string tableName, IAmazonDynamoDB? dynamoDbClient = null) : base(tableName, dynamoDbClient) { }
 
         //--- Methods ---
 

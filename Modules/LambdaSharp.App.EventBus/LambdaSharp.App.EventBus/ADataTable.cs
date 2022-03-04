@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -67,7 +68,7 @@ namespace LambdaSharp.App.EventBus {
         };
 
         //--- Constructors ---
-        public ADataTable(string tableName, IAmazonDynamoDB dynamoDbClient) {
+        public ADataTable(string tableName, IAmazonDynamoDB? dynamoDbClient) {
             TableName = tableName ?? throw new System.ArgumentNullException(nameof(tableName));
             DynamoDbClient = dynamoDbClient ?? new AmazonDynamoDBClient();
             Table = Table.LoadTable(dynamoDbClient, tableName);
@@ -92,16 +93,16 @@ namespace LambdaSharp.App.EventBus {
             return DoSearchAsync(search, cancellationToken);
         }
 
-        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken)
+        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken) where T : notnull
             => CreateOrUpdateItemAsync(item, pk, sk, condition: null, cancellationToken);
 
-        protected Task CreateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken)
+        protected Task CreateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken) where T : notnull
             => CreateOrUpdateItemAsync(item, pk, sk, ItemDoesNotExistCondition, cancellationToken);
 
-        protected Task UpdateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken)
+        protected Task UpdateItemAsync<T>(T item, string pk, string sk, CancellationToken cancellationToken) where T : notnull
             => CreateOrUpdateItemAsync(item, pk, sk, ItemExistsCondition, cancellationToken);
 
-        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, Expression condition, CancellationToken cancellationToken) {
+        protected Task CreateOrUpdateItemAsync<T>(T item, string pk, string sk, Expression? condition, CancellationToken cancellationToken) where T : notnull {
             var document = Serialize(item);
             document["_Type"] = item.GetType().Name;
             document["_Modified"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -109,7 +110,7 @@ namespace LambdaSharp.App.EventBus {
             document["SK"] = sk ?? throw new ArgumentNullException(nameof(sk));
 
             // add operation condition when provided
-            PutItemOperationConfig operationConfig = null;
+            PutItemOperationConfig? operationConfig = null;
             if(condition != null) {
                 operationConfig = new PutItemOperationConfig {
                     ConditionalExpression = condition
@@ -127,7 +128,8 @@ namespace LambdaSharp.App.EventBus {
         protected Document Serialize<T>(T item)
             => Document.FromJson(JsonSerializer.Serialize(item, JsonSerializerOptions));
 
-        protected T Deserialize<T>(Document record)
+        [return: NotNullIfNotNull("record")]
+        protected T? Deserialize<T>(Document? record) where T : class
             => (record != null)
                 ? JsonSerializer.Deserialize<T>(record.ToJson(), JsonSerializerOptions)
                 : default;
