@@ -141,7 +141,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.3.5) - TBD
+### (v0.8.3.5) - 2022-03-03
 
 #### Features
 
@@ -149,8 +149,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added `Module::RestApi::LoggingLevel` pragma override to set the logging level for the REST API.
 
 * SDK
-  * Updated package referenecs to latest compatible versions.
-    * NOTE: `System.Text.Json` has been updated to `6.0.2`, which has obsoleted the `IgnoreNullValues` property in favor of `DefaultIgnoreCondition` in the `JsonSerializerOptions` class.
+  * Updated assembly referenecs to latest compatible versions.
+  * Added `DynamoFloatConverter` to _LambdaSharp.DynamoDB.Serialization_ assembly.
+
 
 ### (v0.8.3.4) - 2021-07-15
 
