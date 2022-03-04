@@ -141,6 +141,20 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
+### (v0.8.4) - TBD
+
+#### BREAKING CHANGES
+
+* SDK
+  * Removed `ForceLambdaColdStart` from `ALambdaFunction`, because it was a duplicate of `TerminateLambdaInstance`.
+
+### Features
+
+* CLI
+  * Added support for Lambda functions using .NET 6.
+  * Updated Blazor WebAssembly app template to target .NET 6.
+
+
 ### (v0.8.3.5) - 2022-03-03
 
 #### Features

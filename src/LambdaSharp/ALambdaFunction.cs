@@ -188,7 +188,11 @@ namespace LambdaSharp {
             CloudWatch
         }
 
-        private class TerminateLambdaException : Exception { }
+        private class TerminateLambdaException : Exception {
+
+            //--- Constructors ---
+            public TerminateLambdaException(string reason) : base(reason) { }
+        }
 
         //--- Class Fields ---
         private static readonly Stopwatch Stopwatch = Stopwatch.StartNew();
@@ -702,18 +706,6 @@ namespace LambdaSharp {
         /// <param name="function">The work to execute asynchronously.</param>
         /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
         protected void RunTask(Func<Task> function, CancellationToken cancellationToken = default)  => AddPendingTask(Task.Run(function, cancellationToken));
-
-        /// <summary>
-        /// The <see cref="ForceLambdaColdStart(System.String)"/> method causes the Lambda runtime to re-initialize as if a cold start had occurred. This methos is useful
-        /// when the global environment is corrupted and only a restart can fix it.
-        /// </summary>
-        protected void ForceLambdaColdStart(string reason) {
-            LogFatal(new ApplicationException(reason), "restart Lambda runtime");
-
-            // NOTE (2020-10-13, bjorg): the following line will cause an uncatchable exception that force the Lambda runtime to start over
-            System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
-        }
-
         /// <summary>
         /// The <see cref="TerminateLambdaInstance(string)"/> method forces the Lambda instance to terminate and perform a cold start on next invocation.
         /// This method should only be used when the processing environment has become corrupted beyond repair.
@@ -723,7 +715,7 @@ namespace LambdaSharp {
             var message = (reason != null)
                 ? $"Lambda instance was intentionally terminated (reason: {reason})"
                 : $"Lambda instance was intentionally terminated (no reason provided)";
-            LogFatal(exception: new TerminateLambdaException(), message);
+            LogFatal(exception: new TerminateLambdaException(reason ?? "no reason provided"), message);
             System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
         }
 
