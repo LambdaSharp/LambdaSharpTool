@@ -16,7 +16,7 @@ if [ -z "$1" ]; then
     done
 
     # run lash once with force compile to make sure we're testing the latest code
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
+    dotnet run --project $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
         --verbose:exceptions \
         --no-beep \
         --tier Test \
@@ -65,7 +65,7 @@ else
 
     # run requested test
     rm $LAMBDASHARP/Tests/Modules/Results/$testfile.json > /dev/null 2>&1
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- deploy \
+    dotnet run --project $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- deploy \
         --verbose:exceptions \
         --no-beep \
         --tier Test \

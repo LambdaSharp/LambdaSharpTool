@@ -166,7 +166,7 @@ __Using PowerShell:__
 $Env:LAMBDASHARP="\Repos\LambdaSharpTool"
 $Env:LAMBDASHARP\Scripts\Set-Lash-Version.ps1
 function Run-LambdaSharp-Project {
-    dotnet run -p $env:LAMBDASHARP\src\LambdaSharp.Tool\LambdaSharp.Tool.csproj -- $args
+    dotnet run --project $env:LAMBDASHARP\src\LambdaSharp.Tool\LambdaSharp.Tool.csproj -- $args
 }
 New-Alias -Name lst -Value Run-LambdaSharp-Project -Description "Run LambdaSharp from project" -Force
 ```
@@ -175,7 +175,7 @@ __Using Bash:__
 ```bash
 export LAMBDASHARP=/Repos/LambdaSharpTool
 source $LAMBDASHARP/Scripts/set-lash-version.sh
-alias lst="dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --"
+alias lst="dotnet run --project $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --"
 ```
 
 __IMPORTANT:__ make sure to always use your `lst` function/alias instead of the `lash` command.
