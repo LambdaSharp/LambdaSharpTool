@@ -2,7 +2,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.Slack</RootNamespace>
+
+    <!-- TODO (2022-03-03, bjorg): enable nullable -->
+    <!-- <Nullable>enable</Nullable> -->
+
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 

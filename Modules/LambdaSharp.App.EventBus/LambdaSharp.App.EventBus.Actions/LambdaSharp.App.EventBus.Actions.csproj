@@ -5,6 +5,12 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.App.EventBus.Actions</RootNamespace>
+
+    <!-- TODO (2022-03-03, bjorg): enable nullable -->
+    <!-- <Nullable>enable</Nullable> -->
+
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>

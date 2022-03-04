@@ -24,4 +24,4 @@ Items:
     Properties:
       Environment:
         Variables:
-          DEBUG_LOGGING_ENABLED: "true"
+          DEBUG_LOGGING_ENABLED: true

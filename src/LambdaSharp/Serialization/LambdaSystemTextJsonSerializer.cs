@@ -42,7 +42,14 @@ namespace LambdaSharp.Serialization {
         /// </summary>
         /// <param name="customizer">A callback to customize the serializer settings.</param>
         public LambdaSystemTextJsonSerializer(Action<JsonSerializerOptions>? customizer) : base(settings => {
-            settings.IgnoreNullValues = true;
+
+            // NOTE (2022-03-03, bjorg): need to make sure `IgnoreNullValues` is disabled as it cannot be used at the same time as `DefaultIgnoreCondition`
+#pragma warning disable CS0618
+            settings.IgnoreNullValues = false;
+#pragma warning disable CS0618
+            settings.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+            // set remaining serialization defaults
             settings.IncludeFields = true;
             settings.NumberHandling = JsonNumberHandling.AllowReadingFromString;
             settings.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;

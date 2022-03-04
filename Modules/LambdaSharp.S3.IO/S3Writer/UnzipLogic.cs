@@ -81,6 +81,15 @@ namespace LambdaSharp.S3.IO.S3Writer {
 
         //--- Methods ---
         public async Task<Response<S3WriterResourceAttributes>> Create(S3WriterResourceProperties properties) {
+            if(properties.SourceBucketName == null) {
+                throw new ArgumentNullException(nameof(properties.SourceBucket));
+            }
+            if(properties.SourceKey == null) {
+                throw new ArgumentNullException(nameof(properties.SourceKey));
+            }
+            if(properties.DestinationBucketName == null) {
+                throw new ArgumentNullException(nameof(properties.DestinationBucket));
+            }
             _logger.LogInfo($"copying package s3://{properties.SourceBucketName}/{properties.SourceKey} to S3 bucket {properties.DestinationBucketName}");
 
             // download package and copy all files to destination bucket
@@ -104,6 +113,18 @@ namespace LambdaSharp.S3.IO.S3Writer {
         }
 
         public async Task<Response<S3WriterResourceAttributes>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties) {
+            if(properties.SourceBucketName == null) {
+                throw new ArgumentNullException(nameof(properties.SourceBucket));
+            }
+            if(properties.SourceKey == null) {
+                throw new ArgumentNullException(nameof(properties.SourceKey));
+            }
+            if(properties.DestinationBucketName == null) {
+                throw new ArgumentNullException(nameof(properties.DestinationBucket));
+            }
+            if(properties.DestinationKey == null) {
+                throw new ArgumentNullException(nameof(properties.DestinationKey));
+            }
 
             // check if the unzip properties have changed
             if(
@@ -162,6 +183,15 @@ namespace LambdaSharp.S3.IO.S3Writer {
         }
 
         public async Task<Response<S3WriterResourceAttributes>> Delete(S3WriterResourceProperties properties) {
+            if(properties.SourceKey == null) {
+                throw new ArgumentNullException(nameof(properties.SourceKey));
+            }
+            if(properties.DestinationBucketName == null) {
+                throw new ArgumentNullException(nameof(properties.DestinationBucket));
+            }
+            if(properties.DestinationKey == null) {
+                throw new ArgumentNullException(nameof(properties.DestinationKey));
+            }
             _logger.LogInfo($"deleting package {properties.SourceKey} from S3 bucket {properties.DestinationBucketName}");
 
             // download package manifest
@@ -179,13 +209,16 @@ namespace LambdaSharp.S3.IO.S3Writer {
         }
 
         private async Task UploadEntry(ZipArchiveEntry entry, S3WriterResourceProperties properties) {
+            if(properties.DestinationKey == null) {
+                throw new ArgumentNullException(nameof(properties.DestinationKey));
+            }
 
             // unzip entry
             using(var stream = entry.Open()) {
                 var memoryStream = new MemoryStream();
 
                 // determine if stream needs to be encoded
-                string contentEncodingHeader = null;
+                string? contentEncodingHeader = null;
                 var encoding = DetermineEncodingType(entry.FullName, properties);
                 switch(encoding) {
                 case "NONE":
@@ -272,7 +305,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             );
        }
 
-        private async Task<Dictionary<string, string>> ReadAndDeleteManifest(S3WriterResourceProperties properties) {
+        private async Task<Dictionary<string, string>?> ReadAndDeleteManifest(S3WriterResourceProperties properties) {
 
             // download package manifest
             var fileEntries = new Dictionary<string, string>();

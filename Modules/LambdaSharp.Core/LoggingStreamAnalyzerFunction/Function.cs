@@ -539,9 +539,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             // local functions
             int GetEventEntrySize(PutEventsRequestEntry eventEntry) {
                 var size = 0;
-                if(eventEntry.Time != null) {
-                    size += 14;
-                }
+                size += 14; // eventEntry.Time is never null
                 size += GetUtf8Length(eventEntry.Source);
                 size += GetUtf8Length(eventEntry.DetailType);
                 size += GetUtf8Length(eventEntry.Detail);

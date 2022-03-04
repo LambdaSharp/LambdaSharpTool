@@ -465,7 +465,7 @@ namespace Test.LambdaSharp.DynamoDB.Internal.DynamoRequestConverterTests {
             output.Should().Be($":v_1");
             converter.ExpressionValues.ContainsKey(":v_1").Should().BeTrue();
             converter.ExpressionValues[":v_1"].S.Should().NotBeNull();
-            converter.ExpressionValues[":v_1"].S.Should().Be("Hello");
+            converter.ExpressionValues[":v_1"].S.Should().Be("EnumValue");
         }
     }
 }

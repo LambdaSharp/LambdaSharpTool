@@ -44,6 +44,15 @@ namespace LambdaSharp.S3.IO.S3Writer {
 
         //--- Methods ---
         public async Task<Response<S3WriterResourceAttributes>> Create(S3WriterResourceProperties properties) {
+            if(properties.BucketName == null) {
+                throw new ArgumentNullException(nameof(properties.Bucket));
+            }
+            if(properties.Key == null) {
+                throw new ArgumentNullException(nameof(properties.Key));
+            }
+            if(properties.Contents == null) {
+                throw new ArgumentNullException(nameof(properties.Contents));
+            }
             _logger.LogInfo($"writing JSON file to s3://{properties.BucketName}/{properties.Key}");
             var contents = Serialize(properties.Contents);
             await _s3Client.PutObjectAsync(new PutObjectRequest {

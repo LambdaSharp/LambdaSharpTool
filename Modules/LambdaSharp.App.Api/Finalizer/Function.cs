@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,9 +29,12 @@ namespace LambdaSharp.AppHosting.Finalizer {
     public sealed class Function : ALambdaFinalizerFunction {
 
         //--- Fields ---
-        private IAmazonAPIGateway _apiGatewayClient;
-        private string _restApiId;
-        private string _stageName;
+        private IAmazonAPIGateway? _apiGatewayClient;
+        private string? _restApiId;
+        private string? _stageName;
+
+        //--- Properties ---
+        private IAmazonAPIGateway ApiGatewayClient => _apiGatewayClient ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -51,14 +55,14 @@ namespace LambdaSharp.AppHosting.Finalizer {
 
             // list current deployments
             LogInfo("Listing deployments");
-            var deploymentsResponse = await  _apiGatewayClient.GetDeploymentsAsync(new GetDeploymentsRequest {
+            var deploymentsResponse = await ApiGatewayClient.GetDeploymentsAsync(new GetDeploymentsRequest {
                 RestApiId = _restApiId
             });
             LogInfo($"Found {deploymentsResponse.Items.Count:N0} deployments");
 
             // create a new deployment
             LogInfo("Creating a new deployment");
-            var createResponse = await _apiGatewayClient.CreateDeploymentAsync(new CreateDeploymentRequest {
+            var createResponse = await ApiGatewayClient.CreateDeploymentAsync(new CreateDeploymentRequest {
                 RestApiId = _restApiId,
                 Description = $"{Info.ModuleId} LambdaSharp App API (update)"
             });
@@ -66,7 +70,7 @@ namespace LambdaSharp.AppHosting.Finalizer {
 
             // update stage to use new deployment
             LogInfo("Updating stage");
-            await _apiGatewayClient.UpdateStageAsync(new UpdateStageRequest {
+            await ApiGatewayClient.UpdateStageAsync(new UpdateStageRequest {
                 RestApiId = _restApiId,
                 StageName = _stageName,
                 PatchOperations = {
@@ -84,7 +88,7 @@ namespace LambdaSharp.AppHosting.Finalizer {
                 LogInfo("Deleting old deployments");
                 foreach(var deployment in deploymentsToDelete) {
                     LogInfo($"Deleting deployment: id={deployment.Id}");
-                    await _apiGatewayClient.DeleteDeploymentAsync(new DeleteDeploymentRequest {
+                    await ApiGatewayClient.DeleteDeploymentAsync(new DeleteDeploymentRequest {
                         RestApiId = _restApiId,
                         DeploymentId = deployment.Id
                     });
@@ -96,14 +100,14 @@ namespace LambdaSharp.AppHosting.Finalizer {
 
             // remove old deployments
             LogInfo("Listing deployments");
-            var deploymentsResponse = await  _apiGatewayClient.GetDeploymentsAsync(new GetDeploymentsRequest {
+            var deploymentsResponse = await ApiGatewayClient.GetDeploymentsAsync(new GetDeploymentsRequest {
                 RestApiId = _restApiId
             });
             LogInfo($"Found {deploymentsResponse.Items.Count:N0} deployments");
 
             // update stage to use the oldest (first) deployment
             LogInfo("Updating stage to use first deployment");
-            await _apiGatewayClient.UpdateStageAsync(new UpdateStageRequest {
+            await ApiGatewayClient.UpdateStageAsync(new UpdateStageRequest {
                 RestApiId = _restApiId,
                 StageName = _stageName,
                 PatchOperations = {
@@ -121,7 +125,7 @@ namespace LambdaSharp.AppHosting.Finalizer {
                 LogInfo("Deleting old deployments");
                 foreach(var deployment in deploymentsToDelete) {
                     LogInfo($"Deleting deployment: id={deployment.Id}");
-                    await _apiGatewayClient.DeleteDeploymentAsync(new DeleteDeploymentRequest {
+                    await ApiGatewayClient.DeleteDeploymentAsync(new DeleteDeploymentRequest {
                         RestApiId = _restApiId,
                         DeploymentId = deployment.Id
                     });

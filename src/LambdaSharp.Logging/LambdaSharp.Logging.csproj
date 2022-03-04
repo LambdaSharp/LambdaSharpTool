@@ -3,7 +3,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Deterministic>true</Deterministic>
     <RootNamespace>LambdaSharp</RootNamespace>
+
+    <!-- TODO (2022-03-03, bjorg): enable nullable -->
+    <!-- <Nullable>enable</Nullable> -->
+
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -25,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'net5.0'">
     <PackageReference Include="System.Text.Json" Version="5.0.2" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.1" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />

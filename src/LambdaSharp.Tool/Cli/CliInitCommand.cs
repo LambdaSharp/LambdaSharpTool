@@ -378,10 +378,10 @@ namespace LambdaSharp.Tool.Cli {
             // check if operating services need to be installed/updated
             if(createNewTier) {
                 Console.WriteLine();
-                Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
+                Console.WriteLine($"Creating new deployment tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
             } else if(updateExistingTier) {
                 Console.WriteLine();
-                Console.WriteLine($"Updating deployment tier '{settings.TierName}'");
+                Console.WriteLine($"Updating deployment tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
             } else {
                 if(!updated) {
                     Console.WriteLine();
@@ -478,9 +478,9 @@ namespace LambdaSharp.Tool.Cli {
 
                 // check if bootstrap template is being updated or installed
                 if(createNewTier) {
-                    Console.WriteLine($"Creating LambdaSharp tier '{settings.TierName}'");
+                    Console.WriteLine($"Creating LambdaSharp tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
                 } else {
-                    Console.WriteLine($"Updating LambdaSharp tier '{settings.TierName}'");
+                    Console.WriteLine($"Updating LambdaSharp tier {Settings.InfoColor}{settings.TierName}{Settings.ResetColor}");
                 }
 
                 // create lambdasharp CLI bootstrap stack
