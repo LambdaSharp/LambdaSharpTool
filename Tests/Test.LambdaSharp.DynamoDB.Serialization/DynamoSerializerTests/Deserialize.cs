@@ -438,12 +438,12 @@ namespace Test.LambdaSharp.DynamoDB.Serialization.DynamoConverterTests {
                     456.0d
                 });
             map.Should().ContainKey("Map")
-                .WhoseValue.Should().Equals(new Dictionary<string, object> {
+                .WhoseValue.Should().BeEquivalentTo(new Dictionary<string, object> {
                     ["First"] = "ghi",
                     ["Second"] = 789.0d
                 });
             map.Should().ContainKey("Binary")
-                .WhoseValue.Equals(Encoding.UTF8.GetBytes("Hellow World!"));
+                .WhoseValue.Should().BeEquivalentTo(Encoding.UTF8.GetBytes("Hello World!"));
         }
         #endregion
 
