@@ -89,7 +89,7 @@ namespace LambdaSharp.Tool.Cli {
                     // sub-command options
                     var namespaceOption = subCmd.Option("--namespace <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
-                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp3.1')", CommandOptionType.SingleValue);
+                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'net6.0')", CommandOptionType.SingleValue);
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
@@ -127,7 +127,7 @@ namespace LambdaSharp.Tool.Cli {
                             settings,
                             functionName,
                             namespaceOption.Value(),
-                            frameworkOption.Value() ?? "netcoreapp3.1",
+                            frameworkOption.Value() ?? "net6.0",
                             workingDirectory,
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
                             languageOption.Value() ?? "csharp",
@@ -563,8 +563,13 @@ namespace LambdaSharp.Tool.Cli {
                 ["ROOTNAMESPACE"] = rootNamespace,
                 ["LAMBDASHARP_VERSION"] = VersionInfoCompatibility.GetLambdaSharpAssemblyWildcardVersion(settings.ToolVersion, framework)
             };
+            var frameworkFolder = framework.Replace(".", "");
             try {
-                var projectContents = ReadResource($"NewCSharpFunction-{functionType}.xml", substitutions);
+                var projectContents = ReadResource($"{frameworkFolder}.NewCSharpFunction-{functionType}.xml", substitutions);
+                if(projectContents is null) {
+                    LogError("function type is not supported for selected framework");
+                    return;
+                }
                 File.WriteAllText(projectFile, projectContents);
                 Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
             } catch(Exception e) {
@@ -574,7 +579,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // create function source code
             var functionFile = Path.Combine(projectDirectory, "Function.cs");
-            var functionContents = ReadResource($"NewCSharpFunction-{functionType}.txt", substitutions);
+            var functionContents = ReadResource($"{frameworkFolder}.NewCSharpFunction-{functionType}.txt", substitutions);
             try {
                 File.WriteAllText(functionFile, functionContents);
                 Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");

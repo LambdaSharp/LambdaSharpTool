@@ -66,13 +66,17 @@ namespace LambdaSharp.Tool.Cli {
 
         //--- Class Methods ---
         public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
-            var result = typeof(ACliCommand).Assembly.ReadManifestResource($"LambdaSharp.Tool.Resources.{resourceName}");
-            if(substitutions != null) {
-                foreach(var kv in substitutions) {
-                    result = result.Replace($"%%{kv.Key}%%", kv.Value);
+            try {
+                var result = typeof(ACliCommand).Assembly.ReadManifestResource($"LambdaSharp.Tool.Resources.{resourceName}");
+                if(substitutions != null) {
+                    foreach(var kv in substitutions) {
+                        result = result.Replace($"%%{kv.Key}%%", kv.Value);
+                    }
                 }
+                return result;
+            } catch {
+                return null;
             }
-            return result;
         }
 
         //--- Fields ---
