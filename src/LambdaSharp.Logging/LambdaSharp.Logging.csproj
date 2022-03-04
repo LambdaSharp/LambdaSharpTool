@@ -29,8 +29,8 @@
     <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' != 'net5.0'">
-    <PackageReference Include="System.Text.Json" Version="5.0.2" />
+  <ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
+    <PackageReference Include="System.Text.Json" Version="6.0.2" />
     <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
