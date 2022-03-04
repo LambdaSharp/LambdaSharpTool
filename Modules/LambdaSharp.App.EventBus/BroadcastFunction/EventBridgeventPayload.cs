@@ -26,12 +26,12 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
         //--- Properties ---
 
         [JsonPropertyName("source")]
-        public string Source { get; set; }
+        public string? Source { get; set; }
 
         [JsonPropertyName("detail-type")]
-        public string DetailType { get; set; }
+        public string? DetailType { get; set; }
 
         [JsonPropertyName("resources")]
-        public List<string> Resources { get; set; }
+        public List<string>? Resources { get; set; }
     }
 }

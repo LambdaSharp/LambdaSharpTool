@@ -5,7 +5,13 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>LambdaSharp.Tool</RootNamespace>
+
+    <!-- TODO (2022-03-03, bjorg): enable nullable -->
+    <!-- <Nullable>enable</Nullable> -->
+
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <PackageId>LambdaSharp.Tool</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>

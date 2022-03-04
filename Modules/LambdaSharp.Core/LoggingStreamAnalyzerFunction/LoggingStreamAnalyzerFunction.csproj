@@ -5,7 +5,10 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.Core.LoggingStreamAnalyzerFunction</RootNamespace>
     <Nullable>enable</Nullable>
+    <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.1.0" />

@@ -3,7 +3,13 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Deterministic>true</Deterministic>
     <RootNamespace>LambdaSharp.App</RootNamespace>
+
+    <!-- TODO (2022-03-03, bjorg): enable nullable -->
+    <!-- <Nullable>enable</Nullable> -->
+
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>

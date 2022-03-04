@@ -32,10 +32,10 @@ namespace LambdaSharp.App.EventBus.Records {
     public sealed class ConnectionRecord {
 
         //--- Properties ---
-        public string ConnectionId { get; set; }
+        public string? ConnectionId { get; set; }
         public ConnectionState State { get; set; }
-        public string ApplicationId { get; set; }
-        public string SubscriptionArn { get; set; }
-        public Dictionary<string, string> Bearer { get; set; }
+        public string? ApplicationId { get; set; }
+        public string? SubscriptionArn { get; set; }
+        public Dictionary<string, string>? Bearer { get; set; }
     }
 }

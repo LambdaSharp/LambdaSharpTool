@@ -22,9 +22,9 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         private class ConnectionHeader {
 
             //--- Properties ---
-            public string Host { get; set; }
-            public string ApiKey { get; set; }
-            public string Id { get; set; }
+            public string? Host { get; set; }
+            public string? ApiKey { get; set; }
+            public string? Id { get; set; }
         }
 
         //--- Class Methods ---
@@ -34,15 +34,23 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
         }
 
         //--- Fields ---
-        private IAmazonSimpleNotificationService _snsClient;
-        private DataTable _dataTable;
-        private string _eventTopicArn;
-        private string _broadcastApiUrl;
-        private string _httpApiToken;
-        private string _clientApiKey;
+        private IAmazonSimpleNotificationService? _snsClient;
+        private DataTable? _dataTable;
+        private string? _eventTopicArn;
+        private string? _broadcastApiUrl;
+        private string? _httpApiToken;
+        private string? _clientApiKey;
 
         //--- Constructors ---
         public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
+        //--- Properties ---
+        private IAmazonSimpleNotificationService SnsClient => _snsClient ?? throw new InvalidOperationException();
+        private DataTable DataTable => _dataTable ?? throw new InvalidOperationException();
+        private string EventTopicArn => _eventTopicArn ?? throw new InvalidOperationException();
+        private string BroadcastApiUrl => _broadcastApiUrl ?? throw new InvalidOperationException();
+        private string HttpApiToken => _httpApiToken ?? throw new InvalidOperationException();
+        private string ClientApiKey => _clientApiKey ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -64,8 +72,8 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             LogInfo($"Connected: {request.RequestContext.ConnectionId}");
 
             // verify client authorization
-            string headerBase64Json = null;
-            if(!(request.QueryStringParameters?.TryGetValue("header", out headerBase64Json) ?? false)) {
+            string? headerBase64Json = null;
+            if(!(request.QueryStringParameters?.TryGetValue("header", out headerBase64Json) ?? false) || (headerBase64Json == null)) {
 
                 // reject connection request
                 return new APIGatewayProxyResponse {
@@ -96,7 +104,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
 
             // create new connection record
-            await _dataTable.CreateConnectionRecordAsync(new ConnectionRecord {
+            await DataTable.CreateConnectionRecordAsync(new ConnectionRecord {
                 ConnectionId = request.RequestContext.ConnectionId,
                 State = ConnectionState.New,
                 ApplicationId = header.Id,
@@ -112,14 +120,14 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             LogInfo($"Disconnected: {request.RequestContext.ConnectionId}");
 
             // retrieve connection record
-            var connection = await _dataTable.GetConnectionRecordAsync(request.RequestContext.ConnectionId);
+            var connection = await DataTable.GetConnectionRecordAsync(request.RequestContext.ConnectionId);
             if(connection == null) {
                 LogInfo("Connection was already removed");
                 return;
             }
 
             // indicate connection is closed
-            await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Closed);
+            await DataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Closed);
 
             // clean-up resources associated with websocket connection
             await Task.WhenAll(new Task[] {
@@ -128,7 +136,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 Task.Run(async () => {
                     if(connection.SubscriptionArn != null) {
                         try {
-                            await _snsClient.UnsubscribeAsync(connection.SubscriptionArn);
+                            await SnsClient.UnsubscribeAsync(connection.SubscriptionArn);
                         } catch(Exception e) {
                             LogErrorAsWarning(e, "failed to unsubscribe (subscription ARN: {0})", connection.SubscriptionArn);
                         }
@@ -139,15 +147,17 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 Task.Run(async () => {
 
                     // fetch all rules associated with websocket connection
-                    var rules = await _dataTable.GetAllRuleRecordAsync(request.RequestContext.ConnectionId);
+                    var rules = await DataTable.GetAllRuleRecordAsync(request.RequestContext.ConnectionId);
 
                     // delete rules
-                    await _dataTable.DeleteAllRuleRecordAsync(rules);
+                    await DataTable.DeleteAllRuleRecordAsync(rules);
                 })
             });
 
             // delete websocket connection record
-            await _dataTable.DeleteConnectionRecordAsync(connection.ConnectionId);
+            if(connection.ConnectionId != null) {
+                await DataTable.DeleteConnectionRecordAsync(connection.ConnectionId);
+            }
         }
 
         // [Route("$default")]
@@ -162,7 +172,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             LogInfo($"Hello: {connectionId}");
 
             // retrieve connection record
-            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+            var connection = await DataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
                 throw Abort(action.AcknowledgeError("connection gone"));
@@ -175,21 +185,21 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
                 LogInfo("Client has already announced itself (state: {0})", connection.State);
                 throw Abort(action.AcknowledgeError("client is already announced"));
             }
-            if(!await _dataTable.UpdateConnectionRecordStateAsync(connection, ConnectionState.Pending)) {
+            if(!await DataTable.UpdateConnectionRecordStateAsync(connection, ConnectionState.Pending)) {
                 LogInfo($"Unable to update connection state from '{connection.State}' to '{ConnectionState.Pending}'");
                 throw Abort(action.AcknowledgeError("client is already being announced"));
             }
 
             // subscribe websocket to SNS topic notifications
             try {
-                await _snsClient.SubscribeAsync(new SubscribeRequest {
+                await SnsClient.SubscribeAsync(new SubscribeRequest {
                     Protocol = "https",
                     Endpoint = $"{_broadcastApiUrl}?ws={connectionId}&token={_httpApiToken}&rid={action.RequestId}",
                     TopicArn = _eventTopicArn
                 });
             } catch(Exception e) {
                 LogError(e, "failed to subscribe to SNS topic");
-                await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
+                await DataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
                 throw Abort(action.AcknowledgeError("internal error"));
             }
 
@@ -207,7 +217,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
 
             // retrieve connection record
-            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+            var connection = await DataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
                 return action.AcknowledgeError("connection gone");
@@ -238,7 +248,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
 
             // create or update event rule
-            await _dataTable.CreateOrUpdateRuleRecordAsync(new RuleRecord {
+            await DataTable.CreateOrUpdateRuleRecordAsync(new RuleRecord {
                 Rule = action.Rule,
                 Pattern = action.Pattern,
                 ConnectionId = connection.ConnectionId
@@ -257,7 +267,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
 
             // retrieve connection record
-            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+            var connection = await DataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 LogInfo("Connection was removed");
                 return action.AcknowledgeError("connection gone");
@@ -276,7 +286,7 @@ namespace LambdaSharp.App.EventBus.ListenerFunction {
             }
 
             // delete event rule
-            await _dataTable.DeleteRuleRecordAsync(connectionId, action.Rule);
+            await DataTable.DeleteRuleRecordAsync(connectionId, action.Rule);
             return action.AcknowledgeOk();
         }
 

@@ -42,16 +42,25 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
     public sealed class Function : ALambdaFunction<APIGatewayHttpApiV2ProxyRequest, APIGatewayHttpApiV2ProxyResponse> {
 
         //--- Fields ---
-        private IAmazonSimpleNotificationService _snsClient;
-        private IAmazonApiGatewayManagementApi _amaClient;
-        private DataTable _dataTable;
-        private string _eventTopicArn;
-        private string _keepAliveRuleArn;
-        private string _httpApiToken;
-        private XmlNamespaceManager _xmlNamespaces;
+        private IAmazonSimpleNotificationService? _snsClient;
+        private IAmazonApiGatewayManagementApi? _amaClient;
+        private DataTable? _dataTable;
+        private string? _eventTopicArn;
+        private string? _keepAliveRuleArn;
+        private string? _httpApiToken;
+        private XmlNamespaceManager? _xmlNamespaces;
 
         //--- Constructors ---
         public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
+        //--- Properties ---
+        private IAmazonSimpleNotificationService SnsClient => _snsClient ?? throw new InvalidOperationException();
+        private IAmazonApiGatewayManagementApi AmaClient => _amaClient ?? throw new InvalidOperationException();
+        private DataTable DataTable => _dataTable ?? throw new InvalidOperationException();
+        private string EventTopicArn => _eventTopicArn ?? throw new InvalidOperationException();
+        private string KeepAliveRuleArn => _keepAliveRuleArn ?? throw new InvalidOperationException();
+        private string HttpApiToken => _httpApiToken ?? throw new InvalidOperationException();
+        private XmlNamespaceManager XmlNamespaces => _xmlNamespaces ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -85,7 +94,7 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
             // validate request token
             if(
                 !request.QueryStringParameters.TryGetValue("token", out var token)
-                || (token != _httpApiToken)
+                || (token != HttpApiToken)
             ) {
                 LogWarn("Missing or invalid request token");
                 return BadRequestResponse();
@@ -146,7 +155,7 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
             // attempt to send serialized message to connection
             var messageBytes = Encoding.UTF8.GetBytes(json);
             try {
-                await _amaClient.PostToConnectionAsync(new PostToConnectionRequest {
+                await AmaClient.PostToConnectionAsync(new PostToConnectionRequest {
                     ConnectionId = connectionId,
                     Data = new MemoryStream(messageBytes)
                 });
@@ -162,12 +171,12 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
 
             // confirm it's for the expected topic ARN
             if(topicSubscription.TopicArn != _eventTopicArn) {
-                LogWarn("Wrong Topic ARN for subscription confirmation (Expected: {0}, Received: {1})", _eventTopicArn, topicSubscription.TopicArn);
+                LogWarn("Wrong Topic ARN for subscription confirmation (Expected: {0}, Received: {1})", EventTopicArn, topicSubscription.TopicArn ?? "<null>");
                 return BadRequestResponse();
             }
 
             // retrieve connection record
-            var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+            var connection = await DataTable.GetConnectionRecordAsync(connectionId);
             if(connection == null) {
                 await SendActionToConnection(new AcknowledgeAction {
                     RequestId = requestId,
@@ -191,14 +200,14 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 using var response = await HttpClient.GetAsync(topicSubscription.SubscribeURL);
                 var xmlResponse = XDocument.Parse(await response.Content.ReadAsStringAsync());
                 subscriptionArn = xmlResponse.Document
-                    .XPathSelectElement("sns:ConfirmSubscriptionResponse/sns:ConfirmSubscriptionResult/sns:SubscriptionArn", _xmlNamespaces)
+                    .XPathSelectElement("sns:ConfirmSubscriptionResponse/sns:ConfirmSubscriptionResult/sns:SubscriptionArn", XmlNamespaces)
                     ?.Value ?? throw new InvalidOperationException("missing subscription ARN");
                 LogInfo("Subscription confirmed: {0}", subscriptionArn);
             } catch(Exception e) {
-                LogError(e, "Unable to confirm subscription (topic: {0}, url: {1})", topicSubscription.TopicArn, topicSubscription.SubscribeURL);
+                LogError(e, "Unable to confirm subscription (topic: {0}, url: {1})", topicSubscription.TopicArn ?? "<null>", topicSubscription.SubscribeURL ?? "<null>");
 
                 // mark connection as failed and report error
-                await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
+                await DataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
                 await SendActionToConnection(new AcknowledgeAction {
                     RequestId = requestId,
                     Status = "Error",
@@ -206,17 +215,17 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 }, connectionId);
                 return InternalServerErrorResponse();
             }
-            if(!await _dataTable.UpdateConnectionRecordStateAndSubscriptionAsync(connection, ConnectionState.Open, subscriptionArn)) {
+            if(!await DataTable.UpdateConnectionRecordStateAndSubscriptionAsync(connection, ConnectionState.Open, subscriptionArn)) {
 
                 // unsubscribe since we couldn't save the subscription ARN
                 try {
-                    await _snsClient.UnsubscribeAsync(subscriptionArn);
+                    await SnsClient.UnsubscribeAsync(subscriptionArn);
                 } catch(Exception e) {
-                    LogErrorAsWarning(e, "failed to unsubscribe (subscription ARN: {0})", connection.SubscriptionArn);
+                    LogErrorAsWarning(e, "failed to unsubscribe (subscription ARN: {0})", connection.SubscriptionArn ?? "<null>");
                 }
 
                 // mark connection as failed and report error
-                await _dataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
+                await DataTable.SetConnectionRecordStateAsync(connection, ConnectionState.Failed);
                 await SendActionToConnection(new AcknowledgeAction {
                     RequestId = requestId,
                     Status = "Error",
@@ -251,11 +260,11 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 (eventBridgeEvent.Source == "aws.events")
                 && (eventBridgeEvent.DetailType == "Scheduled Event")
                 && (eventBridgeEvent.Resources?.Count == 1)
-                && (eventBridgeEvent.Resources[0] == _keepAliveRuleArn)
+                && (eventBridgeEvent.Resources[0] == KeepAliveRuleArn)
             ) {
 
                 // retrieve connection record
-                var connection = await _dataTable.GetConnectionRecordAsync(connectionId);
+                var connection = await DataTable.GetConnectionRecordAsync(connectionId);
                 if(connection == null) {
                     return SuccessResponse("Gone");
                 }
@@ -277,14 +286,14 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
                 LogError(e, "invalid message");
                 return BadRequestResponse();
             }
-            var rules = await _dataTable.GetAllRuleRecordAsync(connectionId);
+            var rules = await DataTable.GetAllRuleRecordAsync(connectionId);
             var matchedRules = rules
                 .Where(rule => {
                     try {
-                        var pattern = JObject.Parse(rule.Pattern);
+                        var pattern = JObject.Parse(rule.Pattern!);
                         return EventPatternMatcher.IsMatch(evt, pattern);
                     } catch(Exception e) {
-                        LogError(e, "invalid event pattern: {0}", rule.Pattern);
+                        LogError(e, "invalid event pattern: {0}", rule.Pattern ?? "<null>");
                         return false;
                     }
                 }).Select(rule => rule.Rule)

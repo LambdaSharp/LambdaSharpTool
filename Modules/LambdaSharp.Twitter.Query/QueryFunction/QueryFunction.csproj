@@ -5,7 +5,10 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>LambdaSharp.Twitter.QueryFunction</RootNamespace>
     <Nullable>enable</Nullable>
+    <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.Comprehend" Version="3.7.5.12" />
