@@ -66,7 +66,7 @@
     <ProjectReference Include="..\..\Libraries\LambdaSharp.CloudFormation\LambdaSharp.CloudFormation.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\*" />
+    <EmbeddedResource Include="Resources\**" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />

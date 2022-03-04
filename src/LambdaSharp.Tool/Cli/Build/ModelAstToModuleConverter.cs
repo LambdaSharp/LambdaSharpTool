@@ -1023,28 +1023,55 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
             var projectName = mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(project);
 
             // check if we need to parse the <TargetFramework> element to determine the lambda runtime
-            var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
+            var targetFramework = mainPropertyGroup?.Element("TargetFramework")?.Value;
+            var outputType = mainPropertyGroup?.Element("OutputType")?.Value;
+            var assemblyName = mainPropertyGroup?.Element("AssemblyName")?.Value;
+            var isSelfContained = (outputType == "Exe") && (assemblyName == "bootstrap");
             if(runtime == null) {
                 switch(targetFramework) {
                 case "netcoreapp1.0":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore10.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore10.ToString();
+                    }
                     break;
                 case "netcoreapp2.0":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore20.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore20.ToString();
+                    }
                     break;
                 case "netcoreapp2.1":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore21.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore21.ToString();
+                    }
                     break;
                 case "netcoreapp3.1":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
+                    }
                     break;
                 case "net5":
                 case "net5.0":
-                    runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
+                    if(isSelfContained) {
+                        runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
+                    } else {
+                        LogError($"function must be self-containted to target .NET 5.0 framework");
+                    }
                     break;
                 case "net6":
                 case "net6.0":
-                    runtime = Amazon.Lambda.Runtime.Dotnet6.ToString();
+                    if(isSelfContained) {
+                        runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnet6.ToString();
+                    }
                     break;
                 default:
                     LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
@@ -1055,6 +1082,8 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
             // check if we need to read the project file <RootNamespace> element to determine the handler name
             if(handler == null) {
                 var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
+
+                // TODO (2022-03-04, bjorg): this works by accident for self-contained functions
                 if(rootNamespace != null) {
                     handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
                 } else {

@@ -6,9 +6,10 @@ fi
 
 # mkdir TestModule
 cd $LAMBDASHARP
-if [ ! -d tmp ]; then
-    mkdir tmp
+if [ -d tmp ]; then
+    rm -rf tmp
 fi
+mkdir tmp
 cd tmp
 mkdir TestModule-$LAMBDASHARP_TIER
 cd TestModule-$LAMBDASHARP_TIER

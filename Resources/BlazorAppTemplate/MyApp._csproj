@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Deterministic>true</Deterministic>
     <RootNamespace>%%ROOTNAMESPACE%%</RootNamespace>
     <NoWarn>CS1998</NoWarn>
@@ -11,7 +11,7 @@
     <PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.App" Version="0.8.3.*"/>
+    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.App" Version="0.8.4.*"/>
     <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)/src/LambdaSharp.App/LambdaSharp.App.csproj" />
   </ItemGroup>
 </Project>

@@ -37,7 +37,6 @@ namespace LambdaSharp.Build.CSharp.Function {
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
         private const string API_MAPPINGS = "api-mappings.json";
-        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
 
         //--- Types --
         private class ApiGatewayInvocationMappings {
@@ -224,7 +223,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             var isAmazonLinux2 = Provider.IsAmazonLinux2();
             var isReadyToRun = isReadyToRunSupported && isAmazonLinux2;
             var isSelfContained = (projectFile.OutputType == "Exe")
-                || (projectFile.AssemblyName == "bootstrap");
+                && (projectFile.AssemblyName == "bootstrap");
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
             var selfContained = isSelfContained ? ", SelfContained" : "";
             Provider.WriteLine($"=> Building function {Provider.InfoColor}{function.FullName}{Provider.ResetColor} [{projectFile.TargetFramework}, {buildConfiguration}{readyToRunText}{selfContained}]");
@@ -234,18 +233,6 @@ namespace LambdaSharp.Build.CSharp.Function {
             if(projectFile.RemoveAmazonLambdaToolsReference()) {
                 LogWarn($"removing obsolete AWS Lambda Tools extension from {Path.GetRelativePath(Provider.WorkingDirectory, function.Project)}");
                 projectFile.Save(function.Project);
-            }
-
-            // validate project properties for self-contained functions
-            if(
-                isSelfContained
-                && (
-                    (projectFile.OutputType != "Exe")
-                    || (projectFile.AssemblyName != "bootstrap")
-                )
-            ) {
-                LogError("function project must have <OutputType>Exe</OutputType> and <AssemblyName>bootstrap</AssemblyName> properties");
-                return;
             }
 
             // validate the project is using the most recent lambdasharp assembly references

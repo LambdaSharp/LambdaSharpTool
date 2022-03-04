@@ -80,7 +80,7 @@ namespace LambdaSharp.Build.CSharp {
                 success = new ProcessLauncher(BuildEventsConfig).Execute(
                     dotNetExe,
                     new[] {
-                        "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
+                        "run", "--project", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
                     }.Union(arguments).ToList(),
                     workingDirectory,
                     showOutput,
