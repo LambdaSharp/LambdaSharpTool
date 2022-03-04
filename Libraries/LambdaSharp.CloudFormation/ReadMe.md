@@ -6,6 +6,37 @@ This assembly is used to build and generate CloudFormation templates.
 
 ## Rules
 
+Limits: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html
+
+* Template
+    * max body size: 1 MB
+    * AWSTemplateFormatVersion
+        * must be `2010-09-09` when present
+    * Description
+        * The value for the description declaration must be a literal string that is between 0 and 1024 bytes in length.
+    * Metadata
+        * AWS::CloudFormation::Init
+        * AWS::CloudFormation::Interface
+        * AWS::CloudFormation::Designer
+    * Parameters
+        * maximum of 200 parameters
+        * Each parameter must be given a logical name (also called logical ID), which must be alphanumeric and unique among all logical names within the template.
+        * Each parameter must be assigned a parameter type that is supported by AWS CloudFormation. For more information, see Type.
+        * Each parameter must be assigned a value at runtime for AWS CloudFormation to successfully provision the stack. You can optionally specify a default value for AWS CloudFormation to use unless another value is provided.
+        * Parameters must be declared and referenced from within the same template. You can reference parameters from the Resources and Outputs sections of the template.
+    * Rules
+        * no known limits
+    * Mappings
+        * maximum of 200 mappings
+    * Conditions
+        * no known limits
+    * Transform
+        * TODO
+    * Resources
+        * maximum of 500 resources
+    * Outputs
+        * maximum of 200 outputs
+
 * Conditions
     * Declaration
         * validate the condition name is a string
@@ -26,8 +57,6 @@ This assembly is used to build and generate CloudFormation templates.
     * `!Ref`
         * must reference a parameter
 
-* Rules
-    * TODO
 
 * Functions in Resources & Export values
     * `!Base64`: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-base64.html
@@ -57,7 +86,7 @@ This assembly is used to build and generate CloudFormation templates.
         * parameter 3 (SecondLevelKey)
             * allowed functions: `!FindInMap`, `!Ref`
             * must be string or int literal
-    * `!GetAz`: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getavailabilityzones.html
+    * `!GetAZs`: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getavailabilityzones.html
         * must have 1 expression
         * parameter 1 (region)
             * allowed functions: `!Ref`
@@ -96,14 +125,59 @@ This assembly is used to build and generate CloudFormation templates.
             * must be a string literal
         * parameter 2 (source string)
             * must be a string expression
-    * `!Sub` string
+    * `!Sub` string (short form)
         * must have 1 expression
-        * parameter 1 ()
-            * TODO
+        * parameter 1 (format string)
+            * process `${Foo}` pattern as `!Ref Foo` expression
+            * process `${Foo.Bar}` pattern as `!GetAtt Foo.Bar` expression
+    * `!Sub` list (long form)
+        * must have 1 or 2 expressions
+        * parameter 1 (format string)
+            * process `${Foo}` pattern as a placeholder variable or, when not found, as a `!Ref Foo` expression
+            * process `${Foo.Bar}` pattern as `!GetAtt Foo.Bar` expression
+        * parameter 2 (map)
+            * placeholder variable name with a string expression
+            * ensure placeholder variable is used in format string
     * `!Ref`
-        * check that a resource with the given name exists
+        * check that a resource or parameter or pseudo-parameter with the given name exists
         * if referenced resource has a condition
             * ensure the `!Ref` expression is nested inside an `!If` expression
             * ensure the corresponding `!If` branch is only taken when the resource condition is true
     * `!GetAtt`
-        * TODO
+        * check that a resource with the given name exists
+        * if referenced resource has a condition
+            * ensure the `!Ref` expression is nested inside an `!If` expression
+            * ensure the corresponding `!If` branch is only taken when the resource condition is true
+        * check that attribute exists on resource
+
+* Parameter
+    * parameter name max 255 characters
+    * parameter value max 4,096 bytes
+
+* Mapping
+    * max 200 attributes
+    * name max 255 characters
+
+* Resource
+    * name max 255 characters
+    * TODO
+
+* Output
+    * name max 255 characters
+    * TODO
+
+* Rule: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/rules-section-structure.html
+    * TODO
+    * Functions
+        * Fn::And
+        * Fn::Contains
+        * Fn::EachMemberEquals
+        * Fn::EachMemberIn
+        * Fn::Equals
+        * Fn::If
+        * Fn::Not
+        * Fn::Or
+        * Fn::RefAll
+        * Fn::ValueOf
+        * Fn::ValueOfAll
+

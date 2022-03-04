@@ -24,6 +24,5 @@ namespace LambdaSharp.CloudFormation.Iam {
 
         //--- Properties ---
         public List<IamServiceAuthorization>? Services { get; set; }
-
     }
 }
