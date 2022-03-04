@@ -4,11 +4,13 @@
     <Deterministic>true</Deterministic>
     <RootNamespace>%%ROOTNAMESPACE%%</RootNamespace>
     <NoWarn>CS1998</NoWarn>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.6" PrivateAssets="all" />
-    <PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.2" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.App" Version="0.8.4.*"/>

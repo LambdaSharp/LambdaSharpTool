@@ -5,7 +5,7 @@
 <li class="list-group-item">
     <div class="form-group row p-auto">
         <div class="col-1">
-            <input type="checkbox" checked="@Todo.Completed" @onchange="args => OnCheckedChanged((bool)args.Value)"/>
+            <input type="checkbox" checked="@Todo.Completed" @onchange="args => OnCheckedChanged((bool)(args?.Value ?? false))"/>
         </div>
         <div class="col-11" >
             @Todo.Description
@@ -16,8 +16,8 @@
 @code {
 
     //--- Properties ---
-    [Parameter] public TodoItem Todo { get; set; }
-    [Parameter] public Action<bool> StatusChanged { get; set; }
+    [Parameter] public TodoItem Todo { get; set; } = new();
+    [Parameter] public Action<bool>? StatusChanged { get; set; }
 
     //--- Methods ---
     private void OnCheckedChanged(bool isChecked) {
