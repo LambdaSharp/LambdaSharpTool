@@ -199,7 +199,7 @@ namespace LambdaSharp.Core.RollbarApi {
             return list.Where(project => project.Name != null).ToArray();
         }
 
-        public async Task<RollbarProject> FindProjectByName(string projectName) {
+        public async Task<RollbarProject?> FindProjectByName(string projectName) {
 
             // Rollbar has a 32-character limit on project names
             if(projectName.Length > 32) {

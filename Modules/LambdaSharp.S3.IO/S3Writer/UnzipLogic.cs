@@ -58,7 +58,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
                     stream.CopyTo(hashStream);
                 }
                 hashStream.FlushFinalBlock();
-                return string.Concat(md5.Hash.Select(x => x.ToString("X2")));
+                return string.Concat(md5.Hash!.Select(x => x.ToString("X2")));
             }
         }
 

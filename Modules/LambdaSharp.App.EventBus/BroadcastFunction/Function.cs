@@ -199,8 +199,8 @@ namespace LambdaSharp.App.EventBus.BroadcastFunction {
             try {
                 using var response = await HttpClient.GetAsync(topicSubscription.SubscribeURL);
                 var xmlResponse = XDocument.Parse(await response.Content.ReadAsStringAsync());
-                subscriptionArn = xmlResponse.Document
-                    .XPathSelectElement("sns:ConfirmSubscriptionResponse/sns:ConfirmSubscriptionResult/sns:SubscriptionArn", XmlNamespaces)
+                subscriptionArn = xmlResponse?.Document
+                    ?.XPathSelectElement("sns:ConfirmSubscriptionResponse/sns:ConfirmSubscriptionResult/sns:SubscriptionArn", XmlNamespaces)
                     ?.Value ?? throw new InvalidOperationException("missing subscription ARN");
                 LogInfo("Subscription confirmed: {0}", subscriptionArn);
             } catch(Exception e) {

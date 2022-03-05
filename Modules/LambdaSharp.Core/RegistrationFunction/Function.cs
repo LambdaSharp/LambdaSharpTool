@@ -385,21 +385,21 @@ namespace LambdaSharp.Core.RegistrationFunction {
             }
 
             // generate the Rollbar project name
-            var name = Regex.Replace(_rollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
+            var name = Regex.Replace(RollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
                 var value = match.ToString();
                 switch(value) {
                 case "{ModuleFullName}":
-                    return properties.GetModuleFullName();
+                    return properties.GetModuleFullName() ?? throw new InvalidOperationException("ModuleFullName not defined");
                 case "{ModuleNamespace}":
-                    return properties.GetModuleNamespace();
+                    return properties.GetModuleNamespace() ?? throw new InvalidOperationException("ModuleNamespace not defined");
                 case "{ModuleName}":
-                    return properties.GetModuleName();
+                    return properties.GetModuleName() ?? throw new InvalidOperationException("ModuleName not defined");
                 case "{ModuleId}":
-                    return properties.ModuleId;
+                    return properties.ModuleId ?? throw new InvalidOperationException("ModuleId not defined");
                 case "{ModuleIdNoTierPrefix}":
-                    return string.IsNullOrEmpty(Info.DeploymentTier)
+                    return (string.IsNullOrEmpty(Info.DeploymentTier)
                         ? properties.ModuleId
-                        : properties.ModuleId?.Substring(Info.DeploymentTier.Length + 1);
+                        : properties.ModuleId?.Substring(Info.DeploymentTier.Length + 1)) ?? throw new InvalidOperationException("ModuleId not defined");
                 default:
 
                     // remove curly braces for unrecognized placeholders
@@ -409,7 +409,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
             // NOTE (2020-02-19, bjorg): Rollbar projects cannot exceed 32 characters
             if(name.Length > 32) {
-                using(var crypto = new SHA256Managed()) {
+                using(var crypto = SHA256.Create()) {
                     var hash = string.Concat(crypto.ComputeHash(Encoding.UTF8.GetBytes(name)).Select(x => x.ToString("X2")));
 
                     // keep first X characters for original project name, append (32-X) characters from the hash
@@ -423,7 +423,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
             // retrieve access token for Rollbar project
             var tokens = await RollbarClient.ListProjectTokens(project.Id);
-            var token = tokens.FirstOrDefault(t => t.Name == "post_server_item").AccessToken;
+            var token = tokens.FirstOrDefault(t => t.Name == "post_server_item")?.AccessToken;
             if(token == null) {
                 throw new RegistrarException("internal error: unable to retrieve token for new Rollbar project");
             }

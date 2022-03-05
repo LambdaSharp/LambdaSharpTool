@@ -60,7 +60,7 @@ namespace LambdaSharp.App.EventBus {
         //--- Fields ---
 
         protected JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
-            IgnoreNullValues = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = false,
             Converters = {
                 new JsonStringEnumConverter()
