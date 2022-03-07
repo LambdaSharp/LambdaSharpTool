@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -188,10 +189,10 @@ namespace LambdaSharp {
             CloudWatch
         }
 
-        private class TerminateLambdaException : Exception {
+        private class ForceColdStartException : Exception {
 
             //--- Constructors ---
-            public TerminateLambdaException(string reason) : base(reason) { }
+            public ForceColdStartException(string reason) : base(reason) { }
         }
 
         //--- Class Fields ---
@@ -706,17 +707,18 @@ namespace LambdaSharp {
         /// <param name="function">The work to execute asynchronously.</param>
         /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
         protected void RunTask(Func<Task> function, CancellationToken cancellationToken = default)  => AddPendingTask(Task.Run(function, cancellationToken));
+
         /// <summary>
-        /// The <see cref="TerminateLambdaInstance(string)"/> method forces the Lambda instance to terminate and perform a cold start on next invocation.
-        /// This method should only be used when the processing environment has become corrupted beyond repair.
+        /// The <see cref="ForceLambdaColdStart(System.String)"/> method causes the Lambda runtime to re-initialize as if a cold start had occurred. This methos is useful
+        /// when the global environment is corrupted and only a restart can fix it.
         /// </summary>
-        /// <param name="reason">Optional message shown as reason for terminating the Lambda instance.</param>
-        protected void TerminateLambdaInstance(string? reason = null) {
-            var message = (reason != null)
-                ? $"Lambda instance was intentionally terminated (reason: {reason})"
-                : $"Lambda instance was intentionally terminated (no reason provided)";
-            LogFatal(exception: new TerminateLambdaException(reason ?? "no reason provided"), message);
-            System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(Type).GetType()).ToString();
+        /// <param name="reason">Optional message shown as reason for forcing a cold-start of the Lambda instance.</param>
+        [DoesNotReturn]
+        protected void ForceLambdaColdStart(string? reason = null) {
+            reason ??= "no reason provided";
+            var message = $"Forcing cold-start of Lambda instance ({reason})";
+            LogFatal(new ForceColdStartException(reason), message);
+            Environment.FailFast(reason);
         }
 
         private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {

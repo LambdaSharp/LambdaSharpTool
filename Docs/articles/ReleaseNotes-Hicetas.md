@@ -146,7 +146,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 #### BREAKING CHANGES
 
 * SDK
-  * Removed `ForceLambdaColdStart` from `ALambdaFunction`, because it was a duplicate of `TerminateLambdaInstance`.
+  * Removed `TerminateLambdaInstance` from `ALambdaFunction`, because it was a duplicate of `ForceLambdaColdStart`.
 
 ### Features
 
@@ -154,6 +154,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added support for Lambda functions using .NET 6.
   * Updated Blazor WebAssembly app template to target .NET 6.
 
+* SDK
+  * Added `LambdaSourceGeneratorJsonSerializer` for .NET 6 projects.
+    * **WARNING:** JSON source generators do NOT support JSON converters; if your code relies on JSON converters, do not use `LambdaSourceGeneratorJsonSerializer`.
 
 ### (v0.8.3.5) - 2022-03-03
 
