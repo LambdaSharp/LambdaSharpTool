@@ -222,8 +222,8 @@ namespace LambdaSharp.Build.CSharp.Function {
             var isReadyToRunSupported = VersionInfoCompatibility.IsReadyToRunSupported(projectFile.TargetFramework);
             var isAmazonLinux2 = Provider.IsAmazonLinux2();
             var isReadyToRun = isReadyToRunSupported && isAmazonLinux2;
-            var isSelfContained = (projectFile.OutputType == "Exe")
-                && (projectFile.AssemblyName == "bootstrap");
+            var isSelfContained = (projectFile.OutputType == "Exe") && (projectFile.AssemblyName == "bootstrap");
+            var isTopLevelMain = !isSelfContained && (projectFile.OutputType == "Exe");
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
             var selfContained = isSelfContained ? ", SelfContained" : "";
             Provider.WriteLine($"=> Building function {Provider.InfoColor}{function.FullName}{Provider.ResetColor} [{projectFile.TargetFramework}, {buildConfiguration}{readyToRunText}{selfContained}]");
@@ -256,9 +256,9 @@ namespace LambdaSharp.Build.CSharp.Function {
 
             // check if the assembly entry-point needs to be validated
             if(function.HasHandlerValidation) {
-                if(isSelfContained) {
+                if(isSelfContained || isTopLevelMain) {
 
-                    // TODO (2021-02-08, bjorg): validate the assembly has a Main() entry point
+                    // nothing to do
                 } else {
 
                     // verify the function handler can be found in the compiled assembly

@@ -152,6 +152,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * CLI
   * Added support for Lambda functions using .NET 6.
+  * Added support for Lambda functions with top-level statements.
   * Updated Blazor WebAssembly app template to target .NET 6.
 
 * SDK

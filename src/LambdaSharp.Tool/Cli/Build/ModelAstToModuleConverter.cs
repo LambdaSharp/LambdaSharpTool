@@ -1027,11 +1027,14 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
             var outputType = mainPropertyGroup?.Element("OutputType")?.Value;
             var assemblyName = mainPropertyGroup?.Element("AssemblyName")?.Value;
             var isSelfContained = (outputType == "Exe") && (assemblyName == "bootstrap");
+            var isTopLevelMain = !isSelfContained && (outputType == "Exe");
             if(runtime == null) {
                 switch(targetFramework) {
                 case "netcoreapp1.0":
                     if(isSelfContained) {
                         LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
                     } else {
                         runtime = Amazon.Lambda.Runtime.Dotnetcore10.ToString();
                     }
@@ -1039,6 +1042,8 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 case "netcoreapp2.0":
                     if(isSelfContained) {
                         LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
                     } else {
                         runtime = Amazon.Lambda.Runtime.Dotnetcore20.ToString();
                     }
@@ -1046,6 +1051,8 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 case "netcoreapp2.1":
                     if(isSelfContained) {
                         LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
                     } else {
                         runtime = Amazon.Lambda.Runtime.Dotnetcore21.ToString();
                     }
@@ -1053,6 +1060,8 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                 case "netcoreapp3.1":
                     if(isSelfContained) {
                         LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
                     } else {
                         runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
                     }
@@ -1062,13 +1071,15 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
                     if(isSelfContained) {
                         runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
                     } else {
-                        LogError($"function must be self-containted to target .NET 5.0 framework");
+                        LogError($"selected framework requires self-contained functions");
                     }
                     break;
                 case "net6":
                 case "net6.0":
                     if(isSelfContained) {
                         runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
+                    } else if(isTopLevelMain) {
+                        runtime = Amazon.Lambda.Runtime.Dotnet6.ToString();
                     } else {
                         runtime = Amazon.Lambda.Runtime.Dotnet6.ToString();
                     }
@@ -1081,13 +1092,21 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
 
             // check if we need to read the project file <RootNamespace> element to determine the handler name
             if(handler == null) {
-                var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
+                if(isSelfContained) {
 
-                // TODO (2022-03-04, bjorg): this works by accident for self-contained functions
-                if(rootNamespace != null) {
-                    handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
+                    // for self-contained functions, the handler is set to the name of the compiled assembly
+                    handler = "bootstrap";
+                } else if(isTopLevelMain) {
+
+                    // for functions with top-level statements, the handler is set to the name of the compiled assembly
+                    handler = Path.GetFileNameWithoutExtension(project);
                 } else {
-                    LogError("could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
+                    var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
+                    if(rootNamespace != null) {
+                        handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
+                    } else {
+                        LogError("could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
+                    }
                 }
             }
         }
