@@ -254,6 +254,18 @@ namespace LambdaSharp.Build.CSharp.Function {
                 return;
             }
 
+            // building a function with top-level statements also creates an ELF file we don't need
+            if(isTopLevelMain) {
+                var elfBinary = Path.Combine(publishFolder, Path.GetFileNameWithoutExtension(function.Project));
+                try {
+                    File.Delete(elfBinary);
+                } catch(Exception e) {
+
+                    // no harm in leaving the file; report error as a warning
+                    LogWarn($"Unable to delete unnecessary ELF binary at '{elfBinary}' (Error: {e})");
+                }
+            }
+
             // check if the assembly entry-point needs to be validated
             if(function.HasHandlerValidation) {
                 if(isSelfContained || isTopLevelMain) {
