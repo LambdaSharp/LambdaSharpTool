@@ -60,6 +60,9 @@ namespace LambdaSharp.Tool.Cli {
 
     public abstract class ACliCommand : CliBase {
 
+        //--- Constants ---
+        private const string RESOURCE_PREFIX = "LambdaSharp.Tool.Resources.";
+
         //--- Class Properties ---
         public static string CredentialsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws");
         public static string CredentialsFilePath = Path.Combine(CredentialsFolder, "credentials");
@@ -67,7 +70,7 @@ namespace LambdaSharp.Tool.Cli {
         //--- Class Methods ---
         public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
             try {
-                var result = typeof(ACliCommand).Assembly.ReadManifestResource($"LambdaSharp.Tool.Resources.{resourceName}");
+                var result = typeof(ACliCommand).Assembly.ReadManifestResource($"{RESOURCE_PREFIX}{resourceName}");
                 if(substitutions != null) {
                     foreach(var kv in substitutions) {
                         result = result.Replace($"%%{kv.Key}%%", kv.Value);
@@ -78,6 +81,12 @@ namespace LambdaSharp.Tool.Cli {
                 return null;
             }
         }
+
+        public static string[] GetResourceNames(string prefix)
+            => typeof(ACliCommand).Assembly.GetManifestResourceNames()
+                .Where(name => name.StartsWith($"{RESOURCE_PREFIX}{prefix}", StringComparison.Ordinal))
+                .Select(name => name.Substring(RESOURCE_PREFIX.Length))
+                .ToArray();
 
         //--- Fields ---
         private readonly Dictionary<CommandLineApplication, List<Action>> _commandOptions = new Dictionary<CommandLineApplication, List<Action>>();

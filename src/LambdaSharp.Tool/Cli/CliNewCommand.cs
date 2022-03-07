@@ -556,36 +556,47 @@ namespace LambdaSharp.Tool.Cli {
                 functionType = Enum.Parse<FunctionType>(settings.PromptChoice("Select function type", _functionTypes), ignoreCase: true);
             }
 
-            // create function project
-            var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+            // fetch resource names for this function type
+            var frameworkFolder = framework.Replace(".", "");
+            var sourceResourceNamesPrefix = $"{frameworkFolder}.NewCSharpFunction-{functionType}.";
+            var sourceResourceNames = GetResourceNames(sourceResourceNamesPrefix);
+            if(sourceResourceNames.Length == 0) {
+                LogError("function type is not supported for selected framework");
+                return;
+            }
+
+            // create files for the project
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
                 ["LAMBDASHARP_VERSION"] = VersionInfoCompatibility.GetLambdaSharpAssemblyWildcardVersion(settings.ToolVersion, framework)
             };
-            var frameworkFolder = framework.Replace(".", "");
-            try {
-                var projectContents = ReadResource($"{frameworkFolder}.NewCSharpFunction-{functionType}.xml", substitutions);
-                if(projectContents is null) {
-                    LogError("function type is not supported for selected framework");
-                    return;
-                }
-                File.WriteAllText(projectFile, projectContents);
-                Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
-            } catch(Exception e) {
-                LogError($"unable to create project file '{projectFile}'", e);
-                return;
-            }
+            var projectSourceResourceName = $"{sourceResourceNamesPrefix}xml";
+            foreach(var sourceResourceName in sourceResourceNames) {
+                var sourceContents = ReadResource(sourceResourceName, substitutions);
+                if(sourceResourceName == projectSourceResourceName) {
 
-            // create function source code
-            var functionFile = Path.Combine(projectDirectory, "Function.cs");
-            var functionContents = ReadResource($"{frameworkFolder}.NewCSharpFunction-{functionType}.txt", substitutions);
-            try {
-                File.WriteAllText(functionFile, functionContents);
-                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
-            } catch(Exception e) {
-                LogError($"unable to create function file '{functionFile}'", e);
-                return;
+                    // create function project
+                    var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+                    try {
+                        File.WriteAllText(projectFile, sourceContents);
+                        Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
+                    } catch(Exception e) {
+                        LogError($"unable to create project file '{projectFile}'", e);
+                        return;
+                    }
+                } else {
+
+                    // create source file
+                    var otherFile = Path.Combine(projectDirectory, Path.GetFileNameWithoutExtension(sourceResourceName.Substring(sourceResourceNamesPrefix.Length)).Replace("_", "."));
+                    try {
+                        File.WriteAllText(otherFile, sourceContents);
+                        Console.WriteLine($"Created file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), otherFile)}");
+                    } catch(Exception e) {
+                        LogError($"unable to create file '{otherFile}'", e);
+                        return;
+                    }
+                }
             }
         }
 
