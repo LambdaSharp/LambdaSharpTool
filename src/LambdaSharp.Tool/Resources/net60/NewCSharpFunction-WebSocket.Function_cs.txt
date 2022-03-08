@@ -1,7 +1,7 @@
+namespace %%ROOTNAMESPACE%%;
+
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
-
-namespace %%ROOTNAMESPACE%%;
 
 public class ApiGatewayEndpointRequest {
 

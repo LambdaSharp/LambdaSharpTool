@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
+namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction;
+
 using LambdaSharp.Exceptions;
 
-namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
+public class ProcessLogEventsException : ALambdaException {
 
-    public class ProcessLogEventsException : ALambdaException {
-
-        //--- Constructors ---
-        public ProcessLogEventsException(string format, params object[] args) : base(format, args) { }
-    }
+    //--- Constructors ---
+    public ProcessLogEventsException(string format, params object[] args) : base(format, args) { }
 }

@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.App.EventBus.Records {
+namespace LambdaSharp.App.EventBus.Records;
 
-    public sealed class RuleRecord {
+public sealed class RuleRecord {
 
-        //--- Properties ---
-        public string? Rule { get; set; }
-        public string? Pattern { get; set; }
-        public string? ConnectionId { get; set; }
-    }
+    //--- Properties ---
+    public string? Rule { get; set; }
+    public string? Pattern { get; set; }
+    public string? ConnectionId { get; set; }
 }

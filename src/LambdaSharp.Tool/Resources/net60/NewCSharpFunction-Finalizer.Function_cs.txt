@@ -1,7 +1,7 @@
+namespace %%ROOTNAMESPACE%%;
+
 using LambdaSharp;
 using LambdaSharp.Finalizer;
-
-namespace %%ROOTNAMESPACE%%;
 
 public sealed class Function : ALambdaFinalizerFunction {
 

@@ -1,8 +1,8 @@
+namespace %%ROOTNAMESPACE%%;
+
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
-
-namespace %%ROOTNAMESPACE%%;
 
 public sealed class Function : ALambdaApiGatewayFunction {
 

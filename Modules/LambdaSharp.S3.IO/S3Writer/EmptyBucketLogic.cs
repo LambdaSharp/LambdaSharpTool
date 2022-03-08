@@ -16,81 +16,77 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+namespace LambdaSharp.S3.IO.S3Writer;
+
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.CustomResource;
 using LambdaSharp.Logging;
 
-namespace LambdaSharp.S3.IO.S3Writer {
+public class EmptyBucketLogic {
 
-    public class EmptyBucketLogic {
+    //--- Fields ---
+    private readonly ILambdaSharpLogger _logger;
+    private readonly IAmazonS3 _s3Client;
 
-        //--- Fields ---
-        private readonly ILambdaSharpLogger _logger;
-        private readonly IAmazonS3 _s3Client;
+    //--- Constructors ---
+    public EmptyBucketLogic(ILambdaSharpLogger logger, IAmazonS3 s3Client) {
+        _logger = logger;
+        _s3Client = s3Client;
+    }
 
-        //--- Constructors ---
-        public EmptyBucketLogic(ILambdaSharpLogger logger, IAmazonS3 s3Client) {
-            _logger = logger;
-            _s3Client = s3Client;
-        }
+    //--- Methods ---
+    public async Task<Response<S3WriterResourceAttributes>> Create(S3WriterResourceProperties properties) {
 
-        //--- Methods ---
-        public async Task<Response<S3WriterResourceAttributes>> Create(S3WriterResourceProperties properties) {
-
-            // nothing to do on create
-            return new Response<S3WriterResourceAttributes> {
-                PhysicalResourceId = $"s3emptybucket:{properties.BucketName}",
-                Attributes = new S3WriterResourceAttributes {
-                    BucketName = properties.BucketName
-                }
-            };
-        }
-
-        public Task<Response<S3WriterResourceAttributes>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties)
-            => Create(properties);
-
-        public async Task<Response<S3WriterResourceAttributes>> Delete(S3WriterResourceProperties properties) {
-            if(properties.Enabled == false) {
-
-                // don't do anything if disabled
-                return new Response<S3WriterResourceAttributes>();
+        // nothing to do on create
+        return new Response<S3WriterResourceAttributes> {
+            PhysicalResourceId = $"s3emptybucket:{properties.BucketName}",
+            Attributes = new S3WriterResourceAttributes {
+                BucketName = properties.BucketName
             }
-            var bucketName = properties.BucketName;
-            _logger.LogInfo($"emptying bucket: {bucketName}");
+        };
+    }
 
-            // enumerate all S3 objects
-            var request = new ListObjectsV2Request {
-                BucketName = bucketName
-            };
-            var counter = 0;
-            var deletions = new List<Task>();
-            do {
-                var response = await _s3Client.ListObjectsV2Async(request);
+    public Task<Response<S3WriterResourceAttributes>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties)
+        => Create(properties);
 
-                // delete any objects found
-                if(response.S3Objects.Any()) {
-                    deletions.Add(_s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
-                        BucketName = bucketName,
-                        Objects = response.S3Objects.Select(s3 => new KeyVersion {
-                            Key = s3.Key
-                        }).ToList(),
-                        Quiet = true
-                    }));
-                    counter += response.S3Objects.Count;
-                }
+    public async Task<Response<S3WriterResourceAttributes>> Delete(S3WriterResourceProperties properties) {
+        if(properties.Enabled == false) {
 
-                // continue until no more objects can be fetched
-                request.ContinuationToken = response.NextContinuationToken;
-            } while(request.ContinuationToken != null);
-
-            // wait for all deletions to complete
-            await Task.WhenAll(deletions);
-            _logger.LogInfo($"deleted {counter:N0} objects");
+            // don't do anything if disabled
             return new Response<S3WriterResourceAttributes>();
         }
+        var bucketName = properties.BucketName;
+        _logger.LogInfo($"emptying bucket: {bucketName}");
+
+        // enumerate all S3 objects
+        var request = new ListObjectsV2Request {
+            BucketName = bucketName
+        };
+        var counter = 0;
+        var deletions = new List<Task>();
+        do {
+            var response = await _s3Client.ListObjectsV2Async(request);
+
+            // delete any objects found
+            if(response.S3Objects.Any()) {
+                deletions.Add(_s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
+                    BucketName = bucketName,
+                    Objects = response.S3Objects.Select(s3 => new KeyVersion {
+                        Key = s3.Key
+                    }).ToList(),
+                    Quiet = true
+                }));
+                counter += response.S3Objects.Count;
+            }
+
+            // continue until no more objects can be fetched
+            request.ContinuationToken = response.NextContinuationToken;
+        } while(request.ContinuationToken != null);
+
+        // wait for all deletions to complete
+        await Task.WhenAll(deletions);
+        _logger.LogInfo($"deleted {counter:N0} objects");
+        return new Response<S3WriterResourceAttributes>();
     }
 }

@@ -1,6 +1,6 @@
-using LambdaSharp;
-
 namespace %%ROOTNAMESPACE%%;
+
+using LambdaSharp;
 
 public class FunctionRequest {
 

@@ -1,7 +1,7 @@
+namespace %%ROOTNAMESPACE%%;
+
 using LambdaSharp;
 using LambdaSharp.SimpleNotificationService;
-
-namespace %%ROOTNAMESPACE%%;
 
 public class Message {
 

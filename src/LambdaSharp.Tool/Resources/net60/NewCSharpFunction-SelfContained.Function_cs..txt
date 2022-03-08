@@ -1,7 +1,7 @@
+namespace %%ROOTNAMESPACE%%;
+
 using Amazon.Lambda.RuntimeSupport;
 using LambdaSharp;
-
-namespace %%ROOTNAMESPACE%%;
 
 public class FunctionRequest {
 
