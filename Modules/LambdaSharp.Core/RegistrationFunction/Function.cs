@@ -418,11 +418,11 @@ namespace LambdaSharp.Core.RegistrationFunction {
             }
 
             // find or create Rollbar project
-            var project = await RollbarClient.FindProjectByName(name)
-                ?? await RollbarClient.CreateProject(name);
+            var project = await RollbarClient.FindProjectByNameAsync(name)
+                ?? await RollbarClient.CreateProjectAsync(name);
 
             // retrieve access token for Rollbar project
-            var tokens = await RollbarClient.ListProjectTokens(project.Id);
+            var tokens = await RollbarClient.ListProjectTokensAsync(project.Id);
             var token = tokens.FirstOrDefault(t => t.Name == "post_server_item")?.AccessToken;
             if(token == null) {
                 throw new RegistrarException("internal error: unable to retrieve token for new Rollbar project");

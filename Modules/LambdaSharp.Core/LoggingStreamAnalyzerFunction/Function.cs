@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.CloudWatchEvents;
@@ -464,22 +463,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
             // send payload to rollbar
             try {
-                var response = RollbarClient.SendRollbarPayload(rollbar);
-                LogInfo($"Rollbar.SendRollbarPayload() succeeded: {response}");
-            } catch(WebException e) {
-                if(e.Response == null) {
-                    LogWarn($"Rollbar request failed (status: {e.Status}, message: {e.Message})");
-                } else {
-                    using(var stream = e.Response.GetResponseStream()) {
-                        if(stream == null) {
-                            LogWarn($"Rollbar.SendRollbarPayload() failed: {e.Status}");
-                        } else {
-                            using(var reader = new StreamReader(stream)) {
-                                LogWarn($"Rollbar.SendRollbarPayload() failed: {reader.ReadToEnd()}");
-                            }
-                        }
-                    }
-                }
+                await RollbarClient.SendRollbarPayloadAsync(rollbar);
+                LogInfo($"Rollbar.SendRollbarPayload() succeeded");
             } catch(Exception e) {
                 LogErrorAsWarning(e, "Rollbar.SendRollbarPayload() failed");
             }

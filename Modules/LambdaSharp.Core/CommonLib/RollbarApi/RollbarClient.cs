@@ -135,31 +135,19 @@ namespace LambdaSharp.Core.RollbarApi {
         private HttpClient HttpClient => _httpClient ?? throw new InvalidOperationException();
 
         //--- Methods ---
-        public string SendRollbarPayload(Rollbar rollbar) {
-
-            // send payload to rollbar
-            var payload = Serialize(rollbar);
-            var payloadBytes = Encoding.UTF8.GetBytes(payload);
-            var request = (HttpWebRequest)WebRequest.Create("https://api.rollbar.com/api/1/item/");
-            request.ContentType = "application/json";
-            request.Method = "POST";
-            request.ContentLength = payloadBytes.Length;
-            using(var stream = request.GetRequestStream()) {
-                stream.Write(payloadBytes, 0, payloadBytes.Length);
-            }
-            var response = request.GetResponse();
-            var responseCode = ((HttpWebResponse)response).StatusCode;
-            using(var stream = response.GetResponseStream()) {
-                if(stream == null) {
-                    return responseCode.ToString();
-                }
-                using(var reader = new StreamReader(stream)) {
-                    return reader.ReadToEnd();
-                }
+        public async Task SendRollbarPayloadAsync(Rollbar rollbar) {
+            var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
+                RequestUri = new Uri("https://api.rollbar.com/api/1/item/"),
+                Method = HttpMethod.Post,
+                Content = new StringContent(Serialize(rollbar), Encoding.UTF8, "application/json")
+            });
+            var result = Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
+            if(!httpResponse.IsSuccessStatusCode) {
+                throw new RollbarClientException($"SendRollbarPayloadAsync failed (Status: {httpResponse.StatusCode}, Message: {result.Message ?? "<null>"})");
             }
         }
 
-        public async Task<RollbarProject> CreateProject(string projectName) {
+        public async Task<RollbarProject> CreateProjectAsync(string projectName) {
             LogInfo($"create rollbar project {projectName}");
             var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                 RequestUri = new Uri("https://api.rollbar.com/api/1/projects/"),
@@ -171,7 +159,7 @@ namespace LambdaSharp.Core.RollbarApi {
             });
             var result = Deserialize<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
             if((httpResponse.StatusCode == (HttpStatusCode)422) && (result.Message == "Project with this name already exists")) {
-                return await FindProjectByName(projectName) ?? throw new RollbarClientException($"could not find project: {projectName}");
+                return await FindProjectByNameAsync(projectName) ?? throw new RollbarClientException($"could not find project: {projectName}");
             }
             if(!httpResponse.IsSuccessStatusCode) {
                 throw new RollbarClientException($"http operation failed: {httpResponse.StatusCode}");
@@ -182,7 +170,7 @@ namespace LambdaSharp.Core.RollbarApi {
             return Deserialize<RollbarProject>(Serialize(result.Result));
         }
 
-        public async Task<IEnumerable<RollbarProject>> ListAllProjects() {
+        public async Task<IEnumerable<RollbarProject>> ListAllProjectsAsync() {
             LogInfo($"list all rollbar projects");
             var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                 RequestUri = new Uri($"https://api.rollbar.com/api/1/projects/?access_token={_accountReadAccessToken}"),
@@ -199,17 +187,17 @@ namespace LambdaSharp.Core.RollbarApi {
             return list.Where(project => project.Name != null).ToArray();
         }
 
-        public async Task<RollbarProject?> FindProjectByName(string projectName) {
+        public async Task<RollbarProject?> FindProjectByNameAsync(string projectName) {
 
             // Rollbar has a 32-character limit on project names
             if(projectName.Length > 32) {
                 projectName = projectName.Substring(0, 32);
             }
-            var allProjects = await ListAllProjects();
+            var allProjects = await ListAllProjectsAsync();
             return allProjects.FirstOrDefault(project => projectName.Equals(project.Name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public async Task<RollbarProject> GetProject(int projectId) {
+        public async Task<RollbarProject> GetProjectAsync(int projectId) {
             LogInfo($"get rollbar project {projectId}");
             var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                 RequestUri = new Uri($"https://api.rollbar.com/api/1/project/{projectId}?access_token={_accountReadAccessToken}"),
@@ -225,7 +213,7 @@ namespace LambdaSharp.Core.RollbarApi {
             return Deserialize<RollbarProject>(Serialize(result.Result));
         }
 
-        public async Task DeleteProject(int projectId) {
+        public async Task DeleteProjectAsync(int projectId) {
             LogInfo($"delete rollbar project {projectId}");
             var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                 RequestUri = new Uri($"https://api.rollbar.com/api/1/project/{projectId}?access_token={_accountWriteAccessToken}"),
@@ -240,7 +228,7 @@ namespace LambdaSharp.Core.RollbarApi {
             }
         }
 
-        public async Task<IEnumerable<RollbarProjectToken>> ListProjectTokens(int projectId) {
+        public async Task<IEnumerable<RollbarProjectToken>> ListProjectTokensAsync(int projectId) {
             LogInfo($"list rollbar project tokens {projectId}");
             var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                 RequestUri = new Uri($"https://api.rollbar.com/api/1/project/{projectId}/access_tokens?access_token={_accountReadAccessToken}"),

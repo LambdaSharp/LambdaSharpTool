@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8D460424F28A5E7174F107D995F4E9E4"
+      "Default": "6B67A96481FECEF9AEEF7E9FCBE063A0"
     }
   },
   "Resources": {
@@ -128,6 +128,7 @@
         "Environment": {
           "Variables": {
             "DEBUG_LOGGING_ENABLED": "false",
+            "AWS_LAMBDA_HANDLER_LOG_FORMAT": "Unformatted",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
@@ -835,7 +836,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "8D460424F28A5E7174F107D995F4E9E4",
+      "TemplateChecksum": "6B67A96481FECEF9AEEF7E9FCBE063A0",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [

@@ -145,6 +145,9 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### BREAKING CHANGES
 
+* CLI
+  * Upgraded _LambdaSharp.Tool_ (`lash`) to .NET 6.
+
 * SDK
   * Removed `TerminateLambdaInstance` from `ALambdaFunction`, because it was a duplicate of `ForceLambdaColdStart`.
 
