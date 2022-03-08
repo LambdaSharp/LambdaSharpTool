@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -238,6 +238,7 @@ namespace LambdaSharp.CustomResource {
         /// throw Abort("value for property X is invalid");
         /// </code>
         /// </example>
+        // TODO (2022-03-07, bjorg): use [DoesNotReturn] attribute instead of returning an exception
         protected Exception Abort(string message) => throw new CustomResourceAbortException(message);
 
         /// <summary>

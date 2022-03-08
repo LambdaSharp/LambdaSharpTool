@@ -13,7 +13,7 @@
     <Title>LambdaSharp (λ#) CloudFormation</Title>
     <Description>Serverless .NET for AWS - LambdaSharp CloudFormation Library</Description>
     <Company>LambdaSharp</Company>
-    <Copyright>Copyright (C) 2018-2021</Copyright>
+    <Copyright>Copyright (C) 2018-2022</Copyright>
     <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
