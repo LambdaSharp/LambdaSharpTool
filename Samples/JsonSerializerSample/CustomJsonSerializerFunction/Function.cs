@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,38 +16,36 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace Sample.JsonSerializer.CustomJsonSerializerFunction;
+
 using LambdaSharp;
 
-namespace Sample.JsonSerializer.CustomJsonSerializerFunction {
+public class FunctionRequest {
 
-    public class FunctionRequest {
+    //--- Properties ---
+    public string? Bar { get; set; }
+}
 
-        //--- Properties ---
-        public string Bar { get; set; }
-    }
+public class FunctionResponse {
 
-    public class FunctionResponse {
+    //--- Properties ---
+    public string? Bar { get; set; }
+}
 
-        //--- Properties ---
-        public string Bar { get; set; }
-    }
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
-    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    //--- Constructors ---
 
-        //--- Constructors ---
+    // using a custom JSON serializer based on LitJson (https://litjson.net/)
+    public Function() : base(new CustomJsonSerializer()) { }
 
-        // using a custom JSON serializer based on LitJson (https://litjson.net/)
-        public Function() : base(new CustomJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-            LogInfo("Deserialized using {1}: {0}", LambdaSerializer.Serialize(request), LambdaSerializer.GetType().FullName);
-            return new FunctionResponse {
-                Bar = request.Bar
-            };
-        }
+    public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+        LogInfo("Deserialized using {1}: {0}", LambdaSerializer.Serialize(request), LambdaSerializer.GetType().FullName ?? "<null>");
+        return new FunctionResponse {
+            Bar = request.Bar
+        };
     }
 }

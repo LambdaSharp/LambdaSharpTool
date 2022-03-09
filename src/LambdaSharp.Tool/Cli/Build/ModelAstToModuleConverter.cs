@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1023,24 +1023,66 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
             var projectName = mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(project);
 
             // check if we need to parse the <TargetFramework> element to determine the lambda runtime
-            var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
+            var targetFramework = mainPropertyGroup?.Element("TargetFramework")?.Value;
+            var outputType = mainPropertyGroup?.Element("OutputType")?.Value;
+            var assemblyName = mainPropertyGroup?.Element("AssemblyName")?.Value;
+            var isSelfContained = (outputType == "Exe") && (assemblyName == "bootstrap");
+            var isTopLevelMain = !isSelfContained && (outputType == "Exe");
             if(runtime == null) {
                 switch(targetFramework) {
                 case "netcoreapp1.0":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore10.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore10.ToString();
+                    }
                     break;
                 case "netcoreapp2.0":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore20.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore20.ToString();
+                    }
                     break;
                 case "netcoreapp2.1":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore21.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore21.ToString();
+                    }
                     break;
                 case "netcoreapp3.1":
-                    runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
+                    if(isSelfContained) {
+                        LogError($"selected framework does not support self-containted functions");
+                    } else if(isTopLevelMain) {
+                        LogError($"selected framework does not support functions with top-level statments");
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
+                    }
                     break;
                 case "net5":
                 case "net5.0":
-                    runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
+                    if(isSelfContained) {
+                        runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
+                    } else {
+                        LogError($"selected framework requires self-contained functions");
+                    }
+                    break;
+                case "net6":
+                case "net6.0":
+                    if(isSelfContained) {
+                        runtime = Amazon.Lambda.Runtime.ProvidedAl2.ToString();
+                    } else if(isTopLevelMain) {
+                        runtime = Amazon.Lambda.Runtime.Dotnet6.ToString();
+                    } else {
+                        runtime = Amazon.Lambda.Runtime.Dotnet6.ToString();
+                    }
                     break;
                 default:
                     LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
@@ -1050,11 +1092,21 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
 
             // check if we need to read the project file <RootNamespace> element to determine the handler name
             if(handler == null) {
-                var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
-                if(rootNamespace != null) {
-                    handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
+                if(isSelfContained) {
+
+                    // for self-contained functions, the handler is set to the name of the compiled assembly
+                    handler = "bootstrap";
+                } else if(isTopLevelMain) {
+
+                    // for functions with top-level statements, the handler is set to the name of the compiled assembly
+                    handler = Path.GetFileNameWithoutExtension(project);
                 } else {
-                    LogError("could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
+                    var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
+                    if(rootNamespace != null) {
+                        handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
+                    } else {
+                        LogError("could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
+                    }
                 }
             }
         }

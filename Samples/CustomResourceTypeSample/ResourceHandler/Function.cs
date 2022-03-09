@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,69 +16,66 @@
  * limitations under the License.
  */
 
-using System.Threading;
-using System.Threading.Tasks;
+namespace CustomResourceSample.ResourceHandler;
+
 using LambdaSharp;
 using LambdaSharp.CustomResource;
 
-namespace CustomResourceSample.ResourceHandler {
+public class ResourceProperties {
 
-    public class ResourceProperties {
+    //--- Properties ---
 
-        //--- Properties ---
+    // TO-DO: add expected custom resource properties
+}
 
-        // TO-DO: add expected custom resource properties
+public class ResourceAttributes {
+
+    //--- Properties ---
+
+    // TO-DO: add returned custom resource attributes
+}
+
+public sealed class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
+
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
+
+    public override async Task<Response<ResourceAttributes>> ProcessCreateResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
+
+        // TO-DO: create custom resource using resource properties from request
+
+        return new Response<ResourceAttributes> {
+
+            // TO-DO: assign a physical resource ID for custom resource
+            PhysicalResourceId = "MyResource:123",
+
+            // TO-DO: set response attributes
+            Attributes = new ResourceAttributes { }
+        };
     }
 
-    public class ResourceAttributes {
+    public override async Task<Response<ResourceAttributes>> ProcessDeleteResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
 
-        //--- Properties ---
+        // TO-DO: delete custom resource identified by PhysicalResourceId in request
 
-        // TO-DO: add returned custom resource attributes
+        return new Response<ResourceAttributes>();
     }
 
-    public sealed class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
+    public override async Task<Response<ResourceAttributes>> ProcessUpdateResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+        // TO-DO: update custom resource using resource properties from request
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
+        return new Response<ResourceAttributes> {
 
-        public override async Task<Response<ResourceAttributes>> ProcessCreateResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
+            // TO-DO: optionally assign a new physical resource ID to trigger deletion of the previous custom resource
+            PhysicalResourceId = "MyResource:123",
 
-            // TO-DO: create custom resource using resource properties from request
-
-            return new Response<ResourceAttributes> {
-
-                // TO-DO: assign a physical resource ID for custom resource
-                PhysicalResourceId = "MyResource:123",
-
-                // TO-DO: set response attributes
-                Attributes = new ResourceAttributes { }
-            };
-        }
-
-        public override async Task<Response<ResourceAttributes>> ProcessDeleteResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
-
-            // TO-DO: delete custom resource identified by PhysicalResourceId in request
-
-            return new Response<ResourceAttributes>();
-        }
-
-        public override async Task<Response<ResourceAttributes>> ProcessUpdateResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
-
-            // TO-DO: update custom resource using resource properties from request
-
-            return new Response<ResourceAttributes> {
-
-                // TO-DO: optionally assign a new physical resource ID to trigger deletion of the previous custom resource
-                PhysicalResourceId = "MyResource:123",
-
-                // TO-DO: set response attributes
-                Attributes = new ResourceAttributes { }
-           };
-        }
+            // TO-DO: set response attributes
+            Attributes = new ResourceAttributes { }
+        };
     }
 }

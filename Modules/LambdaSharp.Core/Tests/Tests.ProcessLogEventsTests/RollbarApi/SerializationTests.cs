@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,43 +16,41 @@
  * limitations under the License.
  */
 
-using System;
+namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests;
+
 using System.Text.Json;
 using FluentAssertions;
 using LambdaSharp.Core.RollbarApi;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
+public class SerializationTests {
 
-    public class SerializationTests {
+    //--- Constructors ---
+    public SerializationTests(ITestOutputHelper output) => Output = output;
 
-        //--- Constructors ---
-        public SerializationTests(ITestOutputHelper output) => Output = output;
+    //--- Properties ---
+    private ITestOutputHelper Output { get; }
 
-        //--- Properties ---
-        private ITestOutputHelper Output { get; }
+    //--- Methods ---
 
-        //--- Methods ---
+    [Fact]
+    public void Deserialize_RollbarProject() {
 
-        [Fact]
-        public void Deserialize_RollbarProject() {
+        // arrange
+        var project = new RollbarProject {
+            Id = 42,
+            Name = "MyRollbarProject",
+            Status = "enabled",
+            Created = DateTimeOffset.FromUnixTimeSeconds(1597324772),
+            Modified = DateTimeOffset.FromUnixTimeSeconds(1622557791)
+        };
+        var json = JsonSerializer.Serialize(project);
 
-            // arrange
-            var project = new RollbarProject {
-                Id = 42,
-                Name = "MyRollbarProject",
-                Status = "enabled",
-                Created = DateTimeOffset.FromUnixTimeSeconds(1597324772),
-                Modified = DateTimeOffset.FromUnixTimeSeconds(1622557791)
-            };
-            var json = JsonSerializer.Serialize(project);
+        // act
+        var data = JsonSerializer.Deserialize<RollbarProject>(json);
 
-            // act
-            var data = JsonSerializer.Deserialize<RollbarProject>(json);
-
-            // assert
-            data.Should().BeEquivalentTo(project);
-        }
+        // assert
+        data.Should().BeEquivalentTo(project);
     }
 }

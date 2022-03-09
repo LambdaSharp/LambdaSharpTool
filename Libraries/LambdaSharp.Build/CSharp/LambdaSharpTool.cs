@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using LambdaSharp.Build.Internal;
 using NJsonSchema;
@@ -79,7 +80,7 @@ namespace LambdaSharp.Build.CSharp {
                 success = new ProcessLauncher(BuildEventsConfig).Execute(
                     dotNetExe,
                     new[] {
-                        "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
+                        "run", "--project", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
                     }.Union(arguments).ToList(),
                     workingDirectory,
                     showOutput,
@@ -291,7 +292,7 @@ namespace LambdaSharp.Build.CSharp {
             // create json document
             try {
                 var output = JsonSerializer.Serialize(schemas, new JsonSerializerOptions {
-                    IgnoreNullValues = false,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     WriteIndented = true
                 });
                 if(outputFile != null) {
@@ -395,7 +396,7 @@ namespace LambdaSharp.Build.CSharp {
                     ModuleVersionId = assembly.ManifestModule.ModuleVersionId.ToString()
                 };
                 File.WriteAllText(outputFilepath, System.Text.Json.JsonSerializer.Serialize(metadata, new System.Text.Json.JsonSerializerOptions {
-                    IgnoreNullValues = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     WriteIndented = true
                 }));
             } else {

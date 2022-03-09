@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Deterministic>true</Deterministic>
     <RootNamespace>LambdaSharp.App</RootNamespace>
 
@@ -20,7 +20,7 @@
     <Title>LambdaSharp (λ#) App</Title>
     <Description>Serverless .NET for AWS - App Library</Description>
     <Company>LambdaSharp</Company>
-    <Copyright>Copyright (C) 2018-2021</Copyright>
+    <Copyright>Copyright (C) 2018-2022</Copyright>
     <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -28,6 +28,7 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
     <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>AWS;Blazor;LambdaSharp;Serverless</PackageTags>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.1"/>
@@ -41,5 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="ReadMe.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,7 @@
+using Amazon.Lambda.RuntimeSupport;
+using %%ROOTNAMESPACE%%;
+
+// NOTE: this method is the entry point for Lambda functions with a custom runtime
+await LambdaBootstrapBuilder.Create(new Function().FunctionHandlerAsync)
+    .Build()
+    .RunAsync();

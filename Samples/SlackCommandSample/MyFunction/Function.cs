@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,20 +16,23 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
+namespace SlackCommandSample.MyFunction;
+
 using LambdaSharp;
 using LambdaSharp.Slack;
 
-namespace SlackCommandSample.MyFunction {
+public sealed class Function : ALambdaSlackCommandFunction {
 
-    public sealed class Function : ALambdaSlackCommandFunction {
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) {
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
+        // TO-DO: add function initialization and reading configuration settings
+    }
 
-        protected async override Task ProcessSlackRequestAsync(SlackRequest request)
-            => Console.WriteLine("Hello world!");
+    protected override async Task ProcessSlackRequestAsync(SlackRequest request) {
+
+        // TO-DO: add business logic
+
+        Console.WriteLine("Hello world!");
     }
 }

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>%%FRAMEWORK%%</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>%%ROOTNAMESPACE%%</RootNamespace>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS1998</NoWarn>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Required to create self-contained Lambda package -->
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bootstrap</AssemblyName>
+
+    <!-- The following optional settings reduce the self-contained Lambda package size -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TrimMode>link</TrimMode>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <EventSourceSupport>false</EventSourceSupport>
+    <DebuggerSupport>false</DebuggerSupport>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="%%LAMBDASHARP_VERSION%%"/>
+    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj" />
+  </ItemGroup>
+</Project>

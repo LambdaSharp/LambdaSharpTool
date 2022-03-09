@@ -231,7 +231,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 
 ### Build, publish, and deploy module in current folder
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash deploy
 ```
@@ -273,7 +273,7 @@ Done (finished: 9/5/2019 1:43:03 PM; duration: 00:01:55.6433420)
 
 ### Deploy a published module
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash deploy bin/cloudformation.json
 ```
@@ -324,7 +324,7 @@ Secrets:
     - alias/MySecretKey
 ```
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash deploy --parameters params.yml Demo
 ```

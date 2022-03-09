@@ -77,7 +77,7 @@ List modules from this S3 bucket (default: match argument)
 
 ### List all modules from the lambdasharp origin
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash util list-modules lambdasharp
 ```
@@ -102,7 +102,7 @@ Done (finished: 8/31/2020 1:17:52 PM; duration: 00:00:01.7544419)
 
 ### List all version of the LambdaSharp.S3.IO@lambdasharp module
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash util list-modules LambdaSharp.S3.IO@lambdasharp
 ```
@@ -118,7 +118,7 @@ Done (finished: 8/31/2020 1:18:47 PM; duration: 00:00:01.7517330)
 
 ### List all version of the LambdaSharp.S3.IO@lambdasharp module, including pre-release versions
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash util list-modules --include-prerelease LambdaSharp.S3.IO@lambdasharp
 ```

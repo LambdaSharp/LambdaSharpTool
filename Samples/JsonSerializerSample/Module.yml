@@ -10,33 +10,34 @@ Description: Module description
 # The Items section defines values and resources for the module.
 Items:
 
-  - Variable: MyVariable
-    Description: Variable description
-    Value: A sample variable value for the module
-
   - Function: SystemTextJsonFunction
-    Description: TO-DO - update function description
     Memory: 256
     Timeout: 30
     Properties:
       Environment:
         Variables:
-            DEBUG_LOGGING_ENABLED: true
+          DEBUG_LOGGING_ENABLED: true
+
+  - Function: SourceGeneratorFunction
+    Memory: 256
+    Timeout: 30
+    Properties:
+      Environment:
+        Variables:
+          DEBUG_LOGGING_ENABLED: true
 
   - Function: NewtonsoftJsonFunction
-    Description: TO-DO - update function description
     Memory: 256
     Timeout: 30
     Properties:
       Environment:
         Variables:
-            DEBUG_LOGGING_ENABLED: true
+          DEBUG_LOGGING_ENABLED: true
 
   - Function: CustomJsonSerializerFunction
-    Description: TO-DO - update function description
     Memory: 256
     Timeout: 30
     Properties:
       Environment:
         Variables:
-            DEBUG_LOGGING_ENABLED: true
+          DEBUG_LOGGING_ENABLED: true

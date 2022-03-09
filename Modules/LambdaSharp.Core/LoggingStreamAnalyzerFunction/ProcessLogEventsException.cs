@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
+namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction;
+
 using LambdaSharp.Exceptions;
 
-namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
+public class ProcessLogEventsException : ALambdaException {
 
-    public class ProcessLogEventsException : ALambdaException {
-
-        //--- Constructors ---
-        public ProcessLogEventsException(string format, params object[] args) : base(format, args) { }
-    }
+    //--- Constructors ---
+    public ProcessLogEventsException(string format, params object[] args) : base(format, args) { }
 }

@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,21 +16,20 @@
  * limitations under the License.
  */
 
+namespace Sample.DynamoDBNative.ApiFunction.Models;
+
 using Sample.DynamoDBNative.DataAccess.Models;
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+public class CreateCustomerRequest {
 
-    public class CreateCustomerRequest {
+    //--- Properties ---
+    public string? Username { get; set; }
+    public string? EmailAddress { get; set; }
+    public string? Name { get; set; }
+}
 
-        //--- Properties ---
-        public string Username { get; set; }
-        public string EmailAddress { get; set; }
-        public string Name { get; set; }
-    }
+public class CreateCustomerResponse {
 
-    public class CreateCustomerResponse {
-
-        //--- Properties ---
-        public CustomerRecord Customer { get; set; }
-    }
+    //--- Properties ---
+    public CustomerRecord? Customer { get; set; }
 }

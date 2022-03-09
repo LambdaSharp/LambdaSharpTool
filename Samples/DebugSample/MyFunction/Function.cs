@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,33 +16,31 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace Sample.Debug.MyFunction;
+
 using LambdaSharp;
 
-namespace Sample.Debug.MyFunction {
+public class FunctionRequest { }
 
-    public class FunctionRequest { }
+public class FunctionResponse { }
 
-    public class FunctionResponse { }
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
-    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
+    public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+        // LogDebug() is only emitted to the logs when the DEBUG_LOGGING_ENABLED environment variable is set
+        LogDebug("this will only show if DEBUG_LOGGING_ENABLED environment variable is set");
 
-            // LogDebug() is only emitted to the logs when the DEBUG_LOGGING_ENABLED environment variable is set
-            LogDebug("this will only show if DEBUG_LOGGING_ENABLED environment variable is set");
-
-            // to avoid unnecessary overhead, check if debug logging is enabled before constructing debug output
-            if(DebugLoggingEnabled) {
-                LogDebug("more complex statements should be guarded using the DebugLoggingEnabled property");
-            }
-            return new FunctionResponse();
+        // to avoid unnecessary overhead, check if debug logging is enabled before constructing debug output
+        if(DebugLoggingEnabled) {
+            LogDebug("more complex statements should be guarded using the DebugLoggingEnabled property");
         }
+        return new FunctionResponse();
     }
 }

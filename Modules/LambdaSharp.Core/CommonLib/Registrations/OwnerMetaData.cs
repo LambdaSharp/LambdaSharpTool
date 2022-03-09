@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,42 +16,41 @@
  * limitations under the License.
  */
 
+namespace LambdaSharp.Core.Registrations;
+
 using System;
 
-namespace LambdaSharp.Core.Registrations {
+public class OwnerMetaData {
 
-    public class OwnerMetaData {
+    //--- Properties ---
+    public string? ModuleId { get; set; }
 
-        //--- Properties ---
-        public string? ModuleId { get; set; }
+    #region --- Module Record ---
+    public string? ModuleInfo { get; set; }
+    public int RollbarProjectId { get; set; }
+    public string? RollbarAccessToken { get; set; }
 
-        #region --- Module Record ---
-        public string? ModuleInfo { get; set; }
-        public int RollbarProjectId { get; set; }
-        public string? RollbarAccessToken { get; set; }
+    // NOTE (2020-07-27, bjorg): this property was replaced by `ModuleInfo`
+    public string? Module { get; set; }
+    #endregion
 
-        // NOTE (2020-07-27, bjorg): this property was replaced by `ModuleInfo`
-        public string? Module { get; set; }
-        #endregion
+    #region --- Function Record ---
+    public string? FunctionId { get; set; }
+    public string? FunctionName { get; set; }
+    public string? FunctionLogGroupName { get; set; }
+    public string? FunctionPlatform { get; set; }
+    public string? FunctionFramework { get; set; }
+    public string? FunctionLanguage { get; set; }
+    public int FunctionMaxMemory { get; set; }
+    public TimeSpan FunctionMaxDuration { get; set; }
+    #endregion
 
-        #region --- Function Record ---
-        public string? FunctionId { get; set; }
-        public string? FunctionName { get; set; }
-        public string? FunctionLogGroupName { get; set; }
-        public string? FunctionPlatform { get; set; }
-        public string? FunctionFramework { get; set; }
-        public string? FunctionLanguage { get; set; }
-        public int FunctionMaxMemory { get; set; }
-        public TimeSpan FunctionMaxDuration { get; set; }
-        #endregion
-
-        #region --- App Record ---
-        public string? AppId { get; set; }
-        public string? AppName { get; set; }
-        public string? AppLogGroup { get; set; }
-        public string? AppPlatform { get; set; }
-        public string? AppFramework { get; set; }
-        public string? AppLanguage { get; set; }
-        #endregion
-    }
+    #region --- App Record ---
+    public string? AppId { get; set; }
+    public string? AppName { get; set; }
+    public string? AppLogGroup { get; set; }
+    public string? AppPlatform { get; set; }
+    public string? AppFramework { get; set; }
+    public string? AppLanguage { get; set; }
+    #endregion
 }

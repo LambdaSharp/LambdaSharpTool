@@ -53,17 +53,10 @@ Name of a method to analyze
 
 ### Create JSON Schema for `WebSocketsSample.MessageFunction.Function::SendMessageAsync`
 
-__Using Bash:__
+__Command Line (Bash):__
 ```bash
 lash util create-invoke-methods-schema \
     --directory MessageFunction/bin/Release/netcoreapp3.1/publish/ \
-    --method MessageFunction::WebSocketsSample.MessageFunction.Function::SendMessageAsync
-```
-
-__Using PowerShell:__
-```powershell
-lash util create-invoke-methods-schema ^
-    --assembly MessageFunction/bin/Release/netcoreapp3.1/publish/ ^
     --method MessageFunction::WebSocketsSample.MessageFunction.Function::SendMessageAsync
 ```
 

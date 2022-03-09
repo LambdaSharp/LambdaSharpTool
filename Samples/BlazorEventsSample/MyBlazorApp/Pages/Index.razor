@@ -1,6 +1,6 @@
 @*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,8 +90,8 @@
     }
 
     //--- Fields ---
-    private Validations _validations;
-    private string _description;
+    private Validations? _validations;
+    private string? _description;
     private Filter _filter = Filter.All;
 
     private List<TodoItem> _todos = new List<TodoItem> {
@@ -167,7 +167,7 @@
     }
 
     private void OnAddTodo() {
-        if(_validations.ValidateAll()) {
+        if(_validations?.ValidateAll() ?? true) {
 
             // create new todo item and add it to the list
             var todo = new TodoItem {
@@ -188,7 +188,7 @@
 
             // reset UI state
             _description = null;
-            _validations.ClearAll();
+            _validations?.ClearAll();
         } else {
 
             // could not add Todo item, because validation failed

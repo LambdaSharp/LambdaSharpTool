@@ -1,6 +1,6 @@
 @*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,10 @@
 <ListGroupItem>
     <Field Horizontal="true" Padding="Padding.IsAuto.OnAll">
         <FieldBody ColumnSize="ColumnSize.Is1">
-            <Check TValue="bool" Checked="@Todo.Completed" CheckedChanged="@OnCheckedChanged"></Check>
+            <Check TValue="bool" Checked="@(Todo?.Completed ?? false)" CheckedChanged="@OnCheckedChanged"></Check>
         </FieldBody>
         <FieldBody ColumnSize="ColumnSize.Is11">
-            @Todo.Description
+            @(Todo?.Description ?? "")
         </FieldBody>
     </Field>
 </ListGroupItem>
@@ -30,12 +30,14 @@
 @code {
 
     //--- Properties ---
-    [Parameter] public TodoItem Todo { get; set; }
-    [Parameter] public Action<TodoItem> StatusChanged { get; set; }
+    [Parameter] public TodoItem? Todo { get; set; }
+    [Parameter] public Action<TodoItem>? StatusChanged { get; set; }
 
     //--- Methods ---
     private void OnCheckedChanged(bool isChecked) {
-        Todo.Completed = isChecked;
-        StatusChanged?.Invoke(Todo);
+        if(Todo is not null) {
+            Todo.Completed = isChecked;
+            StatusChanged?.Invoke(Todo);
+        }
     }
 }

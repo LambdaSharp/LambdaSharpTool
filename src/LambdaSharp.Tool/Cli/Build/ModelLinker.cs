@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -92,6 +92,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // set default environment variables
                         environment["DEBUG_LOGGING_ENABLED"] = "false";
+                        environment["AWS_LAMBDA_HANDLER_LOG_FORMAT"] = "Unformatted";
                         environment["MODULE_ID"] = FnRef("AWS::StackName");
                         environment["MODULE_INFO"] = FnRef("Module::Info");
                         environment["LAMBDA_NAME"] = function.FullName;

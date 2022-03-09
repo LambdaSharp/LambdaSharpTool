@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,24 +25,24 @@ namespace ApiInvokeSample.MyFunction {
 
         //--- Properties ---
         [Required]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [Required]
-        public string Value { get; set; }
+        public string? Value { get; set; }
     }
 
     public class AddItemRequest {
 
         //--- Properties ---
         [Required]
-        public string Value { get; set; }
+        public string? Value { get; set; }
     }
 
     public class AddItemResponse {
 
         //--- Properties ---
         [Required]
-        public string Id { get; set; }
+        public string? Id { get; set; }
     }
 
     public class GetItemsResponse {
@@ -56,10 +56,10 @@ namespace ApiInvokeSample.MyFunction {
 
         //--- Properties ---
         [Required]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [Required]
-        public string Value { get; set; }
+        public string? Value { get; set; }
     }
 
     public class DeleteItemResponse {

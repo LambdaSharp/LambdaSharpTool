@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,41 +16,37 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
+namespace Sample.JsonSerializer.SystemTextJsonFunction;
+
 using LambdaSharp;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Sample.JsonSerializer.SystemTextJsonFunction {
+public class FunctionRequest {
 
-    public class FunctionRequest {
+    //--- Properties ---
+    [JsonPropertyName("foo")]
+    public string? Bar { get; set; }
+}
 
-        //--- Properties ---
-        [JsonPropertyName("foo")]
-        public string Bar { get; set; }
-    }
+public class FunctionResponse {
 
-    public class FunctionResponse {
+    //--- Properties ---
+    [JsonPropertyName("foo")]
+    public string? Bar { get; set; }
+}
 
-        //--- Properties ---
-        [JsonPropertyName("foo")]
-        public string Bar { get; set; }
-    }
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
-    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-            LogInfo("Deserialized using {1}: {0}", LambdaSerializer.Serialize(request), LambdaSerializer.GetType().FullName);
-            return new FunctionResponse {
-                Bar = request.Bar
-            };
-        }
+    public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+        LogInfo("Deserialized using {1}: {0}", LambdaSerializer.Serialize(request), LambdaSerializer.GetType().FullName ?? "<null>");
+        return new FunctionResponse {
+            Bar = request.Bar
+        };
     }
 }

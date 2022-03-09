@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace Sample.DynamoDBNative.ApiFunction.Models;
+
 using Sample.DynamoDBNative.DataAccess.Models;
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+public class GetCustomerWithMostRecentOrdersResponse {
 
-    public class GetCustomerWithMostRecentOrdersResponse {
-
-        //--- Properties ---
-        public CustomerRecord Customer { get; set; }
-        public List<OrderRecord> Orders { get; set; }
-    }
+    //--- Properties ---
+    public CustomerRecord? Customer { get; set; }
+    public List<OrderRecord>? Orders { get; set; }
 }

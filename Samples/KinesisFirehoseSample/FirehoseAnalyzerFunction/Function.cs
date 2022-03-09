@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,57 +16,52 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
+namespace Sample.KinesisFirehose.FirehoseAnalyzerFunction;
+
 using System.IO.Compression;
 using System.Text;
-using System.Threading.Tasks;
 using Amazon.Lambda.KinesisFirehoseEvents;
 using LambdaSharp;
 
-namespace Sample.KinesisFirehose.FirehoseAnalyzerFunction {
+public sealed class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse> {
 
-    public sealed class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
+    public override async Task<KinesisFirehoseResponse> ProcessMessageAsync(KinesisFirehoseEvent request) {
+        LogInfo($"InvocationId: {request.InvocationId}");
+        LogInfo($"DeliveryStreamArn: {request.DeliveryStreamArn}");
+        LogInfo($"Region: {request.Region}");
+        var response = new KinesisFirehoseResponse {
+            Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
+        };
+        foreach(var record in request.Records) {
+            LogInfo($"RecordId: {record.RecordId}");
+            LogInfo($"ApproximateArrivalEpoch: {record.ApproximateArrivalEpoch}");
+            LogInfo($"ApproximateArrivalTimestamp: {record.ApproximateArrivalTimestamp}");
 
-        public override async Task<KinesisFirehoseResponse> ProcessMessageAsync(KinesisFirehoseEvent request) {
-            LogInfo($"InvocationId: {request.InvocationId}");
-            LogInfo($"DeliveryStreamArn: {request.DeliveryStreamArn}");
-            LogInfo($"Region: {request.Region}");
-            var response = new KinesisFirehoseResponse {
-                Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
-            };
-            foreach(var record in request.Records) {
-                LogInfo($"RecordId: {record.RecordId}");
-                LogInfo($"ApproximateArrivalEpoch: {record.ApproximateArrivalEpoch}");
-                LogInfo($"ApproximateArrivalTimestamp: {record.ApproximateArrivalTimestamp}");
-
-                // decode and decompress data element
-                string data;
-                using(var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData)))
-                using(var destinationStream = new MemoryStream()) {
-                    using(var gzip = new GZipStream(sourceStream, CompressionMode.Decompress)) {
-                        gzip.CopyTo(destinationStream);
-                        destinationStream.Position = 0;
-                    }
-                    data = Encoding.UTF8.GetString(destinationStream.ToArray());
+            // decode and decompress data element
+            string data;
+            using(var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData)))
+            using(var destinationStream = new MemoryStream()) {
+                using(var gzip = new GZipStream(sourceStream, CompressionMode.Decompress)) {
+                    gzip.CopyTo(destinationStream);
+                    destinationStream.Position = 0;
                 }
-                LogInfo($"Data: {data}");
-
-                // transform data: For example ToUpper the data
-                response.Records.Add(new KinesisFirehoseResponse.FirehoseRecord {
-                    RecordId = record.RecordId,
-                    Result = KinesisFirehoseResponse.TRANSFORMED_STATE_OK,
-                    Base64EncodedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(data.ToUpper()))
-                });
+                data = Encoding.UTF8.GetString(destinationStream.ToArray());
             }
-            return response;
+            LogInfo($"Data: {data}");
+
+            // transform data: For example ToUpper the data
+            response.Records.Add(new KinesisFirehoseResponse.FirehoseRecord {
+                RecordId = record.RecordId,
+                Result = KinesisFirehoseResponse.TRANSFORMED_STATE_OK,
+                Base64EncodedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(data.ToUpper()))
+            });
         }
+        return response;
     }
 }

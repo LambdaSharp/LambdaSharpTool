@@ -18,8 +18,8 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentAssertions;
-using LambdaSharp.CloudFormation;
 using LambdaSharp.CloudFormation.Template;
 using Xunit;
 
@@ -37,7 +37,7 @@ namespace Tests.LambdaSharp.CloudFormation {
 
             // act
             var json = JsonSerializer.Serialize(template, new JsonSerializerOptions {
-              IgnoreNullValues = true,
+              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
               WriteIndented = true
             });
 
@@ -64,7 +64,7 @@ namespace Tests.LambdaSharp.CloudFormation {
 
             // act
             var json = JsonSerializer.Serialize(template, new JsonSerializerOptions {
-              IgnoreNullValues = true,
+              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
               WriteIndented = true
             });
 
@@ -108,7 +108,7 @@ namespace Tests.LambdaSharp.CloudFormation {
 
             // act
             var json = JsonSerializer.Serialize(template, new JsonSerializerOptions {
-              IgnoreNullValues = true,
+              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
               WriteIndented = true
             });
 
@@ -153,7 +153,7 @@ namespace Tests.LambdaSharp.CloudFormation {
 
             // act
             var json = JsonSerializer.Serialize(template, new JsonSerializerOptions {
-              IgnoreNullValues = true,
+              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
               WriteIndented = true
             });
 
@@ -199,7 +199,7 @@ namespace Tests.LambdaSharp.CloudFormation {
 
             // act
             var json = JsonSerializer.Serialize(template, new JsonSerializerOptions {
-              IgnoreNullValues = true,
+              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
               WriteIndented = true
             });
 

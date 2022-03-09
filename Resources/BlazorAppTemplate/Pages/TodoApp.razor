@@ -20,7 +20,7 @@
                         <div class="row">
                             <div class="col-1">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="checkAllItems" checked="@Todos.All(x => x.Completed)" @onchange="args => OnCheckAll((bool)args.Value)"/>
+                                    <input class="form-check-input" type="checkbox" id="checkAllItems" checked="@Todos.All(x => x.Completed)" @onchange="args => OnCheckAll((bool)(args?.Value ?? false))"/>
                                     <label class="form-check-label" for="checkAllItems">All</label>
                                 </div>
                             </div>
@@ -71,7 +71,7 @@
     }
 
     //--- Fields ---
-    private string _description;
+    private string? _description;
     private Filter _filter = Filter.All;
 
     private List<TodoItem> _todos = new List<TodoItem> {

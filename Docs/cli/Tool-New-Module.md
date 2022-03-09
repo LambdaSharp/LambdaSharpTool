@@ -31,7 +31,7 @@ lash new module My.NewModule
 
 ### Create a new module in the current folder
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new module My.NewModule
 ```

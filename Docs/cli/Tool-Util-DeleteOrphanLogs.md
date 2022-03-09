@@ -35,7 +35,7 @@ The `util delete-orphan-logs` command is used to delete CloudWatch log groups th
 
 ### Delete all orphaned Lambda CloudWatch logs
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash util delete-orphan-logs
 ```

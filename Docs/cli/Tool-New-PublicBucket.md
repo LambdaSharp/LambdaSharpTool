@@ -47,7 +47,7 @@ lash new public-bucket my-lambdasharp-bucket
 
 ### Create a public S3 bucket with Requester Pays access
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new public-bucket my-lambdasharp-bucket4
 ```

@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,38 +16,36 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace DynamoDBSample.MyFunction;
+
 using Amazon.Lambda.DynamoDBEvents;
 using LambdaSharp;
 
-namespace DynamoDBSample.MyFunction {
+public sealed class Function : ALambdaFunction<DynamoDBEvent, string> {
 
-    public sealed class Function : ALambdaFunction<DynamoDBEvent, string> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task<string> ProcessMessageAsync(DynamoDBEvent dynamoDbEvent) {
-            LogInfo($"# Kinesis Records = {dynamoDbEvent.Records.Count}");
-            for(var i = 0; i < dynamoDbEvent.Records.Count; ++i) {
-                var record = dynamoDbEvent.Records[i];
-                LogInfo($"Record #{i}");
-                LogInfo($"AwsRegion = {record.AwsRegion}");
-                LogInfo($"DynamoDB.ApproximateCreationDateTime = {record.Dynamodb.ApproximateCreationDateTime}");
-                LogInfo($"DynamoDB.Keys.Count = {record.Dynamodb.Keys.Count}");
-                LogInfo($"DynamoDB.SequenceNumber = {record.Dynamodb.SequenceNumber}");
-                LogInfo($"DynamoDB.UserIdentity.PrincipalId = {record.UserIdentity?.PrincipalId}");
-                LogInfo($"EventID = {record.EventID}");
-                LogInfo($"EventName = {record.EventName}");
-                LogInfo($"EventSource = {record.EventSource}");
-                LogInfo($"EventSourceArn = {record.EventSourceArn}");
-                LogInfo($"EventVersion = {record.EventVersion}");
-            }
-            return "Ok";
+    public override async Task<string> ProcessMessageAsync(DynamoDBEvent dynamoDbEvent) {
+        LogInfo($"# Kinesis Records = {dynamoDbEvent.Records.Count}");
+        for(var i = 0; i < dynamoDbEvent.Records.Count; ++i) {
+            var record = dynamoDbEvent.Records[i];
+            LogInfo($"Record #{i}");
+            LogInfo($"AwsRegion = {record.AwsRegion}");
+            LogInfo($"DynamoDB.ApproximateCreationDateTime = {record.Dynamodb.ApproximateCreationDateTime}");
+            LogInfo($"DynamoDB.Keys.Count = {record.Dynamodb.Keys.Count}");
+            LogInfo($"DynamoDB.SequenceNumber = {record.Dynamodb.SequenceNumber}");
+            LogInfo($"DynamoDB.UserIdentity.PrincipalId = {record.UserIdentity?.PrincipalId}");
+            LogInfo($"EventID = {record.EventID}");
+            LogInfo($"EventName = {record.EventName}");
+            LogInfo($"EventSource = {record.EventSource}");
+            LogInfo($"EventSourceArn = {record.EventSourceArn}");
+            LogInfo($"EventVersion = {record.EventVersion}");
         }
+        return "Ok";
     }
 }

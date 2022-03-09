@@ -47,7 +47,7 @@ The `util list-lambdas` command is used to list all Lambda functions grouped by 
 
 ### List all Lambda functions by CloudFormation stack
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash util list-lambdas
 ```

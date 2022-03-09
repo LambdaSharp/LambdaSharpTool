@@ -159,7 +159,7 @@ lash new function MyNewFunction
 
 ### Build and publish module in current folder
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash publish
 ```
@@ -181,7 +181,7 @@ Done (finished: 9/5/2019 1:07:28 PM; duration: 00:00:11.1692368)
 
 ### Publish manifest
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash publish bin/cloudformation.json
 ```

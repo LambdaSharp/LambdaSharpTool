@@ -1,0 +1,157 @@
+@*
+ * Sample Todo app using CloudWatch Logs, Metrics, and Events
+ *@
+
+@page "/todo"
+
+@using LambdaSharp.Logging.Metrics
+
+@inherits ALambdaComponent
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="card mt-4">
+                <div class="card-header pb-1">
+                    <h4>Todo List</h4>
+                </div>
+                <div class="card-body pb-0">
+                    <form>
+                        <div class="row">
+                            <div class="col-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="checkAllItems" checked="@Todos.All(x => x.Completed)" @onchange="args => OnCheckAll((bool)args.Value)"/>
+                                    <label class="form-check-label" for="checkAllItems">All</label>
+                                </div>
+                            </div>
+                            <div class="col-11">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" @bind-value="_description" placeholder="What needs to be done?"/>
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary" @onclick="OnAddTodo" @onclick:preventDefault="true">+ Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-body py-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach(var todo in Todos) {
+                            <TodoListItem Todo="@todo" StatusChanged="@OnTodoStatusChanged" />
+                        }
+                    </ul>
+                </div>
+                <div class="card-footer pb-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="@FilterAllButtonClass" @onclick="(() => SetFilter(Filter.All))" active="@(_filter == Filter.All)">All</button>
+                                <button type="button" class="@FilterActiveClass" @onclick="(() => SetFilter(Filter.Active))" active="@(_filter == Filter.Active)">Active</button>
+                                <button type="button" class="@FilterCompletedClass" @onclick="(() => SetFilter(Filter.Completed))" active="@(_filter == Filter.Completed)">Completed</button>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <button type="button" class="btn btn-warning float-right" @onclick="OnClearCompleted" disabled="@HasNoCompletedTodos">Clear Completed</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    //--- Types ---
+    private enum Filter {
+        All,
+        Active,
+        Completed,
+    }
+
+    //--- Fields ---
+    private string _description;
+    private Filter _filter = Filter.All;
+
+    private List<TodoItem> _todos = new List<TodoItem> {
+        new TodoItem {
+            Description = "Buy milk"
+        },
+        new TodoItem {
+            Description = "Call John regarding the meeting"
+        },
+        new TodoItem {
+            Description = "Walk a dog"
+        }
+    };
+
+    //--- Properties ---
+    private IEnumerable<TodoItem> Todos
+        => _filter switch {
+            Filter.Active => _todos.Where(todo => !todo.Completed),
+            Filter.Completed => _todos.Where(todo => todo.Completed),
+            _ => _todos
+        };
+
+    private string FilterAllButtonClass => "btn btn-info" + ((_filter == Filter.All) ? " active" : "");
+    private string FilterActiveClass => "btn btn-info" + ((_filter == Filter.Active) ? " active" : "");
+    private string FilterCompletedClass => "btn btn-info" + ((_filter == Filter.Completed) ? " active" : "");
+    private bool HasNoCompletedTodos => !Todos.Any(x => x.Completed);
+
+    //--- Methods ---
+    private void SetFilter(Filter filter) {
+
+        // filter Todo list by state
+        _filter = filter;
+
+        // record user action in CloudWatch Logs
+        LogInfo($"filter changed to {filter}");
+    }
+
+    private void OnCheckAll(bool isChecked) => _todos.ForEach(x => x.Completed = isChecked);
+    private void OnTodoStatusChanged(bool isChecked) => StateHasChanged();
+
+    private void OnAddTodo() {
+        if(string.IsNullOrWhiteSpace(_description)) {
+            return;
+        }
+
+        // create new todo item and add it to the list
+        var todo = new TodoItem {
+            Description = _description.Trim()
+        };
+        _todos.Add(todo);
+
+        // send event about added Todo item to CloudWatch EventBridge
+        LogEvent(
+
+            // identify the application source the event is part of
+            source: "TodoApp",
+
+            // identify the type of event
+            detailType: "TodoAdded",
+
+            // specify the event details
+            detail: todo
+        );
+
+        // record number of created Todo items in CloudWatch Metrics
+        LogMetric("TodoItems.Created", 1.0, LambdaMetricUnit.Count);
+
+        // reset UI state
+        _description = null;
+    }
+
+    private void OnClearCompleted() {
+
+        // remove all cleared items from Todo list
+        var todoItemsCleared = _todos.RemoveAll(x => x.Completed);
+
+        // reset filter to show all items
+        _filter = Filter.All;
+
+        // record number of cleared Todo items in CloudWatch Metrics
+        LogMetric("TodoItems.Cleared", todoItemsCleared, LambdaMetricUnit.Count);
+    }
+}

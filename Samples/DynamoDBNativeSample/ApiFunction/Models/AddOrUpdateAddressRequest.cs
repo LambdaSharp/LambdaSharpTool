@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+namespace Sample.DynamoDBNative.ApiFunction.Models;
 
-    public class AddOrUpdateAddressRequest {
+public class AddOrUpdateAddressRequest {
 
-        //--- Properties ---
-        public string Street { get; set; }
-        public string City { get; set; }
-        public string State { get; set; }
-    }
-
-    public class AddOrUpdateAddressResponse { }
+    //--- Properties ---
+    public string? Street { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
 }
+
+public class AddOrUpdateAddressResponse { }
