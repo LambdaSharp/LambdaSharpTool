@@ -15,7 +15,7 @@ if [ -z "$LAMBDASHARP_VERSION" ]; then
     exit 1
 fi
 
-read --project "Proceed with publishing v$LAMBDASHARP_VERSION? [y/n] " -n 1 -r
+read -p "Proceed with publishing v$LAMBDASHARP_VERSION? [y/n] " -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
