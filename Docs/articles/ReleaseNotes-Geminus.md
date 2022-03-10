@@ -79,7 +79,7 @@ The `lash publish` command has a new option to override the module origin inform
 
 The `lash publish` command is responsible for uploading the module artifacts to the deployment bucket, as well as importing all dependencies. Modules from a foreign origin can also be imported explicitly by this command.
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash publish LambdaSharp.S3.Subscriber:0.7.0@lambdasharp
 ```
@@ -116,7 +116,7 @@ The generated `.csproj` file was updated to make it easier for contributors to d
 
 The `lash new bucket` command is used to create a new public S3 bucket configured to require requestors to pay for data transfer. This is the recommended configuration when publicly sharing LambdaSharp modules so the owner of the bucket only pays for the storage and not its access, which could become expensive for a popular module. Once the bucket is created, it can be used with a deployment tier to enable publishing to it.
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new bucket my-lambdasharp-bucket
 ```
@@ -137,7 +137,7 @@ Done (finished: 8/16/2019 10:20:18 AM; duration: 00:00:32.5327433)
 
 The `lash info` command now shows if LambdaSharp Core Services are enabled for the deployment tier. In addition, it will also show how much Lambda storage is used and how much Lambda reserved capacity is used by the AWS account.
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash info
 ```

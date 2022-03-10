@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,22 +16,20 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace LambdaSharp.App.EventBus.BroadcastFunction;
+
 using System.Text.Json.Serialization;
 
-namespace LambdaSharp.App.EventBus.BroadcastFunction {
+public sealed class EventBridgeventPayload {
 
-    public sealed class EventBridgeventPayload {
+    //--- Properties ---
 
-        //--- Properties ---
+    [JsonPropertyName("source")]
+    public string? Source { get; set; }
 
-        [JsonPropertyName("source")]
-        public string? Source { get; set; }
+    [JsonPropertyName("detail-type")]
+    public string? DetailType { get; set; }
 
-        [JsonPropertyName("detail-type")]
-        public string? DetailType { get; set; }
-
-        [JsonPropertyName("resources")]
-        public List<string>? Resources { get; set; }
-    }
+    [JsonPropertyName("resources")]
+    public List<string>? Resources { get; set; }
 }

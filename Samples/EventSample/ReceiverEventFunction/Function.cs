@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,40 +16,36 @@
  * limitations under the License.
  */
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+namespace Sample.Event.ReceiverEventFunction;
+
 using LambdaSharp;
 using LambdaSharp.EventBridge;
 
-namespace Sample.Event.ReceiverEventFunction {
+public class EventDetails {
 
-    public class EventDetails {
+    //--- Properties ---
+    public string? Message { get; set; }
+}
 
-        //--- Properties ---
-        public string Message { get; set; }
-    }
+public sealed class Function : ALambdaEventFunction<EventDetails> {
 
-    public sealed class Function : ALambdaEventFunction<EventDetails> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        public override async Task ProcessEventAsync(EventDetails details) {
-            var request = CurrentEvent;
-            LogInfo($"Version = {request.Version}");
-            LogInfo($"Account = {request.Account}");
-            LogInfo($"Region = {request.Region}");
-            LogInfo($"Detail = {LambdaSerializer.Serialize(details)}");
-            LogInfo($"DetailType = {request.DetailType}");
-            LogInfo($"Source = {request.Source}");
-            LogInfo($"Time = {request.Time}");
-            LogInfo($"Id = {request.Id}");
-            LogInfo($"Resources = [{string.Join(",", request.Resources ?? Enumerable.Empty<string>())}]");
-            LogInfo($"Latency = {DateTime.UtcNow - request.Time}");
-        }
+    public override async Task ProcessEventAsync(EventDetails details) {
+        var request = CurrentEvent;
+        LogInfo($"Version = {request.Version}");
+        LogInfo($"Account = {request.Account}");
+        LogInfo($"Region = {request.Region}");
+        LogInfo($"Detail = {LambdaSerializer.Serialize(details)}");
+        LogInfo($"DetailType = {request.DetailType}");
+        LogInfo($"Source = {request.Source}");
+        LogInfo($"Time = {request.Time}");
+        LogInfo($"Id = {request.Id}");
+        LogInfo($"Resources = [{string.Join(",", request.Resources ?? Enumerable.Empty<string>())}]");
+        LogInfo($"Latency = {DateTime.UtcNow - request.Time}");
     }
 }

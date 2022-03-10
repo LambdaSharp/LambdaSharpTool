@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>LambdaSharp.Build</RootNamespace>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
+    <ImplicitUsings>enable</ImplicitUsings>
     <WarningLevel>9999</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
@@ -13,7 +14,7 @@
     <Title>LambdaSharp (λ#) Build</Title>
     <Description>Serverless .NET for AWS - LambdaSharp Build Library</Description>
     <Company>LambdaSharp</Company>
-    <Copyright>Copyright (C) 2018-2021</Copyright>
+    <Copyright>Copyright (C) 2018-2022</Copyright>
     <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

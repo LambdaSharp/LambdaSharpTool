@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,19 +41,19 @@ namespace LambdaSharp.Serialization {
         /// Constructs instance of serializer.
         /// </summary>
         /// <param name="customizer">A callback to customize the serializer settings.</param>
-        public LambdaSystemTextJsonSerializer(Action<JsonSerializerOptions>? customizer) : base(settings => {
+        public LambdaSystemTextJsonSerializer(Action<JsonSerializerOptions>? customizer) : base(options => {
 
             // NOTE (2022-03-03, bjorg): need to make sure `IgnoreNullValues` is disabled as it cannot be used at the same time as `DefaultIgnoreCondition`
-#pragma warning disable CS0618
-            settings.IgnoreNullValues = false;
-#pragma warning disable CS0618
-            settings.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+#pragma warning disable CS0618, SYSLIB0020
+            options.IgnoreNullValues = false;
+#pragma warning disable CS0618, SYSLIB0020
+            options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
             // set remaining serialization defaults
-            settings.IncludeFields = true;
-            settings.NumberHandling = JsonNumberHandling.AllowReadingFromString;
-            settings.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-            customizer?.Invoke(settings);
+            options.IncludeFields = true;
+            options.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+            options.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            customizer?.Invoke(options);
         }) { }
 
         /// <summary>

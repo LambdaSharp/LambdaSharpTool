@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,19 +64,13 @@ namespace LambdaSharp.Modules {
 
         public static VersionInfo GetLambdaSharpAssemblyReferenceVersion(VersionInfo version) => version.GetMajorMinorVersion();
 
-        public static bool IsNetCore3OrLater(string framework)
-            => (
-                framework.StartsWith("netcoreapp", StringComparison.Ordinal)
-                && (string.Compare(framework, "netcoreapp3.", StringComparison.Ordinal) >= 0)
-            ) || IsNet5OrLater(framework);
+        public static bool IsReadyToRunSupported(string framework)
 
-        public static bool IsNet5OrLater(string framework)
-            => framework.StartsWith("net", StringComparison.Ordinal)
-                && !framework.StartsWith("netcoreapp", StringComparison.Ordinal)
-                && (
-                    string.Equals(framework, "net5", StringComparison.Ordinal)
-                    && (string.Compare(framework, "net5.", StringComparison.Ordinal) >= 0)
-                );
+            // NOTE (2022-03-04, bjorg): ReadyToRun is supported as of .NET Core 3.0
+            => framework switch {
+                "netcoreapp3.0" or "netcoreapp3.1" or "net5.0" or "net6.0" => true,
+                _ => false
+            };
 
         public static bool IsValidLambdaSharpAssemblyReferenceForToolVersion(VersionInfo toolVersion, string projectFramework, string lambdaSharpAssemblyVersion, out bool outdated) {
 
@@ -133,6 +127,14 @@ namespace LambdaSharp.Modules {
                         (libraryVersion.Build == 2)
                         || (libraryVersion.Build == 3)
                     );
+                break;
+            case "net6":
+            case "net6.0":
+
+                // .NET 6 projects require 0.8.4.*
+                valid = (libraryVersion.Major == 0)
+                    && (libraryVersion.Minor == 8)
+                    && (libraryVersion.Build == 4);
                 break;
             default:
                 throw new VersionInfoCompatibilityUnsupportedFrameworkException(projectFramework);

@@ -151,7 +151,7 @@ lash build
 
 ### Build module in current folder
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash build
 ```
@@ -171,7 +171,7 @@ Done (finished: 1/17/2019 3:57:27 PM; duration: 00:00:21.2642565)
 
 ### Build module in a sub-folder
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash build Demo
 ```

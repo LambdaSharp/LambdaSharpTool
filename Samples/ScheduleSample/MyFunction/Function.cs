@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,22 +16,20 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace ScheduleSample.MyFunction;
+
 using LambdaSharp;
 using LambdaSharp.Schedule;
 
-namespace ScheduleSample.MyFunction {
+public sealed class Function : ALambdaScheduleFunction {
 
-    public sealed class Function : ALambdaScheduleFunction {
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task ProcessEventAsync(LambdaScheduleEvent schedule) {
-            LogInfo($"Id = {schedule.Id}");
-            LogInfo($"Time = {schedule.Time}");
-            LogInfo($"Name = '{schedule.Name}'");
-        }
+    public override async Task ProcessEventAsync(LambdaScheduleEvent schedule) {
+        LogInfo($"Id = {schedule.Id}");
+        LogInfo($"Time = {schedule.Time}");
+        LogInfo($"Name = '{schedule.Name}'");
     }
 }

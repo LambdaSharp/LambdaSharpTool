@@ -1,0 +1,88 @@
+# The Module Name is used as prefix for all contained resources.
+Module: Legacy.ModuleV082
+
+# The Module Version is shown in the CloudFormation stack and Lambda function descriptions.
+Version: 1.0-DEV
+
+# The Module Description is shown in the AWS CloudFormation console with the version number.
+Description: Module description
+
+# The Items section defines values and resources for the module.
+Items:
+
+  - Variable: MyVariable
+    Description: Variable description
+    Value: A sample variable value for the module
+
+  - Function: Finalizer
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyApiGatewayFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyApiGatewayProxyFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - App: MyApp
+    Description: TO-DO - update app description
+
+  - Variable: MyAppWebsiteUrl
+    Description: MyApp Website URL
+    Scope: stack
+    Value: !GetAtt MyApp::Bucket.Outputs.WebsiteUrl
+
+  - Function: MyCustomResourceFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyEventFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyGenericFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyQueueFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyScheduleFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MySelfContainedFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyTopicFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyWebSocketFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyWebSocketProxyFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30
+
+  - Function: MyJavascriptFunction
+    Description: TO-DO - update function description
+    Memory: 1769
+    Timeout: 30

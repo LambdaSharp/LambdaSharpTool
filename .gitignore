@@ -18,3 +18,4 @@ cloudformation.json
 params.yml
 appsettings.Development.json
 src/CloudFormationResourceSpecification.json
+tmp/

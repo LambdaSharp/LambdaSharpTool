@@ -53,7 +53,7 @@ lash new expiring-bucket my-lambdasharp-bucket
 
 ### Create an S3 bucket that self-deletes in 3 days
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new expiring-bucket my-bucket --expiration-in-days 3
 ```

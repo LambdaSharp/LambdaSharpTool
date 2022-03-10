@@ -37,7 +37,7 @@ lash new app MyApp
 
 ### Create a new Blazor WebAssembly app
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new app MyApp
 ```

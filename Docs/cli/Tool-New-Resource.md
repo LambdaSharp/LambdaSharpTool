@@ -23,7 +23,7 @@ The command has no options.
 
 ### Create a new resource
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new resource MyResource AWS::SNS::Topic
 ```
@@ -53,7 +53,7 @@ Module:
 
 ### Show partial resource type matches
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash new resource MyResource sns
 ```

@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,28 +16,26 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace Sample.Event.MyFunction;
+
 using LambdaSharp;
 
-namespace Sample.Event.MyFunction {
+public class FunctionRequest { }
 
-    public class FunctionRequest { }
+public class FunctionResponse { }
 
-    public class FunctionResponse { }
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
-    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-            LogEvent("MySample", "MyEvent", new {
-                Message = "hello world!"
-            });
-            return new FunctionResponse();
-        }
+    public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+        LogEvent("MySample", "MyEvent", new {
+            Message = "hello world!"
+        });
+        return new FunctionResponse();
     }
 }

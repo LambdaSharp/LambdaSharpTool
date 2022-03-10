@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ namespace LambdaSharp.EventBridge {
     public abstract class ALambdaEventFunction<TMessage> : ALambdaFunction {
 
         //--- Fields ---
-        private CloudWatchEvent<TMessage>?  _currentEvent;
+        private CloudWatchEvent<TMessage>? _currentEvent;
 
         //--- Constructors ---
 

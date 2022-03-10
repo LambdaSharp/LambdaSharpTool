@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,7 +89,7 @@ namespace LambdaSharp.Tool.Cli {
                     // sub-command options
                     var namespaceOption = subCmd.Option("--namespace <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
-                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp3.1')", CommandOptionType.SingleValue);
+                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'net6.0')", CommandOptionType.SingleValue);
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
@@ -127,7 +127,7 @@ namespace LambdaSharp.Tool.Cli {
                             settings,
                             functionName,
                             namespaceOption.Value(),
-                            frameworkOption.Value() ?? "netcoreapp3.1",
+                            frameworkOption.Value() ?? "net6.0",
                             workingDirectory,
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
                             languageOption.Value() ?? "csharp",
@@ -556,32 +556,47 @@ namespace LambdaSharp.Tool.Cli {
                 functionType = Enum.Parse<FunctionType>(settings.PromptChoice("Select function type", _functionTypes), ignoreCase: true);
             }
 
-            // create function project
-            var isNetCore31OrLater = VersionInfoCompatibility.IsNetCore3OrLater(framework);
-            var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+            // fetch resource names for this function type
+            var frameworkFolder = framework.Replace(".", "");
+            var sourceResourceNamesPrefix = $"{frameworkFolder}.NewCSharpFunction-{functionType}.";
+            var sourceResourceNames = GetResourceNames(sourceResourceNamesPrefix);
+            if(sourceResourceNames.Length == 0) {
+                LogError("function type is not supported for selected framework");
+                return;
+            }
+
+            // create files for the project
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
                 ["LAMBDASHARP_VERSION"] = VersionInfoCompatibility.GetLambdaSharpAssemblyWildcardVersion(settings.ToolVersion, framework)
             };
-            try {
-                var projectContents = ReadResource($"NewCSharpFunction-{functionType}.xml", substitutions);
-                File.WriteAllText(projectFile, projectContents);
-                Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
-            } catch(Exception e) {
-                LogError($"unable to create project file '{projectFile}'", e);
-                return;
-            }
+            var projectSourceResourceName = $"{sourceResourceNamesPrefix}xml";
+            foreach(var sourceResourceName in sourceResourceNames) {
+                var sourceContents = ReadResource(sourceResourceName, substitutions);
+                if(sourceResourceName == projectSourceResourceName) {
 
-            // create function source code
-            var functionFile = Path.Combine(projectDirectory, "Function.cs");
-            var functionContents = ReadResource($"NewCSharpFunction-{functionType}.txt", substitutions);
-            try {
-                File.WriteAllText(functionFile, functionContents);
-                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
-            } catch(Exception e) {
-                LogError($"unable to create function file '{functionFile}'", e);
-                return;
+                    // create function project
+                    var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+                    try {
+                        File.WriteAllText(projectFile, sourceContents);
+                        Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
+                    } catch(Exception e) {
+                        LogError($"unable to create project file '{projectFile}'", e);
+                        return;
+                    }
+                } else {
+
+                    // create source file
+                    var otherFile = Path.Combine(projectDirectory, Path.GetFileNameWithoutExtension(sourceResourceName.Substring(sourceResourceNamesPrefix.Length)).Replace("_", "."));
+                    try {
+                        File.WriteAllText(otherFile, sourceContents);
+                        Console.WriteLine($"Created file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), otherFile)}");
+                    } catch(Exception e) {
+                        LogError($"unable to create file '{otherFile}'", e);
+                        return;
+                    }
+                }
             }
         }
 

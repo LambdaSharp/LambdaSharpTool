@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>%%FRAMEWORK%%</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>%%ROOTNAMESPACE%%</RootNamespace>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS1998</NoWarn>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp.ApiGateway" Version="%%LAMBDASHARP_VERSION%%"/>
+    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)\src\LambdaSharp.ApiGateway\LambdaSharp.ApiGateway.csproj" />
+  </ItemGroup>
+</Project>

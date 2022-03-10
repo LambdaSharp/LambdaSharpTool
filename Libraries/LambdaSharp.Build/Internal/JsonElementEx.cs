@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -129,7 +129,12 @@ namespace LambdaSharp.Build.Internal {
                 // read property
                 var key = reader.GetString();
                 reader.Read();
-                result[key] = Read(ref reader);
+                var value = Read(ref reader);
+
+                // don't store elements where the key is null
+                if(key is not null) {
+                    result[key] = value;
+                }
             }
         }
 
@@ -149,7 +154,7 @@ namespace LambdaSharp.Build.Internal {
         private void WriteObject(Utf8JsonWriter writer, Dictionary<string, object> mapValue, JsonSerializerOptions options) {
             writer.WriteStartObject();
             foreach(var kv in mapValue) {
-                if(!options.IgnoreNullValues || (kv.Value != null)) {
+                if((options.DefaultIgnoreCondition != JsonIgnoreCondition.WhenWritingNull) || (kv.Value != null)) {
                     writer.WritePropertyName(kv.Key);
                     Write(writer, kv.Value, options);
                 }

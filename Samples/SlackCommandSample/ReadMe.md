@@ -36,11 +36,17 @@ The following AWS Lambda function derives from the `ALambdaSlackCommandFunction`
 public sealed class Function : ALambdaSlackCommandFunction {
 
     //--- Methods ---
-    public override Task InitializeAsync(LambdaConfig config)
-        => Task.CompletedTask;
+    public override async Task InitializeAsync(LambdaConfig config) {
 
-    protected async override Task ProcessSlackRequestAsync(SlackRequest request)
-        => Console.WriteLine("Hello world!");
+        // TO-DO: add function initialization and reading configuration settings
+    }
+
+    protected override async Task ProcessSlackRequestAsync(SlackRequest request) {
+
+        // TO-DO: add business logic
+
+        Console.WriteLine("Hello world!");
+    }
 }
 ```
 

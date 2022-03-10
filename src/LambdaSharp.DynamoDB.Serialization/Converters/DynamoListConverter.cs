@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         public static readonly DynamoListConverter Instance = new DynamoListConverter();
 
         //--- Class Methods ---
-        private static Type GetListItemType(Type type) {
+        private static Type? GetListItemType(Type type) {
             if(type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(IList<>))) {
                 return type.GenericTypeArguments[0];
             }

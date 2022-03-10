@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,11 +52,11 @@ namespace ApiInvokeSample.MyFunction {
             };
         }
 
-        public GetItemsResponse GetItems(string contains = null, int offset = 0, int limit = 10) {
+        public GetItemsResponse GetItems(string? contains = null, int offset = 0, int limit = 10) {
 
             // response with list of all items
             return new GetItemsResponse {
-                Items = new List<Item>(_items.Where(item => (contains == null) || item.Value.Contains(contains)).Skip(offset).Take(limit))
+                Items = new List<Item>(_items.Where(item => (contains == null) || item.Value!.Contains(contains)).Skip(offset).Take(limit))
             };
         }
 

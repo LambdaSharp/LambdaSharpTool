@@ -74,7 +74,7 @@ The user will have to confirm the operation twice, including confirming the depl
 
 ### List all deployed modules
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash nuke --tier Sandbox
 ```

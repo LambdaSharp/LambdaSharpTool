@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,42 +16,40 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace SqsSample.MyFunction;
+
 using LambdaSharp;
 using LambdaSharp.SimpleQueueService;
 
-namespace SqsSample.MyFunction {
+public class MyMessage {
 
-    public class MyMessage {
+    //--- Properties ---
+    public string? Text { get; set; }
+}
 
-        //--- Properties ---
-        public string Text { get; set; }
-    }
+public sealed class Function : ALambdaQueueFunction<MyMessage> {
 
-    public sealed class Function : ALambdaQueueFunction<MyMessage> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task ProcessMessageAsync(MyMessage message) {
-            LogInfo($"Message.Text = {message.Text}");
-            foreach(var attribute in CurrentRecord.Attributes) {
-                LogInfo($"CurrentRecord.Attributes.{attribute.Key} = {attribute.Value}");
-            }
-            LogInfo($"CurrentRecord.Body = {CurrentRecord.Body}");
-            LogInfo($"CurrentRecord.EventSource = {CurrentRecord.EventSource}");
-            LogInfo($"CurrentRecord.EventSourceArn = {CurrentRecord.EventSourceArn}");
-            LogInfo($"CurrentRecord.Md5OfBody = {CurrentRecord.Md5OfBody}");
-            LogInfo($"CurrentRecord.Md5OfMessageAttributes = {CurrentRecord.Md5OfMessageAttributes}");
-            foreach(var attribute in CurrentRecord.MessageAttributes) {
-                LogInfo($"CurrentRecord.MessageAttributes.{attribute.Key} = {attribute.Value}");
-            }
-            LogInfo($"CurrentRecord.MessageId = {CurrentRecord.MessageId}");
-            LogInfo($"CurrentRecord.ReceiptHandle = {CurrentRecord.ReceiptHandle}");
+    public override async Task ProcessMessageAsync(MyMessage message) {
+        LogInfo($"Message.Text = {message.Text}");
+        foreach(var attribute in CurrentRecord.Attributes) {
+            LogInfo($"CurrentRecord.Attributes.{attribute.Key} = {attribute.Value}");
         }
+        LogInfo($"CurrentRecord.Body = {CurrentRecord.Body}");
+        LogInfo($"CurrentRecord.EventSource = {CurrentRecord.EventSource}");
+        LogInfo($"CurrentRecord.EventSourceArn = {CurrentRecord.EventSourceArn}");
+        LogInfo($"CurrentRecord.Md5OfBody = {CurrentRecord.Md5OfBody}");
+        LogInfo($"CurrentRecord.Md5OfMessageAttributes = {CurrentRecord.Md5OfMessageAttributes}");
+        foreach(var attribute in CurrentRecord.MessageAttributes) {
+            LogInfo($"CurrentRecord.MessageAttributes.{attribute.Key} = {attribute.Value}");
+        }
+        LogInfo($"CurrentRecord.MessageId = {CurrentRecord.MessageId}");
+        LogInfo($"CurrentRecord.ReceiptHandle = {CurrentRecord.ReceiptHandle}");
     }
 }

@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,7 +123,7 @@ namespace LambdaSharp.Tool {
 
         public static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            IgnoreNullValues = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = true,
             NumberHandling = JsonNumberHandling.AllowReadingFromString
         };

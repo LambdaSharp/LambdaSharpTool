@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,26 +16,23 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace LambdaSharp.App.EventBus.Records;
 
-namespace LambdaSharp.App.EventBus.Records {
+public enum ConnectionState {
+    Unknown,
+    New,
+    Pending,
+    Open,
+    Failed,
+    Closed
+}
 
-    public enum ConnectionState {
-        Unknown,
-        New,
-        Pending,
-        Open,
-        Failed,
-        Closed
-    }
+public sealed class ConnectionRecord {
 
-    public sealed class ConnectionRecord {
-
-        //--- Properties ---
-        public string? ConnectionId { get; set; }
-        public ConnectionState State { get; set; }
-        public string? ApplicationId { get; set; }
-        public string? SubscriptionArn { get; set; }
-        public Dictionary<string, string>? Bearer { get; set; }
-    }
+    //--- Properties ---
+    public string? ConnectionId { get; set; }
+    public ConnectionState State { get; set; }
+    public string? ApplicationId { get; set; }
+    public string? SubscriptionArn { get; set; }
+    public Dictionary<string, string>? Bearer { get; set; }
 }

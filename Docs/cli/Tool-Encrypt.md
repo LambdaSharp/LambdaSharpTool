@@ -71,7 +71,7 @@ Specify encryption key ID or alias to use (default: use default deployment tier 
 
 ### Encrypt file using a specific key
 
-__Using PowerShell/Bash:__
+__Command Line:__
 ```bash
 lash encrypt --key alias/MySecretKey --tier Sandbox < api-key.txt
 ```

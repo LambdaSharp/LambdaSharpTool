@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2021
+ * Copyright (C) 2018-2022
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LambdaSharp.Build.CSharp.Internal;
 using LambdaSharp.Build.Internal;
 using LambdaSharp.Modules;
@@ -36,7 +37,6 @@ namespace LambdaSharp.Build.CSharp.Function {
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
         private const string API_MAPPINGS = "api-mappings.json";
-        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
 
         //--- Types --
         private class ApiGatewayInvocationMappings {
@@ -65,7 +65,7 @@ namespace LambdaSharp.Build.CSharp.Function {
         //--- Class Fields ---
         private static JsonSerializerOptions _jsonOptions = new JsonSerializerOptions {
             WriteIndented = false,
-            IgnoreNullValues = true
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
         //--- Class Methods ---
@@ -219,11 +219,11 @@ namespace LambdaSharp.Build.CSharp.Function {
             var projectFile = new CSharpProjectFile(function.Project);
 
             // compile function project
-            var isNetCore31OrLater = VersionInfoCompatibility.IsNetCore3OrLater(projectFile.TargetFramework);
+            var isReadyToRunSupported = VersionInfoCompatibility.IsReadyToRunSupported(projectFile.TargetFramework);
             var isAmazonLinux2 = Provider.IsAmazonLinux2();
-            var isReadyToRun = isNetCore31OrLater && isAmazonLinux2;
-            var isSelfContained = (projectFile.OutputType == "Exe")
-                || (projectFile.AssemblyName == "bootstrap");
+            var isReadyToRun = isReadyToRunSupported && isAmazonLinux2;
+            var isSelfContained = (projectFile.OutputType == "Exe") && (projectFile.AssemblyName == "bootstrap");
+            var isTopLevelMain = !isSelfContained && (projectFile.OutputType == "Exe");
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
             var selfContained = isSelfContained ? ", SelfContained" : "";
             Provider.WriteLine($"=> Building function {Provider.InfoColor}{function.FullName}{Provider.ResetColor} [{projectFile.TargetFramework}, {buildConfiguration}{readyToRunText}{selfContained}]");
@@ -233,18 +233,6 @@ namespace LambdaSharp.Build.CSharp.Function {
             if(projectFile.RemoveAmazonLambdaToolsReference()) {
                 LogWarn($"removing obsolete AWS Lambda Tools extension from {Path.GetRelativePath(Provider.WorkingDirectory, function.Project)}");
                 projectFile.Save(function.Project);
-            }
-
-            // validate project properties for self-contained functions
-            if(
-                isSelfContained
-                && (
-                    (projectFile.OutputType != "Exe")
-                    || (projectFile.AssemblyName != "bootstrap")
-                )
-            ) {
-                LogError("function project must have <OutputType>Exe</OutputType> and <AssemblyName>bootstrap</AssemblyName> properties");
-                return;
             }
 
             // validate the project is using the most recent lambdasharp assembly references
@@ -260,17 +248,29 @@ namespace LambdaSharp.Build.CSharp.Function {
             }
 
             // build project with AWS dotnet CLI lambda tool
-            if(!DotNetPublish(projectFile.TargetFramework, buildConfiguration, projectDirectory, forceBuild, isNetCore31OrLater, isAmazonLinux2, isReadyToRun, isSelfContained, out var publishFolder)) {
+            if(!DotNetPublish(projectFile.TargetFramework, buildConfiguration, projectDirectory, forceBuild, isReadyToRunSupported, isAmazonLinux2, isReadyToRun, isSelfContained, out var publishFolder)) {
 
                 // nothing to do; error was already reported
                 return;
             }
 
+            // building a function with top-level statements also creates an ELF file we don't need
+            if(isTopLevelMain) {
+                var elfBinary = Path.Combine(publishFolder, Path.GetFileNameWithoutExtension(function.Project));
+                try {
+                    File.Delete(elfBinary);
+                } catch(Exception e) {
+
+                    // no harm in leaving the file; report error as a warning
+                    LogWarn($"Unable to delete unnecessary ELF binary at '{elfBinary}' (Error: {e})");
+                }
+            }
+
             // check if the assembly entry-point needs to be validated
             if(function.HasHandlerValidation) {
-                if(isSelfContained) {
+                if(isSelfContained || isTopLevelMain) {
 
-                    // TODO (2021-02-08, bjorg): validate the assembly has a Main() entry point
+                    // nothing to do
                 } else {
 
                     // verify the function handler can be found in the compiled assembly
@@ -328,7 +328,7 @@ namespace LambdaSharp.Build.CSharp.Function {
                     }
                 }
                 hashStream.FlushFinalBlock();
-                hash = md5.Hash.ToHexString();
+                hash = md5.Hash!.ToHexString();
             }
 
             // genereate function package with hash
@@ -357,7 +357,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             string buildConfiguration,
             string projectDirectory,
             bool forceBuild,
-            bool isNetCore31OrLater,
+            bool isReadyToRunSupported,
             bool isAmazonLinux2,
             bool isReadyToRun,
             bool isSelfContained,
@@ -391,7 +391,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             };
 
             // for .NET Core 3.1 and later, disable tiered compilation since Lambda functions are generally short lived
-            if(isNetCore31OrLater) {
+            if(isReadyToRunSupported) {
                 publishParameters.Add("/p:TieredCompilation=false");
                 publishParameters.Add("/p:TieredCompilationQuickJit=false");
             }
@@ -580,7 +580,7 @@ namespace LambdaSharp.Build.CSharp.Function {
             bool silent = false
         ) {
             Provider.ExistingPackages.Remove(schemaFile);
-            var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonSerializer.Deserialize<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile));
+            var schemas = JsonSerializer.Deserialize<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile)) ?? throw new ArgumentException("schema file deserialized to null");
 
             // process schema contents
             var success = true;
