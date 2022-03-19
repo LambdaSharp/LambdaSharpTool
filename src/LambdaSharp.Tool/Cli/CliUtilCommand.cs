@@ -35,6 +35,8 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
+using Amazon.CodeBuild;
+using Amazon.CodeBuild.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Amazon.S3;
@@ -429,6 +431,7 @@ namespace LambdaSharp.Tool.Cli {
             await DeleteOrphanLambdaLogsAsync();
             await DeleteOrphanApiGatewayLogs();
             await DeleteOrphanApiGatewayV2Logs();
+            await DeleteOrphanCodeBuildLogs();
             if((orphanedLogGroups > 0) || (skippedLogGroups > 0)) {
                 Console.WriteLine();
             }
@@ -493,7 +496,27 @@ namespace LambdaSharp.Tool.Cli {
                 await DeleteOrphanCloudWatchLogs(
                     "/aws/apigateway/",
                     logGroupName => (logGroupName == "/aws/apigateway/welcome") || apiGatewayGroupNames.Any(apiGatewayGroupName => logGroupName.StartsWith(apiGatewayGroupName, StringComparison.Ordinal)),
-                    logGroupName => Regex.IsMatch(logGroupName, @"^/aws/apigateway/[a-zA-Z0-9]+/.+$")
+                    logGroupName => Regex.IsMatch(logGroupName, @"^\/aws\/apigateway\/[a-zA-Z0-9]+/.+$")
+                );
+            }
+
+            async Task DeleteOrphanCodeBuildLogs() {
+
+                // list all CodeBuild instances
+                var codeBuildClient = new AmazonCodeBuildClient(AWSConfigs.RegionEndpoint);
+                var request = new ListProjectsRequest { };
+                var codeBuildProjectNames = new List<string>();
+                do {
+                    var response = await codeBuildClient.ListProjectsAsync(request);
+                    codeBuildProjectNames.AddRange(response.Projects.Select(item => $"/aws/codebuild/{item}"));
+                    request.NextToken = response.NextToken;
+                } while(request.NextToken != null);
+
+                // list all log groups for API Gateway instances
+                await DeleteOrphanCloudWatchLogs(
+                    "/aws/codebuild/",
+                    logGroupName => codeBuildProjectNames.Contains(logGroupName),
+                    logGroupName => Regex.IsMatch(logGroupName, @"^\/aws\/codebuild\/[a-zA-Z0-9\-_]+$")
                 );
             }
 
