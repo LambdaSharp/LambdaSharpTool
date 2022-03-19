@@ -34,7 +34,7 @@ namespace Demo.SlackTodo {
             _table = new TaskTable(config.ReadDynamoDBTableName("TaskTable"));
         }
 
-        protected async override Task ProcessSlackRequestAsync(SlackRequest request) {
+        protected override async Task ProcessSlackRequestAsync(SlackRequest request) {
 
             // parse request into two strings and check if the first one is a recognized command
             var args = request.Text?.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries) ?? new[] { "" };

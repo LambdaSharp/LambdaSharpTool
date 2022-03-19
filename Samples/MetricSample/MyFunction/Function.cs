@@ -16,30 +16,28 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace Sample.Metric.MyFunction;
+
 using LambdaSharp;
 using LambdaSharp.Logging.Metrics;
 
-namespace Sample.Metric.MyFunction {
+public class FunctionRequest { }
 
-    public class FunctionRequest { }
+public class FunctionResponse { }
 
-    public class FunctionResponse { }
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
-    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-            LogMetric(new LambdaMetric[] {
-                ("CompletedMessages.Latency", 100.0, LambdaMetricUnit.Milliseconds),
-                ("CompletedMessages.Count", 1, LambdaMetricUnit.Count)
-            });
-            return new FunctionResponse();
-        }
+    public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+        LogMetric(new LambdaMetric[] {
+            ("CompletedMessages.Latency", 100.0, LambdaMetricUnit.Milliseconds),
+            ("CompletedMessages.Count", 1, LambdaMetricUnit.Count)
+        });
+        return new FunctionResponse();
     }
 }

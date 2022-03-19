@@ -241,29 +241,5 @@ namespace LambdaSharp.DynamoDB.Serialization {
                 return convert(converter, usedTargetType);
             }
         }
-
-        private static Type GetListItemType(Type type) {
-            if(type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(IList<>))) {
-                return type.GenericTypeArguments[0];
-            }
-            return type.GetInterfaces()
-                .Where(i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof(IList<>)))
-                .Select(i => i.GenericTypeArguments[0])
-                .FirstOrDefault();
-        }
-
-        private static Type GetDictionaryItemType(Type type) {
-            if(
-                type.IsGenericType
-                && (type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                && (type.GenericTypeArguments[0] == typeof(string))
-            ) {
-                return type.GenericTypeArguments[1];
-            }
-            return type.GetInterfaces()
-                .Where(i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof(IDictionary<,>)) && (i.GenericTypeArguments[0] == typeof(string)))
-                .Select(i => i.GenericTypeArguments[1])
-                .FirstOrDefault();
-        }
     }
 }

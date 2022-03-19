@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
     <Deterministic>true</Deterministic>
     <RootNamespace>LambdaSharp.DynamoDB.Native</RootNamespace>
     <Nullable>enable</Nullable>
@@ -25,6 +25,7 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
     <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>AWS;DynamoDB;Lambda;LambdaSharp;Serverless</PackageTags>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
@@ -34,5 +35,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
+    <None Include="ReadMe.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

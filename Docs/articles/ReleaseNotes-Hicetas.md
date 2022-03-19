@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.3.4) - 2021-07-15
+# LambdaSharp "Hicetas" Release (v0.8.4.0) - 2022-03-09
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,7 +141,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.4) - TBD
+### (v0.8.4.0) - (2022-03-09)
 
 #### BREAKING CHANGES
 
@@ -149,6 +149,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Upgraded _LambdaSharp.Tool_ (`lash`) to .NET 6.
 
 * SDK
+  * Upgraded LambdaSharp assemblies (`LambdaSharp` and `LambdaSharp.*`) to .NET 6.
   * Removed `TerminateLambdaInstance` from `ALambdaFunction`, because it was a duplicate of `ForceLambdaColdStart`.
 
 ### Features
@@ -157,10 +158,15 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added support for Lambda functions using .NET 6.
   * Added support for Lambda functions with top-level statements.
   * Updated Blazor WebAssembly app template to target .NET 6.
+  * New projects now have `<ImplicitUsings>` and `<Nullable>` enabled by default.
 
 * SDK
   * Added `LambdaSourceGeneratorJsonSerializer` for .NET 6 projects.
     * **WARNING:** JSON source generators do NOT support JSON converters; if your code relies on JSON converters, do not use `LambdaSourceGeneratorJsonSerializer`.
+
+* Samples
+  * Added `JsonSerializerSample/SourceGeneratorFunction` sample showing how to use `LambdaSourceGeneratorJsonSerializer`.
+
 
 ### (v0.8.3.5) - 2022-03-03
 

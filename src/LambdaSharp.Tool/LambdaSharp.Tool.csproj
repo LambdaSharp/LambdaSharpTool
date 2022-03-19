@@ -28,6 +28,7 @@
     <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>AWS CloudFormation Lambda LambdaSharp Serverless DotNetCore</PackageTags>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
 
     <ToolCommandName>lash</ToolCommandName>
     <PackAsTool>True</PackAsTool>
@@ -70,5 +71,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
+    <None Include="ReadMe.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

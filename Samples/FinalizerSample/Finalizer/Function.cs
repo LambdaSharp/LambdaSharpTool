@@ -16,70 +16,69 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+namespace FinalizerSample.Finalizer;
+
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp;
 using LambdaSharp.Finalizer;
 
-namespace FinalizerSample.Finalizer {
+public sealed class Function : ALambdaFinalizerFunction {
 
-    public sealed class Function : ALambdaFinalizerFunction {
+    //--- Fields ---
+    private IAmazonS3? _s3Client;
+    private string? _bucketName;
 
-        //--- Fields ---
-        private IAmazonS3 _s3Client;
-        private string _bucketName;
+    //--- Properties ---
+    private IAmazonS3 S3Client => _s3Client ?? throw new InvalidOperationException();
+    private string BucketName => _bucketName ?? throw new InvalidOperationException();
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) {
-            _s3Client = new AmazonS3Client();
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) {
+        _s3Client = new AmazonS3Client();
 
-            // read configuration settings
-            _bucketName = config.ReadS3BucketName("MyBucket");
-        }
+        // read configuration settings
+        _bucketName = config.ReadS3BucketName("MyBucket");
+    }
 
-        public override async Task CreateDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
-            LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
-        }
+    public override async Task CreateDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
+        LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
+    }
 
-        public override async Task UpdateDeploymentAsync(FinalizerProperties current, FinalizerProperties previous, CancellationToken cancellationToken) {
-            LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {current.DeploymentChecksum}");
-        }
+    public override async Task UpdateDeploymentAsync(FinalizerProperties current, FinalizerProperties previous, CancellationToken cancellationToken) {
+        LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {current.DeploymentChecksum}");
+    }
 
-        public override async Task DeleteDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
-            LogInfo($"Deleting Deployment: {current.DeploymentChecksum}");
+    public override async Task DeleteDeploymentAsync(FinalizerProperties current, CancellationToken cancellationToken) {
+        LogInfo($"Deleting Deployment: {current.DeploymentChecksum}");
 
-            // enumerate all S3 objects
-            var request = new ListObjectsV2Request {
-                BucketName = _bucketName
-            };
-            var counter = 0;
-            var deletions = new List<Task>();
-            do {
-                var response = await _s3Client.ListObjectsV2Async(request);
+        // enumerate all S3 objects
+        var request = new ListObjectsV2Request {
+            BucketName = BucketName
+        };
+        var counter = 0;
+        var deletions = new List<Task>();
+        do {
+            var response = await S3Client.ListObjectsV2Async(request);
 
-                // delete any objects found
-                if(response.S3Objects.Any()) {
-                    deletions.Add(_s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
-                        BucketName = _bucketName,
-                        Objects = response.S3Objects.Select(s3 => new KeyVersion {
-                            Key = s3.Key
-                        }).ToList(),
-                        Quiet = true
-                    }));
-                    counter += response.S3Objects.Count;
-                }
+            // delete any objects found
+            if(response.S3Objects.Any()) {
+                deletions.Add(S3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
+                    BucketName = _bucketName,
+                    Objects = response.S3Objects.Select(s3 => new KeyVersion {
+                        Key = s3.Key
+                    }).ToList(),
+                    Quiet = true
+                }));
+                counter += response.S3Objects.Count;
+            }
 
-                // continue until no more objects can be fetched
-                request.ContinuationToken = response.NextContinuationToken;
-            } while(request.ContinuationToken != null);
+            // continue until no more objects can be fetched
+            request.ContinuationToken = response.NextContinuationToken;
+        } while(request.ContinuationToken != null);
 
-            // wait for all deletions to complete
-            await Task.WhenAll(deletions);
-            LogInfo($"Deleted {counter:N0} objects");
-        }
+        // wait for all deletions to complete
+        await Task.WhenAll(deletions);
+        LogInfo($"Deleted {counter:N0} objects");
     }
 }

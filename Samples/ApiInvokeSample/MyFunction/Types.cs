@@ -25,24 +25,24 @@ namespace ApiInvokeSample.MyFunction {
 
         //--- Properties ---
         [Required]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [Required]
-        public string Value { get; set; }
+        public string? Value { get; set; }
     }
 
     public class AddItemRequest {
 
         //--- Properties ---
         [Required]
-        public string Value { get; set; }
+        public string? Value { get; set; }
     }
 
     public class AddItemResponse {
 
         //--- Properties ---
         [Required]
-        public string Id { get; set; }
+        public string? Id { get; set; }
     }
 
     public class GetItemsResponse {
@@ -56,10 +56,10 @@ namespace ApiInvokeSample.MyFunction {
 
         //--- Properties ---
         [Required]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [Required]
-        public string Value { get; set; }
+        public string? Value { get; set; }
     }
 
     public class DeleteItemResponse {

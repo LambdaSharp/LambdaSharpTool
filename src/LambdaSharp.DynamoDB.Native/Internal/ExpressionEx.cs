@@ -42,7 +42,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                 return false;
             case DefaultExpression defaultExpression:
                 return false;
-            case IndexExpression indexExpression:
+            case IndexExpression indexExpression when !(indexExpression.Object is null):
                 return indexExpression.Object.IsParametric() || indexExpression.Arguments.Any(argumentExpression => argumentExpression.IsParametric());
             case InvocationExpression invocationExpression:
                 return invocationExpression.Expression.IsParametric() || invocationExpression.Arguments.Any(argumentExpression => argumentExpression.IsParametric());

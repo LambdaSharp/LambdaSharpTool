@@ -16,37 +16,35 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace S3Sample.MyFunction;
+
 using Amazon.Lambda.S3Events;
 using LambdaSharp;
 
-namespace S3Sample.MyFunction {
+public sealed class Function : ALambdaFunction<S3Event, string> {
 
-    public sealed class Function : ALambdaFunction<S3Event, string> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task<string> ProcessMessageAsync(S3Event s3Event) {
-            LogInfo($"# S3 Records = {s3Event.Records.Count}");
-            for(var i = 0; i < s3Event.Records.Count; ++i) {
-                var record = s3Event.Records[i];
-                LogInfo($"EventName = {record.EventName.Value}");
-                LogInfo($"EventSource = {record.EventSource}");
-                LogInfo($"EventTime = {record.EventTime}");
-                LogInfo($"EventVersion = {record.EventVersion}");
-                LogInfo($"S3.Bucket.Name = {record.S3.Bucket.Name}");
-                LogInfo($"S3.Object.ETag = {record.S3.Object.ETag}");
-                LogInfo($"S3.Object.Key = {record.S3.Object.Key}");
-                LogInfo($"S3.Object.Size = {record.S3.Object.Size}");
-                LogInfo($"S3.Object.VersionId = {record.S3.Object.VersionId}");
-                LogInfo($"UserIdentity.PrincipalId = {record.UserIdentity.PrincipalId}");
-            }
-            return "Ok";
+    public override async Task<string> ProcessMessageAsync(S3Event s3Event) {
+        LogInfo($"# S3 Records = {s3Event.Records.Count}");
+        for(var i = 0; i < s3Event.Records.Count; ++i) {
+            var record = s3Event.Records[i];
+            LogInfo($"EventName = {record.EventName.Value}");
+            LogInfo($"EventSource = {record.EventSource}");
+            LogInfo($"EventTime = {record.EventTime}");
+            LogInfo($"EventVersion = {record.EventVersion}");
+            LogInfo($"S3.Bucket.Name = {record.S3.Bucket.Name}");
+            LogInfo($"S3.Object.ETag = {record.S3.Object.ETag}");
+            LogInfo($"S3.Object.Key = {record.S3.Object.Key}");
+            LogInfo($"S3.Object.Size = {record.S3.Object.Size}");
+            LogInfo($"S3.Object.VersionId = {record.S3.Object.VersionId}");
+            LogInfo($"UserIdentity.PrincipalId = {record.UserIdentity.PrincipalId}");
         }
+        return "Ok";
     }
 }

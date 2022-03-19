@@ -129,7 +129,7 @@ namespace LambdaSharp.Build.Internal {
                 // read property
                 var key = reader.GetString();
                 reader.Read();
-                var value =  Read(ref reader);
+                var value = Read(ref reader);
 
                 // don't store elements where the key is null
                 if(key is not null) {

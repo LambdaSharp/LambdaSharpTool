@@ -16,43 +16,41 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace SnsSample.MyFunction;
+
 using LambdaSharp;
 using LambdaSharp.SimpleNotificationService;
 
-namespace SnsSample.MyFunction {
+public class MyMessage {
 
-    public class MyMessage {
+    //--- Properties ---
+    public string? Text { get; set; }
+}
 
-        //--- Properties ---
-        public string Text { get; set; }
-    }
+public sealed class Function : ALambdaTopicFunction<MyMessage> {
 
-    public sealed class Function : ALambdaTopicFunction<MyMessage> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task ProcessMessageAsync(MyMessage message) {
-            LogInfo($"Message.Text = {message.Text}");
-            LogInfo($"CurrentRecord.Message = {CurrentRecord.Message}");
-            LogInfo($"CurrentRecord.MessageAttributes = {CurrentRecord.MessageAttributes}");
-            foreach(var attribute in CurrentRecord.MessageAttributes) {
-                LogInfo($"CurrentRecord.MessageAttributes.{attribute.Key} = {attribute.Value}");
-            }
-            LogInfo($"CurrentRecord.MessageId = {CurrentRecord.MessageId}");
-            LogInfo($"CurrentRecord.Signature = {CurrentRecord.Signature}");
-            LogInfo($"CurrentRecord.SignatureVersion = {CurrentRecord.SignatureVersion}");
-            LogInfo($"CurrentRecord.SigningCertUrl = {CurrentRecord.SigningCertUrl}");
-            LogInfo($"CurrentRecord.Subject = {CurrentRecord.Subject}");
-            LogInfo($"CurrentRecord.Timestamp = {CurrentRecord.Timestamp}");
-            LogInfo($"CurrentRecord.TopicArn = {CurrentRecord.TopicArn}");
-            LogInfo($"CurrentRecord.Type = {CurrentRecord.Type}");
-            LogInfo($"CurrentRecord.UnsubscribeUrl = {CurrentRecord.UnsubscribeUrl}");
+    public override async Task ProcessMessageAsync(MyMessage message) {
+        LogInfo($"Message.Text = {message.Text}");
+        LogInfo($"CurrentRecord.Message = {CurrentRecord.Message}");
+        LogInfo($"CurrentRecord.MessageAttributes = {CurrentRecord.MessageAttributes}");
+        foreach(var attribute in CurrentRecord.MessageAttributes) {
+            LogInfo($"CurrentRecord.MessageAttributes.{attribute.Key} = {attribute.Value}");
         }
+        LogInfo($"CurrentRecord.MessageId = {CurrentRecord.MessageId}");
+        LogInfo($"CurrentRecord.Signature = {CurrentRecord.Signature}");
+        LogInfo($"CurrentRecord.SignatureVersion = {CurrentRecord.SignatureVersion}");
+        LogInfo($"CurrentRecord.SigningCertUrl = {CurrentRecord.SigningCertUrl}");
+        LogInfo($"CurrentRecord.Subject = {CurrentRecord.Subject}");
+        LogInfo($"CurrentRecord.Timestamp = {CurrentRecord.Timestamp}");
+        LogInfo($"CurrentRecord.TopicArn = {CurrentRecord.TopicArn}");
+        LogInfo($"CurrentRecord.Type = {CurrentRecord.Type}");
+        LogInfo($"CurrentRecord.UnsubscribeUrl = {CurrentRecord.UnsubscribeUrl}");
     }
 }

@@ -16,17 +16,15 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace Sample.DynamoDBNative.ApiFunction.Models;
+
 using Sample.DynamoDBNative.DataAccess.Models;
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+public class SaveOrderRequest {
 
-    public class SaveOrderRequest {
-
-        //--- Properties ---
-        public OrderRecord Order { get; set; }
-        public List<OrderItemRecord> Items { get; set; }
-    }
-
-    public class SaveOrderResponse { }
+    //--- Properties ---
+    public OrderRecord? Order { get; set; }
+    public List<OrderItemRecord>? Items { get; set; }
 }
+
+public class SaveOrderResponse { }

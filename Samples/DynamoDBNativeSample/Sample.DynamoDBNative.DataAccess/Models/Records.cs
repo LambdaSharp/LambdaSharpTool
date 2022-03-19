@@ -16,65 +16,62 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
+namespace Sample.DynamoDBNative.DataAccess.Models;
+
 using System.Text.Json.Serialization;
 
-namespace Sample.DynamoDBNative.DataAccess.Models {
+public class CustomerRecord {
 
-    public class CustomerRecord {
+    //--- Properties ---
+    public string? Username { get; set; }
+    public string? EmailAddress { get; set; }
+    public string? Name { get; set; }
+    public Dictionary<string, AddressRecord>? Addresses { get; set; }
+}
 
-        //--- Properties ---
-        public string Username { get; set; }
-        public string EmailAddress { get; set; }
-        public string Name { get; set; }
-        public Dictionary<string, AddressRecord> Addresses { get; set; }
-    }
+public class CustomerEmailRecord {
 
-    public class CustomerEmailRecord {
+    //--- Properties ---
+    public string? Username { get; set; }
+    public string? EmailAddress { get; set; }
+}
 
-        //--- Properties ---
-        public string Username { get; set; }
-        public string EmailAddress { get; set; }
-    }
+public class AddressRecord {
 
-    public class AddressRecord {
+    //--- Properties ---
+    public string? Label { get; set; }
+    public string? Street { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+}
 
-        //--- Properties ---
-        public string Label { get; set; }
-        public string Street { get; set; }
-        public string City { get; set; }
-        public string State { get; set; }
-    }
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum OrderStatus {
+    Undefined,
+    Pending,
+    Shipped,
+    Delivered,
+    Cancelled,
+    Returned
+}
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum OrderStatus {
-        Undefined,
-        Pending,
-        Shipped,
-        Delivered,
-        Cancelled,
-        Returned
-    }
+public class OrderRecord {
 
-    public class OrderRecord {
+    //--- Properties ---
+    public string? OrderId { get; set; }
+    public string? CustomerUsername { get; set; }
+    public OrderStatus Status { get; set; }
+    public DateTimeOffset CreateAt { get; set; }
+    public decimal Amount { get; set; }
+    public int NumberOfItems { get; set; }
+}
 
-        //--- Properties ---
-        public string OrderId { get; set; }
-        public string CustomerUsername { get; set; }
-        public OrderStatus Status { get; set; }
-        public DateTimeOffset CreateAt { get; set; }
-        public decimal Amount { get; set; }
-        public int NumberOfItems { get; set; }
-    }
+public class OrderItemRecord {
 
-    public class OrderItemRecord {
-
-        //--- Properties ---
-        public string OrderId { get; set; }
-        public string ItemId { get; set; }
-        public string Description { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
-    }
+    //--- Properties ---
+    public string? OrderId { get; set; }
+    public string? ItemId { get; set; }
+    public string? Description { get; set; }
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
 }

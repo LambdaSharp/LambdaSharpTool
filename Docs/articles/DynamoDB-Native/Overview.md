@@ -5,7 +5,7 @@ keywords: overview, api, dynamodb, aws, amazon
 ---
 # DynamoDB for .NET
 
-DynamoDB is an advanced, serverless key-value store that is fast and scales well, but that suffers from a complex API design. To learn more about DynamoDB, visit the [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) webpage or buy the excellent ["The DynamoDB Book" by Alex DeBrie](https://www.dynamodbbook.com/) for in-depth coverage with samples.
+[Amazon DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html) is an advanced, serverless key-value store that is fast and scales well, but that suffers from a complex API design. To learn more about DynamoDB, visit the [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) webpage or buy the excellent ["The DynamoDB Book" by Alex DeBrie](https://www.dynamodbbook.com/) for in-depth coverage with samples.
 
 _LambdaSharp.DynamoDB.Native_ uses LINQ expression with a fluent interface which drastically simplifies using advanced DynamoDB features in applications.
 
@@ -13,7 +13,7 @@ To optimize simplicity, the `DynamoTable` makes a few design choices.
 1. `DynamoTable` is designed for single table access and does not support operations across multiple tables.
 1. `DynamoTable` assumes the primary key is made from a partition key and a sort key. Furthermore, the name of partition key is `PK` and the name of the sort key is `SK`.
 
-These are intentional constraints of the `DynamoTable` implementation. If these constraints do not fit your use case, then `DynamoTable` may not be suitable to your application.
+These are intentional constraints of the `DynamoTable` implementation. If these constraints do not fit your use case, then `DynamoTable` may not be suitable for you.
 
 
 ## Initializing a `DynamoTable` instance

@@ -16,44 +16,42 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace Sample.LambdaSelfContained.MySelfContainedFunction;
+
 using Amazon.Lambda.RuntimeSupport;
 using LambdaSharp;
 
-namespace Sample.LambdaSelfContained.MySelfContainedFunction {
+public class FunctionRequest { }
 
-    public class FunctionRequest { }
+public class FunctionResponse {
 
-    public class FunctionResponse {
+    //--- Properties ---
+    public string? Message { get; set; }
+}
 
-        //--- Properties ---
-        public string Message { get; set; }
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+
+    //--- Class Methods ---
+    public static async Task Main(string[] args) {
+
+        // NOTE: this method is the entry point for Lambda functions with a custom runtime
+        using var handlerWrapper = HandlerWrapper.GetHandlerWrapper(new Function().FunctionHandlerAsync);
+        using var bootstrap = new LambdaBootstrap(handlerWrapper);
+        await bootstrap.RunAsync();
     }
 
-    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Class Methods ---
-        public static async Task Main(string[] args) {
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) {
+        LogInfo("Custom runtime function initialization");
+    }
 
-            // NOTE: this method is the entry point for Lambda functions with a custom runtime
-            using var handlerWrapper = HandlerWrapper.GetHandlerWrapper(new Function().FunctionHandlerAsync);
-            using var bootstrap = new LambdaBootstrap(handlerWrapper);
-            await bootstrap.RunAsync();
-       }
-
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
-
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) {
-            LogInfo("Custom runtime function initialization");
-        }
-
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-            LogInfo("Custom runtime function invocation");
-            return new FunctionResponse {
-                Message = "Success!!!"
-            };
-        }
+    public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+        LogInfo("Custom runtime function invocation");
+        return new FunctionResponse {
+            Message = "Success!!!"
+        };
     }
 }

@@ -16,43 +16,39 @@
  * limitations under the License.
  */
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+// NOTE (2020-01-05, bjorg): see Sample.Event.ReceiverEventFunction in this sample, which uses the preferred ALambdaEventFunction<T> base class
+namespace Sample.Event.ReceiverFunction;
+
 using Amazon.Lambda.CloudWatchEvents;
 using LambdaSharp;
 
-// NOTE (2020-01-05, bjorg): see Sample.Event.ReceiverEventFunction in this sample, which uses the preferred ALambdaEventFunction<T> base class
-namespace Sample.Event.ReceiverFunction {
+public class EventDetails {
 
-    public class EventDetails {
+    //--- Properties ---
+    public string? Message { get; set; }
+}
 
-        //--- Properties ---
-        public string? Message { get; set; }
-    }
+public class FunctionResponse { }
 
-    public class FunctionResponse { }
+public sealed class Function : ALambdaFunction<CloudWatchEvent<EventDetails>, FunctionResponse> {
 
-    public sealed class Function : ALambdaFunction<CloudWatchEvent<EventDetails>, FunctionResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent<EventDetails> request) {
-            LogInfo($"Version = {request.Version}");
-            LogInfo($"Account = {request.Account}");
-            LogInfo($"Region = {request.Region}");
-            LogInfo($"Detail = {LambdaSerializer.Serialize(request.Detail)}");
-            LogInfo($"DetailType = {request.DetailType}");
-            LogInfo($"Source = {request.Source}");
-            LogInfo($"Time = {request.Time}");
-            LogInfo($"Id = {request.Id}");
-            LogInfo($"Resources = [{string.Join(",", request.Resources ?? Enumerable.Empty<string>())}]");
-            LogInfo($"Latency = {DateTime.UtcNow - request.Time}");
-            return new FunctionResponse();
-        }
+    public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent<EventDetails> request) {
+        LogInfo($"Version = {request.Version}");
+        LogInfo($"Account = {request.Account}");
+        LogInfo($"Region = {request.Region}");
+        LogInfo($"Detail = {LambdaSerializer.Serialize(request.Detail)}");
+        LogInfo($"DetailType = {request.DetailType}");
+        LogInfo($"Source = {request.Source}");
+        LogInfo($"Time = {request.Time}");
+        LogInfo($"Id = {request.Id}");
+        LogInfo($"Resources = [{string.Join(",", request.Resources ?? Enumerable.Empty<string>())}]");
+        LogInfo($"Latency = {DateTime.UtcNow - request.Time}");
+        return new FunctionResponse();
     }
 }

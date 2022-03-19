@@ -118,7 +118,7 @@ public sealed class Function : ALambdaCustomResourceFunction<RegistrationResourc
     private string RollbarProjectPattern => _rollbarProjectPattern ?? throw new InvalidOperationException();
 
     //--- Methods ---
-    public async override Task InitializeAsync(LambdaConfig config) {
+    public override async Task InitializeAsync(LambdaConfig config) {
         var tableName = config.ReadDynamoDBTableName("RegistrationTable");
         _registrations = new RegistrationTable(new AmazonDynamoDBClient(), tableName);
         _rollbarClient = new RollbarClient(

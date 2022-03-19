@@ -44,7 +44,11 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
         /// <param name="expression">The expression to parse.</param>
         /// <param name="output">The rendered expression when <c>true</c>, otherwise <c>null</c>.</param>
         /// <returns>Returns <c>true</c> when the expression was parsed successfully.</returns>
-        public bool TryParseAttributePath(Expression expression, [NotNullWhen(true)] out string? output) {
+        public bool TryParseAttributePath(Expression? expression, [NotNullWhen(true)] out string? output) {
+            if(expression is null) {
+                output = null;
+                return false;
+            }
 
             // expression must contain lambda parameter, but just be the lambda parameter
             if(!(expression is ParameterExpression) && expression.IsParametric()) {
@@ -55,7 +59,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             return false;
 
             // local functions
-            string ParseAttributePath(Expression expression, int depth) {
+            string ParseAttributePath(Expression? expression, int depth) {
                 if(depth > 32) {
                     throw new NotSupportedException("exceeded the maximum depth for an attribute path (max: 32)");
                 }
@@ -110,7 +114,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     // NOTE (2021-06-05, bjorg): there can only be one parameter, so no need to check that the name matches
                     return "";
                 }
-                throw new NotSupportedException($"invalid attribute path expression: {expression}");
+                throw new NotSupportedException($"invalid attribute path expression: {expression?.ToString() ?? "<null>"}");
 
                 // local functions
                 static string Join(string left, string right) => (left.Length == 0) ? right : (left + "." + right);
@@ -435,8 +439,11 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
                     left = leftUnaryExpression.Operand;
 
                     // convert the right constant expression from int enum value to string enum value
-                    if(right is ConstantExpression rightConstantExpresion) {
-                        right = Expression.Constant(Enum.GetName(leftUnaryExpression.Operand.Type, rightConstantExpresion.Value));
+                    if(right is ConstantExpression rightConstantExpression) {
+                        if(rightConstantExpression.Value is null) {
+                            throw new NotSupportedException($"right constant expression cannot be 'null': {right}");
+                        }
+                        right = Expression.Constant(Enum.GetName(leftUnaryExpression.Operand.Type, rightConstantExpression.Value));
                     } else if(
                         (right is UnaryExpression rightUnaryExpression)
                         && (rightUnaryExpression.NodeType == ExpressionType.Convert)
@@ -722,6 +729,7 @@ namespace LambdaSharp.DynamoDB.Native.Internal {
             if(
                 (expression is MemberExpression memberExpression)
                 && (memberExpression.Member.Name == nameof(ICollection.Count))
+                && (!(memberExpression.Expression is null))
                 && (
                     typeof(ICollection).IsAssignableFrom(memberExpression.Expression.Type)
                     || memberExpression.Expression.Type.GetInterfaces().Any(i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof(ICollection<>)))

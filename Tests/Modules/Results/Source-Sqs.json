@@ -71,7 +71,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "63798CDCEB5194EB5695EEAFBC3971C0"
+      "Default": "BD3380E41F66FC24202B09FC87F8B1BD"
     }
   },
   "Resources": {
@@ -142,7 +142,7 @@
             },
             "MODULE_INFO": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "Function",
-            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "LAMBDA_RUNTIME": "dotnet6",
             "DEPLOYMENT_TIER": {
               "Fn::Select": [
                 "0",
@@ -218,7 +218,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore3.1",
+        "Runtime": "dotnet6",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -512,7 +512,7 @@
           "Fn::Sub": "/aws/lambda/${Function}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore3.1",
+        "FunctionFramework": "dotnet6",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -904,7 +904,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "63798CDCEB5194EB5695EEAFBC3971C0",
+      "TemplateChecksum": "BD3380E41F66FC24202B09FC87F8B1BD",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "1",
       "ParameterSections": [

@@ -16,40 +16,37 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
+namespace Sample.JsonSerializer.NewtonsoftJsonFunction;
+
 using LambdaSharp;
 using Newtonsoft.Json;
 
-namespace Sample.JsonSerializer.NewtonsoftJsonFunction {
+public class FunctionRequest {
 
-    public class FunctionRequest {
+    //--- Properties ---
+    [JsonProperty("foo")]
+    public string? Bar { get; set; }
+}
 
-        //--- Properties ---
-        [JsonProperty("foo")]
-        public string Bar { get; set; }
-    }
+public class FunctionResponse {
 
-    public class FunctionResponse {
+    //--- Properties ---
+    [JsonProperty("foo")]
+    public string? Bar { get; set; }
+}
 
-        //--- Properties ---
-        [JsonProperty("foo")]
-        public string Bar { get; set; }
-    }
+public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
-    public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
-            LogInfo("Deserialized using {1}: {0}", LambdaSerializer.Serialize(request), LambdaSerializer.GetType().FullName);
-            return new FunctionResponse {
-                Bar = request.Bar
-            };
-        }
+    public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+        LogInfo("Deserialized using {1}: {0}", LambdaSerializer.Serialize(request), LambdaSerializer.GetType().FullName ?? "<null>");
+        return new FunctionResponse {
+            Bar = request.Bar
+        };
     }
 }

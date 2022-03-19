@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-using System.Linq;
-using System.Threading.Tasks;
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
 using Sample.DynamoDBNative.ApiFunction.Models;
@@ -29,10 +27,13 @@ namespace Sample.DynamoDBNative.ApiFunction {
     public sealed class Function : ALambdaApiGatewayFunction {
 
         //--- Fields ---
-        private IThriftBooksDataAccess _dataAccessClient;
+        private IThriftBooksDataAccess? _dataAccessClient;
 
         //--- Constructors ---
         public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+
+        //--- Properties ---
+        private IThriftBooksDataAccess DataAccessClient => _dataAccessClient ?? throw new InvalidOperationException();
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -50,7 +51,7 @@ namespace Sample.DynamoDBNative.ApiFunction {
                 Name = request.Name,
                 Username = request.Username
             };
-            await _dataAccessClient.CreateCustomerAsync(customer);
+            await DataAccessClient.CreateCustomerAsync(customer);
             return new CreateCustomerResponse {
                 Customer = customer
             };
@@ -63,12 +64,12 @@ namespace Sample.DynamoDBNative.ApiFunction {
                 State = request.State,
                 Street = request.Street
             };
-            await _dataAccessClient.AddOrUpdateAddressAsync(customerUsername, address);
+            await DataAccessClient.AddOrUpdateAddressAsync(customerUsername, address);
             return new AddOrUpdateAddressResponse();
         }
 
         public async Task<GetCustomerWithMostRecentOrdersResponse> GetCustomerWithMostRecentOrdersAsync(string customerUsername, int? limit) {
-            var (customer, orders) = await _dataAccessClient.GetCustomerWithMostRecentOrdersAsync(customerUsername, limit ?? 10);
+            var (customer, orders) = await DataAccessClient.GetCustomerWithMostRecentOrdersAsync(customerUsername, limit ?? 10);
             return new GetCustomerWithMostRecentOrdersResponse {
                 Customer = customer,
                 Orders = orders.ToList()
@@ -76,17 +77,17 @@ namespace Sample.DynamoDBNative.ApiFunction {
         }
 
         public async Task<SaveOrderResponse> SaveOrderAsync(SaveOrderRequest request) {
-            await _dataAccessClient.SaveOrderAsync(request.Order, request.Items);
+            await DataAccessClient.SaveOrderAsync(request.Order, request.Items);
             return new SaveOrderResponse();
         }
 
         public async Task<UpdateOrderResponse> UpdateOrderAsync(UpdateOrderRequest request) {
-            await _dataAccessClient.UpdateOrderAsync(request.OrderId, request.Status);
+            await DataAccessClient.UpdateOrderAsync(request.OrderId, request.Status);
             return new UpdateOrderResponse();
         }
 
         public async Task<GetOrderWithOrderItemsResponse> GetOrderWithOrderItemsAsync(string orderId) {
-            var (order, orderItems) = await _dataAccessClient.GetOrderWithOrderItemsAsync(orderId);
+            var (order, orderItems) = await DataAccessClient.GetOrderWithOrderItemsAsync(orderId);
             return new GetOrderWithOrderItemsResponse {
                 Order = order,
                 Items = orderItems.ToList()

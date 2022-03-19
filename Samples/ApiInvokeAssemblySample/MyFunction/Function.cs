@@ -16,22 +16,19 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
+namespace ApiInvokeSample.MyFunction;
+
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
 
-namespace ApiInvokeSample.MyFunction {
+public sealed class Function : ALambdaApiGatewayFunction, ILogicDependencyProvider {
 
-    public sealed class Function : ALambdaApiGatewayFunction, ILogicDependencyProvider {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) { }
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
-
-        //--- ILogicDependencyProvider Members ---
-        Exception ILogicDependencyProvider.ThrowItemIdNotFound(string message) => AbortNotFound(message);
-    }
+    //--- ILogicDependencyProvider Members ---
+    Exception ILogicDependencyProvider.ThrowItemIdNotFound(string message) => AbortNotFound(message);
 }

@@ -16,42 +16,40 @@
  * limitations under the License.
  */
 
-using System.Threading.Tasks;
+namespace AlexaSample.MyFunction;
+
 using Alexa.NET;
 using Alexa.NET.Request;
 using Alexa.NET.Request.Type;
 using Alexa.NET.Response;
 using LambdaSharp;
 
-namespace AlexaSample.MyFunction {
+public sealed class Function : ALambdaFunction<SkillRequest, SkillResponse> {
 
-    public sealed class Function : ALambdaFunction<SkillRequest, SkillResponse> {
+    //--- Constructors ---
 
-        //--- Constructors ---
+    // NOTE (2021-01-04, bjorg): Alexa.NET uses Newtonsoft.Json for serialization
+    public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
 
-        // NOTE (2021-01-04, bjorg): Alexa.NET uses Newtonsoft.Json for serialization
-        public Function() : base(new LambdaSharp.Serialization.LambdaNewtonsoftJsonSerializer()) { }
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task<SkillResponse> ProcessMessageAsync(SkillRequest skill) {
-            switch(skill.Request) {
-            case LaunchRequest launch:
-                LogInfo("Launch");
-                break;
-            case IntentRequest intent:
-                LogInfo("Intent");
-                LogInfo($"Intent.Name = {intent.Intent.Name}");
-                break;
-            case SessionEndedRequest ended:
-                LogInfo("Session ended");
-                return ResponseBuilder.Empty();
-            }
-            return ResponseBuilder.Tell(new PlainTextOutputSpeech {
-                Text = "Hi!"
-            });
+    public override async Task<SkillResponse> ProcessMessageAsync(SkillRequest skill) {
+        switch(skill.Request) {
+        case LaunchRequest launch:
+            LogInfo("Launch");
+            break;
+        case IntentRequest intent:
+            LogInfo("Intent");
+            LogInfo($"Intent.Name = {intent.Intent.Name}");
+            break;
+        case SessionEndedRequest ended:
+            LogInfo("Session ended");
+            return ResponseBuilder.Empty();
         }
+        return ResponseBuilder.Tell(new PlainTextOutputSpeech {
+            Text = "Hi!"
+        });
     }
 }

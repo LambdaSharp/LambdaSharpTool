@@ -16,33 +16,30 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
+namespace SqsSample.Consumer;
+
 using LambdaSharp;
 using LambdaSharp.Exceptions;
 using LambdaSharp.SimpleQueueService;
 
-namespace SqsSample.Consumer {
+public sealed class Function : ALambdaQueueFunction<int> {
 
-    public sealed class Function : ALambdaQueueFunction<int> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Methods ---
+    public override Task InitializeAsync(LambdaConfig config)
+        => Task.CompletedTask;
 
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task ProcessMessageAsync(int message) {
-            LogInfo($"received: {message}");
-            if(message % 10 == 0) {
-                LogWarn("Retriable Error");
-                throw new LambdaRetriableException("Retriable Error!");
-            }
-            if(message % 5 == 0) {
-                LogWarn("Non Retriable Error");
-                throw new Exception("Non Retriable Error");
-            }
+    public override async Task ProcessMessageAsync(int message) {
+        LogInfo($"received: {message}");
+        if(message % 10 == 0) {
+            LogWarn("Retriable Error");
+            throw new LambdaRetriableException("Retriable Error!");
+        }
+        if(message % 5 == 0) {
+            LogWarn("Non Retriable Error");
+            throw new Exception("Non Retriable Error");
         }
     }
 }

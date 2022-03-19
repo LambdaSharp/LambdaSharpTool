@@ -37,7 +37,7 @@ namespace LambdaSharp.EventBridge {
     public abstract class ALambdaEventFunction<TMessage> : ALambdaFunction {
 
         //--- Fields ---
-        private CloudWatchEvent<TMessage>?  _currentEvent;
+        private CloudWatchEvent<TMessage>? _currentEvent;
 
         //--- Constructors ---
 

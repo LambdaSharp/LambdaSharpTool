@@ -24,8 +24,8 @@ namespace Sample.BlazorEventsSample.MyBlazorApp.Shared {
     public class TodoItem {
 
         //--- Properties ---
-        public string Id { get; set; }
+        public string? Id { get; set; }
         public bool Completed { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

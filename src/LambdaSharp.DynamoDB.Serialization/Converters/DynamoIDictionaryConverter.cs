@@ -37,7 +37,7 @@ namespace LambdaSharp.DynamoDB.Serialization.Converters {
         public static readonly DynamoIDictionaryConverter Instance = new DynamoIDictionaryConverter();
 
         //--- Class Methods ---
-        private static Type GetDictionaryItemType(Type type) {
+        private static Type? GetDictionaryItemType(Type type) {
             if(
                 type.IsGenericType
                 && (type.GetGenericTypeDefinition() == typeof(IDictionary<,>))

@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+namespace Sample.DynamoDBNative.ApiFunction.Models;
 
-    public class AddOrUpdateAddressRequest {
+public class AddOrUpdateAddressRequest {
 
-        //--- Properties ---
-        public string Street { get; set; }
-        public string City { get; set; }
-        public string State { get; set; }
-    }
-
-    public class AddOrUpdateAddressResponse { }
+    //--- Properties ---
+    public string? Street { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
 }
+
+public class AddOrUpdateAddressResponse { }

@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Deterministic>true</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>Sample.LambdaSelfContained.MySelfContainedFunction</RootNamespace>
+    <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
+    <ImplicitUsings>enable</ImplicitUsings>
 
     <!-- Required to create self-contained Lambda package -->
     <OutputType>Exe</OutputType>

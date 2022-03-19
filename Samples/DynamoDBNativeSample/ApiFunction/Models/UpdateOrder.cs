@@ -16,16 +16,15 @@
  * limitations under the License.
  */
 
+namespace Sample.DynamoDBNative.ApiFunction.Models;
+
 using Sample.DynamoDBNative.DataAccess.Models;
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+public class UpdateOrderRequest {
 
-    public class UpdateOrderRequest {
-
-        //--- Properties ---
-        public string OrderId { get; set; }
-        public OrderStatus Status { get; set; }
-    }
-
-    public class UpdateOrderResponse { }
+    //--- Properties ---
+    public string? OrderId { get; set; }
+    public OrderStatus Status { get; set; }
 }
+
+public class UpdateOrderResponse { }

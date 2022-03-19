@@ -16,56 +16,54 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace ApiInvokeSample.MyFunction;
+
 using System.ComponentModel.DataAnnotations;
 
-namespace ApiInvokeSample.MyFunction {
+public class Item {
 
-    public class Item {
+    //--- Properties ---
+    [Required]
+    public string? Id { get; set; }
 
-        //--- Properties ---
-        [Required]
-        public string Id { get; set; }
+    [Required]
+    public string? Value { get; set; }
+}
 
-        [Required]
-        public string Value { get; set; }
-    }
+public class AddItemRequest {
 
-    public class AddItemRequest {
+    //--- Properties ---
+    [Required]
+    public string? Value { get; set; }
+}
 
-        //--- Properties ---
-        [Required]
-        public string Value { get; set; }
-    }
+public class AddItemResponse {
 
-    public class AddItemResponse {
+    //--- Properties ---
+    [Required]
+    public string? Id { get; set; }
+}
 
-        //--- Properties ---
-        [Required]
-        public string Id { get; set; }
-    }
+public class GetItemsResponse {
 
-    public class GetItemsResponse {
+    //--- Properties ---
+    [Required]
+    public List<Item> Items = new List<Item>();
+}
 
-        //--- Properties ---
-        [Required]
-        public List<Item> Items = new List<Item>();
-    }
+public class GetItemResponse {
 
-    public class GetItemResponse {
+    //--- Properties ---
+    [Required]
+    public string? Id { get; set; }
 
-        //--- Properties ---
-        [Required]
-        public string Id { get; set; }
+    [Required]
+    public string? Value { get; set; }
+}
 
-        [Required]
-        public string Value { get; set; }
-    }
+public class DeleteItemResponse {
 
-    public class DeleteItemResponse {
-
-        //--- Properties ---
-        [Required]
-        public bool Deleted;
-    }
+    //--- Properties ---
+    [Required]
+    public bool Deleted;
 }

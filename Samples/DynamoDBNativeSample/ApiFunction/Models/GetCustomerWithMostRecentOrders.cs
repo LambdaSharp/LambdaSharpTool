@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace Sample.DynamoDBNative.ApiFunction.Models;
+
 using Sample.DynamoDBNative.DataAccess.Models;
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+public class GetCustomerWithMostRecentOrdersResponse {
 
-    public class GetCustomerWithMostRecentOrdersResponse {
-
-        //--- Properties ---
-        public CustomerRecord Customer { get; set; }
-        public List<OrderRecord> Orders { get; set; }
-    }
+    //--- Properties ---
+    public CustomerRecord? Customer { get; set; }
+    public List<OrderRecord>? Orders { get; set; }
 }

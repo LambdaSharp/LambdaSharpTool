@@ -5,7 +5,7 @@ keywords: serialization, api, dynamodb, aws, amazon
 ---
 # Serialization for DynamoDB
 
-DynamoDB uses its own document model for serializing data structures, which looks similar to JSON. The _LambdaSharp.DynamoDB.Serialization_ library is modeled after other serialization libraries, such as _System.Text.Json.JsonSerializer_ to streamline conversions between .NET types and DynamoDB documents.
+[Amazon DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html) uses its own document model for serializing data structures, which looks similar to JSON. The _LambdaSharp.DynamoDB.Serialization_ library is modeled after other serialization libraries, such as _System.Text.Json.JsonSerializer_ to streamline conversions between .NET types and DynamoDB documents.
 
 ## Serialization
 
@@ -136,6 +136,7 @@ The default converters are:
 * `DynamoLongConverter`
 * `DynamoDoubleConverter`
 * `DynamoDateTimeOffsetConverter`
+* `DynamoFloatConverter`
 * `DynamoDecimalConverter`
 * `DynamoStringConverter`
 * `DynamoEnumConverter`

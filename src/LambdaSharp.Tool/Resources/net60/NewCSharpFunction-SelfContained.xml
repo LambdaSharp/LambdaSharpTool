@@ -5,6 +5,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>%%ROOTNAMESPACE%%</RootNamespace>
+    <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
 

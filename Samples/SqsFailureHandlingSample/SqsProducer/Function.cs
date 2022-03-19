@@ -16,32 +16,33 @@
  * limitations under the License.
  */
 
-using System.Linq;
-using System.Threading.Tasks;
+namespace SqsSample.Producer;
+
 using Amazon.SQS;
 using LambdaSharp;
 
-namespace SqsSample.Producer {
+public sealed class Function : ALambdaFunction<int, string> {
 
-    public sealed class Function : ALambdaFunction<int, string> {
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Fields ---
+    private string? _sqsQueueUrl;
+    private IAmazonSQS? _sqsClient;
 
-        //--- Fields ---
-        private string _sqsQueueUrl;
-        private IAmazonSQS _sqsClient;
+    //--- Properties ---
+    private string SqsQueueUrl => _sqsQueueUrl ?? throw new InvalidOperationException();
+    private IAmazonSQS SqsClient => _sqsClient ?? throw new InvalidOperationException();
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) {
-            _sqsQueueUrl = config.ReadSqsQueueUrl("SqsQueue");
-            _sqsClient = new AmazonSQSClient();
-        }
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) {
+        _sqsQueueUrl = config.ReadSqsQueueUrl("SqsQueue");
+        _sqsClient = new AmazonSQSClient();
+    }
 
-        public override async Task<string> ProcessMessageAsync(int request) {
-            LogInfo($"generating {request:N0} messages");
-            await Task.WhenAll(Enumerable.Range(0, request).Select(i => _sqsClient.SendMessageAsync(_sqsQueueUrl, i.ToString())));
-            return "OK";
-        }
+    public override async Task<string> ProcessMessageAsync(int request) {
+        LogInfo($"generating {request:N0} messages");
+        await Task.WhenAll(Enumerable.Range(0, request).Select(i => SqsClient.SendMessageAsync(SqsQueueUrl, i.ToString())));
+        return "OK";
     }
 }

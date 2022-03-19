@@ -16,50 +16,50 @@
  * limitations under the License.
  */
 
-using System;
-using System.Threading.Tasks;
+namespace WebSocketsSample.ConnectionFunction;
+
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
 using Demo.WebSocketsChat.Common;
 
-namespace WebSocketsSample.ConnectionFunction {
+public sealed class Function : ALambdaApiGatewayFunction {
 
-    public sealed class Function : ALambdaApiGatewayFunction {
+    //--- Fields ---
+    private ConnectionsTable? _connections;
 
-        //--- Fields ---
-        private ConnectionsTable _connections;
+    //--- Constructors ---
+    public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
 
-        //--- Constructors ---
-        public Function() : base(new LambdaSharp.Serialization.LambdaSystemTextJsonSerializer()) { }
+    //--- Properties ---
+    private ConnectionsTable Connections => _connections ?? throw new InvalidOperationException();
 
-        //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) {
-            _connections = new ConnectionsTable(
-                config.ReadDynamoDBTableName("ConnectionsTable"),
-                new AmazonDynamoDBClient()
-            );
+    //--- Methods ---
+    public override async Task InitializeAsync(LambdaConfig config) {
+        _connections = new ConnectionsTable(
+            config.ReadDynamoDBTableName("ConnectionsTable"),
+            new AmazonDynamoDBClient()
+        );
+    }
+
+    public async Task OpenConnectionAsync(APIGatewayProxyRequest request) {
+        try {
+            LogInfo($"Connected: {request.RequestContext.ConnectionId} [{request.RequestContext.RouteKey}]");
+            await Connections.InsertRowAsync(request.RequestContext.ConnectionId);
+        } catch(Exception e) {
+            LogError(e);
+            throw Abort(CreateResponse(500, $"Failure while attempting to connect: {e.Message}"));
         }
+    }
 
-        public async Task OpenConnectionAsync(APIGatewayProxyRequest request) {
-            try {
-                LogInfo($"Connected: {request.RequestContext.ConnectionId} [{request.RequestContext.RouteKey}]");
-                await _connections.InsertRowAsync(request.RequestContext.ConnectionId);
-            } catch(Exception e) {
-                LogError(e);
-                throw Abort(CreateResponse(500, $"Failure while attempting to connect: {e.Message}"));
-            }
-        }
-
-        public async Task CloseConnectionAsync(APIGatewayProxyRequest request) {
-            try {
-                LogInfo($"Disconnected: {request.RequestContext.ConnectionId} [{request.RequestContext.RouteKey}]");
-                await _connections.DeleteRowAsync(request.RequestContext.ConnectionId);
-            } catch(Exception e) {
-                LogError(e);
-                throw Abort(CreateResponse(500, $"Failure while attempting to disconnect: {e.Message}"));
-            }
+    public async Task CloseConnectionAsync(APIGatewayProxyRequest request) {
+        try {
+            LogInfo($"Disconnected: {request.RequestContext.ConnectionId} [{request.RequestContext.RouteKey}]");
+            await Connections.DeleteRowAsync(request.RequestContext.ConnectionId);
+        } catch(Exception e) {
+            LogError(e);
+            throw Abort(CreateResponse(500, $"Failure while attempting to disconnect: {e.Message}"));
         }
     }
 }

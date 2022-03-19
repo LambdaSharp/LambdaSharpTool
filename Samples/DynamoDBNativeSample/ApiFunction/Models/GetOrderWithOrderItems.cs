@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+namespace Sample.DynamoDBNative.ApiFunction.Models;
+
 using Sample.DynamoDBNative.DataAccess.Models;
 
-namespace Sample.DynamoDBNative.ApiFunction.Models {
+public class GetOrderWithOrderItemsResponse {
 
-    public class GetOrderWithOrderItemsResponse {
-
-        //--- Properties ---
-        public OrderRecord Order { get; set; }
-        public List<OrderItemRecord> Items { get; set; }
-    }
+    //--- Properties ---
+    public OrderRecord? Order { get; set; }
+    public List<OrderItemRecord>? Items { get; set; }
 }
