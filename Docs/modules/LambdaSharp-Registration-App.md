@@ -15,7 +15,7 @@ The `LambdaSharp::Registration::App` type creates a new or updates an existing a
 ```yaml
 Using:
 
-  - Module: LambdaSharp.Core:0.8.1
+  - Module: LambdaSharp.Core:0.8@lambdasharp
 ```
 
 ## Syntax

@@ -90,7 +90,7 @@ In the following example, the module definition indicates that it has a dependen
 Module: Acme.MyModule
 Using:
 
-  - Module: LambdaSharp.S3.IO
+  - Module: LambdaSharp.S3.IO@lambdasharp
 ```
 
 ### Module Items

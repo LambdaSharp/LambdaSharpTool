@@ -15,7 +15,7 @@ The `LambdaSharp::Registration::Function` type creates a new or updates an exist
 ```yaml
 Using:
 
-  - Module: LambdaSharp.Core:0.5
+  - Module: LambdaSharp.Core:0.8@lambdasharp
 ```
 
 ## Syntax

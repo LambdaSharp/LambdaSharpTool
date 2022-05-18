@@ -15,7 +15,7 @@ The `LambdaSharp.S3.Subscriber` module defines the `LambdaSharp::S3::Subscriptio
 ```yaml
 Using:
 
-  - Module: LambdaSharp.S3.Subscriber:0.5
+  - Module: LambdaSharp.S3.Subscriber:0.8@lambdasharp
 ```
 
 ## Syntax
