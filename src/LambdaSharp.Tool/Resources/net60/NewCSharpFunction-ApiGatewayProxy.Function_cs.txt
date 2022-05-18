@@ -19,7 +19,7 @@ public sealed class Function : ALambdaApiGatewayFunction {
 
         // TO-DO: add business logic for API Gateway proxy request handling
 
-        return new APIGatewayProxyResponse {
+        return new() {
             Body = "Ok",
             Headers = new Dictionary<string, string> {
                 ["Content-Type"] = "text/plain"
