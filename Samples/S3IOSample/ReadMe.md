@@ -27,7 +27,7 @@ Module: Sample.S3.IO
 Description: Showcase how to write files to an S3 bucket
 Using:
 
-  - Module: LambdaSharp.S3.IO@lambdasharp
+  - Module: LambdaSharp.S3.IO:0.8@lambdasharp
 
 Items:
 
