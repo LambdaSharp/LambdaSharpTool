@@ -32,7 +32,7 @@ Items:
 
 ## Function Code
 
-The schedule event can be parsed into a `LambdaScheduleEvent` message instance by using the `ALambdaFunction<T>` base class.
+The schedule event can be parsed into a `LambdaScheduleEvent` message instance by using the `ALambdaScheduleFunction` base class.
 
 ```csharp
 public sealed class Function : ALambdaScheduleFunction {
