@@ -144,11 +144,16 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.4.1) - TBD
 
+#### BREAKING CHANGES
+
+* SDK
+  * Moved _LambdaSharp.DynamoDB.Native_ to its own [LambdaSharp.DynamoDB repository](https://github.com/LambdaSharp/LambdaSharp.DynamoDB)
+  * Moved _LambdaSharp.DynamoDB.Serialization_ to its own [LambdaSharp.DynamoDB repository](https://github.com/LambdaSharp/LambdaSharp.DynamoDB)
+
 #### Features
 
 * CLI
   * Added ability to detect and delete orphaned CodeBuild logs when running `lash util delete-orphan-logs`.
-
 
 ### (v0.8.4.0) - 2022-03-09
 
@@ -185,7 +190,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added `Module::RestApi::LoggingLevel` pragma override to set the logging level for the REST API.
 
 * SDK
-  * Updated assembly referenecs to latest compatible versions.
+  * Updated assembly references to latest compatible versions.
   * Added `DynamoFloatConverter` to _LambdaSharp.DynamoDB.Serialization_ assembly.
 
 

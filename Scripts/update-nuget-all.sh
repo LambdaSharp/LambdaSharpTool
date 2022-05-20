@@ -53,14 +53,6 @@ update
 cd $LAMBDASHARP/src/LambdaSharp.ApiGateway
 update
 
-# Update LambdaSharp.DynamoDB.Serialization
-cd $LAMBDASHARP/src/LambdaSharp.DynamoDB.Serialization
-update
-
-# Update LambdaSharp.DynamoDB.Native
-cd $LAMBDASHARP/src/LambdaSharp.DynamoDB.Native
-update
-
 # Update LambdaSharp.EventBridge
 cd $LAMBDASHARP/src/LambdaSharp.EventBridge
 update

@@ -10,29 +10,6 @@
 - name: API Gateway for .NET
   href: APIGateway.md
 
-- name: DynamoDB for .NET
-  href: DynamoDB-Native/Overview.md
-  items:
-
-    - name: Serialization
-      href: DynamoDB-Native/Serialization.md
-      items:
-
-      - name: .NET Type Mappings
-        href: DynamoDB-Native/Serialization-TypeMappings.md
-
-      - name: Custom Type Converters
-        href: DynamoDB-Native/Serialization-CustomConverters.md
-
-      - name: AttributeValue to JSON Converter
-        href: DynamoDB-Native/Serialization-AttributeValueJson.md
-
-    - name: Condition/Filter Specification
-      href: DynamoDB-Native/Condition-Filter-Specification.md
-
-    - name: UpdateItem SET Expression Specification
-      href: DynamoDB-Native/UpdateItem-Set-Specification.md
-
 - name: Finalizer
   href: Finalizer.md
 
