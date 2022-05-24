@@ -50,7 +50,7 @@ namespace LambdaSharp.Build.CSharp.Internal {
                 // analyze project for references
                 var csproj = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
 
-                // TODO (2019-10-22, bjorg): enhance precision for understanding elements in .csrpoj files
+                // TODO (2019-10-22, bjorg): enhance precision for understanding elements in .csproj files
 
                 // recurse into referenced projects
                 foreach(var projectReference in csproj.Descendants("ProjectReference").Where(node => node.Attribute("Include") != null)) {
