@@ -16,10 +16,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using LambdaSharp.Modules;

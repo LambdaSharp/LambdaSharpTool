@@ -318,15 +318,15 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task RefreshCloudFormationSpecAsync(
-            string specifcationUrl,
+            string specificationUrl,
             string destinationZipLocation,
             string destinationJsonLocation
         ) {
             Console.WriteLine();
 
             // download json specification
-            Console.WriteLine($"Fetching specification from {specifcationUrl}");
-            var response = await new HttpClient().GetAsync(specifcationUrl);
+            Console.WriteLine($"Fetching specification from {specificationUrl}");
+            var response = await new HttpClient().GetAsync(specificationUrl);
             string text;
             using(var decompressionStream = new GZipStream(await response.Content.ReadAsStreamAsync(), CompressionMode.Decompress))
             using(var decompressedMemoryStream = new MemoryStream()) {

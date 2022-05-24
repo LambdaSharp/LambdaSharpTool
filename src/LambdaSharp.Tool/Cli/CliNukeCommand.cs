@@ -31,7 +31,6 @@ namespace LambdaSharp.Tool.Cli {
 
     public class CliNukeCommand : ACliCommand {
 
-
         //--- Constants ---
         private const int MAX_ITERATIONS = 100;
 
