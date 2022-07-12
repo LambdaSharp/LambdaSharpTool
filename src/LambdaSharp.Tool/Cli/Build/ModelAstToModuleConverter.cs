@@ -1027,7 +1027,7 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
             var outputType = mainPropertyGroup?.Element("OutputType")?.Value;
             var assemblyName = mainPropertyGroup?.Element("AssemblyName")?.Value;
             var isSelfContained = (outputType == "Exe") && (assemblyName == "bootstrap");
-            var isTopLevelMain = !isSelfContained && (outputType == "Exe");
+            var isTopLevelMain = (outputType == "Exe") && (assemblyName is null);
             if(runtime == null) {
                 switch(targetFramework) {
                 case "netcoreapp1.0":
