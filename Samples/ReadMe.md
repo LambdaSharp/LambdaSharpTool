@@ -37,3 +37,4 @@ Please refer to the [Folder Structure Documentation](https://lambdasharp.net/art
 1. [Custom JSON Serializer](JsonSerializerSample/)
 1. [Source Generator JSON Serializer](JsonSerializerSample/)
 1. [Self-Contained Lambda Function](LambdaSelfContainedSample/)
+1. [Lambda Function with Top-Level Statements](LambdaTopLevelSample/)
