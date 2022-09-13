@@ -12,8 +12,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.1.0" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
-    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.7.4.76" />
     <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.7.2.53" />
   </ItemGroup>
   <ItemGroup>

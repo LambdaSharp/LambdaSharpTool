@@ -23,6 +23,6 @@
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.8.3" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.9.50" />
   </ItemGroup>
 </Project>

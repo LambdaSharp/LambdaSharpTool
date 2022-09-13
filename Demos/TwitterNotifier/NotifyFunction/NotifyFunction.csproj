@@ -7,7 +7,7 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.3.31" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.4.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp.SimpleNotificationService\LambdaSharp.SimpleNotificationService.csproj" />

@@ -12,9 +12,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.7.8.5" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.3.31" />
+    <PackageReference Include="AWSSDK.Core" Version="3.7.13.1" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.4.10" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.4.3" />
 
     <!-- TODO (2021-01-02, bjorg): remove Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

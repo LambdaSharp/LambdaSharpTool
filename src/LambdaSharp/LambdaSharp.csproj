@@ -28,15 +28,15 @@
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.2.0" />
-    <PackageReference Include="AWSSDK.Core" Version="3.7.8.5" />
-    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.7.4.76" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.2.76" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.2.28" />
-    <PackageReference Include="AWSSDK.XRay" Version="3.7.0.131" />
-    <PackageReference Include="AWSXRayRecorder.Core" Version="2.10.1" />
-    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.3" />
-    <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.7.3" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
+    <PackageReference Include="AWSSDK.Core" Version="3.7.13.1" />
+    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.7.4.148" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.4.21" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.2.100" />
+    <PackageReference Include="AWSSDK.XRay" Version="3.7.0.203" />
+    <PackageReference Include="AWSXRayRecorder.Core" Version="2.11.1" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.9.1" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.8.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.Logging\LambdaSharp.Logging.csproj" />

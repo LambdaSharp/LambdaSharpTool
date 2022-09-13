@@ -28,7 +28,7 @@
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.CloudFormation" Version="3.7.9.9" />
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.7.11.26" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp.CustomResource\LambdaSharp.CustomResource.csproj" />
