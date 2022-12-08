@@ -16,7 +16,7 @@
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.3.31" />
 
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 
     <PackageReference Include="TweetinviAPI" Version="5.0.4" />
   </ItemGroup>
