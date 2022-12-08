@@ -28,7 +28,7 @@
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.3.4" />
 
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 
     <!-- TODO (2021-05-16, bjorg): upgrade NJsonScheam to 10.4.x -->
     <PackageReference Include="NJsonSchema" Version="9.14.1" />
