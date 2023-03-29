@@ -715,7 +715,8 @@ namespace LambdaSharp.Tool {
 
             // never cache pre-release versions or when the module origin is not set
             if(
-                moduleLocation.ModuleInfo.Version.IsPreRelease()
+                moduleLocation?.ModuleInfo?.Version == null
+                || moduleLocation.ModuleInfo.Version.IsPreRelease()
                 || (moduleLocation.ModuleInfo.Origin is null)
             ) {
                 return null;
