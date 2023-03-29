@@ -6,10 +6,22 @@
     <NoWarn>CS1998</NoWarn>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+    <BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishTrimmed>true</PublishTrimmed>
+    <RunAOTCompilation>true</RunAOTCompilation>
+  </PropertyGroup>
+
+  <!-- In debug, make builds faster by reducing optimizations -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <WasmNativeStrip>false</WasmNativeStrip>
+    <EmccCompileOptimizationFlag>-O1</EmccCompileOptimizationFlag>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.2" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
