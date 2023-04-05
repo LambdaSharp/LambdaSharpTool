@@ -36,37 +36,37 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
-    <PackageReference Include="AWSSDK.APIGateway" Version="3.7.3.59" />
-    <PackageReference Include="AWSSDK.ApiGatewayV2" Version="3.7.1.152" />
-    <PackageReference Include="AWSSDK.CodeBuild" Version="3.7.7.128" />
-    <PackageReference Include="AWSSDK.CloudFormation" Version="3.7.11.26" />
-    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.7.2.98" />
-    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.2.184" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.4.21" />
-    <PackageReference Include="AWSSDK.Lambda" Version="3.7.14.10" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.196" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.18.2" />
+    <PackageReference Include="AWSSDK.APIGateway" Version="3.7.100.106" />
+    <PackageReference Include="AWSSDK.ApiGatewayV2" Version="3.7.100.106" />
+    <PackageReference Include="AWSSDK.CodeBuild" Version="3.7.100.105" />
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.7.104.44" />
+    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.7.104.48" />
+    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.100.106" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.101.81" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.105.25" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.101.40" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.8" />
     <PackageReference Include="Humidifier.Json" Version="0.3.1" />
     <PackageReference Include="Humidifier" Version="0.3.1" />
-    <PackageReference Include="JsonDiffPatch" Version="2.0.55" />
+    <PackageReference Include="JsonDiffPatch" Version="2.0.61" />
 
     <!-- TODO (2021-05-16, bjorg): upgrade McMaster.Extensions.CommandLineUtils to 3.1.x -->
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.3.4" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.NETCore.App" Version="2.2.8" />
-    <PackageReference Include="Microsoft.NETCore.DotNetHostPolicy" Version="6.0.8" />
-    <PackageReference Include="Microsoft.NETCore.Platforms" Version="6.0.5" />
+    <PackageReference Include="Microsoft.NETCore.DotNetHostPolicy" Version="7.0.4" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.1" />
     <PackageReference Include="Microsoft.NETCore.Targets" Version="5.0.0" />
 
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
     <!-- TODO (2021-05-16, bjorg): upgrade NJsonScheam to 10.4.x -->
     <PackageReference Include="NJsonSchema" Version="9.14.1" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="YamlDotNet" Version="12.0.0" />
+    <PackageReference Include="YamlDotNet" Version="12.3.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\LambdaSharp.Build\LambdaSharp.Build.csproj" />

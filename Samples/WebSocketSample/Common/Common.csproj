@@ -4,6 +4,6 @@
     <RootNamespace>Demo.WebSocketsChat.Common</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.102.20" />
   </ItemGroup>
 </Project>

@@ -7,7 +7,7 @@
     <RootNamespace>Demo.SlackTodo</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.4.10" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.102.20" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />

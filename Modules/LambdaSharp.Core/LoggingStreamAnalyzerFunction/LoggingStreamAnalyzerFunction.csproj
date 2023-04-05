@@ -11,8 +11,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.1.0" />
-    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.7.2.53" />
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.2.0" />
+    <PackageReference Include="AWSSDK.KinesisFirehose" Version="3.7.101.81" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />

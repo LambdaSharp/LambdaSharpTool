@@ -28,7 +28,7 @@
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.0.0" />
+    <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LambdaSharp\LambdaSharp.csproj" />
