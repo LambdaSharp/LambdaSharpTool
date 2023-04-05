@@ -8,11 +8,14 @@ fi
 # https://github.com/dotnet-outdated/dotnet-outdated
 dotnet tool update --global dotnet-outdated-tool
 
-# find all C# projects, except those in the Tests/Legacy folder
-dotnet outdated --upgrade --recursive "$LAMBDASHARP/Libraries"
-dotnet outdated --upgrade --recursive "$LAMBDASHARP/src"
-dotnet outdated --upgrade --recursive "$LAMBDASHARP/Modules"
-dotnet outdated --upgrade --recursive "$LAMBDASHARP/Samples"
-dotnet outdated --upgrade --recursive "$LAMBDASHARP/Demos"
+# Exclude some assemblies that have breaking changes
+EXCLUDE="--exclude Blazorise --exclude McMaster.Extensions.CommandLineUtils --exclude NJsonSchema --exclude YamlDotNet"
 
-find "$LAMBDASHARP/Tests" -name "*.csproj" -not -path "$LAMBDASHARP/Tests/Legacy/*" | xargs -I {} dotnet outdated --upgrade "{}"
+# find all C# projects, except those in the Tests/Legacy folder
+dotnet outdated --upgrade --recursive "$LAMBDASHARP/Libraries" $EXCLUDE
+dotnet outdated --upgrade --recursive "$LAMBDASHARP/src" $EXCLUDE
+dotnet outdated --upgrade --recursive "$LAMBDASHARP/Modules" $EXCLUDE
+dotnet outdated --upgrade --recursive "$LAMBDASHARP/Samples" $EXCLUDE
+dotnet outdated --upgrade --recursive "$LAMBDASHARP/Demos" $EXCLUDE
+
+find "$LAMBDASHARP/Tests" -name "*.csproj" -not -path "$LAMBDASHARP/Tests/Legacy/*" | xargs -I {} dotnet outdated --upgrade "{}" $EXCLUDE
