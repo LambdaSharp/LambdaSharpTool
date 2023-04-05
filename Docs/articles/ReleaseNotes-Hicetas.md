@@ -155,6 +155,12 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * CLI
   * Added ability to detect and delete orphaned CodeBuild logs when running `lash util delete-orphan-logs`.
 
+* SDK
+  * Updated assembly references to latest compatible versions.
+
+* Samples
+  * Added _LambdaTopLevelSample_ to showcase how top-level functions can be done.
+
 ### (v0.8.4.0) - 2022-03-09
 
 #### BREAKING CHANGES
