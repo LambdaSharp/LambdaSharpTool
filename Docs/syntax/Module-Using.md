@@ -47,7 +47,7 @@ The <code>Module</code> attribute specifies the full name of the required module
 ```yaml
 Using:
 
-  - Module: LambdaSharp.S3.IO
+  - Module: LambdaSharp.S3.IO:0.8@lambdasharp
 ```
 
 ### List a dependency with a specific version number

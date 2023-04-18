@@ -31,6 +31,6 @@ public sealed class Function : ALambdaFunction<FunctionRequest, FunctionResponse
 
         // TO-DO: add business logic
 
-        return new FunctionResponse();
+        return new();
     }
 }

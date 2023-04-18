@@ -35,7 +35,7 @@ namespace DemoS3Subscriber.Subscriber {
             LogInfo($"# S3 Records = {s3Event.Records.Count}");
             for(var i = 0; i < s3Event.Records.Count; ++i) {
                 var record = s3Event.Records[i];
-                LogInfo($"EventName = {record.EventName.Value}");
+                LogInfo($"EventName = {record.EventName}");
                 LogInfo($"EventSource = {record.EventSource}");
                 LogInfo($"EventTime = {record.EventTime}");
                 LogInfo($"EventVersion = {record.EventVersion}");

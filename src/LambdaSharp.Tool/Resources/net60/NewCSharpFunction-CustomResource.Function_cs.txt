@@ -32,7 +32,7 @@ public sealed class Function : ALambdaCustomResourceFunction<ResourceProperties,
 
         // TO-DO: create custom resource using resource properties from request
 
-        return new Response<ResourceAttributes> {
+        return new() {
 
             // TO-DO: assign a physical resource ID for custom resource
             PhysicalResourceId = "MyResource:123",
@@ -46,14 +46,14 @@ public sealed class Function : ALambdaCustomResourceFunction<ResourceProperties,
 
         // TO-DO: delete custom resource identified by PhysicalResourceId in request
 
-        return new Response<ResourceAttributes>();
+        return new();
     }
 
     public override async Task<Response<ResourceAttributes>> ProcessUpdateResourceAsync(Request<ResourceProperties> request, CancellationToken cancellationToken) {
 
         // TO-DO: update custom resource using resource properties from request
 
-        return new Response<ResourceAttributes> {
+        return new() {
 
             // TO-DO: optionally assign a new physical resource ID to trigger deletion of the previous custom resource
             PhysicalResourceId = "MyResource:123",

@@ -16,12 +16,8 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -222,8 +218,9 @@ namespace LambdaSharp.Build.CSharp.Function {
             var isReadyToRunSupported = VersionInfoCompatibility.IsReadyToRunSupported(projectFile.TargetFramework);
             var isAmazonLinux2 = Provider.IsAmazonLinux2();
             var isReadyToRun = isReadyToRunSupported && isAmazonLinux2;
-            var isSelfContained = (projectFile.OutputType == "Exe") && (projectFile.AssemblyName == "bootstrap");
-            var isTopLevelMain = !isSelfContained && (projectFile.OutputType == "Exe");
+            var outputType = projectFile.OutputType?.ToLowerInvariant();
+            var isSelfContained = (outputType == "exe") && (projectFile.AssemblyName == "bootstrap");
+            var isTopLevelMain = (outputType == "exe") && (projectFile.AssemblyName is null);
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
             var selfContained = isSelfContained ? ", SelfContained" : "";
             Provider.WriteLine($"=> Building function {Provider.InfoColor}{function.FullName}{Provider.ResetColor} [{projectFile.TargetFramework}, {buildConfiguration}{readyToRunText}{selfContained}]");

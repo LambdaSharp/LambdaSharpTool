@@ -15,7 +15,7 @@ The `LambdaSharp::Registration::Module` type creates a new or updates an existin
 ```yaml
 Using:
 
-  - Module: LambdaSharp.Core:0.5
+  - Module: LambdaSharp.Core:0.8@lambdasharp
 ```
 
 ## Syntax

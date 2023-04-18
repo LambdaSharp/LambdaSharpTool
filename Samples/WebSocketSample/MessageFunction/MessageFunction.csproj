@@ -11,8 +11,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.0.132" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
+    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.100.106" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.102.20" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />

@@ -15,7 +15,7 @@ On creation or update, nothing happens. On the deletion, the contents of the S3 
 ```yaml
 Using:
 
-  - Module: LambdaSharp.S3.IO:0.5@lambdasharp
+  - Module: LambdaSharp.S3.IO:0.8@lambdasharp
 ```
 
 ## Syntax

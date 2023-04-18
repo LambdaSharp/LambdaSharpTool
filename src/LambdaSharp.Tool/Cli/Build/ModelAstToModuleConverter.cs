@@ -1024,10 +1024,10 @@ System.Console.WriteLine($"*** PATTERN TYPE: {pattern?.GetType().FullName ?? "<n
 
             // check if we need to parse the <TargetFramework> element to determine the lambda runtime
             var targetFramework = mainPropertyGroup?.Element("TargetFramework")?.Value;
-            var outputType = mainPropertyGroup?.Element("OutputType")?.Value;
+            var outputType = mainPropertyGroup?.Element("OutputType")?.Value?.ToLowerInvariant();
             var assemblyName = mainPropertyGroup?.Element("AssemblyName")?.Value;
-            var isSelfContained = (outputType == "Exe") && (assemblyName == "bootstrap");
-            var isTopLevelMain = !isSelfContained && (outputType == "Exe");
+            var isSelfContained = (outputType == "exe") && (assemblyName == "bootstrap");
+            var isTopLevelMain = (outputType == "exe") && (assemblyName is null);
             if(runtime == null) {
                 switch(targetFramework) {
                 case "netcoreapp1.0":
