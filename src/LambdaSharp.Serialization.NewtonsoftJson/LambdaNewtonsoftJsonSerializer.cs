@@ -102,9 +102,9 @@ namespace LambdaSharp.Serialization {
         /// <returns>Deserialized instance.</returns>
         public object Deserialize(Stream stream, Type type) {
             try {
-                using(var reader = new StreamReader(stream)) {
-                    return JsonConvert.DeserializeObject(reader.ReadToEnd(), type, _staticSettings);
-                }
+                using var reader = new StreamReader(stream);
+                return JsonConvert.DeserializeObject(reader.ReadToEnd(), type, _staticSettings)
+                    ?? throw new ArgumentNullException("stream contents is null");
             } catch(Exception e) {
                 string message;
                 if(type == typeof(string)) {

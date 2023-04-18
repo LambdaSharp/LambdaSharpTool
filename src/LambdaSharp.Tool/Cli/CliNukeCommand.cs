@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.S3.Model;
+using Amazon.S3.Util;
 using LambdaSharp.Tool.Cli.Tier;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
@@ -30,7 +31,6 @@ using McMaster.Extensions.CommandLineUtils;
 namespace LambdaSharp.Tool.Cli {
 
     public class CliNukeCommand : ACliCommand {
-
 
         //--- Constants ---
         private const int MAX_ITERATIONS = 100;
@@ -219,7 +219,7 @@ namespace LambdaSharp.Tool.Cli {
             if(bucketsToDelete.Any()) {
                 Console.WriteLine();
                 foreach(var bucketName in bucketsToDelete) {
-                    if(await settings.S3Client.DoesS3BucketExistAsync(bucketName)) {
+                    if(await AmazonS3Util.DoesS3BucketExistV2Async(settings.S3Client, bucketName)) {
                         try {
                             Console.WriteLine($"=> Deleting S3 Bucket {Settings.InfoColor}{bucketName}{Settings.ResetColor}");
                             await settings.S3Client.DeleteBucketAsync(bucketName);

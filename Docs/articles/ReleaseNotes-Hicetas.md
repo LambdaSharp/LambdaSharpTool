@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-# LambdaSharp "Hicetas" Release (v0.8.4.0) - 2022-03-09
+# LambdaSharp "Hicetas" Release (v0.8.4.1) - 2023-04-18
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
@@ -141,7 +141,27 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ## Releases
 
-### (v0.8.4.0) - (2022-03-09)
+
+### (v0.8.4.1) - 2023-04-18
+
+#### BREAKING CHANGES
+
+* SDK
+  * Moved _LambdaSharp.DynamoDB.Native_ to its own [LambdaSharp.DynamoDB repository](https://github.com/LambdaSharp/LambdaSharp.DynamoDB)
+  * Moved _LambdaSharp.DynamoDB.Serialization_ to its own [LambdaSharp.DynamoDB repository](https://github.com/LambdaSharp/LambdaSharp.DynamoDB)
+
+#### Features
+
+* CLI
+  * Added ability to detect and delete orphaned CodeBuild logs when running `lash util delete-orphan-logs`.
+
+* SDK
+  * Updated assembly references.
+
+* Samples
+  * Added _LambdaTopLevelSample_ to showcase how top-level functions can be done.
+
+### (v0.8.4.0) - 2022-03-09
 
 #### BREAKING CHANGES
 
@@ -152,7 +172,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Upgraded LambdaSharp assemblies (`LambdaSharp` and `LambdaSharp.*`) to .NET 6.
   * Removed `TerminateLambdaInstance` from `ALambdaFunction`, because it was a duplicate of `ForceLambdaColdStart`.
 
-### Features
+#### Features
 
 * CLI
   * Added support for Lambda functions using .NET 6.
@@ -176,7 +196,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
   * Added `Module::RestApi::LoggingLevel` pragma override to set the logging level for the REST API.
 
 * SDK
-  * Updated assembly referenecs to latest compatible versions.
+  * Updated assembly references to latest compatible versions.
   * Added `DynamoFloatConverter` to _LambdaSharp.DynamoDB.Serialization_ assembly.
 
 

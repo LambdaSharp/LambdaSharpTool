@@ -11,9 +11,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp.CustomResource\LambdaSharp.CustomResource.csproj" />
     <ProjectReference Include="..\CommonLib\CommonLib.csproj" />
   </ItemGroup>

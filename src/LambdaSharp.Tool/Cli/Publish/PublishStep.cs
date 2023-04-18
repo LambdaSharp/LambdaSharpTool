@@ -211,7 +211,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
             imported = imported | await ImportArtifact(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease());
             if(imported) {
-                new ModelManifestLoader(Settings, manifest.GetFullName()).ResetCache(Settings.DeploymentBucketName, moduleInfo);
+                new ModelManifestLoader(Settings, manifest.GetFullName()).ResetCache(Settings.DeploymentBucketName, moduleLocation.ModuleInfo);
                 Console.WriteLine($"=> Imported {moduleLocation.ModuleInfo}");
             } else {
                 Console.WriteLine($"=> Nothing to do");

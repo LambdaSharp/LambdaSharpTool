@@ -4,14 +4,17 @@
     <Deterministic>true</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>Sample.LambdaTopLevel.MyTopLevelFunction</RootNamespace>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Required to create top-level function -->
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp.DynamoDB.Native\LambdaSharp.DynamoDB.Native.csproj" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.8.6" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.1" />
   </ItemGroup>
 </Project>

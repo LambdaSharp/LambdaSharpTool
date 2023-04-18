@@ -101,7 +101,7 @@ public sealed class Function : ALambdaApiGatewayFunction {
     public APIGatewayProxyResponse UnrecognizedRequest(APIGatewayProxyRequest request) {
         try {
             var json = JObject.Parse(request.Body);
-            var action = (string)json["action"];
+            var action = (string?)json["action"];
             if(action != null) {
                 return CreateResponse(404, $"Unrecognized action '{action}'");
             } else {

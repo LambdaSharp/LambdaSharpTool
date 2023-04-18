@@ -11,12 +11,12 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Comprehend" Version="3.7.5.12" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.6" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.3.31" />
+    <PackageReference Include="AWSSDK.Comprehend" Version="3.7.103.7" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.102.20" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.101.41" />
 
     <!-- TODO (2020-08-05, bjorg): remove Newtonsoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
     <PackageReference Include="TweetinviAPI" Version="5.0.4" />
   </ItemGroup>

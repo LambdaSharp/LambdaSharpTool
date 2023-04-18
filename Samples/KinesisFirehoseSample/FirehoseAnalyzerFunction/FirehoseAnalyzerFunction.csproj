@@ -10,9 +10,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.1.0"/>
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj"/>
+    <ProjectReference Include="$(LAMBDASHARP)\src\LambdaSharp\LambdaSharp.csproj" />
   </ItemGroup>
 </Project>
