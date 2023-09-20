@@ -137,7 +137,7 @@ using LambdaSharp.Logging.Metrics.Models;
         _registrations = new RegistrationTable(dynamoClient, tableName);
         _cachedRegistrations = new Dictionary<string, OwnerMetaData>();
         _rollbarClient = new RollbarClient(
-            httpClient: null,
+            httpClient: HttpClient,
             accountReadAccessToken: null,
             accountWriteAccessToken: null,
             message => LogInfo(message)
